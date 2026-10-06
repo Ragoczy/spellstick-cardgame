@@ -6,12 +6,13 @@
 // 4. The attacker wins only with a higher value. Ties go to the defender, except at faceoffs,
 //    where they go to the chooser.
 
-import { adjustAmount, affinityFor, spellFizzles } from './affinity';
-import { cardView, defOf, drawCards, hasReactionSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt, statOf } from './board';
-import type { PlayerCardDef, SpellCardDef } from './cards';
-import type { Breakdown, BreakdownPart, GameEvent } from './events';
+import { affinityFor, spellFizzles } from './affinity';
+import { cardView, defOf, drawCards, hasReactionSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
+import type { SpellCardDef } from './cards';
+import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
 import { continueGame, scoreGoal } from './flow';
+import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
 
 function otherRole(role: ContestRole): ContestRole {
@@ -62,16 +63,6 @@ export function playReaction(s: GameState, card: Uid | null, ev: GameEvent[]): v
   afterReaction(s, contest, role, ev);
 }
 
-function bonusApplies(def: PlayerCardDef, me: ContestSide): number {
-  const ability = def.ability;
-  if (ability?.effect !== 'bonus') return 0;
-  const { stat, amount, when, row } = ability.params;
-  if (stat !== me.stat) return 0;
-  if (when !== undefined && when !== me.use) return 0;
-  if (row !== undefined && row !== me.pos.area) return 0;
-  return amount;
-}
-
 function isActiveShield(s: GameState, side: ContestSide): boolean {
   if (!side.spell || side.spell.fizzled) return false;
   const spell = defOf(s, side.spell.uid);
@@ -83,25 +74,11 @@ export function contestValue(s: GameState, contest: Contest, role: ContestRole):
   const me = contest[role];
   const them = contest[otherRole(role)];
   const slot = slotAt(s, me.side, me.pos)!;
-  const def = playerAt(s, me.side, me.pos);
-  // Shield: this player's stat counts as 0 and their abilities are ignored. Spells still count.
-  const shielded = isActiveShield(s, them);
-  const base = shielded ? 0 : statOf(def, me.stat);
-  const parts: BreakdownPart[] = [];
-
-  const bonus = shielded ? 0 : bonusApplies(def, me);
-  if (bonus !== 0) parts.push({ label: 'Ability', amount: bonus });
-
-  if (me.spell && !me.spell.fizzled) {
-    const spell = defOf(s, me.spell.uid);
-    if (isReactionSpell(spell) && spell.ability.effect === 'boost') {
-      parts.push({ label: spell.name, amount: adjustAmount(spell.ability.params.amount, me.spell.affinity, s.config) });
-    }
-  }
-  parts.push(...me.modifiers);
-
-  const total = Math.max(0, base + parts.reduce((sum, p) => sum + p.amount, 0));
-  return { side: me.side, pos: me.pos, card: cardView(s, slot.uid), stat: me.stat, base, parts, total, shielded };
+  const spell = me.spell && !me.spell.fizzled
+    ? { def: defOf(s, me.spell.uid) as SpellCardDef, affinity: me.spell.affinity }
+    : null;
+  const score = scoreSide({ player: playerAt(s, me.side, me.pos), side: me, spell, shielded: isActiveShield(s, them) }, s.config);
+  return { side: me.side, pos: me.pos, card: cardView(s, slot.uid), stat: me.stat, ...score };
 }
 
 function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
@@ -126,6 +103,7 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
 
 function giveBall(s: GameState, side: Side, pos: ContestSide['pos'], ev: GameEvent[]): void {
   s.ball = { side, pos };
+  s.ballProtected = false;
   ev.push({ type: 'ballMoved', side, pos });
 }
 
@@ -137,6 +115,11 @@ function applyOutcome(s: GameState, contest: Contest, attackerWins: boolean, ev:
       // The winner's player in the contest takes the ball (a lost pass is an interception).
       const winner = attackerWins ? attacker : defender;
       giveBall(s, winner.side, winner.pos, ev);
+      // Experimental: a caught pass can't be tackled until the catcher's team's next turn.
+      const protect = s.config.protectCatch;
+      if (contest.kind === 'pass' && attackerWins && (protect === 'all' || (protect === 'forward' && attacker.pos.area === 'forward'))) {
+        s.ballProtected = true;
+      }
       break;
     }
     case 'tackle':

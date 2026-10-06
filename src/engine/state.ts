@@ -99,6 +99,10 @@ export interface GameState {
   teams: Record<Side, TeamState>;
   /** The ball holder, or null while a faceoff is due. */
   ball: { side: Side; pos: Pos } | null;
+  /** Experimental (config.protectCatch): the holder just caught a pass and can't be tackled yet. */
+  ballProtected: boolean;
+  /** Actions the active player may still take this turn (experimental config.actionsPerTurn). */
+  actionsLeft: number;
   /** Who chooses the lane at the next faceoff. */
   faceoffChooser: Side;
   score: Record<Side, number>;

@@ -1,0 +1,53 @@
+// Experimental rule switches used by simulation what-ifs. They are off by default, and the
+// real rules (RULES.md) don't include them.
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_CONFIG } from '../src/engine/config';
+import { applyAction } from '../src/engine/reducer';
+import { LANE_COUNTS, fwd, lastContest, mid, play, player, scenario } from './helpers';
+
+describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
+  const LAST = lanes - 1;
+
+  it('are off by default', () => {
+    expect(DEFAULT_CONFIG.passTiesGoTo).toBe('defender');
+    expect(DEFAULT_CONFIG.protectCatch).toBe('off');
+  });
+
+  it('passTiesGoTo: attacker gives tied passes to the receiver', () => {
+    const s = scenario({ lanes, config: { passTiesGoTo: 'attacker' } }); // fillers: 3 vs 3
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    expect(lastContest(events).winner).toBe('A');
+    expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
+  });
+
+  it("protectCatch: forward stops the defender tackling a forward who just caught a pass, until that team's next turn", () => {
+    const s = scenario({ lanes, config: { protectCatch: 'forward' }, A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 6 }) } } } });
+    let { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    expect(state.ballProtected).toBe(true);
+    expect(() => applyAction(state, { type: 'tackle', side: 'B' })).toThrow("can't be tackled");
+    ({ state } = play(state, { type: 'regroup', side: 'B', discard: [] }));
+    expect(state.ballProtected).toBe(false);
+  });
+
+  it('actionsPerTurn: 2 lets the player act twice, and a goal ends the turn', () => {
+    const s = scenario({
+      lanes,
+      config: { actionsPerTurn: 2 },
+      A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 6, shot: 6 }) } } },
+    });
+    let { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    expect(state.pending).toEqual({ kind: 'action', side: 'A' });
+    ({ state } = play(state, { type: 'shoot', side: 'A' }));
+    expect(state.score.A).toBe(1);
+    expect(state.pending).toEqual({ kind: 'faceoffLane', side: 'B' });
+    ({ state } = play(state, { type: 'faceoffLane', side: 'B', lane: 0 }));
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+    expect(state.actionsLeft).toBe(2);
+  });
+
+  it("protectCatch: forward doesn't protect a midfielder", () => {
+    const s = scenario({ lanes, config: { protectCatch: 'forward' }, A: { lineup: { midfield: { [LAST]: player('A mid', { speed: 6 }) } } } });
+    const { state } = play(s, { type: 'pass', side: 'A', to: mid(LAST) });
+    expect(state.ballProtected).toBe(false);
+  });
+});

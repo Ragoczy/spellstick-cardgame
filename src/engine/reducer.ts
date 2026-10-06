@@ -24,6 +24,7 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
   const s = structuredClone(state);
   const ev: GameEvent[] = [];
   const side = action.side;
+  if (state.pending.kind === 'action') s.actionsLeft -= 1;
 
   switch (action.type) {
     case 'chooseGoalie': chooseGoalie(s, side, action.card, ev); break;
@@ -98,7 +99,7 @@ function pass(s: GameState, side: Side, to: FieldPos, ev: GameEvent[]): void {
     kind: 'pass',
     attacker: { side, pos: to, stat: 'speed', use: 'receive', spell: null, modifiers: [] },
     defender: { side: otherSide(side), pos: opposite(to), stat: 'defense', use: 'intercept', spell: null, modifiers: [] },
-    tiesGoTo: 'defender',
+    tiesGoTo: s.config.passTiesGoTo,
   }, ev);
 }
 

@@ -21,7 +21,9 @@ One ruleset drives two products:
 | `data/cards.prototype.json` | Placeholder 40-card decks for two teams. Names, elements, and flavor are placeholders. |
 | `scripts/generate_prototype_cards.py` | Regenerates the placeholder decks. |
 | `src/engine/` | The rules engine (pure TypeScript, no UI). |
-| `src/ai/` | Computer players (a random player for testing; the real AI arrives in M2). |
+| `src/ai/` | Computer players: a rule-of-thumb opponent, and a random player for stress tests. |
+| `src/sim/` | The simulator, balance statistics, what-if experiments, and report writer. |
+| `reports/` | Simulation reports. |
 | `tests/` | Engine tests: one file per rule section and per effect, all run with 2 and 3 lanes. |
 
 ## Commands
@@ -31,6 +33,7 @@ One ruleset drives two products:
 | `npm install` | Install dependencies (once). |
 | `npm test` | Run every engine test. |
 | `npm run demo -- --seed 7 --lanes 2` | Play one game between random players and print it in plain language. |
+| `npm run sim -- --games 1000 --seed 1` | Play 1,000 computer-vs-computer games and write a balance report to `reports/`. Add `--experiments` for what-if comparisons, `--lanes 3` for the add-on. |
 | `npm run dev` | Start the browser version (a placeholder page until M3). |
 | `npm run build` | Build the static site into `dist/`. |
 

@@ -9,6 +9,7 @@ function faceoffScenario(chooser: Side, options: ScenarioOptions): GameState {
   const s = scenario({ ...options, ball: null, turn: 5, active: chooser === 'A' ? 'B' : 'A' });
   s.faceoffChooser = chooser;
   s.pending = { kind: 'faceoffLane', side: chooser };
+  s.actionsLeft = 0; // the goal ended the scoring team's actions
   return s;
 }
 

@@ -40,6 +40,7 @@ function canShoot(s: GameState, side: Side, from: 'forward' | 'midfield'): strin
 function canTackle(s: GameState, side: Side): string | null {
   if (s.ball === null || s.ball.side !== otherSide(side)) return 'You can only tackle when the other team has the ball.';
   if (s.ball.pos.area === 'goal') return "Goalies can't be tackled.";
+  if (s.ballProtected) return "That player just caught a pass and can't be tackled until their next turn.";
   return null;
 }
 

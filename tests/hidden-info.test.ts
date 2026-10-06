@@ -2,7 +2,9 @@
 // computer opponent) only ever see viewFor(), legalActions(), and eventsFor().
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../src/ai/agent';
+import { heuristicAgent } from '../src/ai/heuristic';
 import { randomAgent } from '../src/ai/random';
+import { makeConfig } from '../src/engine/config';
 import { runGame } from '../src/ai/runGame';
 import type { Action } from '../src/engine/actions';
 import { AREAS, otherSide, type Side } from '../src/engine/field';
@@ -58,9 +60,12 @@ describe.each(LANE_COUNTS)('hidden information (%i lanes)', (lanes) => {
     expect(eventsFor(events, 'B')).toEqual(events);
   });
 
-  it("never gives a computer player anything it shouldn't see, across whole games", () => {
-    // Wraps a random player and checks everything it is handed before it decides.
-    for (let seed = 1; seed <= 10; seed++) {
+  it.each([
+    ['random player', (seed: number) => randomAgent(seed)],
+    ['computer opponent', (seed: number) => heuristicAgent(seed, makeConfig({ lanes }))],
+  ] as const)("never gives a %s anything it shouldn't see, across whole games", (_name, makeAgent) => {
+    // Wraps each player and checks everything it is handed before it decides.
+    for (let seed = 1; seed <= 6; seed++) {
       let latest: GameState | null = null;
       const watched = (side: Side, inner: Agent): Agent => ({
         name: 'watched',
@@ -80,7 +85,7 @@ describe.each(LANE_COUNTS)('hidden information (%i lanes)', (lanes) => {
       };
       runGame(
         { seed, cardSet: prototypeCards, config: { lanes } },
-        { A: watched('A', randomAgent(seed)), B: watched('B', randomAgent(seed + 100)) },
+        { A: watched('A', makeAgent(seed)), B: watched('B', makeAgent(seed + 100)) },
         {
           onStart: (state, events) => {
             latest = state;

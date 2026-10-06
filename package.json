@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "demo": "tsx scripts/demo-game.ts"
+    "demo": "tsx scripts/demo-game.ts",
+    "sim": "tsx scripts/sim.ts"
   },
   "dependencies": {
     "react": "^19.3.0",

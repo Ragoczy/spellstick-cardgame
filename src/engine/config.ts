@@ -20,6 +20,14 @@ export interface GameConfig {
   maxTurns: number;
   /** Expected cards per team deck (used to check card data). */
   deckSize: number;
+
+  // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
+  /** Who wins a tied pass. The rules say the defender. */
+  passTiesGoTo: 'defender' | 'attacker';
+  /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
+  protectCatch: 'off' | 'forward' | 'all';
+  /** Actions per turn. The rules say 1. A goal ends the turn's actions. */
+  actionsPerTurn: number;
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
@@ -32,6 +40,9 @@ export const DEFAULT_CONFIG: GameConfig = {
   affinityOpposedPenalty: 1,
   maxTurns: 300,
   deckSize: 40,
+  passTiesGoTo: 'defender',
+  protectCatch: 'off',
+  actionsPerTurn: 1,
 };
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {

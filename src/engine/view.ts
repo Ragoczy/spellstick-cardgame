@@ -26,6 +26,8 @@ export interface PlayerView {
   opposedPairs: [string, string][];
   score: Record<Side, number>;
   ball: { side: Side; pos: Pos } | null;
+  /** Experimental rule: the holder can't be tackled yet. */
+  ballProtected: boolean;
   faceoffChooser: Side;
   endgame: { finalTurnFor: Side | null; suddenDeath: boolean };
   /** What the game is waiting for. All of it is public information. */
@@ -74,6 +76,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     opposedPairs: s.opposedPairs,
     score: s.score,
     ball: s.ball,
+    ballProtected: s.ballProtected,
     faceoffChooser: s.faceoffChooser,
     endgame: s.endgame,
     pending: s.pending,

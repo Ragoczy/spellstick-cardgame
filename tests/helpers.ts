@@ -126,6 +126,8 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     activeSide: active,
     teams,
     ball: options.ball === undefined ? { side: active, pos: { area: 'midfield', lane: 0 } } : options.ball,
+    ballProtected: false,
+    actionsLeft: config.actionsPerTurn,
     faceoffChooser: active === 'A' ? 'B' : 'A',
     score: options.score ?? { A: 0, B: 0 },
     endgame: { finalTurnFor: null, suddenDeath: false },

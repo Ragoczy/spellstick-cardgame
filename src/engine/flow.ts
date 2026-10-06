@@ -25,6 +25,11 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
     startTurn(s, s.firstSide, ev);
     return;
   }
+  // Experimental: more than one action per turn.
+  if (s.actionsLeft > 0) {
+    s.pending = { kind: 'action', side: s.activeSide };
+    return;
+  }
   // Discard step.
   const extra = s.teams[s.activeSide].hand.length - s.config.handLimit;
   if (extra > 0) {
@@ -37,6 +42,7 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
 function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   s.turn += 1;
   s.activeSide = side;
+  if (s.ball?.side === side) s.ballProtected = false;
   ev.push({ type: 'turnStarted', side, turn: s.turn });
 
   // Draw step.
@@ -53,6 +59,7 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   }
   // (If the final turn is already set, this player just skips the draw.)
 
+  s.actionsLeft = s.config.actionsPerTurn;
   s.pending = { kind: 'action', side };
 }
 
@@ -90,6 +97,7 @@ function startSuddenDeath(s: GameState, ev: GameEvent[]): void {
 
 export function scoreGoal(s: GameState, side: Side, ev: GameEvent[]): void {
   s.score[side] += 1;
+  s.actionsLeft = 0;
   ev.push({ type: 'goal', side, score: { ...s.score } });
   if (s.endgame.suddenDeath) {
     endGame(s, side, 'sudden_death', ev);
@@ -98,6 +106,7 @@ export function scoreGoal(s: GameState, side: Side, ev: GameEvent[]): void {
   } else {
     // Players stay where they are; the team that was scored on chooses the faceoff lane.
     s.ball = null;
+    s.ballProtected = false;
     s.faceoffChooser = otherSide(side);
   }
 }

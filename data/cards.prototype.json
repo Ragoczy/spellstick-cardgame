@@ -1,0 +1,1512 @@
+{
+  "version": "0.3-prototype",
+  "elements": [
+    "fire",
+    "water",
+    "earth",
+    "air"
+  ],
+  "opposedPairs": [
+    [
+      "fire",
+      "water"
+    ],
+    [
+      "earth",
+      "air"
+    ]
+  ],
+  "teams": [
+    {
+      "id": "A",
+      "name": "Placeholder Team A",
+      "color": "#B5462E",
+      "placeholder": true
+    },
+    {
+      "id": "B",
+      "name": "Placeholder Team B",
+      "color": "#2E6FB5",
+      "placeholder": true
+    }
+  ],
+  "cards": [
+    {
+      "id": "a-p-01",
+      "team": "A",
+      "kind": "field",
+      "name": "A Runner 01",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "defense",
+          "amount": 2,
+          "when": "intercept"
+        }
+      },
+      "text": "+2 Defense when intercepting."
+    },
+    {
+      "id": "a-p-02",
+      "team": "A",
+      "kind": "field",
+      "name": "A Runner 02",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-03",
+      "team": "A",
+      "kind": "field",
+      "name": "A Runner 03",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-04",
+      "team": "A",
+      "kind": "field",
+      "name": "A Runner 04",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "defense",
+          "amount": 2,
+          "when": "intercept"
+        }
+      },
+      "text": "+2 Defense when intercepting."
+    },
+    {
+      "id": "a-p-05",
+      "team": "A",
+      "kind": "field",
+      "name": "A Runner 05",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-06",
+      "team": "A",
+      "kind": "field",
+      "name": "A Striker 06",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-07",
+      "team": "A",
+      "kind": "field",
+      "name": "A Striker 07",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-08",
+      "team": "A",
+      "kind": "field",
+      "name": "A Striker 08",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "defense",
+          "amount": 2,
+          "when": "intercept"
+        }
+      },
+      "text": "+2 Defense when intercepting."
+    },
+    {
+      "id": "a-p-09",
+      "team": "A",
+      "kind": "field",
+      "name": "A Striker 09",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "shot",
+          "amount": 1,
+          "row": "forward"
+        }
+      },
+      "text": "+1 Shot while playing forward."
+    },
+    {
+      "id": "a-p-10",
+      "team": "A",
+      "kind": "field",
+      "name": "A Striker 10",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-11",
+      "team": "A",
+      "kind": "field",
+      "name": "A Playmaker 11",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-12",
+      "team": "A",
+      "kind": "field",
+      "name": "A Playmaker 12",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-13",
+      "team": "A",
+      "kind": "field",
+      "name": "A Playmaker 13",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-14",
+      "team": "A",
+      "kind": "field",
+      "name": "A Playmaker 14",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-15",
+      "team": "A",
+      "kind": "field",
+      "name": "A Allround 15",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-16",
+      "team": "A",
+      "kind": "field",
+      "name": "A Allround 16",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-17",
+      "team": "A",
+      "kind": "field",
+      "name": "A Allround 17",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-18",
+      "team": "A",
+      "kind": "field",
+      "name": "A Anchor 18",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3,
+      "placeholder": true,
+      "ability": {
+        "effect": "draw_on_win",
+        "params": {
+          "count": 1
+        }
+      },
+      "text": "When this player wins a contest, draw 1 card."
+    },
+    {
+      "id": "a-p-19",
+      "team": "A",
+      "kind": "field",
+      "name": "A Anchor 19",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-20",
+      "team": "A",
+      "kind": "field",
+      "name": "A Anchor 20",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "a-p-21",
+      "team": "A",
+      "kind": "field",
+      "name": "A Stopper 21",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 2,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "faceoff",
+          "amount": 2,
+          "when": "faceoff"
+        }
+      },
+      "text": "+2 Faceoff."
+    },
+    {
+      "id": "a-p-22",
+      "team": "A",
+      "kind": "field",
+      "name": "A Stopper 22",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "a-g-01",
+      "team": "A",
+      "kind": "goalie",
+      "name": "A Goalie 01",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "save": 5,
+      "placeholder": true
+    },
+    {
+      "id": "a-g-02",
+      "team": "A",
+      "kind": "goalie",
+      "name": "A Goalie 02",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 4,
+      "placeholder": true
+    },
+    {
+      "id": "a-s-01",
+      "team": "A",
+      "kind": "spell",
+      "name": "Fire Boost",
+      "spellType": "reaction",
+      "element": "fire",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-02",
+      "team": "A",
+      "kind": "spell",
+      "name": "Water Boost",
+      "spellType": "reaction",
+      "element": "water",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-03",
+      "team": "A",
+      "kind": "spell",
+      "name": "Earth Boost",
+      "spellType": "reaction",
+      "element": "earth",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-04",
+      "team": "A",
+      "kind": "spell",
+      "name": "Air Boost",
+      "spellType": "reaction",
+      "element": "air",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-05",
+      "team": "A",
+      "kind": "spell",
+      "name": "Neutral Boost",
+      "spellType": "reaction",
+      "element": null,
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-06",
+      "team": "A",
+      "kind": "spell",
+      "name": "Earth Shield",
+      "spellType": "reaction",
+      "element": "earth",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-07",
+      "team": "A",
+      "kind": "spell",
+      "name": "Water Shield",
+      "spellType": "reaction",
+      "element": "water",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-08",
+      "team": "A",
+      "kind": "spell",
+      "name": "Water Scry",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-09",
+      "team": "A",
+      "kind": "spell",
+      "name": "Air Scry",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-10",
+      "team": "A",
+      "kind": "spell",
+      "name": "Earth Swap",
+      "spellType": "action",
+      "element": "earth",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down players.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-11",
+      "team": "A",
+      "kind": "spell",
+      "name": "Air Long Pass",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-12",
+      "team": "A",
+      "kind": "spell",
+      "name": "Air Long Pass",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-13",
+      "team": "A",
+      "kind": "spell",
+      "name": "Fire Long Shot",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "long_shot",
+        "params": {
+          "penalty": 2
+        }
+      },
+      "text": "A midfielder holding the ball may shoot, with -2 Shot.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-14",
+      "team": "A",
+      "kind": "spell",
+      "name": "Fire Steal",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-15",
+      "team": "A",
+      "kind": "spell",
+      "name": "Earth Steal",
+      "spellType": "action",
+      "element": "earth",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-16",
+      "team": "A",
+      "kind": "spell",
+      "name": "Neutral Recall",
+      "spellType": "action",
+      "element": null,
+      "ability": {
+        "effect": "recall",
+        "params": {
+          "count": 2
+        }
+      },
+      "text": "Draw 2 cards.",
+      "placeholder": true
+    },
+    {
+      "id": "b-p-01",
+      "team": "B",
+      "kind": "field",
+      "name": "B Stopper 01",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-02",
+      "team": "B",
+      "kind": "field",
+      "name": "B Stopper 02",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-03",
+      "team": "B",
+      "kind": "field",
+      "name": "B Stopper 03",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-04",
+      "team": "B",
+      "kind": "field",
+      "name": "B Stopper 04",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-05",
+      "team": "B",
+      "kind": "field",
+      "name": "B Stopper 05",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 2,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 2,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "faceoff",
+          "amount": 2,
+          "when": "faceoff"
+        }
+      },
+      "text": "+2 Faceoff."
+    },
+    {
+      "id": "b-p-06",
+      "team": "B",
+      "kind": "field",
+      "name": "B Anchor 06",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-07",
+      "team": "B",
+      "kind": "field",
+      "name": "B Anchor 07",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "defense",
+          "amount": 2,
+          "when": "intercept"
+        }
+      },
+      "text": "+2 Defense when intercepting."
+    },
+    {
+      "id": "b-p-08",
+      "team": "B",
+      "kind": "field",
+      "name": "B Anchor 08",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-09",
+      "team": "B",
+      "kind": "field",
+      "name": "B Anchor 09",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "defense",
+          "amount": 2,
+          "when": "intercept"
+        }
+      },
+      "text": "+2 Defense when intercepting."
+    },
+    {
+      "id": "b-p-10",
+      "team": "B",
+      "kind": "field",
+      "name": "B Anchor 10",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-11",
+      "team": "B",
+      "kind": "field",
+      "name": "B Allround 11",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "faceoff",
+          "amount": 2,
+          "when": "faceoff"
+        }
+      },
+      "text": "+2 Faceoff."
+    },
+    {
+      "id": "b-p-12",
+      "team": "B",
+      "kind": "field",
+      "name": "B Allround 12",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-13",
+      "team": "B",
+      "kind": "field",
+      "name": "B Allround 13",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-14",
+      "team": "B",
+      "kind": "field",
+      "name": "B Allround 14",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 3,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "shot",
+          "amount": 1,
+          "row": "forward"
+        }
+      },
+      "text": "+1 Shot while playing forward."
+    },
+    {
+      "id": "b-p-15",
+      "team": "B",
+      "kind": "field",
+      "name": "B Playmaker 15",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-16",
+      "team": "B",
+      "kind": "field",
+      "name": "B Playmaker 16",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-17",
+      "team": "B",
+      "kind": "field",
+      "name": "B Playmaker 17",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-18",
+      "team": "B",
+      "kind": "field",
+      "name": "B Runner 18",
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-19",
+      "team": "B",
+      "kind": "field",
+      "name": "B Runner 19",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-20",
+      "team": "B",
+      "kind": "field",
+      "name": "B Runner 20",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4,
+      "placeholder": true
+    },
+    {
+      "id": "b-p-21",
+      "team": "B",
+      "kind": "field",
+      "name": "B Striker 21",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "shot",
+          "amount": 1,
+          "row": "forward"
+        }
+      },
+      "text": "+1 Shot while playing forward."
+    },
+    {
+      "id": "b-p-22",
+      "team": "B",
+      "kind": "field",
+      "name": "B Striker 22",
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2,
+      "placeholder": true
+    },
+    {
+      "id": "b-g-01",
+      "team": "B",
+      "kind": "goalie",
+      "name": "B Goalie 01",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 5,
+      "placeholder": true
+    },
+    {
+      "id": "b-g-02",
+      "team": "B",
+      "kind": "goalie",
+      "name": "B Goalie 02",
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 4,
+      "placeholder": true
+    },
+    {
+      "id": "b-s-01",
+      "team": "B",
+      "kind": "spell",
+      "name": "Fire Boost",
+      "spellType": "reaction",
+      "element": "fire",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-02",
+      "team": "B",
+      "kind": "spell",
+      "name": "Water Boost",
+      "spellType": "reaction",
+      "element": "water",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-03",
+      "team": "B",
+      "kind": "spell",
+      "name": "Earth Boost",
+      "spellType": "reaction",
+      "element": "earth",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-04",
+      "team": "B",
+      "kind": "spell",
+      "name": "Air Boost",
+      "spellType": "reaction",
+      "element": "air",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-05",
+      "team": "B",
+      "kind": "spell",
+      "name": "Neutral Boost",
+      "spellType": "reaction",
+      "element": null,
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-06",
+      "team": "B",
+      "kind": "spell",
+      "name": "Earth Shield",
+      "spellType": "reaction",
+      "element": "earth",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-07",
+      "team": "B",
+      "kind": "spell",
+      "name": "Water Shield",
+      "spellType": "reaction",
+      "element": "water",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-08",
+      "team": "B",
+      "kind": "spell",
+      "name": "Water Scry",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-09",
+      "team": "B",
+      "kind": "spell",
+      "name": "Air Scry",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-10",
+      "team": "B",
+      "kind": "spell",
+      "name": "Earth Swap",
+      "spellType": "action",
+      "element": "earth",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down players.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-11",
+      "team": "B",
+      "kind": "spell",
+      "name": "Air Long Pass",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-12",
+      "team": "B",
+      "kind": "spell",
+      "name": "Air Long Pass",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-13",
+      "team": "B",
+      "kind": "spell",
+      "name": "Fire Long Shot",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "long_shot",
+        "params": {
+          "penalty": 2
+        }
+      },
+      "text": "A midfielder holding the ball may shoot, with -2 Shot.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-14",
+      "team": "B",
+      "kind": "spell",
+      "name": "Fire Steal",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-15",
+      "team": "B",
+      "kind": "spell",
+      "name": "Earth Steal",
+      "spellType": "action",
+      "element": "earth",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-16",
+      "team": "B",
+      "kind": "spell",
+      "name": "Neutral Recall",
+      "spellType": "action",
+      "element": null,
+      "ability": {
+        "effect": "recall",
+        "params": {
+          "count": 2
+        }
+      },
+      "text": "Draw 2 cards.",
+      "placeholder": true
+    },
+    {
+      "id": "promo-canon-01",
+      "team": "A",
+      "kind": "field",
+      "name": "Canon player (TBD)",
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 4,
+      "promo": true,
+      "placeholder": true,
+      "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks."
+    }
+  ]
+}

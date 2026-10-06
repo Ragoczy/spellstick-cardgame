@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spellstick card set",
+  "type": "object",
+  "required": ["version", "elements", "opposedPairs", "teams", "cards"],
+  "properties": {
+    "version": { "type": "string" },
+    "elements": {
+      "description": "Element names used for affinities and spells. Placeholders until canon is set.",
+      "type": "array", "items": { "type": "string" }, "minItems": 2
+    },
+    "opposedPairs": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+    },
+    "teams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "color"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "placeholder": { "type": "boolean" }
+        }
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "team", "kind", "name"],
+        "properties": {
+          "id": { "type": "string", "description": "Also the art filename stem in assets/cards/." },
+          "team": { "type": "string" },
+          "kind": { "enum": ["field", "goalie", "spell"] },
+          "name": { "type": "string" },
+          "resonants": {
+            "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity (e.g. fire).",
+            "type": "array", "minItems": 1, "maxItems": 3,
+            "items": {
+              "type": "object",
+              "required": ["name", "affinity"],
+              "properties": {
+                "name": { "type": "string" },
+                "affinity": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "speed": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "shot": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "defense": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "faceoff": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "save": { "type": "integer", "minimum": 0, "maximum": 8 },
+          "spellType": { "enum": ["reaction", "action"] },
+          "element": { "type": ["string", "null"], "description": "Spell element, or null for neutral." },
+          "ability": { "$ref": "#/$defs/ability" },
+          "text": { "type": "string", "description": "Rules text printed on the card." },
+          "flavor": { "type": "string" },
+          "copies": { "type": "integer", "minimum": 1, "default": 1 },
+          "addon": { "type": "boolean", "description": "True if the card belongs to the center-lane add-on." },
+          "promo": { "type": "boolean" },
+          "placeholder": { "type": "boolean" }
+        },
+        "allOf": [
+          { "if": { "properties": { "kind": { "const": "field" } } },
+            "then": { "required": ["resonants", "speed", "shot", "defense", "faceoff"] } },
+          { "if": { "properties": { "kind": { "const": "goalie" } } },
+            "then": { "required": ["resonants", "save"] } },
+          { "if": { "properties": { "kind": { "const": "spell" } } },
+            "then": { "required": ["spellType", "element", "ability"] } }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 },
+    "ability": {
+      "type": "object",
+      "required": ["effect", "params"],
+      "properties": {
+        "effect": {
+          "enum": ["bonus", "draw_on_win", "boost", "shield", "scry", "swap",
+                   "long_pass", "long_shot", "steal", "recall"]
+        },
+        "params": { "type": "object" }
+      },
+      "allOf": [
+        { "if": { "properties": { "effect": { "const": "bonus" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["stat", "amount"], "additionalProperties": false,
+            "properties": {
+              "stat": { "enum": ["speed", "shot", "defense", "faceoff", "save"] },
+              "amount": { "type": "integer" },
+              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff"] },
+              "row": { "enum": ["defense", "midfield", "forward"] }
+            } } } } },
+        { "if": { "properties": { "effect": { "const": "draw_on_win" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["count"], "additionalProperties": false,
+            "properties": { "count": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "enum": ["boost", "steal"] } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["amount"], "additionalProperties": false,
+            "properties": { "amount": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "const": "recall" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["count"], "additionalProperties": false,
+            "properties": { "count": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "const": "long_shot" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["penalty"], "additionalProperties": false,
+            "properties": { "penalty": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "enum": ["shield", "scry", "swap", "long_pass"] } } },
+          "then": { "properties": { "params": {
+            "type": "object", "maxProperties": 0 } } } }
+      ]
+    }
+  }
+}

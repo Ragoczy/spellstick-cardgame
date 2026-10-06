@@ -20,8 +20,15 @@ describe.each(LANE_COUNTS)('pass (%i lanes)', (lanes) => {
     expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
   });
 
-  it('is intercepted on a tie, and the intercepting player holds the ball', () => {
+  it('is caught on a tie', () => {
     const s = scenario({ lanes }); // fillers: Speed 3 vs Defense 3
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    expect(lastContest(events).winner).toBe('A');
+    expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
+  });
+
+  it("is intercepted when the receiver's value is lower, and the intercepting player holds the ball", () => {
+    const s = scenario({ lanes, A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 2 }) } } } });
     const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
     expect(lastContest(events).winner).toBe('B');
     expect(state.ball).toEqual({ side: 'B', pos: dfn(LAST) });

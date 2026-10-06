@@ -27,13 +27,13 @@ export const EXPERIMENTS: ExperimentDef[] = [
   },
   {
     name: 'Goalies Save +1',
-    description: 'Goalies back to Save 5 and 4 (before v0.4).',
+    description: 'Goalies at Save 4 and 3.',
     cards: goalieSave(1),
   },
   {
-    name: 'Goalies Save −1',
-    description: 'Goalies even weaker: Save 3 and 2.',
-    cards: goalieSave(-1),
+    name: 'Goalies Save +2',
+    description: 'Goalies back to Save 5 and 4 (before v0.4).',
+    cards: goalieSave(2),
   },
   {
     name: 'Defense max 5',
@@ -56,19 +56,8 @@ export const EXPERIMENTS: ExperimentDef[] = [
     config: { penaltyBonus: 2 },
   },
   {
-    name: 'Tied passes caught + Penalty +2',
-    description: 'Both changes together.',
-    config: { passTiesGoTo: 'attacker', penaltyBonus: 2 },
-  },
-  {
-    name: 'Save −1 + Penalty +1',
-    description: 'Goalies Save 3 and 2, and penalty shooters get +1 Shot.',
-    config: { penaltyBonus: 1 },
-    cards: goalieSave(-1),
-  },
-  {
-    name: 'Tied passes caught',
-    description: 'A tied pass goes to the receiver instead of the interceptor.',
-    config: { passTiesGoTo: 'attacker' },
+    name: 'Tied passes intercepted',
+    description: 'A tied pass goes to the interceptor (before v0.4).',
+    config: { passTiesGoTo: 'defender' },
   },
 ];

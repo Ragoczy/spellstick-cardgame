@@ -512,7 +512,7 @@
           "affinity": "fire"
         }
       ],
-      "save": 4,
+      "save": 3,
       "placeholder": true
     },
     {
@@ -526,7 +526,7 @@
           "affinity": "water"
         }
       ],
-      "save": 3,
+      "save": 2,
       "placeholder": true
     },
     {
@@ -1230,7 +1230,7 @@
           "affinity": "earth"
         }
       ],
-      "save": 4,
+      "save": 3,
       "placeholder": true
     },
     {
@@ -1244,7 +1244,7 @@
           "affinity": "earth"
         }
       ],
-      "save": 3,
+      "save": 2,
       "placeholder": true
     },
     {

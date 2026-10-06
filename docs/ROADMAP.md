@@ -37,8 +37,9 @@ same tests pass with lanes set to 3.
 - Starting targets (adjust as we learn):
   - first-player win rate 45–55%,
   - team A vs team B win rate 45–55%,
-  - about 1–2 goals per game, and under 10% of games drawn (changed from "80% of games end at
-    3 goals" after the first simulation: the decks are now the game clock),
+  - about 1–2 goals per game, and under 20% of games drawn (changed from "80% of games end at
+    3 goals" after the first simulation, when the decks became the game clock; Paul accepted
+    a draw rate of about 15% rather than adding a final tiebreak),
   - 30–50 total turns per game. This is assumed to be about 20–30 minutes on the table, to be
     checked in the first real playtest (each turn now has two actions).
 

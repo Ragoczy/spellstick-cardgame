@@ -1,7 +1,7 @@
 // RULES.md "Contests": reveal, attacker's reaction, defender's reaction, resolve, ties.
 import { describe, expect, it } from 'vitest';
 import { applyAction } from '../../src/engine/reducer';
-import { LANE_COUNTS, boost, eventsOfType, fwd, lastContest, play, player, scenario, uid } from '../helpers';
+import { LANE_COUNTS, boost, eventsOfType, fwd, goalie, lastContest, play, player, scenario, uid } from '../helpers';
 
 describe.each(LANE_COUNTS)('contests (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
@@ -45,12 +45,13 @@ describe.each(LANE_COUNTS)('contests (%i lanes)', (lanes) => {
   it('applies abilities and spells, and the attacker wins only with a higher value', () => {
     const s = scenario({
       lanes,
-      A: { hand: [boost('A boost')], lineup: { forward: { [LAST]: player('A fwd', { speed: 3 }) } } },
-      B: { hand: [boost('B boost')], lineup: { defense: { [LAST]: player('B def', { defense: 3 }) } } },
+      ball: { side: 'A', pos: fwd(LAST) },
+      A: { hand: [boost('A boost')], lineup: { forward: { [LAST]: player('A fwd', { shot: 3 }) } } },
+      B: { hand: [boost('B boost')], goalie: goalie('B goalie', 3) },
     });
     const { events } = play(
       s,
-      { type: 'pass', side: 'A', to: fwd(LAST) },
+      { type: 'shoot', side: 'A' },
       { type: 'react', side: 'A', card: uid(s, 'A', 'A boost') },
       { type: 'react', side: 'B', card: uid(s, 'B', 'B boost') },
     );

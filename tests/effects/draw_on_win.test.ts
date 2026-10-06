@@ -1,7 +1,7 @@
 // Effect: draw_on_win { count }
 import { describe, expect, it } from 'vitest';
 import type { PlayerAbility } from '../../src/engine/cards';
-import { LANE_COUNTS, eventsOfType, fwd, play, player, scenario, shield, uid } from '../helpers';
+import { LANE_COUNTS, dfn, eventsOfType, fwd, play, player, scenario, shield, uid } from '../helpers';
 
 const drawOnWin: PlayerAbility = { effect: 'draw_on_win', params: { count: 1 } };
 
@@ -28,13 +28,14 @@ describe.each(LANE_COUNTS)('draw_on_win (%i lanes)', (lanes) => {
   });
 
   it('is ignored when the player is shielded', () => {
-    // A shields B's defender (Defense 0) but has Speed 0 itself, so B still wins the 0–0 tie.
+    // A tackles with Defense 0 and shields B's holder (Speed 0), so B still wins the 0–0 tie.
     const s = scenario({
       lanes,
-      A: { hand: [shield('A shield')], lineup: { forward: { [LAST]: player('A fwd', { speed: 0 }) } } },
-      B: { lineup: { defense: { [LAST]: player('B def', { defense: 3 }, { ability: drawOnWin }) } } },
+      ball: { side: 'B', pos: dfn(LAST) },
+      A: { hand: [shield('A shield')], lineup: { forward: { [LAST]: player('A fwd', { defense: 0 }) } } },
+      B: { lineup: { defense: { [LAST]: player('B def', { speed: 3 }, { ability: drawOnWin }) } } },
     });
-    const { events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'react', side: 'A', card: uid(s, 'A', 'A shield') });
+    const { events } = play(s, { type: 'tackle', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'A shield') });
     expect(eventsOfType(events, 'contestResolved')[0]?.winner).toBe('B');
     expect(eventsOfType(events, 'drew').filter((e) => e.reason === 'ability')).toHaveLength(0);
   });

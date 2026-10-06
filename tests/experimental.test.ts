@@ -9,15 +9,14 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
 
   it('are off by default', () => {
-    expect(DEFAULT_CONFIG.passTiesGoTo).toBe('defender');
     expect(DEFAULT_CONFIG.protectCatch).toBe('off');
   });
 
-  it('passTiesGoTo: attacker gives tied passes to the receiver', () => {
-    const s = scenario({ lanes, config: { passTiesGoTo: 'attacker' } }); // fillers: 3 vs 3
+  it('passTiesGoTo: defender (the rule before v0.4) gives tied passes to the interceptor', () => {
+    const s = scenario({ lanes, config: { passTiesGoTo: 'defender' } }); // fillers: 3 vs 3
     const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
-    expect(lastContest(events).winner).toBe('A');
-    expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
+    expect(lastContest(events).winner).toBe('B');
+    expect(state.ball).toEqual({ side: 'B', pos: { area: 'defense', lane: LAST } });
   });
 
   it("protectCatch: forward stops the defender tackling a forward who just caught a pass, until that team's next turn", () => {

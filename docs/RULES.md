@@ -146,8 +146,8 @@ scored on takes the next turn, whoever won the faceoff.
 
 The receiver and the opponent's player in the receiver's slot are both revealed, then contest:
 receiver's **Speed** against the opponent's **Defense**. The passer isn't part of the contest
-and isn't revealed. If the receiver wins, they hold the ball. If not, the opponent's player
-intercepts and holds the ball.
+and isn't revealed. If the receiver's value is **equal or higher**, they catch it and hold the
+ball. If not, the opponent's player intercepts and holds the ball.
 
 A goalie holding the ball may pass to any of its defenders the same way.
 
@@ -185,8 +185,8 @@ Every contest has an attacker (the side taking the action) and a defender.
 2. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
    having seen it, may do the same. Each side plays at most one.
 3. Apply abilities and spells. A value can't go below 0.
-4. **The attacker wins only if their value is higher.** Ties go to the defender, except at
-   faceoffs (see "Faceoff").
+4. **The attacker wins only if their value is higher.** Ties go to the defender, except in
+   passes (ties go to the receiver) and faceoffs (ties go to the chooser).
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
 tackling team in a tackle. In a faceoff, the chooser acts first like an attacker and wins ties.
@@ -269,7 +269,8 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 - v0.4 — Two actions per turn (was one), after simulation showed games were too slow to score. A goal ends your turn.
 - v0.4 — The decks are the game clock: at full time, more goals wins. First to 3 goals still wins straight away.
 - v0.4 — A tie at full time goes to a penalty shootout (3 each, then one each) instead of sudden death.
-- v0.4 — Prototype goalies lowered from Save 5/4 to 4/3 (card data, not a rule).
+- v0.4 — Tied passes are caught by the receiver (they were intercepted), to help scoring.
+- v0.4 — Prototype goalies lowered from Save 5/4 to 3/2 (card data, not a rule).
 
 - v0.3 — Scoring: kept Shot vs Save; noted that a forward must beat its defender to get the ball, which meets the canon note.
 - v0.3 — Faceoffs use a new Faceoff stat instead of Speed (canon note). "+2 Speed in faceoffs" is now "+2 Faceoff".

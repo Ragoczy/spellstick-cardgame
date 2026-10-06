@@ -26,10 +26,10 @@ export interface GameConfig {
   shootoutRounds: number;
   /** Added to the shooter's Shot in a penalty. */
   penaltyBonus: number;
-
-  // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
-  /** Who wins a tied pass. The rules say the defender. */
+  /** Who wins a tied pass: 'attacker' = the receiver catches it. */
   passTiesGoTo: 'defender' | 'attacker';
+
+  // Experimental rule switch, used only by simulation what-ifs. Not in RULES.md.
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
 }
@@ -47,7 +47,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   actionsPerTurn: 2,
   shootoutRounds: 3,
   penaltyBonus: 0,
-  passTiesGoTo: 'defender',
+  passTiesGoTo: 'attacker',
   protectCatch: 'off',
 };
 

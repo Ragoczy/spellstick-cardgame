@@ -1,7 +1,7 @@
 // Effect: shield {} (reaction, non-numeric)
 import { describe, expect, it } from 'vitest';
 import type { PlayerAbility } from '../../src/engine/cards';
-import { LANE_COUNTS, boost, fwd, lastContest, play, player, scenario, shield, uid } from '../helpers';
+import { LANE_COUNTS, boost, fwd, lastContest, mid, play, player, scenario, shield, uid } from '../helpers';
 
 const plusTwo: PlayerAbility = { effect: 'bonus', params: { stat: 'defense', amount: 2 } };
 
@@ -34,10 +34,10 @@ describe.each(LANE_COUNTS)('shield (%i lanes)', (lanes) => {
   });
 
   it('when both sides shield, both stats are 0 and the defender wins the tie', () => {
-    const s = scenario({ lanes, A: { hand: [shield('A shield')] }, B: { hand: [shield('B shield')] } });
+    const s = scenario({ lanes, ball: { side: 'B', pos: mid(LAST) }, A: { hand: [shield('A shield')] }, B: { hand: [shield('B shield')] } });
     const { events } = play(
       s,
-      { type: 'pass', side: 'A', to: fwd(LAST) },
+      { type: 'tackle', side: 'A' },
       { type: 'react', side: 'A', card: uid(s, 'A', 'A shield') },
       { type: 'react', side: 'B', card: uid(s, 'B', 'B shield') },
     );

@@ -22,6 +22,7 @@ One ruleset drives two products:
 | `scripts/generate_prototype_cards.py` | Regenerates the placeholder decks. |
 | `src/engine/` | The rules engine (pure TypeScript, no UI). |
 | `src/ai/` | Computer players: a rule-of-thumb opponent, and a random player for stress tests. |
+| `src/ui/` | The browser game (React). It only ever reads your own view of the game. |
 | `src/sim/` | The simulator, balance statistics, what-if experiments, and report writer. |
 | `reports/` | Simulation reports. |
 | `tests/` | Engine tests: one file per rule section and per effect, all run with 2 and 3 lanes. |
@@ -34,8 +35,8 @@ One ruleset drives two products:
 | `npm test` | Run every engine test. |
 | `npm run demo -- --seed 7 --lanes 2` | Play one game between random players and print it in plain language. |
 | `npm run sim -- --games 1000 --seed 1` | Play 1,000 computer-vs-computer games and write a balance report to `reports/`. Add `--experiments` for what-if comparisons, `--lanes 3` for the add-on. |
-| `npm run dev` | Start the browser version (a placeholder page until M3). |
-| `npm run build` | Build the static site into `dist/`. |
+| `npm run dev` | Start the browser game at http://localhost:5173. Add `?seed=123` to replay a particular game, or `?autoplay=1` to watch the computer play both sides. |
+| `npm run build` | Build the static site into `dist/` (upload that folder to any web host or a WordPress subfolder). |
 
 ## Before you start
 

@@ -3,6 +3,7 @@
 // this player has scried them. The opponent's hand and both decks appear only as counts.
 
 import type { Area } from './cards';
+import type { GameConfig } from './config';
 import { cardView } from './board';
 import type { CardView, GameEvent } from './events';
 import { AREAS, otherSide, type Pos, type Side } from './field';
@@ -18,6 +19,8 @@ export type SlotView =
 
 export interface PlayerView {
   me: Side;
+  /** The rules settings for this game (public). */
+  config: GameConfig;
   turn: number;
   activeSide: Side;
   firstSide: Side;
@@ -33,6 +36,8 @@ export interface PlayerView {
   shootout: Shootout | null;
   /** What the game is waiting for. All of it is public information. */
   pending: Pending;
+  /** Actions the active player has left this turn. */
+  actionsLeft: number;
   result: GameResult | null;
   mine: {
     hand: CardView[];
@@ -69,6 +74,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
   const their = s.teams[them];
   return structuredClone({
     me,
+    config: s.config,
     turn: s.turn,
     activeSide: s.activeSide,
     firstSide: s.firstSide,
@@ -82,6 +88,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     endgame: s.endgame,
     shootout: s.shootout,
     pending: s.pending,
+    actionsLeft: s.actionsLeft,
     result: s.result,
     mine: {
       hand: my.hand.map((uid) => cardView(s, uid)),

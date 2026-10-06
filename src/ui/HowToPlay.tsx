@@ -1,0 +1,64 @@
+// A short, player-facing version of docs/RULES.md (v0.4). If the rules change, update this too.
+
+export function HowToPlay({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="screen rules">
+      <button type="button" className="quiet" onClick={onBack}>← Back</button>
+      <h2>How to play</h2>
+
+      <h3>The idea</h3>
+      <p>
+        Each team lines up its players <b>face down</b>: forwards, midfielders, defenders, and a goalie.
+        Your forwards face their defenders, and your defenders face their forwards. Pass the ball up the
+        field and shoot past their goalie. Every time the ball arrives somewhere, the two players there
+        are turned face up and <b>contest</b> it. So where you hide your best players matters.
+      </p>
+
+      <h3>Cards</h3>
+      <ul>
+        <li><b>Field players</b> have Speed (catching passes, dodging tackles), Shot (scoring), Defense (intercepting, tackling), and Faceoff.</li>
+        <li><b>Goalies</b> have Save.</li>
+        <li>Players have 1–3 <b>Resonants</b>, emotions like Anger, each with an elemental <b>Affinity</b> (the colored dots).</li>
+        <li><b>Spells</b> have an element. Cast by a player whose Affinity matches, number effects get +1. Cast by a player with the opposite element (fire–water, earth–air), they get −1, and other effects fail.</li>
+      </ul>
+
+      <h3>Your turn</h3>
+      <ol>
+        <li>Draw a card.</li>
+        <li>Take <b>two actions</b> (the same one twice is fine). Scoring ends your turn.</li>
+        <li>If you have more than 7 cards, discard down to 7.</li>
+      </ol>
+
+      <h3>Actions</h3>
+      <ul>
+        <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed against the opponent's Defense. Ties are caught; otherwise it's intercepted.</li>
+        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save. Ties go to the goalie.</li>
+        <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
+        <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
+        <li><b>Substitute</b> a player from your hand, face down.</li>
+        <li><b>Regroup:</b> discard up to 2 cards and draw that many (or do nothing).</li>
+      </ul>
+
+      <h3>Contests</h3>
+      <p>
+        Both players are revealed. The attacker may play one <b>reaction spell</b>, then the defender may answer
+        with one. Highest value wins.
+      </p>
+
+      <h3>Faceoffs and goals</h3>
+      <p>
+        The game starts with a faceoff, and there's another after each goal: the team that was scored on picks a
+        lane, and the two midfielders compare Faceoff (the chooser wins ties).
+      </p>
+
+      <h3>Winning</h3>
+      <p>
+        The decks are the game clock. When a player can't draw, they finish that turn, the other player takes one
+        last turn, and it's <b>full time</b>: more goals wins. A team that reaches 3 goals wins straight away.
+        If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
+        haven't shot yet, three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
+      </p>
+      <button type="button" className="primary" onClick={onBack}>Got it</button>
+    </div>
+  );
+}

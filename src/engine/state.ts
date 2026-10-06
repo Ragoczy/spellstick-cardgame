@@ -54,7 +54,7 @@ export interface ContestSide {
   modifiers: Modifier[];
 }
 
-export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot';
+export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty';
 export type ContestRole = 'attacker' | 'defender';
 
 export interface Contest {
@@ -74,9 +74,23 @@ export type Pending =
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'discard'; side: Side; count: number }
+  | { kind: 'shootoutPick'; side: Side }
   | { kind: 'gameOver' };
 
-export type EndReason = 'goals' | 'deck_out' | 'sudden_death' | 'draw' | 'turn_cap';
+/**
+ * goals: reached the goal target. time: more goals when the cards ran out. shootout: won the
+ * penalty shootout. draw: the shootout ran out of shooters. turn_cap: safety cap (a bug).
+ */
+export type EndReason = 'goals' | 'time' | 'shootout' | 'draw' | 'turn_cap';
+
+export interface Shootout {
+  /** Shoots first in each round: the team that didn't take the last turn. */
+  first: Side;
+  taken: Record<Side, number>;
+  goals: Record<Side, number>;
+  /** Players who have already taken a penalty (each player shoots at most once). */
+  shooters: Uid[];
+}
 
 export interface GameResult {
   /** null for a draw. */
@@ -109,8 +123,9 @@ export interface GameState {
   endgame: {
     /** Set when a deck runs out: this team takes the last turn of the game. */
     finalTurnFor: Side | null;
-    suddenDeath: boolean;
   };
+  /** The penalty shootout, once it has started. */
+  shootout: Shootout | null;
   pending: Pending;
   result: GameResult | null;
 }

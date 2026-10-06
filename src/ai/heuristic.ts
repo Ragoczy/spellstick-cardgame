@@ -133,6 +133,7 @@ class Thinker {
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
       case 'react': return this.scoreReaction(action.card);
+      case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
       case 'discard': return -this.cardValue(this.handCard(action.card));
       case 'pass': return this.passValue(action.to, []);
       case 'shoot': return this.shotValue(this.view.ball!.pos, [], 0);
@@ -362,6 +363,7 @@ class Thinker {
     const attackerArea = contest.attacker.pos.area;
     switch (contest.kind) {
       case 'shot': return 1;
+      case 'penalty': return 1;
       case 'faceoff': return 0.5;
       case 'pass':
         if (attackerArea === 'forward') return role === 'attacker' ? 0.6 : 0.7;

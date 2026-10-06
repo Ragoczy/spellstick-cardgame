@@ -37,9 +37,10 @@ same tests pass with lanes set to 3.
 - Starting targets (adjust as we learn):
   - first-player win rate 45–55%,
   - team A vs team B win rate 45–55%,
-  - at least 80% of games end by a team reaching 3 goals,
+  - about 1–2 goals per game, and under 10% of games drawn (changed from "80% of games end at
+    3 goals" after the first simulation: the decks are now the game clock),
   - 30–50 total turns per game. This is assumed to be about 20–30 minutes on the table, to be
-    checked in the first real playtest.
+    checked in the first real playtest (each turn now has two actions).
 
 **Done when:** the sim runs 1,000 games with no crashes or illegal states, and the report shows
 which numbers miss their targets, with suggested tuning changes. Do not apply tuning changes

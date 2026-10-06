@@ -77,7 +77,8 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     // At the start, the second player chooses the faceoff lane.
     faceoffChooser: firstSide === 'A' ? 'B' : 'A',
     score: { A: 0, B: 0 },
-    endgame: { finalTurnFor: null, suddenDeath: false },
+    endgame: { finalTurnFor: null },
+    shootout: null,
     pending: { kind: 'chooseGoalie', side: 'A' },
     result: null,
   };

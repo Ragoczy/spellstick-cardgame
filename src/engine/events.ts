@@ -59,5 +59,6 @@ export type GameEvent =
   | { type: 'swapped'; side: Side; a: FieldPos; b: FieldPos }
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
   | { type: 'discarded'; side: Side; cards: CardView[] }
-  | { type: 'suddenDeath' }
+  | { type: 'shootoutStarted'; first: Side }
+  | { type: 'penalty'; side: Side; scored: boolean; goals: Record<Side, number>; taken: Record<Side, number> }
   | { type: 'gameOver'; result: GameResult };

@@ -31,7 +31,7 @@ const zeroAffinity = (): AffinityStats => ({ cast: 0, fizzled: 0, inContest: 0, 
 export class SimStats {
   games = 0;
   wins = { first: 0, second: 0, A: 0, B: 0, draws: 0 };
-  reasons: Record<EndReason, number> = { goals: 0, deck_out: 0, sudden_death: 0, draw: 0, turn_cap: 0 };
+  reasons: Record<EndReason, number> = { goals: 0, time: 0, shootout: 0, draw: 0, turn_cap: 0 };
   turns: number[] = [];
   goals = 0;
   shots = 0;
@@ -42,6 +42,7 @@ export class SimStats {
     pass: { count: 0, attackerWins: 0 },
     tackle: { count: 0, attackerWins: 0 },
     shot: { count: 0, attackerWins: 0 },
+    penalty: { count: 0, attackerWins: 0 },
   };
   /** Passes by the row of the receiver: how often the receiver keeps the ball. */
   passesTo: Record<Area | 'goal', { count: number; attackerWins: number }> = {

@@ -1,18 +1,22 @@
-// Turn flow, goals, and the end of the game.
+// Turn flow, goals, the end of the game, and the penalty shootout.
 
 import { drawCards } from './board';
 import type { GameEvent } from './events';
-import { otherSide, SIDES, type Side } from './field';
-import { shuffle } from './rng';
+import { otherSide, type Side } from './field';
 import type { EndReason, GameState } from './state';
 
 /**
  * Called whenever an action (and any contest it caused) has finished. Works out what the
- * game needs next: a faceoff, the discard step, or the next player's turn.
+ * game needs next: a shootout penalty, a faceoff, another action, the discard step, or the
+ * next player's turn.
  */
 export function continueGame(s: GameState, ev: GameEvent[]): void {
   if (s.result) {
     s.pending = { kind: 'gameOver' };
+    return;
+  }
+  if (s.shootout) {
+    nextPenalty(s, ev);
     return;
   }
   // After a goal (or at the start), the ball goes to a faceoff before anything else.
@@ -25,7 +29,7 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
     startTurn(s, s.firstSide, ev);
     return;
   }
-  // Experimental: more than one action per turn.
+  // The player has actions left this turn.
   if (s.actionsLeft > 0) {
     s.pending = { kind: 'action', side: s.activeSide };
     return;
@@ -45,13 +49,9 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   if (s.ball?.side === side) s.ballProtected = false;
   ev.push({ type: 'turnStarted', side, turn: s.turn });
 
-  // Draw step.
+  // Draw step. The decks are the game clock.
   if (s.teams[side].deck.length > 0) {
     drawCards(s, side, 1, 'turn', ev);
-  } else if (s.endgame.suddenDeath) {
-    // A deck ran out again during sudden death: the game is a draw.
-    endGame(s, null, 'draw', ev);
-    return;
   } else if (s.endgame.finalTurnFor === null) {
     // This player skips the draw but still takes this turn; then the opponent takes the last turn.
     s.endgame.finalTurnFor = otherSide(side);
@@ -67,13 +67,14 @@ function endTurn(s: GameState, ev: GameEvent[]): void {
   const finished = s.activeSide;
 
   if (s.endgame.finalTurnFor === finished) {
-    // The last turn after a deck ran out is over.
+    // Full time: the last turn after a deck ran out is over.
     const other = otherSide(finished);
     if (s.score[finished] !== s.score[other]) {
-      endGame(s, s.score[finished] > s.score[other] ? finished : other, 'deck_out', ev);
-      return;
+      endGame(s, s.score[finished] > s.score[other] ? finished : other, 'time', ev);
+    } else {
+      startShootout(s, other, ev);
     }
-    startSuddenDeath(s, ev);
+    return;
   }
 
   if (s.turn >= s.config.maxTurns) {
@@ -83,25 +84,11 @@ function endTurn(s: GameState, ev: GameEvent[]): void {
   startTurn(s, otherSide(finished), ev);
 }
 
-/** Each player shuffles their discard pile and any remaining deck into a new deck. */
-function startSuddenDeath(s: GameState, ev: GameEvent[]): void {
-  s.endgame.suddenDeath = true;
-  s.endgame.finalTurnFor = null;
-  for (const side of SIDES) {
-    const team = s.teams[side];
-    [team.deck, s.rng] = shuffle([...team.deck, ...team.discard], s.rng);
-    team.discard = [];
-  }
-  ev.push({ type: 'suddenDeath' });
-}
-
 export function scoreGoal(s: GameState, side: Side, ev: GameEvent[]): void {
   s.score[side] += 1;
-  s.actionsLeft = 0;
+  s.actionsLeft = 0; // a goal ends the scoring player's turn
   ev.push({ type: 'goal', side, score: { ...s.score } });
-  if (s.endgame.suddenDeath) {
-    endGame(s, side, 'sudden_death', ev);
-  } else if (s.score[side] >= s.config.goalsToWin) {
+  if (s.score[side] >= s.config.goalsToWin) {
     endGame(s, side, 'goals', ev);
   } else {
     // Players stay where they are; the team that was scored on chooses the faceoff lane.
@@ -109,6 +96,65 @@ export function scoreGoal(s: GameState, side: Side, ev: GameEvent[]): void {
     s.ballProtected = false;
     s.faceoffChooser = otherSide(side);
   }
+}
+
+// ---- Penalty shootout ----
+
+/** Tied at full time: teams alternate penalty shots. `first` is the team that didn't take the last turn. */
+function startShootout(s: GameState, first: Side, ev: GameEvent[]): void {
+  s.ball = null;
+  s.ballProtected = false;
+  s.shootout = { first, taken: { A: 0, B: 0 }, goals: { A: 0, B: 0 }, shooters: [] };
+  ev.push({ type: 'shootoutStarted', first });
+  nextPenalty(s, ev);
+}
+
+/** Records a penalty's result. */
+export function recordPenalty(s: GameState, side: Side, scored: boolean, ev: GameEvent[]): void {
+  const so = s.shootout!;
+  so.taken[side] += 1;
+  if (scored) so.goals[side] += 1;
+  ev.push({ type: 'penalty', side, scored, goals: { ...so.goals }, taken: { ...so.taken } });
+}
+
+/** The shootout winner so far, if it is already decided. */
+function shootoutWinner(s: GameState): Side | null {
+  const { taken, goals } = s.shootout!;
+  const rounds = s.config.shootoutRounds;
+  if (taken.A < rounds || taken.B < rounds) {
+    // Within the first rounds: stop as soon as one team can't catch up.
+    const leftA = Math.max(0, rounds - taken.A);
+    const leftB = Math.max(0, rounds - taken.B);
+    if (goals.A > goals.B + leftB) return 'A';
+    if (goals.B > goals.A + leftA) return 'B';
+    return null;
+  }
+  // Extra rounds, one shot each: decided when both have shot and the goals differ.
+  if (taken.A === taken.B && goals.A !== goals.B) return goals.A > goals.B ? 'A' : 'B';
+  return null;
+}
+
+/** Whether a side still has a field player who hasn't taken a penalty. */
+function hasPenaltyTaker(s: GameState, side: Side): boolean {
+  const used = new Set(s.shootout?.shooters ?? []);
+  return Object.values(s.teams[side].lineup).flat().some((slot) => slot !== null && !used.has(slot.uid));
+}
+
+function nextPenalty(s: GameState, ev: GameEvent[]): void {
+  const so = s.shootout!;
+  const winner = shootoutWinner(s);
+  if (winner) {
+    endGame(s, winner, 'shootout', ev);
+    return;
+  }
+  // Teams alternate, the first team going whenever the counts are level.
+  const second = otherSide(so.first);
+  const side = so.taken[so.first] <= so.taken[second] ? so.first : second;
+  if (!hasPenaltyTaker(s, side)) {
+    endGame(s, null, 'draw', ev);
+    return;
+  }
+  s.pending = { kind: 'shootoutPick', side };
 }
 
 function endGame(s: GameState, winner: Side | null, reason: EndReason, ev: GameEvent[]): void {

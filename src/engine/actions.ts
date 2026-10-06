@@ -28,4 +28,6 @@ export type Action =
   // During a contest: play a reaction spell, or null for none
   | { type: 'react'; side: Side; card: Uid | null }
   // End of turn, one card at a time
-  | { type: 'discard'; side: Side; card: Uid };
+  | { type: 'discard'; side: Side; card: Uid }
+  // Penalty shootout: choose a field player who hasn't shot yet
+  | { type: 'shootoutPick'; side: Side; pos: FieldPos };

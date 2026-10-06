@@ -6,7 +6,7 @@ import type { Area } from './cards';
 import { cardView } from './board';
 import type { CardView, GameEvent } from './events';
 import { AREAS, otherSide, type Pos, type Side } from './field';
-import type { GameResult, GameState, Pending, Slot } from './state';
+import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
 
 export type SlotView =
   | { state: 'empty' }
@@ -29,7 +29,8 @@ export interface PlayerView {
   /** Experimental rule: the holder can't be tackled yet. */
   ballProtected: boolean;
   faceoffChooser: Side;
-  endgame: { finalTurnFor: Side | null; suddenDeath: boolean };
+  endgame: { finalTurnFor: Side | null };
+  shootout: Shootout | null;
   /** What the game is waiting for. All of it is public information. */
   pending: Pending;
   result: GameResult | null;
@@ -79,6 +80,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     ballProtected: s.ballProtected,
     faceoffChooser: s.faceoffChooser,
     endgame: s.endgame,
+    shootout: s.shootout,
     pending: s.pending,
     result: s.result,
     mine: {

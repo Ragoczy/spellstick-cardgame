@@ -12,13 +12,13 @@ const STAT_LABEL: Record<StatName, string> = {
 
 const END_REASON: Record<EndReason, string> = {
   goals: 'reached the goal target',
-  deck_out: 'more goals when the cards ran out',
-  sudden_death: 'sudden-death goal',
-  draw: 'a deck ran out again in sudden death',
+  time: 'more goals at full time',
+  shootout: 'won the penalty shootout',
+  draw: 'the shootout ran out of shooters',
   turn_cap: 'turn limit reached — this is a bug',
 };
 
-const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot' } as const;
+const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty' } as const;
 
 /** "Speed 5 + Fire Boost 3 = 8", or "Defense 0 (shielded)". */
 export function describeValue(b: Breakdown): string {
@@ -44,7 +44,7 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'turnStarted':
       return `— Turn ${e.turn}: ${names[e.side]} —`;
     case 'deckOut':
-      return `${names[e.side]} has no cards left to draw. ${names[e.finalTurnFor]} takes the last turn after this one.`;
+      return `${names[e.side]} has no cards left to draw. ${names[e.finalTurnFor]} takes the last turn after this one, then it's full time.`;
     case 'revealed':
       return `${names[e.side]} reveals ${e.card.def.name} (${posLabel(e.pos)}).`;
     case 'contestStarted':
@@ -72,8 +72,10 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} looks at the face-down card at ${posLabel(e.target)}.`;
     case 'discarded':
       return `${names[e.side]} discards ${e.cards.map((c) => c.def.name).join(', ')}.`;
-    case 'suddenDeath':
-      return 'Tied at the end: sudden death! Discard piles are shuffled into new decks. Next goal wins.';
+    case 'shootoutStarted':
+      return `Full time, and it's a tie: penalty shootout! ${names[e.first]} shoots first.`;
+    case 'penalty':
+      return `${e.scored ? 'Penalty scored' : 'Penalty saved'}. Shootout: ${names.A} ${e.goals.A}, ${names.B} ${e.goals.B}.`;
     case 'gameOver':
       return `Game over: ${e.result.winner === null ? 'a draw' : `${names[e.result.winner]} wins`} (${END_REASON[e.result.reason]}).`;
   }

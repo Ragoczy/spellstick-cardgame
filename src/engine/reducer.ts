@@ -37,6 +37,7 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'substitute': substitute(s, action, ev); break;
     case 'regroup': regroup(s, side, action.discard, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
+    case 'shootoutPick': penalty(s, side, action.pos, ev); break;
     case 'discard':
       discardFromHand(s, side, [action.card], ev);
       continueGame(s, ev);
@@ -117,6 +118,16 @@ function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]
   const attacker: ContestSide = { side, pos: opposite(holderPos), stat: 'defense', use: 'tackle', spell: null, modifiers };
   const defender: ContestSide = { side: otherSide(side), pos: holderPos, stat: 'speed', use: 'evade', spell: null, modifiers: [] };
   startContest(s, { kind: 'tackle', attacker, defender, tiesGoTo: 'defender' }, ev);
+}
+
+function penalty(s: GameState, side: Side, pos: FieldPos, ev: GameEvent[]): void {
+  s.shootout!.shooters.push(slotAt(s, side, pos)!.uid);
+  startContest(s, {
+    kind: 'penalty',
+    attacker: { side, pos, stat: 'shot', use: 'shoot', spell: null, modifiers: s.config.penaltyBonus ? [{ label: 'Penalty', amount: s.config.penaltyBonus }] : [] },
+    defender: { side: otherSide(side), pos: GOAL, stat: 'save', use: 'save', spell: null, modifiers: [] },
+    tiesGoTo: 'defender',
+  }, ev);
 }
 
 // ---- Other actions ----

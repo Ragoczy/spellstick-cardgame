@@ -74,6 +74,8 @@ export interface ScenarioOptions {
   ball?: { side: Side; pos: Pos } | null;
   score?: Record<Side, number>;
   turn?: number;
+  /** Actions the active player has left this turn. Default 1: their last action. */
+  actionsLeft?: number;
   A?: SideSpec;
   B?: SideSpec;
 }
@@ -127,10 +129,11 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     teams,
     ball: options.ball === undefined ? { side: active, pos: { area: 'midfield', lane: 0 } } : options.ball,
     ballProtected: false,
-    actionsLeft: config.actionsPerTurn,
+    actionsLeft: options.actionsLeft ?? 1,
     faceoffChooser: active === 'A' ? 'B' : 'A',
     score: options.score ?? { A: 0, B: 0 },
-    endgame: { finalTurnFor: null, suddenDeath: false },
+    endgame: { finalTurnFor: null },
+    shootout: null,
     pending: { kind: 'action', side: active },
     result: null,
   };

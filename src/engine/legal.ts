@@ -78,6 +78,10 @@ export function legalActions(s: GameState, side: Side): Action[] {
       for (const card of hand) candidates.push({ type: 'discard', side, card });
       break;
 
+    case 'shootoutPick':
+      for (const pos of allFieldPositions(s.config.lanes)) candidates.push({ type: 'shootoutPick', side, pos });
+      break;
+
     case 'action': {
       if (s.ball && s.ball.side === side) {
         for (const to of passTargets(s.ball.pos, s.config.lanes)) candidates.push({ type: 'pass', side, to });

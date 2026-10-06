@@ -79,6 +79,15 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'shootoutPick': {
+      if (p.kind !== 'shootoutPick') return "It isn't time for a penalty.";
+      if (!validField(s, action.pos)) return 'Choose one of your field players.';
+      const slot = slotAt(s, side, action.pos);
+      if (!slot) return 'Choose one of your field players.';
+      if (s.shootout?.shooters.includes(slot.uid)) return 'Each player can only take one penalty.';
+      return null;
+    }
+
     case 'discard': {
       if (p.kind !== 'discard') return "It isn't the discard step.";
       if (!inHand(s, side, action.card)) return 'Discard a card from your hand.';

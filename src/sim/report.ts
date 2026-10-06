@@ -8,6 +8,7 @@ export interface KeyMetrics {
   firstWinRate: number;
   teamAWinRate: number;
   goalEndShare: number;
+  shootoutShare: number;
   avgTurns: number;
   avgGoals: number;
   drawShare: number;
@@ -20,6 +21,7 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     firstWinRate: decided ? s.wins.first / decided : NaN,
     teamAWinRate: decided ? s.wins.A / decided : NaN,
     goalEndShare: s.games ? s.reasons.goals / s.games : NaN,
+    shootoutShare: s.games ? s.reasons.shootout / s.games : NaN,
     avgTurns: average(s.turns),
     avgGoals: s.games ? s.goals / s.games : NaN,
     drawShare: s.games ? s.wins.draws / s.games : NaN,
@@ -32,14 +34,25 @@ export interface Target {
   goal: string;
   value: (m: KeyMetrics) => number;
   format: (n: number) => string;
-  ok: (n: number) => boolean;
+  low: number;
+  high: number;
+}
+
+export function onTarget(t: Target, n: number): boolean {
+  return n >= t.low && n <= t.high;
+}
+
+/** How far a value is outside its target (0 = on target). */
+export function distanceFromTarget(t: Target, n: number): number {
+  return n < t.low ? t.low - n : n > t.high ? n - t.high : 0;
 }
 
 export const TARGETS: Target[] = [
-  { label: 'First-player win rate (decided games)', goal: '45–55%', value: (m) => m.firstWinRate, format: pctOf, ok: (n) => n >= 0.45 && n <= 0.55 },
-  { label: 'Team A win rate (decided games)', goal: '45–55%', value: (m) => m.teamAWinRate, format: pctOf, ok: (n) => n >= 0.45 && n <= 0.55 },
-  { label: 'Games won by reaching the goal target (3)', goal: '≥ 80%', value: (m) => m.goalEndShare, format: pctOf, ok: (n) => n >= 0.8 },
-  { label: 'Average turns per game', goal: '30–50', value: (m) => m.avgTurns, format: (n) => n.toFixed(1), ok: (n) => n >= 30 && n <= 50 },
+  { label: 'First-player win rate (decided games)', goal: '45–55%', value: (m) => m.firstWinRate, format: pctOf, low: 0.45, high: 0.55 },
+  { label: 'Team A win rate (decided games)', goal: '45–55%', value: (m) => m.teamAWinRate, format: pctOf, low: 0.45, high: 0.55 },
+  { label: 'Goals per game', goal: '1–2', value: (m) => m.avgGoals, format: (n) => n.toFixed(2), low: 1, high: 2 },
+  { label: 'Games drawn', goal: 'under 10%', value: (m) => m.drawShare, format: pctOf, low: 0, high: 0.0999 },
+  { label: 'Average turns per game', goal: '30–50', value: (m) => m.avgTurns, format: (n) => n.toFixed(1), low: 30, high: 50 },
 ];
 
 export interface Experiment {
@@ -124,7 +137,7 @@ export function buildReport(input: ReportInput): string {
   out.push('');
   out.push(table(['Measure', 'Target', 'Result', ''], TARGETS.map((t) => {
     const v = t.value(m);
-    return [t.label, t.goal, t.format(v), t.ok(v) ? '✅' : '❌'];
+    return [t.label, t.goal, t.format(v), onTarget(t, v) ? '✅' : '❌'];
   })));
   out.push('');
 
@@ -143,11 +156,11 @@ export function buildReport(input: ReportInput): string {
     const rows = [{ name: 'Current rules', description: '', result: baseline }, ...input.experiments].map((e) => {
       const k = keyMetrics(e.result.stats);
       return [
-        e.name, pctOf(k.goalEndShare), k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare),
+        e.name, k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
         k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate),
       ];
     });
-    out.push(table(['Change', 'Won on goals', 'Goals/game', 'Shots scoring', 'Draws', 'Turns', 'First player wins', 'Team A wins'], rows));
+    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins'], rows));
     out.push('');
     for (const e of input.experiments) out.push(`- **${e.name}:** ${e.description}`);
     out.push('');
@@ -170,10 +183,10 @@ export function buildReport(input: ReportInput): string {
   out.push('### How games end');
   out.push('');
   out.push(table(['Ending', 'Games', 'Share'], [
-    ['A team reached 3 goals', s.reasons.goals, pct(s.reasons.goals, s.games)],
-    ['Cards ran out, one team ahead', s.reasons.deck_out, pct(s.reasons.deck_out, s.games)],
-    ['Sudden-death goal', s.reasons.sudden_death, pct(s.reasons.sudden_death, s.games)],
-    ['Draw (cards ran out again in sudden death)', s.reasons.draw, pct(s.reasons.draw, s.games)],
+    [`A team reached ${config.goalsToWin} goals`, s.reasons.goals, pct(s.reasons.goals, s.games)],
+    ['Full time (cards ran out), one team ahead', s.reasons.time, pct(s.reasons.time, s.games)],
+    ['Penalty shootout', s.reasons.shootout, pct(s.reasons.shootout, s.games)],
+    ['Draw (shootout ran out of shooters)', s.reasons.draw, pct(s.reasons.draw, s.games)],
     ['Turn cap (bug)', s.reasons.turn_cap, pct(s.reasons.turn_cap, s.games)],
   ]));
   out.push('');
@@ -192,9 +205,9 @@ export function buildReport(input: ReportInput): string {
 
   out.push('### Contests');
   out.push('');
-  out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot scores, or the team choosing the faceoff lane wins it.');
+  out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot or penalty scores, or the team choosing the faceoff lane wins it.');
   out.push('');
-  const contestRows = (['pass', 'tackle', 'shot', 'faceoff'] as const).map((k) => {
+  const contestRows = (['pass', 'tackle', 'shot', 'faceoff', 'penalty'] as const).map((k) => {
     const c = s.contests[k];
     return [k, (c.count / s.games).toFixed(1), pct(c.attackerWins, c.count)];
   });

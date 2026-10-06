@@ -1,4 +1,4 @@
-# Spellstick — rules v0.3
+# Spellstick — rules v0.4
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -20,7 +20,8 @@ Claude Code: do not edit this section.
 Each team sets out a lineup of player cards **face down** on its positions. The ball moves
 from player to player by passing. Whenever the ball arrives somewhere, the two players who meet
 there are revealed and contest it. Spells boost or bend those contests, and they work better or
-worse depending on the caster's Resonants. First team to 3 goals ⚙ wins.
+worse depending on the caster's Resonants. The decks are the game clock: when the cards run out,
+the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 
 ## Components
 
@@ -131,7 +132,9 @@ scored on takes the next turn, whoever won the faceoff.
 ## Turn sequence
 
 1. **Draw** one card. If you can't because your deck is empty, see "End of the game".
-2. **Act.** Take exactly one action.
+2. **Act.** Take two actions ⚙, one after the other. They can be the same action twice (for
+   example, pass and then shoot). Scoring a goal ends your turn: after the faceoff, go straight to
+   your discard step.
 3. **Discard** down to 7 cards ⚙ if you have more.
 
 ## Actions with possession
@@ -171,8 +174,8 @@ spell when it could do something (see each effect).
 hand (field player for field player, goalie for goalie), **face down**. The replaced card goes to
 your discard pile, face up. If the replaced player held the ball, the substitute holds it.
 
-**Regroup.** Discard up to 2 cards ⚙, then draw that many. Discarding none is allowed, which
-simply ends your turn.
+**Regroup.** Discard up to 2 cards ⚙, then draw that many. Discarding none is allowed: the
+action does nothing.
 
 ## Contests
 
@@ -185,8 +188,8 @@ Every contest has an attacker (the side taking the action) and a defender.
 4. **The attacker wins only if their value is higher.** Ties go to the defender, except at
    faceoffs (see "Faceoff").
 
-Who is the attacker: the passing team in a pass, the shooting team in a shot, the tackling team
-in a tackle. In a faceoff, the chooser acts first like an attacker and wins ties.
+Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
+tackling team in a tackle. In a faceoff, the chooser acts first like an attacker and wins ties.
 
 ## Scoring
 
@@ -195,15 +198,21 @@ and the team that was scored on chooses the lane.
 
 ## End of the game
 
-- The first team to 3 goals ⚙ wins immediately.
-- Only the Draw step at the start of a turn can end the game. Cards drawn by spells, abilities,
-  or Regroup just come from whatever is left in the deck.
+- The first team to 3 goals ⚙ wins straight away.
+- Otherwise the decks are the game clock. Only the Draw step at the start of a turn can end the
+  game; cards drawn by spells, abilities, or Regroup just come from whatever is left in the deck.
 - If your deck is empty at your Draw step, skip the draw and take the rest of your turn as
-  normal. Then your opponent takes one final turn, and the game ends. The team with more goals
-  wins. (Both players get the same number of turns.)
-- If tied, play **sudden death**: each player shuffles their discard pile and any cards left in
-  their deck into a new deck. Play continues in turn order, and the next goal wins. If a deck
-  runs out again, the game is a draw.
+  normal. Then your opponent takes one final turn, and it's **full time**: the team with more
+  goals wins. (Both players get the same number of turns.)
+- If the score is tied at full time, there is a **penalty shootout**:
+  - The team that didn't take the last turn shoots first; then the teams take turns.
+  - For each penalty, choose one of your field players who hasn't taken a penalty yet. They shoot
+    at the opposing goalie: their **Shot** against the goalie's **Save**, as a normal contest
+    (both revealed, reaction spells allowed, ties go to the goalie).
+  - Each team takes 3 penalties ⚙. Stop early as soon as one team can't catch up.
+  - If still tied after 3 each, keep going one penalty each until one team scores and the other
+    doesn't.
+  - If a team has no players left who haven't shot, the game is a draw.
 - Safety cap for simulation only: 300 turns ⚙. Reaching it ends the game as a draw and is logged
   as a bug.
 
@@ -240,7 +249,7 @@ engine together. "Numeric" effects are adjusted by affinity.
 - `long_shot` — `{ penalty }`, numeric. A midfielder holding the ball may Shoot. Their Shot is
   reduced by `penalty`; the caster's affinity changes the penalty (match: −1 penalty,
   opposed: +1 penalty).
-- `steal` — `{ amount }`, numeric. Make a Tackle this turn and add `amount` to your value. Needs a
+- `steal` — `{ amount }`, numeric. Make a Tackle now and add `amount` to your value. Needs a
   legal Tackle.
 - `recall` — `{ count }`, numeric. Draw `count` cards.
 
@@ -256,6 +265,11 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.4 — Two actions per turn (was one), after simulation showed games were too slow to score. A goal ends your turn.
+- v0.4 — The decks are the game clock: at full time, more goals wins. First to 3 goals still wins straight away.
+- v0.4 — A tie at full time goes to a penalty shootout (3 each, then one each) instead of sudden death.
+- v0.4 — Prototype goalies lowered from Save 5/4 to 4/3 (card data, not a rule).
 
 - v0.3 — Scoring: kept Shot vs Save; noted that a forward must beat its defender to get the ball, which meets the canon note.
 - v0.3 — Faceoffs use a new Faceoff stat instead of Speed (canon note). "+2 Speed in faceoffs" is now "+2 Faceoff".

@@ -109,7 +109,7 @@ def build():
                     card["text"] = text
                 idx += 1
                 cards.append(card)
-        for g, save in ((1, 5), (2, 4)):
+        for g, save in ((1, 4), (2, 3)):  # lowered from 5/4 after the M2 simulation
             cards.append({
                 "id": f"{team_id.lower()}-g-{g:02d}",
                 "team": team_id, "kind": "goalie",

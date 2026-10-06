@@ -4,7 +4,7 @@ import type { Action } from '../../src/engine/actions';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { legalActions } from '../../src/engine/legal';
 import {
-  LANE_COUNTS, GOAL_POS, actionSpell, boost, eventsOfType, goalie, mid, play, player, scenario, uid,
+  LANE_COUNTS, GOAL_POS, actionSpell, boost, eventsOfType, fwd, goalie, mid, play, player, scenario, uid,
 } from '../helpers';
 
 const pass: Action = { type: 'regroup', side: 'A', discard: [] };
@@ -21,11 +21,29 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(state.teams.B.hand.length).toBe(before + 1);
   });
 
-  it('allows exactly one action, then it is the other player\'s turn', () => {
-    const s = scenario({ lanes });
-    const { state } = play(s, pass);
+  it("gives each player two actions per turn, then it is the other player's turn", () => {
+    const s = scenario({ lanes, actionsLeft: 2 });
+    let { state } = play(s, pass);
+    expect(state.pending).toEqual({ kind: 'action', side: 'A' });
+    ({ state } = play(state, pass));
     expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+    expect(state.actionsLeft).toBe(2);
     expect(() => applyAction(state, pass)).toThrow("It isn't your decision right now.");
+  });
+
+  it('allows the same action twice in a turn (pass, then shoot)', () => {
+    const s = scenario({ lanes, actionsLeft: 2, A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 6, shot: 6 }) } } } });
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'shoot', side: 'A' });
+    expect(eventsOfType(events, 'goal')).toHaveLength(1);
+    expect(state.score.A).toBe(1);
+  });
+
+  it("ends the turn when you score, even with an action left", () => {
+    const s = scenario({ lanes, actionsLeft: 2, ball: { side: 'A', pos: fwd(LAST) }, A: { lineup: { forward: { [LAST]: player('A fwd', { shot: 6 }) } } } });
+    let { state } = play(s, { type: 'shoot', side: 'A' });
+    expect(state.pending).toEqual({ kind: 'faceoffLane', side: 'B' });
+    ({ state } = play(state, { type: 'faceoffLane', side: 'B', lane: 0 }));
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
   });
 
   it('ends with discarding down to 7 cards, one at a time', () => {

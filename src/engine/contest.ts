@@ -11,7 +11,7 @@ import { cardView, defOf, drawCards, hasReactionSpell, isReactionSpell, moveHand
 import type { SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
-import { continueGame, scoreGoal } from './flow';
+import { continueGame, recordPenalty, scoreGoal } from './flow';
 import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
 
@@ -129,6 +129,9 @@ function applyOutcome(s: GameState, contest: Contest, attackerWins: boolean, ev:
     case 'shot':
       if (attackerWins) scoreGoal(s, attacker.side, ev);
       else giveBall(s, defender.side, GOAL, ev);
+      break;
+    case 'penalty':
+      recordPenalty(s, attacker.side, attackerWins, ev);
       break;
   }
 }

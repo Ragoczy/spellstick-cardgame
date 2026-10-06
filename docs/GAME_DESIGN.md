@@ -6,7 +6,8 @@ A quick two-player game of spellstick, the lacrosse-with-spells sport from the W
 Each team sets out its lineup face down: two forwards, two midfielders, two defenders, and a
 goalie. The ball moves by passing, and every pass reveals the two players who meet over it, so
 where you hide your best players is the strategy. Spells swing contests, and they hit harder
-when the caster's elemental affinity matches. First team to three goals wins.
+when the caster's elemental affinity matches. When the cards run out, the team with more goals
+wins, and a tie goes to a penalty shootout. Reaching three goals wins straight away.
 
 ## Who it's for
 

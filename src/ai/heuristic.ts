@@ -10,7 +10,7 @@
 // - Ball value grows the closer the ball is to the other goal.
 // - Reaction spells are saved for contests that matter (shots, defending near its own goal).
 // - Casters are chosen to match the spell's element, preferring players already face up.
-// - Hits go after strong revealed players, the ball carrier, or the goalie before a shot.
+// - Hits go after strong revealed players and the ball carrier (goalies can't be hit).
 // - Dirty plays go into contests it expects to win. Mend goes on players it values.
 
 import { affinityFor } from '../engine/affinity';
@@ -315,20 +315,13 @@ class Thinker {
   /** How much injuring the opposing player at `pos` is worth. */
   private injuryWorth(pos: Pos): number {
     const slot = slotOf(this.view, 'opponent', pos);
-    if (slot.state === 'empty') return 0;
-    if (visibleInjury(this.view, 'opponent', pos)) return pos.area === 'goal' && !this.config.goalieCarryOff ? 0 : CARRY_OFF_WORTH;
+    if (slot.state === 'empty' || pos.area === 'goal') return 0; // goalies can't be injured
+    if (visibleInjury(this.view, 'opponent', pos)) return CARRY_OFF_WORTH;
     let worth = INJURY_WORTH;
     const ball = this.view.ball;
     if (ball && ball.side !== this.me && samePos(ball.pos, pos)) worth += 0.05; // the ball carrier
     const player = knownPlayer(this.view, 'opponent', pos);
     if (player?.kind === 'field') worth += 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4);
-    if (player?.kind === 'goalie') worth += 0.02;
-    // Softening the goalie when I'm about to shoot.
-    if (pos.area === 'goal' && ball?.side === this.me && (ball.pos.area === 'forward' || ball.pos.area === 'midfield')) {
-      const save = this.theirValue(pos, 'save', 'save');
-      const shot = this.myValue(ball.pos, 'shot', 'shoot') + 0.6 * this.bestBoost(ball.pos);
-      worth += winChance(shot, Math.max(0, save - 1.7), false) - winChance(shot, save, false);
-    }
     return worth;
   }
 
@@ -368,9 +361,9 @@ class Thinker {
       }
       case 'hit': {
         if (target.kind !== 'hit' || !isFieldPos(action.caster)) return -1;
-        const targetPos: Pos = target.at === 'goalie' ? { area: 'goal' } : opposite(action.caster);
+        const targetPos = opposite(action.caster);
         const strength = this.adjusted(ability.params.strength, affinity) + 0.6 * this.bestBoost(action.caster);
-        const resist = this.theirValue(targetPos, targetPos.area === 'goal' ? 'save' : 'defense', 'resist');
+        const resist = this.theirValue(targetPos, 'defense', 'resist');
         const p = winChance(strength, resist, false);
         return base + p * this.injuryWorth(targetPos) - cost;
       }

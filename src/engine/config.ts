@@ -1,7 +1,7 @@
 // Every tuning number in the rules lives here (marked ⚙ in docs/RULES.md).
 // Balance changes should be one-line edits to DEFAULT_CONFIG.
 
-/** Stats an injury can lower. A goalie loses the injury's biggest penalty from Save instead. */
+/** Stats an injury can lower. (Goalies can't be injured.) */
 export type InjuryStat = 'speed' | 'shot' | 'defense' | 'faceoff';
 
 /** One kind of injury card in the shared injury deck. */
@@ -47,8 +47,6 @@ export interface GameConfig {
   // Experimental rule switch, used only by simulation what-ifs. Not in RULES.md.
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
-  /** Whether an injured goalie injured again is carried off. The rules say true. */
-  goalieCarryOff: boolean;
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
@@ -73,7 +71,6 @@ export const DEFAULT_CONFIG: GameConfig = {
     { id: 'concussion', name: 'Concussion', count: 1, penalty: { speed: 1, shot: 1, defense: 1, faceoff: 1 } },
   ],
   protectCatch: 'off',
-  goalieCarryOff: true,
 };
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {

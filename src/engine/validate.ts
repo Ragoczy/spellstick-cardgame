@@ -191,11 +191,6 @@ export function validateAction(s: GameState, action: Action): string | null {
         case 'hit': {
           if (target.kind !== 'hit') return 'Choose who to hit.';
           if (!isFieldPos(action.caster)) return "A goalie can't cast a hit.";
-          if (target.at === 'goalie') {
-            if (action.caster.area !== 'forward') return 'Only a forward can hit the goalie.';
-            if (!slotAt(s, otherSide(side), { area: 'goal' })) return 'There is no goalie to hit.';
-            return null;
-          }
           if (!slotAt(s, otherSide(side), opposite(action.caster))) return 'There is nobody in that spot to hit.';
           return null;
         }

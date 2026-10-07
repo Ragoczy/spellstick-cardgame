@@ -191,13 +191,13 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
       return;
     case 'hit': {
       if (target.kind !== 'hit') break;
-      // The caster attacks the opposing player in its own spot (or, for a forward, the goalie).
-      const targetPos = target.at === 'goalie' ? GOAL : opposite(caster as FieldPos);
+      // The caster attacks the opposing player in its own spot. Goalies can't be hit.
+      const targetPos = opposite(caster as FieldPos);
       const strength = adjustAmount(ability.params.strength, affinity, s.config);
       startContest(s, {
         kind: 'hit',
         attacker: { side, pos: caster, stat: 'defense', use: 'resist', spell: null, modifiers: [], power: { label: spell.name, value: strength } },
-        defender: { side: otherSide(side), pos: targetPos, stat: targetPos.area === 'goal' ? 'save' : 'defense', use: 'resist', spell: null, modifiers: [] },
+        defender: { side: otherSide(side), pos: targetPos, stat: 'defense', use: 'resist', spell: null, modifiers: [] },
         tiesGoTo: 'defender',
       }, ev);
       return;

@@ -734,7 +734,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {
@@ -750,7 +750,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {
@@ -766,7 +766,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {
@@ -1450,7 +1450,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {
@@ -1466,7 +1466,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {
@@ -1482,7 +1482,7 @@
           "strength": 3
         }
       },
-      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
       "placeholder": true
     },
     {

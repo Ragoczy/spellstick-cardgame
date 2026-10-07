@@ -63,17 +63,6 @@ export const EXPERIMENTS: ExperimentDef[] = [
     cards: goalieSave(1),
   },
   {
-    name: 'Goalies stay on',
-    description: "A goalie can't be carried off: a second injury on a goalie has no further effect.",
-    config: { goalieCarryOff: false },
-  },
-  {
-    name: 'Two hits + goalies stay on',
-    description: 'Both changes together.',
-    config: { goalieCarryOff: false },
-    cards: twoHitsPerTeam,
-  },
-  {
     name: 'Two hits + milder injuries',
     description: 'Both changes together.',
     config: { injuries: milderInjuries },

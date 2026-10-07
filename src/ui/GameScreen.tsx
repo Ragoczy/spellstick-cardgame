@@ -58,7 +58,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     if (t.kind === 'opponent') return [{ side: them, pos: t.pos }];
     if (t.kind === 'pass') return [{ side: me, pos: t.to }];
     if (t.kind === 'swap') return [{ side: me, pos: t.a }, { side: me, pos: t.b }];
-    if (t.kind === 'hit') return [{ side: them, pos: t.at === 'goalie' || !isFieldPos(caster) ? { area: 'goal' } : opposite(caster) }];
+    if (t.kind === 'hit') return isFieldPos(caster) ? [{ side: them, pos: opposite(caster) }] : [];
     if (t.kind === 'mendField') return [{ side: me, pos: t.pos }];
     return [];
   };
@@ -290,7 +290,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     if (selection.kind === 'cast') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const effect = def?.kind === 'spell' ? def.ability.effect : '';
-      const targetHelp = effect === 'hit' ? 'Now tap who to hit (a forward can also hit the goalie).'
+      const targetHelp = effect === 'hit' ? 'Now tap the opposing player in that spot to hit them.'
         : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
         : 'Now choose the target.';
       help = !selection.caster

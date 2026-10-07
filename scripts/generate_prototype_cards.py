@@ -70,7 +70,7 @@ SPELLS = [
 ]
 
 # Hits, chosen to fit each team's main elements: (element, name)
-HIT_TEXT = "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured."
+HIT_TEXT = "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
 HITS = {
     "A": [("fire", "Flambé"), ("fire", "Flambé"), ("air", "Thunderclap")],
     "B": [("water", "Water Spear"), ("water", "Water Spear"), ("earth", "Earth Crush")],

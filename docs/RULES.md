@@ -158,7 +158,7 @@ A goalie holding the ball may pass to any of its defenders the same way.
 
 **Shoot.** Only a forward holding the ball. The opposing goalie is revealed. Contest: forward's
 **Shot** against goalie's **Save**. If the forward wins, you score. If not, the goalie holds
-the ball. An empty goal can't save: any shot scores.
+the ball.
 
 A forward can only get the ball by beating the defender in its slot (winning a pass against
 their Defense, or a tackle), so a goal always means the forward beat both the defender and the
@@ -207,14 +207,16 @@ reaction spells.
 
 Spellstick is a rough sport. Hits and dirty plays injure players.
 
+- **Hitting the goalie isn't allowed.** Goalies can't be injured: Hit can't target them, and a
+  dirty play against a goalie does nothing. (Fouls and penalties will come later.)
+
 - **Injury cards** are face up, so everyone can see an injury, even on a face-down player. The
   deck ⚙ has 3 Singed hair (−1 Speed), 3 Broken finger (−2 Shot), 3 Twisted ankle (−2 Speed),
   2 Bruised ribs (−2 Defense), and 1 Concussion (−1 to Speed, Shot, Defense, and Faceoff).
-  A goalie loses the injury's penalty from **Save** instead (Concussion: −1 Save).
 - **When a player is injured,** draw the top injury card and attach it to them. Their stats are
   lowered while it's attached.
-- **Forced substitution:** if the owner has a field player in hand (a goalie, for a goalie), they
-  must bring one on straight away, face down. This is free and doesn't use an action, even during
+- **Forced substitution:** if the owner has a field player in hand, they must bring one on
+  straight away, face down. This is free and doesn't use an action, even during
   the other player's turn. The injured player goes to the owner's hand with the injury still
   attached. If they held the ball, the substitute holds it.
 - If the owner has nobody to bring on, the injured player stays in place, playing hurt.
@@ -222,9 +224,7 @@ Spellstick is a rough sport. Hits and dirty plays injure players.
 - **Injuries don't stack:** a player who is already injured and gets injured again is **carried
   off** and discarded, and their injury card goes back to the injury deck. This forces a
   substitution too. If there's nobody to bring on, the spot is **empty** until a Substitute fills
-  it. If the carried-off player held the ball, the opposing player in that spot picks it up; if
-  there isn't one (a goalie, or an empty spot), the ball goes to a faceoff, and the team that lost
-  the player chooses the lane.
+  it. If the carried-off player held the ball, the opposing player in that spot picks it up.
 - When an injured player is discarded for any reason, their injury card goes back into the injury
   deck (shuffled in). If the injury deck is empty, an injury does nothing beyond the forced
   substitution.
@@ -275,7 +275,7 @@ engine together. "Numeric" effects are adjusted by affinity.
   this contest, and their abilities and injuries are ignored. Their own spell still counts. If both
   sides shield, both stats are 0.
 - `dirty_play` — `{}`, non-numeric. Play during any contest. If your side wins, the opposing player
-  in that contest is injured.
+  in that contest is injured (unless it's the goalie).
 
 **Action spells**
 
@@ -293,10 +293,9 @@ engine together. "Numeric" effects are adjusted by affinity.
   legal Tackle.
 - `recall` — `{ count }`, numeric. Draw `count` cards.
 - `hit` — `{ strength }`, numeric. The caster (a field player, not the goalie) attacks the
-  opposing player in its own spot; a forward may attack the opposing goalie instead. This is a
-  contest with the casting team as attacker: the spell's strength against the target's Defense
-  (a goalie uses Save). Both sides may play reaction spells as usual. If the hit lands, the target
-  is injured.
+  opposing player in its own spot. Goalies can't be hit. This is a contest with the casting team
+  as attacker: the spell's strength against the target's Defense. Both sides may play reaction
+  spells as usual. If the hit lands, the target is injured.
 - `mend` — `{}`, non-numeric. Remove the injury from one of your players, on the field or in your
   hand. The injury card goes back to the injury deck.
 
@@ -313,9 +312,10 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 
 ## Change log
 
-- v0.5 — New spells: Hit (attack the player in your spot, or a forward can hit the goalie), Dirty play (a reaction that injures the loser if you win), and Mend.
+- v0.5 — New spells: Hit (attack the player in your spot), Dirty play (a reaction that injures the loser if you win), and Mend.
+- v0.5 — Hitting the goalie isn't allowed: goalies can't be injured by hits or dirty plays (Paul's ruling; fouls and penalties to come).
 - v0.5 — Injuries: a shared 12-card injury deck; forced substitution from hand; injuries don't stack (a second injury carries the player off).
-- v0.5 — Empty spots: a carried-off player with no substitute leaves a spot that counts as 0; Substitute can fill it; an empty goal can't save.
+- v0.5 — Empty spots: a carried-off player with no substitute leaves a spot that counts as 0; Substitute can fill it.
 - v0.5 — Injury cards are face up, so injuries show even on face-down players.
 - v0.5 — Prototype decks: four boosts and Earth Swap replaced by three hits, one Late Hit, and one Mend per team.
 

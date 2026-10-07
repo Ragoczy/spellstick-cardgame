@@ -7,14 +7,14 @@ import { findProblems } from '../../src/sim/invariants';
 import { prototypeCards } from '../../src/data/prototype';
 import type { GameState } from '../../src/engine/state';
 import {
-  LANE_COUNTS, GOAL_POS, actionSpell, dfn, eventsOfType, fwd, goalie, lastContest, mid, play, player, scenario, uid,
+  LANE_COUNTS, actionSpell, dfn, eventsOfType, fwd, lastContest, mid, play, player, reaction, scenario, uid,
 } from '../helpers';
 
 const hit = () => actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } });
 
 /** A casts Flambé from its forward at B's defender in the same lane. */
 function hitDefender(s: GameState, lane: number) {
-  return play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(lane), target: { kind: 'hit', at: 'slot' } });
+  return play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(lane), target: { kind: 'hit' } });
 }
 
 /** Attaches the top injury card to a player, as if they had been hurt earlier. */
@@ -46,13 +46,16 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     expect(holder.parts).toEqual([{ label: 'Singed hair', amount: -1 }]);
   });
 
-  it('a concussion lowers every stat; a goalie loses the injury\'s penalty from Save instead', () => {
-    const s = scenario({ lanes, ball: { side: 'A', pos: fwd(0) }, A: { lineup: { forward: { 0: player('A fwd', { shot: 5 }) } } }, B: { goalie: goalie('B goalie', 4) } });
-    s.injuries[uid(s, 'B', 'B goalie')] = s.injuryDeck.find((id) => s.injuryCards[id]!.name === 'Twisted ankle')!;
-    s.injuryDeck = s.injuryDeck.filter((id) => id !== s.injuries[uid(s, 'B', 'B goalie')]);
-    const { events } = play(s, { type: 'shoot', side: 'A' });
-    expect(lastContest(events).defender.total).toBe(2); // Save 4 − 2
+  it("can't happen to goalies: a dirty play that beats the goalie does nothing more", () => {
+    const lateHit = reaction('Late Hit', { effect: 'dirty_play', params: {} });
+    const s = scenario({ lanes, ball: { side: 'A', pos: fwd(0) }, A: { hand: [lateHit], lineup: { forward: { 0: player('A fwd', { shot: 6 }) } } } });
+    const { state, events } = play(s, { type: 'shoot', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'Late Hit') });
+    expect(state.score.A).toBe(1);
+    expect(eventsOfType(events, 'injured')).toHaveLength(0);
+    expect(Object.keys(state.injuries)).toHaveLength(0);
+  });
 
+  it('a concussion lowers every stat', () => {
     const c = scenario({ lanes, active: 'B', ball: { side: 'A', pos: fwd(0) }, A: { lineup: { forward: { 0: player('A fwd', { speed: 4 }) } } } });
     const concussion = c.injuryDeck.find((id) => c.injuryCards[id]!.name === 'Concussion')!;
     c.injuries[uid(c, 'A', 'A fwd')] = concussion;
@@ -150,14 +153,6 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     injure(s, uid(s, 'B', 'B def'));
     const { state } = hitDefender(s, LAST);
     expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
-  });
-
-  it('send the ball to a faceoff, chosen by the team that lost the player, if a carried-off goalie holding it can\'t be replaced', () => {
-    const s = scenario({ lanes, actionsLeft: 2, ball: { side: 'B', pos: GOAL_POS }, A: { hand: [hit()] }, B: { goalie: goalie('B goalie', 1) } });
-    injure(s, uid(s, 'B', 'B goalie'));
-    const { state } = play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(0), target: { kind: 'hit', at: 'goalie' } });
-    expect(state.teams.B.goalie).toBeNull();
-    expect(state.pending).toEqual({ kind: 'faceoffLane', side: 'B' });
   });
 
   it('go back to the injury deck when an injured player is discarded for any reason', () => {

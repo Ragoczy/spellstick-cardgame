@@ -12,8 +12,8 @@ export type SpellTarget =
   | { kind: 'swap'; a: FieldPos; b: FieldPos }
   /** long_pass: the receiver. */
   | { kind: 'pass'; to: FieldPos }
-  /** hit: the opposing player in the caster's spot, or (forwards only) the opposing goalie. */
-  | { kind: 'hit'; at: 'slot' | 'goalie' }
+  /** hit: the opposing player in the caster's spot (goalies can't be hit). */
+  | { kind: 'hit' }
   /** mend: one of your injured players on the field... */
   | { kind: 'mendField'; pos: Pos }
   /** ...or in your hand. */

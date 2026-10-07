@@ -9,13 +9,10 @@ import { isFieldPos, opposite, otherSide, samePos, type Pos, type Side } from '.
 import type { PlayerCardDef, StatName } from './cards';
 import type { GameState, Uid } from './state';
 
-/** How much an injury lowers a stat. A goalie loses the injury's biggest penalty from Save. */
+/** How much an injury lowers a stat. (Goalies can't be injured, so Save is never lowered.) */
 export function injuryPenalty(injury: InjuryDef | null | undefined, player: PlayerCardDef, stat: StatName): number {
-  if (!injury) return 0;
-  if (player.kind === 'goalie') {
-    return stat === 'save' ? Math.max(0, ...Object.values(injury.penalty).map((n) => n ?? 0)) : 0;
-  }
-  return stat === 'save' ? 0 : injury.penalty[stat as InjuryStat] ?? 0;
+  if (!injury || player.kind === 'goalie' || stat === 'save') return 0;
+  return injury.penalty[stat as InjuryStat] ?? 0;
 }
 
 /** Cards in hand that could replace the player at `pos` (field player for field, goalie for goal). */
@@ -30,9 +27,10 @@ export function injurePlayer(s: GameState, side: Side, pos: Pos, source: InjuryS
   if (!slot) return;
   const uid = slot.uid;
 
+  // Hitting the goalie isn't allowed, so a dirty play against a goalie does nothing.
+  if (pos.area === 'goal') return;
+
   if (s.injuries[uid]) {
-    // Experimental: goalies can't be carried off, so a second injury does nothing more.
-    if (pos.area === 'goal' && !s.config.goalieCarryOff) return;
     // Already injured: carried off and discarded. Their injury goes back to the injury deck.
     const card = cardView(s, uid);
     setSlotAt(s, side, pos, null);

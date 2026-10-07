@@ -47,9 +47,9 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
 
       <h3>Hits and injuries</h3>
       <p>
-        Spellstick is rough. A <b>hit</b> spell attacks the opposing player in your caster's spot (a forward can go
-        after the goalie): the spell's strength against their Defense, or Save. A <b>dirty play</b> is a reaction
-        spell: if your side wins the contest, the player you beat is injured.
+        Spellstick is rough. A <b>hit</b> spell attacks the opposing player in your caster's spot: the spell's
+        strength against their Defense. A <b>dirty play</b> is a reaction spell: if your side wins the contest, the
+        player you beat is injured. Hitting the goalie isn't allowed: goalies can't be injured.
       </p>
       <ul>
         <li>An injured player gets a face-up <b>injury card</b> that lowers a stat (for example, Singed hair: −1 Speed).</li>

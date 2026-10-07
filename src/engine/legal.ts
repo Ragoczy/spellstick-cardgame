@@ -43,7 +43,7 @@ function spellTargets(s: GameState, side: Side, effect: string): SpellTarget[] {
       if (!s.ball || s.ball.side !== side) return [];
       return passTargets(s.ball.pos, lanes, true).map((to) => ({ kind: 'pass', to }));
     case 'hit':
-      return [{ kind: 'hit', at: 'slot' }, { kind: 'hit', at: 'goalie' }];
+      return [{ kind: 'hit' }];
     case 'mend':
       return [
         ...playerPositions(s).map((pos): SpellTarget => ({ kind: 'mendField', pos })),

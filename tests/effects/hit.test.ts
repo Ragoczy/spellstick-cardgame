@@ -1,11 +1,11 @@
 // Effect: hit { strength } (action, numeric)
 import { describe, expect, it } from 'vitest';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
-import { LANE_COUNTS, GOAL_POS, actionSpell, boost, dfn, eventsOfType, fwd, goalie, lastContest, mid, play, player, scenario, shield, uid } from '../helpers';
+import { LANE_COUNTS, GOAL_POS, actionSpell, boost, dfn, eventsOfType, fwd, lastContest, mid, play, player, scenario, shield, uid } from '../helpers';
 
 const hit = (element: string | null = null) => actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } }, element);
-const castHit = (s: ReturnType<typeof scenario>, caster: ReturnType<typeof fwd>, at: 'slot' | 'goalie' = 'slot') =>
-  play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster, target: { kind: 'hit', at } });
+const castHit = (s: ReturnType<typeof scenario>, caster: ReturnType<typeof fwd>) =>
+  play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster, target: { kind: 'hit' } });
 
 describe.each(LANE_COUNTS)('hit (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
@@ -37,12 +37,11 @@ describe.each(LANE_COUNTS)('hit (%i lanes)', (lanes) => {
     expect(lastContest(castHit(casterWith('water'), fwd(LAST)).events).attacker.total).toBe(2);
   });
 
-  it('lets a forward hit the goalie instead, against Save', () => {
-    const s = scenario({ lanes, A: { hand: [hit()] }, B: { goalie: goalie('B goalie', 2) } });
-    const { state, events } = castHit(s, fwd(0), 'goalie');
-    expect(lastContest(events).defender).toMatchObject({ pos: GOAL_POS, stat: 'save', total: 2 });
-    expect(state.injuries[uid(s, 'B', 'B goalie')]).toBeDefined();
-    expect(() => castHit(s, mid(0), 'goalie')).toThrow('Only a forward can hit the goalie.');
+  it("never targets the goalie: a forward's hit goes at the defender in its spot", () => {
+    const s = scenario({ lanes, A: { hand: [hit()] } });
+    const { events } = castHit(s, fwd(0));
+    expect(lastContest(events).defender.pos).toEqual(dfn(0));
+    expect(eventsOfType(events, 'contestStarted')[0]?.defender.pos).not.toEqual(GOAL_POS);
   });
 
   it("can't be cast by a goalie", () => {
@@ -64,6 +63,6 @@ describe.each(LANE_COUNTS)('hit (%i lanes)', (lanes) => {
     const s = scenario({ lanes, A: { hand: [hit()] } });
     s.teams.B.lineup.defense[LAST] = null;
     expect(() => castHit(s, fwd(LAST))).toThrow(IllegalActionError);
-    expect(() => applyAction(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(0), target: { kind: 'hit', at: 'slot' } })).not.toThrow();
+    expect(() => applyAction(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(0), target: { kind: 'hit' } })).not.toThrow();
   });
 });

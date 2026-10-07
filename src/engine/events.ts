@@ -71,7 +71,8 @@ export type GameEvent =
   | { type: 'substituted'; side: Side; pos: Pos; removed: CardView }
   | { type: 'swapped'; side: Side; a: FieldPos; b: FieldPos }
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
-  | { type: 'discarded'; side: Side; cards: CardView[] }
+  /** fromPile: a full hand at the draw step, so the top card of that pile went to the discard pile. */
+  | { type: 'discarded'; side: Side; cards: CardView[]; fromPile?: Pile }
   | { type: 'shootoutStarted'; first: Side }
   /** A player called for dice: both players rolled (only the caller spent a roll). */
   | { type: 'diceRolled'; caller: Side; attacker: Side; attackerRoll?: number; defenderRoll?: number; left: Record<Side, number> }

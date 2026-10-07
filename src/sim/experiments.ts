@@ -46,15 +46,19 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'Goalies Save 5',
+    name: 'Goalies Save 4',
     description: 'Weaker goalies: more shots score.',
-    cards: goaliesAt(5),
+    cards: goaliesAt(4),
   },
   {
-    name: 'Goalies Save 7',
-    description: 'Tougher goalies (penalties +4 to keep shootouts short).',
-    config: { penaltyBonus: 4 },
-    cards: goaliesAt(7),
+    name: 'Goalies Save 6',
+    description: 'Tougher goalies (the v0.7 value).',
+    cards: goaliesAt(6),
+  },
+  {
+    name: 'Hand limit 8',
+    description: 'Hold up to 8 cards instead of 7.',
+    config: { handLimit: 8 },
   },
   {
     name: 'Pass bonus +1',

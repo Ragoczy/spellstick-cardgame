@@ -1,5 +1,5 @@
 {
-  "version": "0.7-prototype",
+  "version": "0.8-prototype",
   "elements": [
     "fire",
     "water",
@@ -512,7 +512,7 @@
           "affinity": "fire"
         }
       ],
-      "save": 6,
+      "save": 5,
       "placeholder": true
     },
     {
@@ -526,7 +526,7 @@
           "affinity": "water"
         }
       ],
-      "save": 6,
+      "save": 5,
       "placeholder": true
     },
     {
@@ -1228,7 +1228,7 @@
           "affinity": "earth"
         }
       ],
-      "save": 6,
+      "save": 5,
       "placeholder": true
     },
     {
@@ -1242,7 +1242,7 @@
           "affinity": "earth"
         }
       ],
-      "save": 6,
+      "save": 5,
       "placeholder": true
     },
     {

@@ -250,10 +250,14 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       case 'draw':
         return (
           <div className="prompt">
-            <strong>Your turn: draw a card.</strong> Choose a pile.
+            {view.mine.hand.length >= view.config.handLimit ? (
+              <><strong>Your turn. Your hand is full</strong> ({view.config.handLimit} cards), so you don't draw. Choose a pile: its top card goes to your discard pile, so the game clock keeps running.</>
+            ) : (
+              <><strong>Your turn: draw a card.</strong> Choose a pile.</>
+            )}
             <div className="buttons">
-              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>Draw a player ({view.mine.playersLeft} left)</button>
-              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>Draw a spell ({view.mine.spellsLeft} left)</button>
+              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>{view.mine.hand.length >= view.config.handLimit ? 'Players pile' : 'Draw a player'} ({view.mine.playersLeft} left)</button>
+              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>{view.mine.hand.length >= view.config.handLimit ? 'Spells pile' : 'Draw a spell'} ({view.mine.spellsLeft} left)</button>
               <button type="button" className="quiet" onClick={hint}>Hint</button>
             </div>
             {hintText ? <div className="hint">{hintText}</div> : null}

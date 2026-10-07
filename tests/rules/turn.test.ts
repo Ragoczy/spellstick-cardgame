@@ -44,6 +44,31 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(state.pending).toEqual({ kind: 'action', side: 'B' });
   });
 
+  it("with a full hand, doesn't draw: the top card of the chosen pile goes to the discard pile", () => {
+    const recall = (name: string) => actionSpell(name, { effect: 'recall', params: { count: 1 } });
+    const hand = Array.from({ length: 7 }, (_, i) => player(`B hand ${i}`));
+    const s = scenario({ lanes, B: { hand, deck: [player('B top player'), recall('B top spell')] } });
+    let { state } = play(s, pass);
+    expect(state.pending).toEqual({ kind: 'draw', side: 'B' });
+    let events;
+    ({ state, events } = play(state, { type: 'draw', side: 'B', pile: 'spells' }));
+    expect(eventsOfType(events, 'drew')).toHaveLength(0);
+    expect(eventsOfType(events, 'discarded')[0]).toMatchObject({ side: 'B', fromPile: 'spells', cards: [{ def: { name: 'B top spell' } }] });
+    expect(state.teams.B.hand).toHaveLength(7);
+    expect(state.teams.B.spells).toHaveLength(0);
+    expect(state.teams.B.discard.map((u) => state.cards[u]!.name)).toEqual(['B top spell']);
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+  });
+
+  it('with a full hand and only one pile left, its top card goes to the discard pile without asking', () => {
+    const hand = Array.from({ length: 7 }, (_, i) => player(`B hand ${i}`));
+    const s = scenario({ lanes, B: { hand, deck: [player('B top player')] } });
+    const { state, events } = play(s, pass);
+    expect(eventsOfType(events, 'discarded')[0]).toMatchObject({ fromPile: 'players' });
+    expect(state.teams.B.hand).toHaveLength(7);
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+  });
+
   it("draws from the other pile without asking when one is empty, and can't choose an empty pile", () => {
     const s = scenario({ lanes, B: { deck: [player('B only player')] } });
     const { state, events } = play(s, pass);

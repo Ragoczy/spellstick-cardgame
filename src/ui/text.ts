@@ -131,6 +131,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       }
       return info(`The computer looks at ${at(me, e.target)}.`);
     case 'discarded':
+      if (e.fromPile) {
+        const pile = e.fromPile === 'players' ? 'Players' : 'Spells';
+        return info(`${isMe(e.side) ? 'Your hand is full, so the top card of your' : "The computer's hand is full, so the top card of its"} ${pile} pile goes to the discard pile: ${e.cards.map((c) => c.def.name).join(', ')}.`);
+      }
       return info(`${who(e.side)} ${verb(e.side, 'discard', 'discards')} ${e.cards.map((c) => c.def.name).join(', ')}.`);
     case 'injured': {
       const where = capitalize(at(e.side, e.pos));

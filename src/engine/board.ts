@@ -104,6 +104,22 @@ export function cardsLeft(team: TeamState): number {
   return team.players.length + team.spells.length;
 }
 
+/** Is this hand at (or over) the hand limit? Then the Draw step doesn't add a card. */
+export function handIsFull(s: GameState, side: Side): boolean {
+  return s.teams[side].hand.length >= s.config.handLimit;
+}
+
+/**
+ * The Draw step with a full hand: instead of drawing, the top card of `pile` goes face up on
+ * the discard pile, so the game clock still runs (RULES.md "Turn sequence").
+ */
+export function discardTopOfPile(s: GameState, side: Side, pile: Pile, ev: GameEvent[]): void {
+  const uid = s.teams[side][pile].pop();
+  if (!uid) return;
+  toDiscard(s, side, uid);
+  ev.push({ type: 'discarded', side, cards: [cardView(s, uid)], fromPile: pile });
+}
+
 /** The pile a card belongs in. */
 export function pileFor(def: CardDef): Pile {
   return def.kind === 'spell' ? 'spells' : 'players';

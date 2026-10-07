@@ -623,7 +623,9 @@ class Thinker {
     const want = pile === 'players'
       ? (players === 0 ? 0.6 : players === 1 ? 0.3 : 0.1) + (this.hasInjuredPlayer() ? 0.1 : 0)
       : spells === 0 ? 0.6 : spells <= 2 ? 0.4 : 0.15;
-    return want + this.random() * 0.05;
+    // With a full hand nothing is drawn: the top card of the chosen pile is thrown away instead.
+    const handFull = hand.length >= this.config.handLimit;
+    return (handFull ? -want : want) + this.random() * 0.05;
   }
 
   private hasInjuredPlayer(): boolean {

@@ -4,7 +4,7 @@
 import type { Action } from './actions';
 import { adjustAmount, adjustPenalty, affinityFor, spellFizzles } from './affinity';
 import {
-  cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
+  cardView, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
 } from './board';
 import type { ActionSpellDef } from './cards';
 import { callDice, playReaction, startContest } from './contest';
@@ -244,6 +244,7 @@ function regroup(s: GameState, side: Side, discard: string[], ev: GameEvent[]): 
 }
 
 function draw(s: GameState, side: Side, pile: Pile, ev: GameEvent[]): void {
-  drawCards(s, side, 1, 'turn', ev, pile);
+  if (handIsFull(s, side)) discardTopOfPile(s, side, pile, ev);
+  else drawCards(s, side, 1, 'turn', ev, pile);
   s.pending = { kind: 'action', side };
 }

@@ -140,6 +140,8 @@ scored on takes the next turn, whoever won the faceoff.
 
 1. **Draw** one card from the pile of your choice: Players or Spells. If one pile is empty, draw
    from the other. If both are empty, see "End of the game".
+   **Full hand:** if you already hold 7 cards ⚙ or more, don't draw. Instead, put the top card of
+   the pile of your choice face up on your discard pile (so the game clock still runs).
 2. **Act.** Take one action ⚙. If you score, the faceoff happens straight away, then go to your
    discard step.
 3. **Discard** down to 7 cards ⚙ if you have more.
@@ -162,8 +164,8 @@ A goalie holding the ball may pass to any of its defenders the same way.
 **Shoot.** Only a forward holding the ball. The opposing goalie is revealed. Contest: forward's
 **Shot** against goalie's **Save**, and **every shot is rolled**: the shooter and the goalie each
 roll a six-sided die ⚙ and add it. If the forward's total is higher, you score. If not, the
-goalie holds the ball. Goalies are strong (Save 6 in the prototype decks), so most shots are
-saved: about 1 in 4 goes in. Roll tokens can't be spent on a shot, since it's already rolled.
+goalie holds the ball. Goalies are strong (Save 5 in the prototype decks), so most shots are
+saved: about 1 in 3 goes in. Roll tokens can't be spent on a shot, since it's already rolled.
 
 A forward can only get the ball by beating the defender in its slot (winning a pass against
 their Defense, or a tackle), so a goal always means the forward beat both the defender and the
@@ -336,6 +338,8 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 ## Change log
 
 - v0.8 — One action per turn again (was two). Paul's call.
+- v0.8 — Full hand: with 7 or more cards you don't draw; the top card of a pile of your choice goes to your discard pile instead. With one action a turn, players otherwise had to discard about every other turn.
+- v0.8 — Prototype goalies Save 5 (was 6), so about 1 goal a game with one action per turn (about 1 shot in 3 scores).
 - v0.8 — Two draw piles per team, Players and Spells. At your Draw step you choose which to draw from. Setup draws 8 players and 2 spells. Regroup draws from the same pile as the card you discarded; spells and abilities draw from Spells. The game clock runs out when both piles are empty.
 
 - v0.7 — Passing: the receiver gets +2 in every pass, so most passes are caught (about 9 in 10). Paul: moving the ball upfield should usually work.

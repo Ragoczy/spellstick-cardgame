@@ -1,6 +1,6 @@
 // Turn flow, goals, the end of the game, and the penalty shootout.
 
-import { cardsLeft, drawCards } from './board';
+import { cardsLeft, discardTopOfPile, drawCards, handIsFull } from './board';
 import type { GameEvent } from './events';
 import { otherSide, type Side } from './field';
 import type { EndReason, GameState } from './state';
@@ -62,7 +62,9 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
     return;
   }
   if (cardsLeft(team) > 0) {
-    drawCards(s, side, 1, 'turn', ev, team.players.length > 0 ? 'players' : 'spells');
+    const pile = team.players.length > 0 ? 'players' : 'spells';
+    if (handIsFull(s, side)) discardTopOfPile(s, side, pile, ev);
+    else drawCards(s, side, 1, 'turn', ev, pile);
   } else if (s.endgame.finalTurnFor === null) {
     // This player skips the draw but still takes this turn; then the opponent takes the last turn.
     s.endgame.finalTurnFor = otherSide(side);

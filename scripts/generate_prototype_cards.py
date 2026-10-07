@@ -123,7 +123,7 @@ def build():
                     card["text"] = text
                 idx += 1
                 cards.append(card)
-        for g, save in ((1, 6), (2, 6)):  # v0.7: both Save 6, since shots are rolled (was 3/2)
+        for g, save in ((1, 5), (2, 5)):  # v0.8: both Save 5 (v0.7: 6; before rolled shots: 3/2)
             cards.append({
                 "id": f"{team_id.lower()}-g-{g:02d}",
                 "team": team_id, "kind": "goalie",
@@ -167,7 +167,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.7-prototype",
+        "version": "0.8-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

@@ -18,6 +18,8 @@ export interface KeyMetrics {
   avgGoals: number;
   drawShare: number;
   shotSuccess: number;
+  shotsPerGame: number;
+  tackleSuccess: number;
 }
 
 export function keyMetrics(s: SimStats): KeyMetrics {
@@ -36,6 +38,8 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     avgGoals: s.games ? s.goals / s.games : NaN,
     drawShare: s.games ? s.wins.draws / s.games : NaN,
     shotSuccess: s.shots ? s.shotGoals / s.shots : NaN,
+    shotsPerGame: s.games ? s.shots / s.games : NaN,
+    tackleSuccess: s.contests.tackle.count ? s.contests.tackle.attackerWins / s.contests.tackle.count : NaN,
   };
 }
 
@@ -168,12 +172,12 @@ export function buildReport(input: ReportInput): string {
     const rows = [{ name: 'Current rules', description: '', result: baseline }, ...input.experiments].map((e) => {
       const k = keyMetrics(e.result.stats);
       return [
-        e.name, k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
+        e.name, k.avgGoals.toFixed(2), k.shotsPerGame.toFixed(1), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
         k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate), k.injuriesPerGame.toFixed(2), pctOf(k.moreInjuredWinRate), pctOf(k.upsetRate),
-        pctOf(k.passCatch), pctOf(k.forwardPassCatch),
+        pctOf(k.passCatch), pctOf(k.forwardPassCatch), pctOf(k.tackleSuccess),
       ];
     });
-    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins', 'Upsets', 'Passes caught', 'Forward passes caught'], rows));
+    out.push(table(['Change', 'Goals/game', 'Shots/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins', 'Upsets', 'Passes caught', 'Forward passes caught', 'Tackles win'], rows));
     out.push('');
     out.push('"Upsets": contests where the weaker printed card (stat, ability, injury) won anyway, thanks to spells or dice.');
     out.push('');

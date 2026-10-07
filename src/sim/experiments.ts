@@ -18,6 +18,9 @@ function mapCards(change: (card: CardDef) => CardDef) {
 
 const goalieSave = (delta: number) => mapCards((card) => (card.kind === 'goalie' ? { ...card, save: card.save + delta } : card));
 
+/** Both goalies on each team get the same Save. */
+const goaliesAt = (save: number) => mapCards((card) => (card.kind === 'goalie' ? { ...card, save } : card));
+
 const hitStrength = (strength: number) =>
   mapCards((card) => (card.kind === 'spell' && card.ability.effect === 'hit' ? { ...card, ability: { effect: 'hit', params: { strength } } } as CardDef : card));
 
@@ -43,36 +46,38 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'Pass bonus +1',
-    description: "The receiver adds 1 to their Speed in every pass.",
-    config: { passBonus: 1 },
-  },
-  {
     name: 'Pass bonus +2',
-    description: "The receiver adds 2 to their Speed in every pass.",
+    description: 'The receiver adds 2 to their Speed in every pass.',
     config: { passBonus: 2 },
   },
   {
-    name: 'Pass bonus +3',
-    description: "The receiver adds 3 to their Speed in every pass.",
-    config: { passBonus: 3 },
+    name: 'Rolled shots, Save 6',
+    description: 'Pass bonus +2. Every shot and penalty is rolled (shooter and goalie each roll a die). Goalies Save 6.',
+    config: { passBonus: 2, shotDie: 6 },
+    cards: goaliesAt(6),
   },
   {
-    name: 'Pass bonus +2, Save +1',
-    description: 'Pass bonus +2, and goalies one Save better (to keep scoring in range).',
-    config: { passBonus: 2 },
-    cards: goalieSave(1),
+    name: 'Rolled shots, Save 6, penalties +3',
+    description: 'As above, and penalty shots get +3.',
+    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3 },
+    cards: goaliesAt(6),
   },
   {
-    name: 'Pass bonus +1, Save +1',
-    description: 'Pass bonus +1, and goalies one Save better.',
-    config: { passBonus: 1 },
-    cards: goalieSave(1),
+    name: 'Hockey package',
+    description: 'As above, and Regroup swaps at most 1 card (games run longer, more shots).',
+    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3, regroupMax: 1 },
+    cards: goaliesAt(6),
   },
   {
-    name: 'Pass bonus +2, Save +2',
-    description: 'Pass bonus +2, and goalies two Save better.',
-    config: { passBonus: 2 },
-    cards: goalieSave(2),
+    name: 'Hockey package, Save 7',
+    description: 'The hockey package with tougher goalies (Save 7) and penalties +4.',
+    config: { passBonus: 2, shotDie: 6, penaltyBonus: 4, regroupMax: 1 },
+    cards: goaliesAt(7),
+  },
+  {
+    name: 'Hockey package, no Regroup',
+    description: 'The hockey package, but Regroup only skips the action (no card swaps): longer games.',
+    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3, regroupMax: 0 },
+    cards: goaliesAt(6),
   },
 ];

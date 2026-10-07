@@ -56,6 +56,8 @@ export interface GameConfig {
   diceMode: 'both' | 'self';
   /** Each player in every contest rolls a die this size and adds it (0 = off). */
   contestDie: number;
+  /** Shots and penalties only: the shooter and the goalie always roll a die this size and add it (0 = off). */
+  shotDie: number;
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
 }
@@ -85,6 +87,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   ],
   protectCatch: 'off',
   contestDie: 0,
+  shotDie: 0,
   passBonus: 0,
   diceMode: 'both',
 };

@@ -158,6 +158,8 @@ class Thinker {
   private readonly me: Side;
   /** winChance, allowing for dice if the game uses them. */
   private readonly chance: (mine: number, theirs: number, iWinTies: boolean) => number;
+  private ballLadder: Record<'goal' | Area, number> | null = null;
+  private scale = 1;
 
   constructor(
     private readonly view: PlayerView,
@@ -181,8 +183,8 @@ class Thinker {
       case 'pass': return this.passValue(action.to, []);
       case 'shoot': return this.shotValue(this.view.ball!.pos, [], 0);
       case 'tackle': return this.tackleValue([]);
-      case 'substitute': return this.currentValue() + this.substituteGain(action.pos, this.handCard(action.card));
-      case 'regroup': return this.currentValue() + action.discard.reduce((sum, uid) => sum + 0.05 - this.cardValue(this.handCard(uid)), 0);
+      case 'substitute': return this.currentValue() + this.unit() * this.substituteGain(action.pos, this.handCard(action.card));
+      case 'regroup': return this.currentValue() + this.unit() * action.discard.reduce((sum, uid) => sum + 0.05 - this.cardValue(this.handCard(uid)), 0);
       case 'cast': return this.castValue(action);
       case 'forcedSub': return this.scoreForcedSub(this.handCard(action.card));
     }
@@ -289,13 +291,13 @@ class Thinker {
    * again. A forward is worth what its shot is worth; other spots are worth a fixed amount.
    */
   private holdValue(pos: Pos, safeFromTackles = false): number {
-    if (!isFieldPos(pos)) return BALL_VALUE.goal;
-    const worth = pos.area === 'forward' ? Math.max(BALL_VALUE.midfield, this.shotChance(pos, [])) : BALL_VALUE[pos.area];
+    if (!isFieldPos(pos)) return this.ladder().goal;
+    const worth = pos.area === 'forward' ? Math.max(this.ladder().midfield, this.shotChance(pos, [])) : this.ladder()[pos.area];
     if (safeFromTackles) return worth;
     const tackler = opposite(pos);
     const keep = this.chance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos), this.theirValue(tackler, 'defense', 'tackle'), true);
     const lose = 0.7 * (1 - keep); // the opponent tackles when it looks worthwhile
-    return (1 - lose) * worth - lose * BALL_VALUE[tackler.area];
+    return (1 - lose) * worth - lose * this.ladder()[tackler.area];
   }
 
   /**
@@ -306,7 +308,7 @@ class Thinker {
     const ball = this.view.ball;
     if (!ball) return 0;
     if (ball.side === this.me) return STALL_DISCOUNT * this.holdValue(ball.pos, this.view.ballProtected);
-    return -BALL_VALUE[ball.pos.area];
+    return -this.ladder()[ball.pos.area];
   }
 
   private passValue(to: FieldPos, modifiers: Modifier[]): number {
@@ -316,7 +318,7 @@ class Thinker {
     const p = this.chance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
     const protect = this.config.protectCatch;
     const safe = protect === 'all' || (protect === 'forward' && to.area === 'forward');
-    return p * this.afterGaining(to, safe) - (1 - p) * BALL_VALUE[interceptor.area];
+    return p * this.afterGaining(to, safe) - (1 - p) * this.ladder()[interceptor.area];
   }
 
   /**
@@ -332,12 +334,44 @@ class Thinker {
   /** Chance a shot from `from` goes in. */
   private shotChance(from: Pos, modifiers: Modifier[]): number {
     const mine = this.myValue(from, 'shot', 'shoot', modifiers) + 0.6 * this.bestBoost(from);
-    return this.chance(mine, this.theirValue({ area: 'goal' }, 'save', 'save'), false);
+    return this.shotOdds(mine, this.theirValue({ area: 'goal' }, 'save', 'save'));
+  }
+
+  /** Shot against Save, allowing for the shooter and goalie both rolling (experimental config.shotDie). */
+  private shotOdds(mine: number, theirs: number): number {
+    const die = this.config.shotDie;
+    if (!die || this.config.contestDie) return this.chance(mine, theirs, false);
+    let p = 0;
+    for (let a = 1; a <= die; a++) for (let b = 1; b <= die; b++) p += this.chance(mine + a, theirs + b, false);
+    return p / (die * die);
+  }
+
+  /**
+   * What having the ball in each area is worth. When goalies stop most shots, getting the ball
+   * upfield is worth less, so the ladder is scaled to a typical forward's shot.
+   */
+  private ladder(): Record<'goal' | Area, number> {
+    if (!this.ballLadder) {
+      const typical = this.shotOdds(4, this.theirValue({ area: 'goal' }, 'save', 'save'));
+      const scale = Number.isFinite(typical) ? Math.min(1, typical / 0.5) : 1;
+      this.scale = scale;
+      this.ballLadder = { goal: BALL_VALUE.goal * scale, defense: BALL_VALUE.defense * scale, midfield: BALL_VALUE.midfield * scale, forward: BALL_VALUE.forward * scale };
+    }
+    return this.ballLadder;
+  }
+
+  /**
+   * Everything other than a goal (cards, injuries, field position) is valued in "goals", tuned for
+   * games where a typical shot is about even. When goals are rarer, those values shrink to match.
+   */
+  private unit(): number {
+    this.ladder();
+    return this.scale;
   }
 
   private shotValue(from: Pos, modifiers: Modifier[], extraCost: number): number {
     const p = this.shotChance(from, modifiers);
-    return p * 1 - (1 - p) * BALL_VALUE.goal - extraCost;
+    return p * 1 - (1 - p) * this.ladder().goal - extraCost;
   }
 
   private tackleValue(modifiers: Modifier[]): number {
@@ -345,7 +379,7 @@ class Thinker {
     const tackler = opposite(holder);
     const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler);
     const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
-    return p * this.afterGaining(tackler) - (1 - p) * BALL_VALUE[holder.area];
+    return p * this.afterGaining(tackler) - (1 - p) * this.ladder()[holder.area];
   }
 
   // ---- Other actions ----
@@ -370,13 +404,13 @@ class Thinker {
   private injuryWorth(pos: Pos): number {
     const slot = slotOf(this.view, 'opponent', pos);
     if (slot.state === 'empty' || pos.area === 'goal') return 0; // goalies can't be injured
-    if (visibleInjury(this.view, 'opponent', pos)) return CARRY_OFF_WORTH;
+    if (visibleInjury(this.view, 'opponent', pos)) return CARRY_OFF_WORTH * this.unit();
     let worth = INJURY_WORTH;
     const ball = this.view.ball;
     if (ball && ball.side !== this.me && samePos(ball.pos, pos)) worth += 0.05; // the ball carrier
     const player = knownPlayer(this.view, 'opponent', pos);
     if (player?.kind === 'field') worth += 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4);
-    return worth;
+    return worth * this.unit();
   }
 
   private castValue(action: Extract<Action, { type: 'cast' }>): number {
@@ -386,15 +420,16 @@ class Thinker {
     const affinity = this.affinity(caster, spell);
     const fizzles = affinity === 'opposed' && !NUMERIC_EFFECTS.has(spell.ability.effect);
     const revealCost = isFaceDown(this.view, 'mine', action.caster) ? REVEAL_COST : 0;
-    const cost = (SPELL_VALUE[spell.ability.effect] ?? 0.05) * 0.5 + revealCost;
+    const unit = this.unit();
+    const cost = ((SPELL_VALUE[spell.ability.effect] ?? 0.05) * 0.5 + revealCost) * unit;
     const base = this.currentValue();
-    if (fizzles) return base - cost - 0.1;
+    if (fizzles) return base - cost - 0.1 * unit;
 
     const ability = spell.ability;
     const target = action.target;
     switch (ability.effect) {
       case 'recall':
-        return base + 0.04 * this.adjusted(ability.params.count, affinity) - cost;
+        return base + unit * 0.04 * this.adjusted(ability.params.count, affinity) - cost;
       case 'steal': {
         const amount = this.adjusted(ability.params.amount, affinity);
         return this.tackleValue([{ label: spell.name, amount }]) - cost;
@@ -411,7 +446,7 @@ class Thinker {
         if (target.kind !== 'opponent') return -1;
         const ballIsMine = this.view.ball?.side === this.me;
         const useful = target.pos.area === 'goal' && ballIsMine ? 0.04 : 0.015;
-        return base + useful - cost;
+        return base + unit * useful - cost;
       }
       case 'hit': {
         if (target.kind !== 'hit' || !isFieldPos(action.caster)) return -1;
@@ -433,7 +468,7 @@ class Thinker {
         if (!card?.injury) return -1;
         const def = card.def as PlayerCardDef;
         const worth = def.kind === 'goalie' ? 0.06 : 0.02 + 0.02 * Math.max(0, bestFit(def) - 3);
-        return base + (onField ? worth : worth * 0.5) - cost;
+        return base + unit * (onField ? worth : worth * 0.5) - cost;
       }
       case 'swap': {
         if (target.kind !== 'swap') return -1;
@@ -441,7 +476,7 @@ class Thinker {
         const b = knownPlayer(this.view, 'mine', target.b);
         if (!a || !b) return -1;
         const gain = fit(a, target.b.area) + fit(b, target.a.area) - fit(a, target.a.area) - fit(b, target.b.area);
-        return base + 0.02 * gain - cost;
+        return base + unit * 0.02 * gain - cost;
       }
       default:
         return -1; // reaction spells can't be cast as actions
@@ -474,7 +509,7 @@ class Thinker {
     }
     // Rolls are scarce: worth more as the pile runs down.
     const left = this.view.diceLeft[this.me];
-    const rollValue = left > this.config.diceBudget / 2 ? 0.05 : 0.1;
+    const rollValue = (left > this.config.diceBudget / 2 ? 0.05 : 0.1) * this.unit();
     return this.importance(contest, role) * (withDice - now) - rollValue;
   }
 
@@ -513,7 +548,7 @@ class Thinker {
       : this.chance(myTotal, theirTotal, iWinTies);
 
     const reactionsInHand = this.view.mine.hand.filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction').length;
-    const cost = mySpell ? (reactionsInHand > 1 ? 0.08 : 0.12) : 0;
+    const cost = mySpell ? (reactionsInHand > 1 ? 0.08 : 0.12) * this.unit() : 0;
     let importance = this.importance(contest, role);
     // Winning also injures their player if I play a dirty play; losing injures mine if they did.
     const iDirty = mySpellWorks && mySpell.ability.effect === 'dirty_play';
@@ -532,11 +567,17 @@ class Thinker {
 
   /** How much a contest matters to this side (a goal is 1). */
   private importance(contest: Contest, role: ContestRole): number {
+    if (contest.kind === 'shot' || contest.kind === 'penalty') return 1;
+    return this.unit() * this.fieldImportance(contest, role);
+  }
+
+  /** How much a contest away from goal matters, before scaling (see unit). */
+  private fieldImportance(contest: Contest, role: ContestRole): number {
     const attackerArea = contest.attacker.pos.area;
     switch (contest.kind) {
       case 'shot': return 1;
       case 'penalty': return 1;
-      case 'hit': return role === 'attacker' ? this.injuryWorth(contest.defender.pos) : 0.05;
+      case 'hit': return role === 'attacker' ? this.injuryWorth(contest.defender.pos) / this.unit() : 0.05;
       case 'faceoff': return 0.5;
       case 'pass':
         if (attackerArea === 'forward') return role === 'attacker' ? 0.6 : 0.7;

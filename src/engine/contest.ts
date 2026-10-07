@@ -28,11 +28,13 @@ export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): v
   reveal(s, contest.attacker.side, contest.attacker.pos, ev);
   reveal(s, contest.defender.side, contest.defender.pos, ev);
   // Experimental dice: each player in the contest rolls, before any reaction spells.
-  if (s.config.contestDie > 0) {
+  const isShot = contest.kind === 'shot' || contest.kind === 'penalty';
+  const die = s.config.contestDie || (isShot ? s.config.shotDie : 0);
+  if (die > 0) {
     for (const side of [contest.attacker, contest.defender]) {
       if (!slotAt(s, side.side, side.pos)) continue; // an empty spot doesn't roll
       let roll: number;
-      [roll, s.rng] = randomInt(s.rng, s.config.contestDie);
+      [roll, s.rng] = randomInt(s.rng, die);
       side.roll = roll + 1;
     }
   }

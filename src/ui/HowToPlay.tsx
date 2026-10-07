@@ -32,7 +32,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
       <h3>Actions</h3>
       <ul>
         <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed <b>+2</b> against the opponent's Defense. Ties are caught; otherwise it's intercepted. Most passes get through.</li>
-        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 1 shot in 3 goes in, more with a good shooter or a spell.</li>
+        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 2 shots in 5 go in, more with a good shooter or a spell.</li>
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
         <li><b>Substitute</b> a player from your hand, face down.</li>

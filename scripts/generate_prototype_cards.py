@@ -123,7 +123,7 @@ def build():
                     card["text"] = text
                 idx += 1
                 cards.append(card)
-        for g, save in ((1, 5), (2, 5)):  # v0.8: both Save 5 (v0.7: 6; before rolled shots: 3/2)
+        for g, save in ((1, 4), (2, 4)):  # v0.8: both Save 4 (v0.7: 6; before rolled shots: 3/2)
             cards.append({
                 "id": f"{team_id.lower()}-g-{g:02d}",
                 "team": team_id, "kind": "goalie",

@@ -6,12 +6,14 @@
 //   npm run sim -- --set goalsToWin=2          (try a different config value, without changing the game)
 //   npm run sim -- --experiments               (also run the what-if experiments in src/sim/experiments.ts)
 //   npm run sim -- --experiment-games 300      (games per experiment; default: same as --games)
+//   npm run sim -- --cards data/cards.balanced.json   (use a different card file)
 //
 // Exits with an error if any game crashed, reached an impossible state, or hit the turn cap.
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { makeConfig, type GameConfig } from '../src/engine/config';
 import { prototypeCards } from '../src/data/prototype';
+import { loadCardSet } from '../src/engine/cards';
 import { EXPERIMENTS } from '../src/sim/experiments';
 import { buildReport, type Experiment } from '../src/sim/report';
 import { simulate, type SimResult } from '../src/sim/simulate';
@@ -40,13 +42,15 @@ function progress(label: string, total: number) {
   };
 }
 
+const cardsPath = arg('cards');
+const cardSet = cardsPath ? loadCardSet(JSON.parse(readFileSync(cardsPath, 'utf8'))) : prototypeCards;
 const games = Number(arg('games') ?? 1000);
 const seed = Number(arg('seed') ?? 1);
 const config = makeConfig({ ...configOverrides(), lanes: Number(arg('lanes') ?? configOverrides().lanes ?? 2) });
 const runExperiments = process.argv.includes('--experiments');
 const experimentGames = Number(arg('experiment-games') ?? games);
 
-const baseline = simulate({ games, seed, config, cardSet: prototypeCards, onProgress: progress('Current rules', games) });
+const baseline = simulate({ games, seed, config, cardSet, onProgress: progress('Current rules', games) });
 
 const experiments: Experiment[] = [];
 if (runExperiments) {
@@ -55,7 +59,7 @@ if (runExperiments) {
       games: experimentGames,
       seed,
       config: makeConfig({ ...config, ...e.config }),
-      cardSet: e.cards ? e.cards(prototypeCards) : prototypeCards,
+      cardSet: e.cards ? e.cards(cardSet) : cardSet,
       onProgress: progress(e.name, experimentGames),
     });
     experiments.push({ name: e.name, description: e.description, result });
@@ -67,7 +71,7 @@ const report = buildReport({
   date,
   seed,
   config,
-  cardSetVersion: prototypeCards.version,
+  cardSetVersion: cardSet.version,
   baseline,
   experiments,
   suggestions: suggestTuning(baseline, experiments),

@@ -231,6 +231,11 @@ export function buildReport(input: ReportInput): string {
     return [area, (p.count / s.games).toFixed(1), pct(p.attackerWins, p.count)];
   })));
   out.push('');
+  out.push(table(['Passes to a forward', 'Receiver ahead or level (printed cards)', 'Caught (after dice and spells)'], (['A', 'B'] as const).map((side) => {
+    const f = s.forwardPasses[side];
+    return [`Team ${side}`, pct(f.aheadOrLevel, f.count), pct(f.caught, f.count)];
+  })));
+  out.push('');
 
   out.push('### Injuries');
   out.push('');

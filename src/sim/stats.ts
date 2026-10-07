@@ -66,6 +66,11 @@ export class SimStats {
     midfield: { count: 0, attackerWins: 0 },
     forward: { count: 0, attackerWins: 0 },
   };
+  /** Passes to a forward, by the passing team: how often the receiver started ahead (printed cards) and was caught. */
+  forwardPasses: Record<Side, { count: number; aheadOrLevel: number; caught: number }> = {
+    A: { count: 0, aheadOrLevel: 0, caught: 0 },
+    B: { count: 0, aheadOrLevel: 0, caught: 0 },
+  };
   /** Shots by the row of the shooter (midfield = long shot). */
   shotsFrom: Record<Area | 'goal', { count: number; attackerWins: number }> = {
     goal: { count: 0, attackerWins: 0 },
@@ -147,6 +152,12 @@ export class SimStats {
           if (e.kind === 'pass') {
             this.passesTo[e.attacker.pos.area].count += 1;
             this.passesTo[e.attacker.pos.area].attackerWins += won;
+            if (e.attacker.pos.area === 'forward' && e.defender.card) {
+              const f = this.forwardPasses[e.attacker.side];
+              f.count += 1;
+              f.caught += won;
+              if (e.attacker.printed >= e.defender.printed) f.aheadOrLevel += 1;
+            }
           }
           for (const side of [e.attacker, e.defender]) {
             if (!side.card) continue; // an empty spot

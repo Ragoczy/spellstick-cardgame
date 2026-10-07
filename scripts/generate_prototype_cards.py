@@ -4,9 +4,14 @@ Everything here is a placeholder: names, elements, and numbers exist only so the
 simulator have something to run. Real rosters come in milestone M5.
 
 Usage: python3 scripts/generate_prototype_cards.py > data/cards.prototype.json
+       python3 scripts/generate_prototype_cards.py --balanced > data/cards.balanced.json
+         (candidate rosters: Defense capped at 5, the same mix of player types for both teams)
 """
 import json
 import random
+import sys
+
+BALANCED = "--balanced" in sys.argv
 
 ELEMENTS = ["fire", "water", "earth", "air"]  # placeholders until canon is set
 OPPOSED = [["fire", "water"], ["earth", "air"]]
@@ -21,22 +26,25 @@ RESONANT_NAMES = {"fire": "Anger", "water": "Love", "earth": "Pain", "air": "Joy
 ARCHETYPES = {
     "runner":    (5, 3, 2, 4),
     "striker":   (3, 5, 2, 2),
-    "stopper":   (2, 2, 6, 2),
+    "stopper":   (3, 2, 5, 2) if BALANCED else (2, 2, 6, 2),  # balanced: Defense capped at 5, the point moved to Speed
     "anchor":    (3, 2, 5, 3),
     "playmaker": (4, 3, 3, 5),
     "allround":  (3, 4, 3, 3),
 }
 
+# Balanced candidate: both teams use the same mix of player types.
+BALANCED_MIX = {"runner": 4, "striker": 4, "playmaker": 4, "allround": 4, "anchor": 3, "stopper": 3}
+
 # Per-team archetype mix (22 field players) and element weighting.
 TEAMS = {
     "A": {
         "name": "Placeholder Team A", "color": "#B5462E",
-        "mix": {"runner": 5, "striker": 5, "playmaker": 4, "allround": 3, "anchor": 3, "stopper": 2},
+        "mix": BALANCED_MIX if BALANCED else {"runner": 5, "striker": 5, "playmaker": 4, "allround": 3, "anchor": 3, "stopper": 2},
         "elements": ["fire", "fire", "air", "air", "earth", "water"],
     },
     "B": {
         "name": "Placeholder Team B", "color": "#2E6FB5",
-        "mix": {"stopper": 5, "anchor": 5, "allround": 4, "playmaker": 3, "runner": 3, "striker": 2},
+        "mix": BALANCED_MIX if BALANCED else {"stopper": 5, "anchor": 5, "allround": 4, "playmaker": 3, "runner": 3, "striker": 2},
         "elements": ["water", "water", "earth", "earth", "fire", "air"],
     },
 }
@@ -164,7 +172,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.5-prototype",
+        "version": "0.5-prototype-balanced" if BALANCED else "0.5-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

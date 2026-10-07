@@ -15,7 +15,7 @@
 
 import { affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
-import { NUMERIC_EFFECTS, type Area, type CardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
+import { NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
 import type { GameConfig, InjuryDef, InjuryStat } from '../engine/config';
 import { DEFAULT_CONFIG } from '../engine/config';
 import type { CardView } from '../engine/events';
@@ -31,12 +31,16 @@ import type { Agent } from './agent';
 /** How much having the ball is worth, by where it is (for the side holding it). */
 const BALL_VALUE: Record<'goal' | Area, number> = { goal: 0.05, defense: 0.12, midfield: 0.25, forward: 0.5 };
 
-/** What an unknown opposing player is assumed to have, by position. */
-const UNKNOWN_STATS: Record<'goal' | Area, Partial<Record<StatName, number>>> = {
-  goal: { save: 4.5 },
-  defense: { speed: 2.5, shot: 2.5, defense: 4.5, faceoff: 2.5 },
-  midfield: { speed: 3.5, shot: 3, defense: 3.5, faceoff: 3.5 },
-  forward: { speed: 3.5, shot: 4, defense: 2.5, faceoff: 3 },
+/**
+ * Guessing an unseen opposing player: start from the average of the opponent's players seen so
+ * far (or these starting guesses, before enough have been seen), then adjust for position, since
+ * teams put their best Defense on defense, and so on.
+ */
+const STARTING_GUESS: Record<'speed' | 'shot' | 'defense' | 'faceoff', number> = { speed: 3.3, shot: 3.3, defense: 3.5, faceoff: 3 };
+const POSITION_ADJUST: Record<Area, Partial<Record<StatName, number>>> = {
+  defense: { defense: 0.75, speed: -0.5, shot: -0.5 },
+  midfield: { faceoff: 0.5, speed: 0.25 },
+  forward: { shot: 0.5, speed: 0.25, defense: -0.5 },
 };
 
 /** Rough worth of keeping a card in hand. */
@@ -135,6 +139,12 @@ export function heuristicAgent(seed: number, config: GameConfig = DEFAULT_CONFIG
   };
 }
 
+/** For checking the AI's judgement: every legal action with its score (no randomness), best first. */
+export function explainChoice(view: PlayerView, legal: Action[], config: GameConfig = DEFAULT_CONFIG): { action: Action; score: number }[] {
+  const ai = new Thinker(view, config, () => 0);
+  return legal.map((action) => ({ action, score: ai.score(action) })).sort((a, b) => b.score - a.score);
+}
+
 /** Scores actions for one decision. Built fresh for each decision from the current view. */
 class Thinker {
   private readonly me: Side;
@@ -210,10 +220,30 @@ class Thinker {
       const player = card.def as PlayerCardDef;
       return scoreSide({ player, injury: card.injury, side: { stat, use, pos, modifiers: [] }, spell: null, shielded: false }, this.config).total;
     }
-    // Unknown player: assume average for the position, minus any injury showing.
+    // Unknown player: a guess for the position, minus any injury showing.
     const injury = visibleInjury(this.view, 'opponent', pos);
-    const penalty = injury ? (stat === 'save' ? Math.max(0, ...Object.values(injury.penalty).map((n) => n ?? 0)) : injury.penalty[stat as InjuryStat] ?? 0) : 0;
-    return Math.max(0, (UNKNOWN_STATS[pos.area][stat] ?? 3) - penalty);
+    const penalty = injury && stat !== 'save' ? injury.penalty[stat as InjuryStat] ?? 0 : 0;
+    return Math.max(0, this.guessUnknown(pos, stat) - penalty);
+  }
+
+  /** A guess at an unseen opposing player's stat (see STARTING_GUESS). */
+  private guessUnknown(pos: Pos, stat: StatName): number {
+    if (pos.area === 'goal') {
+      // Assume their goalie is about as good as mine.
+      const mine = knownPlayer(this.view, 'mine', { area: 'goal' });
+      return mine?.kind === 'goalie' ? mine.save : 3;
+    }
+    if (stat === 'save') return 0;
+    const seen = this.seenOpponentFieldPlayers();
+    const average = seen.length >= 3 ? seen.reduce((sum, p) => sum + p[stat], 0) / seen.length : STARTING_GUESS[stat];
+    return average + (POSITION_ADJUST[pos.area][stat] ?? 0);
+  }
+
+  /** Opposing field players this side has seen: face up, scried, or in their discard pile. */
+  private seenOpponentFieldPlayers(): FieldCardDef[] {
+    const onField = [this.view.opponent.goalie, ...Object.values(this.view.opponent.lineup).flat()]
+      .flatMap((slot) => (slot.state === 'revealed' || slot.state === 'faceDown' ? [slot.card.def] : []));
+    return [...onField, ...this.view.opponent.discard.map((c) => c.def)].filter((d): d is FieldCardDef => d.kind === 'field');
   }
 
   /** The biggest boost this side could add with a reaction spell cast by the player at `pos`. */
@@ -272,7 +302,17 @@ class Thinker {
     const p = winChance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
     const protect = this.config.protectCatch;
     const safe = protect === 'all' || (protect === 'forward' && to.area === 'forward');
-    return p * this.holdValue(to, safe) - (1 - p) * BALL_VALUE[interceptor.area];
+    return p * this.afterGaining(to, safe) - (1 - p) * BALL_VALUE[interceptor.area];
+  }
+
+  /**
+   * What getting the ball at `pos` is worth. With another action still to come this turn, a
+   * forward can shoot straight away, before the other team gets a chance to tackle.
+   */
+  private afterGaining(pos: FieldPos, safeFromTackles = false): number {
+    const hold = this.holdValue(pos, safeFromTackles);
+    if (this.view.actionsLeft >= 2 && pos.area === 'forward') return Math.max(hold, this.shotValue(pos, [], 0));
+    return hold;
   }
 
   /** Chance a shot from `from` goes in. */
@@ -291,7 +331,7 @@ class Thinker {
     const tackler = opposite(holder);
     const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler);
     const p = winChance(mine, this.theirValue(holder, 'speed', 'evade'), false);
-    return p * this.holdValue(tackler) - (1 - p) * BALL_VALUE[holder.area];
+    return p * this.afterGaining(tackler) - (1 - p) * BALL_VALUE[holder.area];
   }
 
   // ---- Other actions ----

@@ -7,7 +7,7 @@ import {
   cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
 } from './board';
 import type { ActionSpellDef } from './cards';
-import { playReaction, startContest } from './contest';
+import { callDice, playReaction, startContest } from './contest';
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
@@ -38,6 +38,7 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'substitute': substitute(s, action, ev); break;
     case 'regroup': regroup(s, side, action.discard, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
+    case 'callDice': callDice(s, action.roll, ev); break;
     case 'shootoutPick': penalty(s, side, action.pos, ev); break;
     case 'forcedSub':
       completeForcedSub(s, action.card, ev);

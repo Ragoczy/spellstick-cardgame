@@ -51,6 +51,8 @@ export class SimStats {
   carriedOff = 0;
   /** Goals (and shootout penalties) scored into an empty goal. */
   emptyGoalGoals = 0;
+  /** Rolls spent (experimental dice budget). */
+  diceSpent = 0;
   /** Contests between two players where the printed cards differed: how often the weaker card won. */
   upsets = { contests: 0, weakerWon: 0 };
   /** Games where a spot sat empty because nobody could replace a carried-off player. */
@@ -108,6 +110,9 @@ export class SimStats {
           break;
         case 'slotEmptied':
           emptySlot = true;
+          break;
+        case 'diceRolled':
+          this.diceSpent += 1;
           break;
         case 'turnStarted':
         case 'faceoffStarted':

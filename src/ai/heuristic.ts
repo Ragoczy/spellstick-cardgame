@@ -175,6 +175,7 @@ class Thinker {
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
       case 'react': return this.scoreReaction(action.card);
+      case 'callDice': return action.roll ? this.scoreDice() : 0;
       case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
       case 'discard': return -this.cardValue(this.handCard(action.card));
       case 'pass': return this.passValue(action.to, []);
@@ -444,6 +445,36 @@ class Thinker {
       default:
         return -1; // reaction spells can't be cast as actions
     }
+  }
+
+  // ---- Spending rolls (experimental) ----
+
+  /** Worth of spending a roll now: the gain in win chance in a contest that matters, minus the roll's value. */
+  private scoreDice(): number {
+    const pending = this.view.pending;
+    if (pending.kind !== 'callDice') return -1;
+    const { contest, role } = pending;
+    const other: ContestRole = role === 'attacker' ? 'defender' : 'attacker';
+    const me = contest[role];
+    const them = contest[other];
+    const myCard = knownCard(this.view, 'mine', me.pos)!;
+    const theirCard = knownCard(this.view, 'opponent', them.pos);
+    const total = (card: CardView | null, side: typeof me) =>
+      scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, side, spell: null, shielded: false }, this.config).total;
+    const mine = total(myCard, me);
+    const theirs = total(theirCard, them);
+    const iWinTies = contest.tiesGoTo === role;
+    const now = this.chance(mine, theirs, iWinTies);
+    const die = this.config.budgetDie;
+    let withDice = 0;
+    for (let a = 1; a <= die; a++) {
+      if (this.config.diceMode === 'self') withDice += this.chance(mine + a, theirs, iWinTies) / die;
+      else for (let b = 1; b <= die; b++) withDice += this.chance(mine + a, theirs + b, iWinTies) / (die * die);
+    }
+    // Rolls are scarce: worth more as the pile runs down.
+    const left = this.view.diceLeft[this.me];
+    const rollValue = left > this.config.diceBudget / 2 ? 0.05 : 0.1;
+    return this.importance(contest, role) * (withDice - now) - rollValue;
   }
 
   // ---- Reactions ----

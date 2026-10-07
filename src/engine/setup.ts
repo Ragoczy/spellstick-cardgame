@@ -92,6 +92,7 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     injuryCards,
     injuries: {},
     forcedSub: null,
+    diceLeft: { A: config.diceBudget, B: config.diceBudget },
     pending: { kind: 'chooseGoalie', side: 'A' },
     result: null,
   };

@@ -147,6 +147,7 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     ...injuryDeckFor(config),
     injuries: {},
     forcedSub: null,
+    diceLeft: { A: config.diceBudget, B: config.diceBudget },
     pending: { kind: 'action', side: active },
     result: null,
   };

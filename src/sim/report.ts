@@ -218,6 +218,7 @@ export function buildReport(input: ReportInput): string {
   out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot or penalty scores, the hit lands, or the team choosing the faceoff lane wins it.');
   out.push('');
   out.push(`Upsets (the weaker printed card won, thanks to spells or dice): ${pct(s.upsets.weakerWon, s.upsets.contests)} of ${s.upsets.contests} contests.`);
+  if (s.diceSpent) out.push(`Rolls spent per game: ${(s.diceSpent / s.games).toFixed(1)}.`);
   out.push('');
   const contestRows = (['pass', 'tackle', 'shot', 'faceoff', 'penalty', 'hit'] as const).map((k) => {
     const c = s.contests[k];

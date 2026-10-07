@@ -87,6 +87,12 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'callDice': {
+      if (p.kind !== 'callDice') return 'There is no contest waiting for dice.';
+      if (action.roll && s.diceLeft[side] <= 0) return 'You have no rolls left.';
+      return null;
+    }
+
     case 'react': {
       if (p.kind !== 'reaction') return 'There is no contest to react to.';
       if (action.card === null) return null;

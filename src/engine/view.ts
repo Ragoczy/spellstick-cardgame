@@ -36,6 +36,8 @@ export interface PlayerView {
   shootout: Shootout | null;
   /** Injury cards left in the shared injury deck. */
   injuryDeckCount: number;
+  /** Experimental: rolls each side has left to spend (public). */
+  diceLeft: Record<Side, number>;
   /** A forced substitution waiting to happen (public). */
   forcedSub: { side: Side; pos: Pos } | null;
   /** What the game is waiting for. All of it is public information. */
@@ -95,6 +97,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     // Only your own shooters are listed (the screen only needs to know who of yours has shot).
     shootout: s.shootout ? { ...s.shootout, shooters: s.shootout.shooters.filter((uid) => uid.startsWith(me)) } : null,
     injuryDeckCount: s.injuryDeck.length,
+    diceLeft: s.diceLeft,
     forcedSub: s.forcedSub ? { side: s.forcedSub.side, pos: s.forcedSub.pos } : null,
     pending: s.pending,
     actionsLeft: s.actionsLeft,

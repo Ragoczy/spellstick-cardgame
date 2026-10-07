@@ -76,6 +76,10 @@ export function legalActions(s: GameState, side: Side): Action[] {
       for (let lane = 0; lane < s.config.lanes; lane++) candidates.push({ type: 'faceoffLane', side, lane });
       break;
 
+    case 'callDice':
+      candidates.push({ type: 'callDice', side, roll: false }, { type: 'callDice', side, roll: true });
+      break;
+
     case 'reaction':
       candidates.push({ type: 'react', side, card: null });
       for (const card of hand) if (isReactionSpell(defOf(s, card))) candidates.push({ type: 'react', side, card });

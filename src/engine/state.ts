@@ -78,6 +78,8 @@ export type Pending =
   | { kind: 'faceoffLane'; side: Side }
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
+  /** Experimental (config.diceBudget): spend one of your rolls in this contest? */
+  | { kind: 'callDice'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'discard'; side: Side; count: number }
   /** A player was injured or carried off: their owner must bring on a substitute from hand. */
   | { kind: 'forcedSub'; side: Side; pos: Pos }
@@ -139,6 +141,8 @@ export interface GameState {
   injuryCards: Record<string, InjuryDef>;
   /** Injuries attached to players, by player card id -> injury card id. */
   injuries: Record<Uid, string>;
+  /** Experimental (config.diceBudget): rolls each side has left to spend this game. */
+  diceLeft: Record<Side, number>;
   /** A forced substitution waiting to happen. `injured` is the injured player still in the spot (null if carried off). */
   forcedSub: { side: Side; pos: Pos; injured: Uid | null } | null;
   pending: Pending;

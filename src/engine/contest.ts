@@ -43,7 +43,50 @@ export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): v
     attacker: { side: contest.attacker.side, pos: contest.attacker.pos, ...rollOf(contest.attacker) },
     defender: { side: contest.defender.side, pos: contest.defender.pos, ...rollOf(contest.defender) },
   });
-  askForReaction(s, contest, 'attacker', ev);
+  askForDice(s, contest, 'attacker', ev);
+}
+
+// ---- Experimental: spending rolls (config.diceBudget) ----
+
+/** Asks a side whether to spend a roll, if it can; otherwise moves on. */
+function askForDice(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
+  const me = contest[role];
+  const alreadyRolled = s.config.diceMode === 'both' ? !!(contest.attacker.roll || contest.defender.roll) : !!me.roll;
+  if (s.config.diceBudget > 0 && s.diceLeft[me.side] > 0 && slotAt(s, me.side, me.pos) && !alreadyRolled) {
+    s.pending = { kind: 'callDice', side: me.side, role, contest };
+    return;
+  }
+  afterDice(s, contest, role, ev);
+}
+
+function afterDice(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
+  if (role === 'attacker') askForDice(s, contest, 'defender', ev);
+  else askForReaction(s, contest, 'attacker', ev);
+}
+
+/** A side decides whether to spend a roll. In 'both' mode both players roll; only the caller pays. */
+export function callDice(s: GameState, roll: boolean, ev: GameEvent[]): void {
+  if (s.pending.kind !== 'callDice') throw new Error('No contest is waiting for dice');
+  const { contest, role } = s.pending;
+  const me = contest[role];
+  if (roll) {
+    s.diceLeft[me.side] -= 1;
+    const rollers = s.config.diceMode === 'both' ? [contest.attacker, contest.defender] : [me];
+    for (const side of rollers) {
+      if (!slotAt(s, side.side, side.pos) || side.roll) continue;
+      let value: number;
+      [value, s.rng] = randomInt(s.rng, s.config.budgetDie);
+      side.roll = value + 1;
+    }
+    ev.push({
+      type: 'diceRolled',
+      caller: me.side,
+      ...(contest.attacker.roll ? { attackerRoll: contest.attacker.roll } : {}),
+      ...(contest.defender.roll ? { defenderRoll: contest.defender.roll } : {}),
+      left: { ...s.diceLeft },
+    });
+  }
+  afterDice(s, contest, role, ev);
 }
 
 /** Waits for a side's reaction spell, or moves on if they have none (or no player to cast it). */

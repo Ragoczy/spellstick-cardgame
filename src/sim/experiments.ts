@@ -43,28 +43,28 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'd3 per contest',
-    description: 'Each player in a contest rolls a d3 (1–3) and adds it, before reaction spells.',
-    config: { contestDie: 3 },
-  },
-  {
-    name: 'd4 per contest',
-    description: 'Each player in a contest rolls a d4 (1–4) and adds it, before reaction spells.',
-    config: { contestDie: 4 },
-  },
-  {
-    name: 'd6 per contest',
-    description: 'Each player in a contest rolls a d6 (1–6) and adds it, before reaction spells.',
+    name: 'd6 every contest',
+    description: 'Each player in every contest rolls a d6 and adds it, before reaction spells.',
     config: { contestDie: 6 },
   },
   {
-    name: 'Two hits per team',
-    description: "Each team's third hit becomes a Neutral Boost.",
-    cards: twoHitsPerTeam,
+    name: 'Call for dice: 3 each',
+    description: 'Each player may spend 3 rolls a game. Spending one makes both players roll a d6; only the caller pays.',
+    config: { diceBudget: 3, diceMode: 'both' },
   },
   {
-    name: 'Goalies Save +1',
-    description: 'Goalies at Save 4 and 3.',
-    cards: goalieSave(1),
+    name: 'Call for dice: 5 each',
+    description: 'As above, with 5 rolls each.',
+    config: { diceBudget: 5, diceMode: 'both' },
+  },
+  {
+    name: 'Call for dice: 8 each',
+    description: 'As above, with 8 rolls each.',
+    config: { diceBudget: 8, diceMode: 'both' },
+  },
+  {
+    name: 'Roll for yourself: 5 each',
+    description: 'Each player may spend 5 rolls a game; a spent roll adds a d6 to your side only. The other player may answer with their own.',
+    config: { diceBudget: 5, diceMode: 'self' },
   },
 ];

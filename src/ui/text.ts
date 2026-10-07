@@ -150,6 +150,11 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return { text: `Nobody can replace ${at(e.side, e.pos)}: the spot is empty and counts as 0 until it's filled.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'mended':
       return info(`${who(e.side)} ${verb(e.side, 'mend', 'mends')} ${e.card.def.name}: no more ${e.injury.name.toLowerCase()}.`);
+    case 'diceRolled': {
+      const left = e.left[e.caller];
+      return info(`${who(e.caller)} ${verb(e.caller, 'spend', 'spends')} a roll (${left} left). ` +
+        `Rolls: ${[e.attackerRoll, e.defenderRoll].filter((r) => r !== undefined).join(' and ')}.`);
+    }
     case 'shootoutStarted':
       return { text: `Full time, and it's a tie: penalty shootout! ${who(e.first)} ${verb(e.first, 'shoot', 'shoots')} first.`, tone: 'goal' };
     case 'penalty':

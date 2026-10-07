@@ -86,6 +86,8 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} has nobody to replace them: ${posLabel(e.pos)} is empty.`;
     case 'mended':
       return `${names[e.side]} mends ${e.card.def.name} (${e.injury.name}).`;
+    case 'diceRolled':
+      return `${names[e.caller]} spends a roll. Rolls: attacker ${e.attackerRoll ?? '–'}, defender ${e.defenderRoll ?? '–'}.`;
     case 'gameOver':
       return `Game over: ${e.result.winner === null ? 'a draw' : `${names[e.result.winner]} wins`} (${END_REASON[e.result.reason]}).`;
   }

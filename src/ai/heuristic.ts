@@ -311,7 +311,8 @@ class Thinker {
 
   private passValue(to: FieldPos, modifiers: Modifier[]): number {
     const interceptor = opposite(to);
-    const mine = this.myValue(to, 'speed', 'receive', modifiers) + 0.6 * this.bestBoost(to);
+    const passBonus = this.config.passBonus ? [{ label: 'Pass', amount: this.config.passBonus }] : [];
+    const mine = this.myValue(to, 'speed', 'receive', [...modifiers, ...passBonus]) + 0.6 * this.bestBoost(to);
     const p = this.chance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
     const protect = this.config.protectCatch;
     const safe = protect === 'all' || (protect === 'forward' && to.area === 'forward');

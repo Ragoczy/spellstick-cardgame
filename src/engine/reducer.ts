@@ -102,9 +102,11 @@ function faceoff(s: GameState, chooser: Side, lane: number, ev: GameEvent[]): vo
 }
 
 function pass(s: GameState, side: Side, to: FieldPos, ev: GameEvent[]): void {
+  // Experimental: a passing bonus for the receiver.
+  const modifiers: Modifier[] = s.config.passBonus ? [{ label: 'Pass', amount: s.config.passBonus }] : [];
   startContest(s, {
     kind: 'pass',
-    attacker: { side, pos: to, stat: 'speed', use: 'receive', spell: null, modifiers: [] },
+    attacker: { side, pos: to, stat: 'speed', use: 'receive', spell: null, modifiers },
     defender: { side: otherSide(side), pos: opposite(to), stat: 'defense', use: 'intercept', spell: null, modifiers: [] },
     tiesGoTo: s.config.passTiesGoTo,
   }, ev);

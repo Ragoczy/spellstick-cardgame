@@ -12,6 +12,8 @@ export interface KeyMetrics {
   injuriesPerGame: number;
   moreInjuredWinRate: number;
   upsetRate: number;
+  passCatch: number;
+  forwardPassCatch: number;
   avgTurns: number;
   avgGoals: number;
   drawShare: number;
@@ -28,6 +30,8 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     injuriesPerGame: s.games ? (s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play) / s.games : NaN,
     moreInjuredWinRate: s.moreInjured.games ? s.moreInjured.wins / s.moreInjured.games : NaN,
     upsetRate: s.upsets.contests ? s.upsets.weakerWon / s.upsets.contests : NaN,
+    passCatch: s.contests.pass.count ? s.contests.pass.attackerWins / s.contests.pass.count : NaN,
+    forwardPassCatch: s.passesTo.forward.count ? s.passesTo.forward.attackerWins / s.passesTo.forward.count : NaN,
     avgTurns: average(s.turns),
     avgGoals: s.games ? s.goals / s.games : NaN,
     drawShare: s.games ? s.wins.draws / s.games : NaN,
@@ -166,9 +170,10 @@ export function buildReport(input: ReportInput): string {
       return [
         e.name, k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
         k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate), k.injuriesPerGame.toFixed(2), pctOf(k.moreInjuredWinRate), pctOf(k.upsetRate),
+        pctOf(k.passCatch), pctOf(k.forwardPassCatch),
       ];
     });
-    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins', 'Upsets'], rows));
+    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins', 'Upsets', 'Passes caught', 'Forward passes caught'], rows));
     out.push('');
     out.push('"Upsets": contests where the weaker printed card (stat, ability, injury) won anyway, thanks to spells or dice.');
     out.push('');

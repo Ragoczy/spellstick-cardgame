@@ -43,28 +43,36 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'No dice',
-    description: 'No roll tokens (the rules before v0.6).',
-    config: { diceBudget: 0 },
+    name: 'Pass bonus +1',
+    description: "The receiver adds 1 to their Speed in every pass.",
+    config: { passBonus: 1 },
   },
   {
-    name: '3 rolls each',
-    description: 'Each player has 3 roll tokens instead of 5.',
-    config: { diceBudget: 3 },
+    name: 'Pass bonus +2',
+    description: "The receiver adds 2 to their Speed in every pass.",
+    config: { passBonus: 2 },
   },
   {
-    name: '8 rolls each',
-    description: 'Each player has 8 roll tokens instead of 5.',
-    config: { diceBudget: 8 },
+    name: 'Pass bonus +3',
+    description: "The receiver adds 3 to their Speed in every pass.",
+    config: { passBonus: 3 },
   },
   {
-    name: 'Roll for yourself',
-    description: 'A spent roll adds a die to your side only (the other player may answer with their own token).',
-    config: { diceMode: 'self' },
+    name: 'Pass bonus +2, Save +1',
+    description: 'Pass bonus +2, and goalies one Save better (to keep scoring in range).',
+    config: { passBonus: 2 },
+    cards: goalieSave(1),
   },
   {
-    name: 'd6 every contest',
-    description: 'No tokens; both players roll a d6 in every contest.',
-    config: { diceBudget: 0, contestDie: 6 },
+    name: 'Pass bonus +1, Save +1',
+    description: 'Pass bonus +1, and goalies one Save better.',
+    config: { passBonus: 1 },
+    cards: goalieSave(1),
+  },
+  {
+    name: 'Pass bonus +2, Save +2',
+    description: 'Pass bonus +2, and goalies two Save better.',
+    config: { passBonus: 2 },
+    cards: goalieSave(2),
   },
 ];

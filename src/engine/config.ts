@@ -50,6 +50,8 @@ export interface GameConfig {
   budgetDie: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
+  /** Added to the receiver's value in every pass (0 = off). */
+  passBonus: number;
   /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
   diceMode: 'both' | 'self';
   /** Each player in every contest rolls a die this size and adds it (0 = off). */
@@ -83,6 +85,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   ],
   protectCatch: 'off',
   contestDie: 0,
+  passBonus: 0,
   diceMode: 'both',
 };
 

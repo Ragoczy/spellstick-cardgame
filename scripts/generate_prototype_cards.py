@@ -56,17 +56,28 @@ ABILITIES = [
      "When this player wins a contest, draw 1 card."),
 ]
 
-# 16 spells per team: (effect, spellType, params, copies-by-element, rules text)
+# Spells shared by both teams: (effect, spellType, params, copies-by-element, rules text)
 SPELLS = [
-    ("boost",     "reaction", {"amount": 2},  ["fire", "water", "earth", "air", None], "+2 to your side in this contest."),
+    ("boost",     "reaction", {"amount": 2},  [None], "+2 to your side in this contest."),
     ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat counts as 0 in this contest."),
     ("scry",      "action",   {},             ["water", "air"], "Look at one of your opponent's face-down cards."),
-    ("swap",      "action",   {},             ["earth"], "Swap two of your face-down players."),
     ("long_pass", "action",   {},             ["air", "air"], "Pass, skipping one row forward."),
     ("long_shot", "action",   {"penalty": 2}, ["fire"], "A midfielder holding the ball may shoot, with -2 Shot."),
     ("steal",     "action",   {"amount": 2},  ["fire", "earth"], "Tackle with +2."),
     ("recall",    "action",   {"count": 2},   [None], "Draw 2 cards."),
+    ("dirty_play", "reaction", {},            [None], "If your side wins this contest, the opposing player is injured."),
+    ("mend",      "action",   {},             ["water"], "Remove the injury from one of your players, on the field or in your hand."),
 ]
+
+# Hits, chosen to fit each team's main elements: (element, name)
+HIT_TEXT = "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured."
+HITS = {
+    "A": [("fire", "Flambé"), ("fire", "Flambé"), ("air", "Thunderclap")],
+    "B": [("water", "Water Spear"), ("water", "Water Spear"), ("earth", "Earth Crush")],
+}
+
+# Placeholder names for spells that don't follow the "<Element> <Effect>" pattern.
+SPELL_NAMES = {"dirty_play": "Late Hit", "mend": "Mend"}
 
 
 def resonant(element):
@@ -126,12 +137,23 @@ def build():
                 cards.append({
                     "id": f"{team_id.lower()}-s-{s:02d}",
                     "team": team_id, "kind": "spell",
-                    "name": f"{label} {effect.replace('_', ' ').title()}",
+                    "name": SPELL_NAMES.get(effect, f"{label} {effect.replace('_', ' ').title()}"),
                     "spellType": stype, "element": el,
                     "ability": {"effect": effect, "params": params},
                     "text": text,
                     "placeholder": True,
                 })
+        for el, name in HITS[team_id]:
+            s += 1
+            cards.append({
+                "id": f"{team_id.lower()}-s-{s:02d}",
+                "team": team_id, "kind": "spell",
+                "name": name,
+                "spellType": "action", "element": el,
+                "ability": {"effect": "hit", "params": {"strength": 3}},
+                "text": HIT_TEXT,
+                "placeholder": True,
+            })
         assert s == 16, s
     # The canon player promo: stats and identity to be set by Paul.
     cards.append({
@@ -142,7 +164,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.3-prototype",
+        "version": "0.5-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

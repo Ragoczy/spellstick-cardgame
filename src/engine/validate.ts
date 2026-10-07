@@ -3,7 +3,7 @@
 
 import type { Action } from './actions';
 import { defOf, isActionSpell, isReactionSpell, slotAt } from './board';
-import { otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
+import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 
 function validField(s: GameState, pos: FieldPos): boolean {
@@ -28,6 +28,7 @@ function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): str
   if (!validField(s, to)) return 'That is not a spot on the field.';
   const targets = passTargets(s.ball!.pos, s.config.lanes, longPass);
   if (!targets.some((t) => samePos(t, to))) return "You can't pass there.";
+  if (!slotAt(s, side, to)) return 'Nobody is in that spot to catch it.';
   return null;
 }
 
@@ -41,7 +42,20 @@ function canTackle(s: GameState, side: Side): string | null {
   if (s.ball === null || s.ball.side !== otherSide(side)) return 'You can only tackle when the other team has the ball.';
   if (s.ball.pos.area === 'goal') return "Goalies can't be tackled.";
   if (s.ballProtected) return "That player just caught a pass and can't be tackled until their next turn.";
+  if (!slotAt(s, side, opposite(s.ball.pos))) return 'You have nobody in that spot to tackle with.';
   return null;
+}
+
+/** A lane can be chosen for a faceoff unless both midfielders are missing (and some lane has one). */
+function faceoffLaneOk(s: GameState, lane: number): boolean {
+  const hasMid = (l: number) => !!slotAt(s, 'A', { area: 'midfield', lane: l }) || !!slotAt(s, 'B', { area: 'midfield', lane: l });
+  if (hasMid(lane)) return true;
+  return !Array.from({ length: s.config.lanes }, (_, l) => l).some(hasMid);
+}
+
+/** Whether a card (on the field or in hand) is one of your injured players. */
+function isInjured(s: GameState, uid: string | undefined): boolean {
+  return !!uid && !!s.injuries[uid];
 }
 
 export function validateAction(s: GameState, action: Action): string | null {
@@ -69,6 +83,7 @@ export function validateAction(s: GameState, action: Action): string | null {
     case 'faceoffLane': {
       if (p.kind !== 'faceoffLane') return "It isn't time for a faceoff.";
       if (!Number.isInteger(action.lane) || action.lane < 0 || action.lane >= s.config.lanes) return 'Choose a lane on the field.';
+      if (!faceoffLaneOk(s, action.lane)) return 'Both midfielders in that lane are missing.';
       return null;
     }
 
@@ -85,6 +100,14 @@ export function validateAction(s: GameState, action: Action): string | null {
       const slot = slotAt(s, side, action.pos);
       if (!slot) return 'Choose one of your field players.';
       if (s.shootout?.shooters.includes(slot.uid)) return 'Each player can only take one penalty.';
+      return null;
+    }
+
+    case 'forcedSub': {
+      if (p.kind !== 'forcedSub') return 'There is no injured player to replace.';
+      if (!inHand(s, side, action.card)) return 'Choose a player from your hand.';
+      const kind = defOf(s, action.card).kind;
+      if (p.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') return 'Replace a goalie with a goalie, or a field player with a field player.';
       return null;
     }
 
@@ -112,7 +135,8 @@ export function validateAction(s: GameState, action: Action): string | null {
       return canTackle(s, side);
 
     case 'substitute': {
-      if (!validPos(s, action.pos) || !slotAt(s, side, action.pos)) return 'Choose one of your players to replace.';
+      // The spot may hold a player to replace, or be empty after a player was carried off.
+      if (!validPos(s, action.pos)) return 'Choose one of your players to replace.';
       if (!inHand(s, side, action.card)) return 'Choose a card from your hand.';
       const kind = defOf(s, action.card).kind;
       if (action.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') {
@@ -164,6 +188,28 @@ export function validateAction(s: GameState, action: Action): string | null {
         case 'recall':
           if (target.kind !== 'none') return 'Recall has no target.';
           return null;
+        case 'hit': {
+          if (target.kind !== 'hit') return 'Choose who to hit.';
+          if (!isFieldPos(action.caster)) return "A goalie can't cast a hit.";
+          if (target.at === 'goalie') {
+            if (action.caster.area !== 'forward') return 'Only a forward can hit the goalie.';
+            if (!slotAt(s, otherSide(side), { area: 'goal' })) return 'There is no goalie to hit.';
+            return null;
+          }
+          if (!slotAt(s, otherSide(side), opposite(action.caster))) return 'There is nobody in that spot to hit.';
+          return null;
+        }
+        case 'mend': {
+          if (target.kind === 'mendField') {
+            if (!validPos(s, target.pos) || !isInjured(s, slotAt(s, side, target.pos)?.uid)) return 'Choose one of your injured players.';
+            return null;
+          }
+          if (target.kind === 'mendHand') {
+            if (!inHand(s, side, target.card) || !isInjured(s, target.card)) return 'Choose one of your injured players.';
+            return null;
+          }
+          return 'Choose one of your injured players.';
+        }
       }
       return null;
     }

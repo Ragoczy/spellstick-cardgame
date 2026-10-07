@@ -5,7 +5,7 @@ import type { Action } from '../src/engine/actions';
 import type {
   ActionEffect, Area, CardDef, FieldCardDef, GoalieCardDef, PlayerAbility, ReactionEffect, SpellCardDef,
 } from '../src/engine/cards';
-import { makeConfig, type GameConfig } from '../src/engine/config';
+import { makeConfig, type GameConfig, type InjuryDef } from '../src/engine/config';
 import type { GameEvent } from '../src/engine/events';
 import { AREAS, type FieldPos, type Pos, type Side } from '../src/engine/field';
 import { applyAction } from '../src/engine/reducer';
@@ -80,6 +80,16 @@ export interface ScenarioOptions {
   B?: SideSpec;
 }
 
+/** The injury deck in a fixed, unshuffled order: the first injury in config is drawn last. */
+export function injuryDeckFor(config: GameConfig): { injuryDeck: string[]; injuryCards: Record<string, InjuryDef> } {
+  const injuryCards: Record<string, InjuryDef> = {};
+  let n = 0;
+  for (const injury of config.injuries) {
+    for (let i = 0; i < injury.count; i++) injuryCards[`I${String(++n).padStart(2, '0')}`] = injury;
+  }
+  return { injuryDeck: Object.keys(injuryCards).reverse(), injuryCards };
+}
+
 /** Builds a game in the middle of play: it's `active`'s turn and they must choose an action. */
 export function scenario(options: ScenarioOptions = {}): GameState {
   const config = makeConfig({ ...options.config, lanes: options.lanes ?? options.config?.lanes ?? 2 });
@@ -134,6 +144,9 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     score: options.score ?? { A: 0, B: 0 },
     endgame: { finalTurnFor: null },
     shootout: null,
+    ...injuryDeckFor(config),
+    injuries: {},
+    forcedSub: null,
     pending: { kind: 'action', side: active },
     result: null,
   };

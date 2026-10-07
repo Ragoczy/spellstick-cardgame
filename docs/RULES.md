@@ -1,4 +1,4 @@
-# Spellstick — rules v0.4
+# Spellstick — rules v0.5
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -28,6 +28,7 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 - Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells.
 - A field mat (see "The field").
 - A ball token and a score tracker.
+- A shared **injury deck** of 12 cards ⚙ (see "Injuries").
 
 ## The field
 
@@ -101,7 +102,8 @@ Player abilities are never changed by affinity.
 | steal (+2) | tackle +3 | +2 | +1 |
 | recall (2) | draw 3 | 2 | 1 |
 | long_shot (−2 Shot) | −1 | −2 | −3 |
-| shield, scry, swap, long_pass | works | works | fails |
+| hit (strength 3) | strength 4 | 3 | 2 |
+| shield, dirty_play, scry, swap, long_pass, mend | works | works | fails |
 
 Because your opponent can't see your face-down players, they don't know how strong your spell
 will be until the caster is revealed.
@@ -114,8 +116,9 @@ will be until the caster is revealed.
    players to fill every slot, keep drawing one card at a time until you do. Place field players
    **face down**, one in each of your defense, midfield, and forward slots, and keep the rest as
    your hand.
-3. Choose the first player at random.
-4. Start with a **faceoff** (below). The second player chooses the lane.
+3. Shuffle the injury deck.
+4. Choose the first player at random.
+5. Start with a **faceoff** (below). The second player chooses the lane.
 
 ## Faceoff
 
@@ -123,7 +126,8 @@ Used at the start and after every goal that doesn't end the game. The team that 
 last turn (at the start: the second player; after a goal: the team that was scored on) chooses a
 midfield lane. Both midfielders in that lane are revealed and contest using **Faceoff**.
 The chooser may play a reaction spell first, then the other side. Ties go to the chooser.
-The winner's midfielder takes the ball.
+The winner's midfielder takes the ball. (If the winner's spot is empty, the other midfielder takes it.
+A lane where both midfielders are missing can't be chosen.)
 
 A faceoff is not a turn. At the start, the first player then takes turn 1. After a goal, the
 faceoff happens straight away (before the scoring player's discard step), and the team that was
@@ -147,13 +151,14 @@ scored on takes the next turn, whoever won the faceoff.
 The receiver and the opponent's player in the receiver's slot are both revealed, then contest:
 receiver's **Speed** against the opponent's **Defense**. The passer isn't part of the contest
 and isn't revealed. If the receiver's value is **equal or higher**, they catch it and hold the
-ball. If not, the opponent's player intercepts and holds the ball.
+ball. If not, the opponent's player intercepts and holds the ball. You can't pass to an empty spot,
+and an empty spot can't intercept.
 
 A goalie holding the ball may pass to any of its defenders the same way.
 
 **Shoot.** Only a forward holding the ball. The opposing goalie is revealed. Contest: forward's
 **Shot** against goalie's **Save**. If the forward wins, you score. If not, the goalie holds
-the ball.
+the ball. An empty goal can't save: any shot scores.
 
 A forward can only get the ball by beating the defender in its slot (winning a pass against
 their Defense, or a tackle), so a goal always means the forward beat both the defender and the
@@ -163,7 +168,7 @@ goalie.
 
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
-ball. If you lose, nothing changes. Goalies can't be tackled.
+ball. If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
 
 ## Actions any time
 
@@ -172,7 +177,8 @@ spell when it could do something (see each effect).
 
 **Substitute.** Replace one of your field players or your goalie with a matching card from your
 hand (field player for field player, goalie for goalie), **face down**. The replaced card goes to
-your discard pile, face up. If the replaced player held the ball, the substitute holds it.
+your discard pile, face up. If the replaced player held the ball, the substitute holds it. You can
+also fill an empty spot this way.
 
 **Regroup.** Discard up to 2 cards ⚙, then draw that many. Discarding none is allowed: the
 action does nothing.
@@ -184,12 +190,44 @@ Every contest has an attacker (the side taking the action) and a defender.
 1. Reveal both players involved.
 2. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
    having seen it, may do the same. Each side plays at most one.
-3. Apply abilities and spells. A value can't go below 0.
+3. Apply abilities, injuries, and spells. A value can't go below 0.
 4. **The attacker wins only if their value is higher.** Ties go to the defender, except in
    passes (ties go to the receiver) and faceoffs (ties go to the chooser).
+5. **Injuries:** a hit that lands injures its target, and a dirty play injures the losing player
+   if its side won (see "Injuries").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
-tackling team in a tackle. In a faceoff, the chooser acts first like an attacker and wins ties.
+tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser acts first like an
+attacker and wins ties.
+
+An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
+reaction spells.
+
+## Injuries
+
+Spellstick is a rough sport. Hits and dirty plays injure players.
+
+- **Injury cards** are face up, so everyone can see an injury, even on a face-down player. The
+  deck ⚙ has 3 Singed hair (−1 Speed), 3 Broken finger (−2 Shot), 3 Twisted ankle (−2 Speed),
+  2 Bruised ribs (−2 Defense), and 1 Concussion (−1 to Speed, Shot, Defense, and Faceoff).
+  A goalie loses the injury's penalty from **Save** instead (Concussion: −1 Save).
+- **When a player is injured,** draw the top injury card and attach it to them. Their stats are
+  lowered while it's attached.
+- **Forced substitution:** if the owner has a field player in hand (a goalie, for a goalie), they
+  must bring one on straight away, face down. This is free and doesn't use an action, even during
+  the other player's turn. The injured player goes to the owner's hand with the injury still
+  attached. If they held the ball, the substitute holds it.
+- If the owner has nobody to bring on, the injured player stays in place, playing hurt.
+- An injured player can be substituted back in later. The injury stays until it's **mended**.
+- **Injuries don't stack:** a player who is already injured and gets injured again is **carried
+  off** and discarded, and their injury card goes back to the injury deck. This forces a
+  substitution too. If there's nobody to bring on, the spot is **empty** until a Substitute fills
+  it. If the carried-off player held the ball, the opposing player in that spot picks it up; if
+  there isn't one (a goalie, or an empty spot), the ball goes to a faceoff, and the team that lost
+  the player chooses the lane.
+- When an injured player is discarded for any reason, their injury card goes back into the injury
+  deck (shuffled in). If the injury deck is empty, an injury does nothing beyond the forced
+  substitution.
 
 ## Scoring
 
@@ -224,7 +262,7 @@ engine together. "Numeric" effects are adjusted by affinity.
 **Player abilities**
 
 - `bonus` — `{ stat, amount, when?, row? }`. Add `amount` to `stat` when used for `when`
-  (receive, intercept, tackle, evade, shoot, save, faceoff) and/or while in `row`
+  (receive, intercept, tackle, evade, shoot, save, faceoff, resist — resisting a hit) and/or while in `row`
   (defense, midfield, forward). Every condition given must hold. Example: +2 Defense when
   intercepting.
 - `draw_on_win` — `{ count }`. When this player wins a contest (faceoffs included), its owner
@@ -233,9 +271,11 @@ engine together. "Numeric" effects are adjusted by affinity.
 **Reaction spells**
 
 - `boost` — `{ amount }`, numeric. Add `amount` to your side's value in this contest.
-- `shield` — `{}`, non-numeric. The opposing player's stat counts as 0 in this contest, and
-  their abilities are ignored. Their own spell still counts. If both sides shield, both stats
-  are 0.
+- `shield` — `{}`, non-numeric. The opposing player's stat (or a hit's strength) counts as 0 in
+  this contest, and their abilities and injuries are ignored. Their own spell still counts. If both
+  sides shield, both stats are 0.
+- `dirty_play` — `{}`, non-numeric. Play during any contest. If your side wins, the opposing player
+  in that contest is injured.
 
 **Action spells**
 
@@ -252,6 +292,13 @@ engine together. "Numeric" effects are adjusted by affinity.
 - `steal` — `{ amount }`, numeric. Make a Tackle now and add `amount` to your value. Needs a
   legal Tackle.
 - `recall` — `{ count }`, numeric. Draw `count` cards.
+- `hit` — `{ strength }`, numeric. The caster (a field player, not the goalie) attacks the
+  opposing player in its own spot; a forward may attack the opposing goalie instead. This is a
+  contest with the casting team as attacker: the spell's strength against the target's Defense
+  (a goalie uses Save). Both sides may play reaction spells as usual. If the hit lands, the target
+  is injured.
+- `mend` — `{}`, non-numeric. Remove the injury from one of your players, on the field or in your
+  hand. The injury card goes back to the injury deck.
 
 ## Add-on: center lane
 
@@ -265,6 +312,12 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.5 — New spells: Hit (attack the player in your spot, or a forward can hit the goalie), Dirty play (a reaction that injures the loser if you win), and Mend.
+- v0.5 — Injuries: a shared 12-card injury deck; forced substitution from hand; injuries don't stack (a second injury carries the player off).
+- v0.5 — Empty spots: a carried-off player with no substitute leaves a spot that counts as 0; Substitute can fill it; an empty goal can't save.
+- v0.5 — Injury cards are face up, so injuries show even on face-down players.
+- v0.5 — Prototype decks: four boosts and Earth Swap replaced by three hits, one Late Hit, and one Mend per team.
 
 - v0.4 — Two actions per turn (was one), after simulation showed games were too slow to score. A goal ends your turn.
 - v0.4 — The decks are the game clock: at full time, more goals wins. First to 3 goals still wins straight away.

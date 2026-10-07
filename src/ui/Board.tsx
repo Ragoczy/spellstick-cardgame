@@ -26,9 +26,16 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     flip: props.justRevealed.has(key),
     onClick: () => props.onSpot(side, pos),
   };
-  if (slot.state === 'empty') return <div className="card empty" />;
-  if (slot.state === 'unknown') return <CardBack team={team} {...common} />;
-  return <Card def={slot.card.def} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried} {...common} />;
+  if (slot.state === 'empty') {
+    // Only during play: a player was carried off with nobody to replace them.
+    return (
+      <button type="button" className={`card empty ${common.highlight ? `hl-${common.highlight}` : ''}`} onClick={common.onClick}>
+        {props.view.turn > 0 ? <span className="empty-label">Empty</span> : null}
+      </button>
+    );
+  }
+  if (slot.state === 'unknown') return <CardBack team={team} injury={slot.injury} {...common} />;
+  return <Card def={slot.card.def} injury={slot.card.injury} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried} {...common} />;
 }
 
 export function Board(props: BoardProps) {

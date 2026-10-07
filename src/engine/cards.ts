@@ -15,7 +15,7 @@ export interface Resonant {
 
 export type StatName = 'speed' | 'shot' | 'defense' | 'faceoff' | 'save';
 /** What a stat is being used for in a contest. */
-export type StatUse = 'receive' | 'intercept' | 'tackle' | 'evade' | 'shoot' | 'save' | 'faceoff';
+export type StatUse = 'receive' | 'intercept' | 'tackle' | 'evade' | 'shoot' | 'save' | 'faceoff' | 'resist';
 export type Area = 'defense' | 'midfield' | 'forward';
 
 // ---- Effect vocabulary (docs/RULES.md, "Effect vocabulary") ----
@@ -26,7 +26,8 @@ export type PlayerAbility =
 
 export type ReactionEffect =
   | { effect: 'boost'; params: { amount: number } }
-  | { effect: 'shield'; params: Record<string, never> };
+  | { effect: 'shield'; params: Record<string, never> }
+  | { effect: 'dirty_play'; params: Record<string, never> };
 
 export type ActionEffect =
   | { effect: 'scry'; params: Record<string, never> }
@@ -34,12 +35,14 @@ export type ActionEffect =
   | { effect: 'long_pass'; params: Record<string, never> }
   | { effect: 'long_shot'; params: { penalty: number } }
   | { effect: 'steal'; params: { amount: number } }
-  | { effect: 'recall'; params: { count: number } };
+  | { effect: 'recall'; params: { count: number } }
+  | { effect: 'hit'; params: { strength: number } }
+  | { effect: 'mend'; params: Record<string, never> };
 
 export type SpellEffect = ReactionEffect | ActionEffect;
 
 /** Effects whose number is adjusted by affinity. The rest fail outright when opposed. */
-export const NUMERIC_EFFECTS: ReadonlySet<string> = new Set(['boost', 'long_shot', 'steal', 'recall']);
+export const NUMERIC_EFFECTS: ReadonlySet<string> = new Set(['boost', 'long_shot', 'steal', 'recall', 'hit']);
 
 // ---- Card definitions ----
 
@@ -108,10 +111,10 @@ export interface CardSet {
 // ---- Loader ----
 
 const STATS: StatName[] = ['speed', 'shot', 'defense', 'faceoff', 'save'];
-const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff'];
+const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff', 'resist'];
 const AREAS: Area[] = ['defense', 'midfield', 'forward'];
-const REACTION_EFFECTS = ['boost', 'shield'];
-const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall'];
+const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play'];
+const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall', 'hit', 'mend'];
 
 export class CardDataError extends Error {}
 
@@ -149,6 +152,11 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
     case 'long_shot':
       needInt(params, 'penalty', where);
       break;
+    case 'hit':
+      needInt(params, 'strength', where);
+      break;
+    case 'dirty_play':
+    case 'mend':
     case 'shield':
     case 'scry':
     case 'swap':

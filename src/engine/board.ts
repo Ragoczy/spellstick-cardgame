@@ -2,12 +2,30 @@
 // draft copy of the state made by applyAction, never on the caller's state.
 
 import type { CardDef, PlayerCardDef, SpellCardDef, StatName } from './cards';
+import type { InjuryDef } from './config';
 import type { CardView, DrawReason, GameEvent } from './events';
 import { type Pos, type Side } from './field';
+import { shuffle } from './rng';
 import type { GameState, Slot, TeamState, Uid } from './state';
 
 export function cardView(s: GameState, uid: Uid): CardView {
-  return { uid, def: defOf(s, uid) };
+  const injury = injuryOf(s, uid);
+  return injury ? { uid, def: defOf(s, uid), injury } : { uid, def: defOf(s, uid) };
+}
+
+/** The injury attached to a player card, if any. */
+export function injuryOf(s: GameState, uid: Uid): InjuryDef | null {
+  const injuryCard = s.injuries[uid];
+  return injuryCard ? s.injuryCards[injuryCard] ?? null : null;
+}
+
+/** Takes the injury off a player (if any) and shuffles it back into the injury deck. */
+export function releaseInjury(s: GameState, uid: Uid): InjuryDef | null {
+  const injuryCard = s.injuries[uid];
+  if (!injuryCard) return null;
+  delete s.injuries[uid];
+  [s.injuryDeck, s.rng] = shuffle([...s.injuryDeck, injuryCard], s.rng);
+  return s.injuryCards[injuryCard] ?? null;
 }
 
 export function defOf(s: GameState, uid: Uid): CardDef {
@@ -28,11 +46,17 @@ export function setSlotAt(s: GameState, side: Side, pos: Pos, slot: Slot | null)
   else team.lineup[pos.area][pos.lane] = slot;
 }
 
-/** The player card at a position. Throws if the spot is empty (only possible during setup). */
+/** The player card at a position. Throws if the spot is empty. */
 export function playerAt(s: GameState, side: Side, pos: Pos): PlayerCardDef {
   const slot = slotAt(s, side, pos);
   if (!slot) throw new Error(`No player at ${side} ${pos.area}`);
   return defOf(s, slot.uid) as PlayerCardDef;
+}
+
+/** Puts a card on its owner's discard pile. An injured player's injury goes back to the injury deck. */
+export function toDiscard(s: GameState, side: Side, uid: Uid): void {
+  releaseInjury(s, uid);
+  s.teams[side].discard.push(uid);
 }
 
 export function statOf(def: PlayerCardDef, stat: StatName): number {
@@ -60,9 +84,8 @@ function removeFromHand(team: TeamState, uid: Uid): void {
 
 /** Takes a card from hand and puts it on the discard pile (no event). */
 export function moveHandToDiscard(s: GameState, side: Side, uid: Uid): void {
-  const team = s.teams[side];
-  removeFromHand(team, uid);
-  team.discard.push(uid);
+  removeFromHand(s.teams[side], uid);
+  toDiscard(s, side, uid);
 }
 
 export function takeFromHand(s: GameState, side: Side, uid: Uid): void {

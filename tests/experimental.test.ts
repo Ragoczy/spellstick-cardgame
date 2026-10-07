@@ -3,13 +3,22 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_CONFIG } from '../src/engine/config';
 import { applyAction } from '../src/engine/reducer';
-import { LANE_COUNTS, fwd, lastContest, mid, play, player, scenario } from './helpers';
+import { LANE_COUNTS, actionSpell, eventsOfType, fwd, goalie, lastContest, mid, play, player, scenario, uid } from './helpers';
 
 describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
 
   it('are off by default', () => {
     expect(DEFAULT_CONFIG.protectCatch).toBe('off');
+    expect(DEFAULT_CONFIG.goalieCarryOff).toBe(true);
+  });
+
+  it("goalieCarryOff: false means a goalie injured again stays on with their first injury", () => {
+    const s = scenario({ lanes, config: { goalieCarryOff: false }, A: { hand: [actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } })] }, B: { goalie: goalie('B goalie', 1) } });
+    s.injuries[uid(s, 'B', 'B goalie')] = s.injuryDeck.pop()!;
+    const { state, events } = play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster: fwd(0), target: { kind: 'hit', at: 'goalie' } });
+    expect(state.teams.B.goalie?.uid).toBe(uid(s, 'B', 'B goalie'));
+    expect(eventsOfType(events, 'injured')).toHaveLength(0);
   });
 
   it('passTiesGoTo: defender (the rule before v0.4) gives tied passes to the interceptor', () => {

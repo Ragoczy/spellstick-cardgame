@@ -2,10 +2,10 @@
 // decides what is legal itself: everything clickable comes from the session's legal actions.
 
 import { useMemo, useState } from 'react';
-import { opposite, samePos, type Action, type CardDef, type FieldPos, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
+import { isFieldPos, opposite, samePos, type Action, type CardDef, type FieldPos, type InjuryDef, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
 import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
-import { capitalize, laneName, posName } from './labels';
+import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, matchup, reactionPreview } from './preview';
 import { posKey, useGame, type Announcement } from './useGame';
@@ -29,7 +29,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const them = session.computer;
   const teams = session.setup.teams!;
   const [selection, setSelection] = useState<Selection>(NONE);
-  const [inspected, setInspected] = useState<CardDef | null>(null);
+  const [inspected, setInspected] = useState<{ def: CardDef; injury?: InjuryDef } | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [hintText, setHintText] = useState<string | null>(null);
   const pending = view.pending;
@@ -53,12 +53,22 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const castsFor = (card: string, caster?: Pos) =>
     casts.filter((a) => a.card === card && (!caster || samePos(a.caster, caster)));
 
-  const targetPos = (t: SpellTarget): { side: Side; pos: Pos }[] => {
+  /** The spots on the board a spell target points at (hand targets are handled separately). */
+  const targetPos = (t: SpellTarget, caster: Pos): { side: Side; pos: Pos }[] => {
     if (t.kind === 'opponent') return [{ side: them, pos: t.pos }];
     if (t.kind === 'pass') return [{ side: me, pos: t.to }];
     if (t.kind === 'swap') return [{ side: me, pos: t.a }, { side: me, pos: t.b }];
+    if (t.kind === 'hit') return [{ side: them, pos: t.at === 'goalie' || !isFieldPos(caster) ? { area: 'goal' } : opposite(caster) }];
+    if (t.kind === 'mendField') return [{ side: me, pos: t.pos }];
     return [];
   };
+
+  /** Hand cards that are targets of the spell being cast (Mend on an injured player in hand). */
+  const handTargets = new Set(
+    selection.kind === 'cast' && selection.caster
+      ? castsFor(selection.card, selection.caster).flatMap((a) => (a.target.kind === 'mendHand' ? [a.target.card] : []))
+      : [],
+  );
 
   const highlights = useMemo(() => {
     const map = new Map<string, CardProps['highlight']>();
@@ -84,7 +94,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
           }
         } else {
           for (const a of castsFor(selection.card, selection.caster)) {
-            for (const t of targetPos(a.target)) {
+            for (const t of targetPos(a.target, a.caster)) {
               if (selection.first && a.target.kind === 'swap' && !(samePos(a.target.a, selection.first) || samePos(a.target.b, selection.first))) continue;
               map.set(posKey(t.side, t.pos), 'target');
             }
@@ -106,7 +116,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const inspect = (side: Side, pos: Pos) => {
     const team = side === me ? view.mine : view.opponent;
     const slot = pos.area === 'goal' ? team.goalie : team.lineup[pos.area][pos.lane];
-    if (slot && (slot.state === 'revealed' || slot.state === 'faceDown')) setInspected(slot.card.def);
+    if (slot && (slot.state === 'revealed' || slot.state === 'faceDown')) setInspected(slot.card);
   };
 
   const onSpot = (side: Side, pos: Pos) => {
@@ -133,7 +143,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         return setSelection({ ...selection, caster: pos });
       }
       const options = castsFor(selection.card, selection.caster);
-      const hit = options.filter((a) => targetPos(a.target).some((t) => t.side === side && samePos(t.pos, pos)));
+      const hit = options.filter((a) => targetPos(a.target, a.caster).some((t) => t.side === side && samePos(t.pos, pos)));
       if (!hit.length) return;
       if (hit[0]!.target.kind === 'swap') {
         if (!selection.first) return setSelection({ ...selection, first: pos as FieldPos });
@@ -152,9 +162,14 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     if (side === me && myBall && samePos(myBall, pos) && passes.length) setSelection({ kind: 'holder' });
   };
 
-  const onHandCard = (uid: string, def: CardDef) => {
-    setInspected(def);
+  const onHandCard = (uid: string, def: CardDef, injury?: InjuryDef) => {
+    setInspected({ def, injury });
     if (!myDecision) return;
+    if (pending.kind === 'forcedSub') {
+      const sub = legal.find((a) => a.type === 'forcedSub' && a.card === uid);
+      if (sub) act(sub);
+      return;
+    }
     if (pending.kind === 'reaction') {
       const react = legal.find((a) => a.type === 'react' && a.card === uid);
       if (react) act(react);
@@ -166,6 +181,10 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       return;
     }
     if (pending.kind !== 'action') return;
+    if (selection.kind === 'cast' && handTargets.has(uid)) {
+      const mendHand = castsFor(selection.card, selection.caster).find((a) => a.target.kind === 'mendHand' && a.target.card === uid);
+      if (mendHand) return act(mendHand);
+    }
     if (selection.kind === 'regroup') {
       const picked = selection.picked.includes(uid) ? selection.picked.filter((x) => x !== uid) : [...selection.picked, uid].slice(-view.config.regroupMax);
       return setSelection({ kind: 'regroup', picked });
@@ -230,6 +249,13 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         return <div className="prompt"><strong>Too many cards.</strong> Tap {pending.count} card{pending.count === 1 ? '' : 's'} in your hand to discard (you can hold 7).</div>;
       case 'shootoutPick':
         return <div className="prompt"><strong>Penalty!</strong> Tap one of your players who hasn't shot yet. Their Shot goes against the goalie's Save.</div>;
+      case 'forcedSub':
+        return (
+          <div className="prompt urgent">
+            <strong>Injury!</strong> Your {posName(pending.pos, view.lanes)} has to come off. Tap a{pending.pos.area === 'goal' ? ' goalie' : ' field player'} in
+            your hand to bring on, face down. This doesn't use an action. The injured player goes to your hand, still injured.
+          </div>
+        );
       case 'action':
         return actionPrompt();
       default:
@@ -263,11 +289,15 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     if (selection.kind === 'holder') help = 'Tap a glowing teammate to pass to them. Tap anywhere else to cancel.';
     if (selection.kind === 'cast') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
+      const effect = def?.kind === 'spell' ? def.ability.effect : '';
+      const targetHelp = effect === 'hit' ? 'Now tap who to hit (a forward can also hit the goalie).'
+        : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
+        : 'Now choose the target.';
       help = !selection.caster
         ? `Choose who casts ${def?.name}. Green = affinity match (stronger), red = opposed (weaker).`
-        : selection.first ? 'Now tap the second player to swap.' : 'Now choose the target.';
+        : selection.first ? 'Now tap the second player to swap.' : targetHelp;
     }
-    if (selection.kind === 'substitute') help = 'Tap the player to replace. The new player comes in face down.';
+    if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
     if (selection.kind === 'regroup') help = `Tap up to ${view.config.regroupMax} cards to discard, then confirm. You draw the same number.`;
     return (
       <div className="prompt">
@@ -318,10 +348,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
           <Card
             key={c.uid}
             def={c.def}
+            injury={c.injury}
             showText
             selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-            highlight={myDecision && (legal.some((a) => (a.type === 'react' || a.type === 'discard') && a.card === c.uid)) ? 'target' : null}
-            onClick={() => onHandCard(c.uid, c.def)}
+            highlight={myDecision && (handTargets.has(c.uid) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+            onClick={() => onHandCard(c.uid, c.def, c.injury)}
           />
         ))}
         {view.mine.hand.length === 0 ? <span className="empty-hand">Your hand is empty.</span> : null}
@@ -329,10 +360,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
 
       {inspected ? (
         <div className="inspector" onClick={() => setInspected(null)}>
-          <Card def={inspected} showText />
+          <Card def={inspected.def} injury={inspected.injury} showText />
           <div className="inspector-text">
-            {inspected.kind !== 'spell' ? inspected.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
-            {inspected.flavor ? <div className="flavor">{inspected.flavor}</div> : null}
+            {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
+            {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
+            {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
           </div>
         </div>
       ) : null}
@@ -372,6 +404,10 @@ function ReactionPrompt({ view, onPlay }: { view: PlayerView; onPlay: (uid: stri
   );
 }
 
+function duelCard(card: import('../engine').CardView | null) {
+  return card ? <Card def={card.def} injury={card.injury} /> : <div className="card empty">Empty spot</div>;
+}
+
 function AnnouncementView({ a, onClose }: { a: Announcement; onClose: () => void }) {
   return (
     <div className={`announcement tone-${a.tone}`} onClick={onClose} role="dialog">
@@ -379,9 +415,9 @@ function AnnouncementView({ a, onClose }: { a: Announcement; onClose: () => void
         <h3>{a.title}</h3>
         {a.contest ? (
           <div className="duel">
-            <div><Card def={a.contest.theirs.card.def} /><span className="value">{a.contest.theirs.total}</span><span className="who">Computer</span></div>
+            <div>{duelCard(a.contest.theirs.card)}<span className="value">{a.contest.theirs.total}</span><span className="who">Computer</span></div>
             <div className="vs">vs</div>
-            <div><Card def={a.contest.mine.card.def} /><span className="value">{a.contest.mine.total}</span><span className="who">You</span></div>
+            <div>{duelCard(a.contest.mine.card)}<span className="value">{a.contest.mine.total}</span><span className="who">You</span></div>
           </div>
         ) : null}
         <p>{a.text}</p>

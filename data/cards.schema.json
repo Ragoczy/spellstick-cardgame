@@ -82,8 +82,8 @@
       "required": ["effect", "params"],
       "properties": {
         "effect": {
-          "enum": ["bonus", "draw_on_win", "boost", "shield", "scry", "swap",
-                   "long_pass", "long_shot", "steal", "recall"]
+          "enum": ["bonus", "draw_on_win", "boost", "shield", "dirty_play", "scry", "swap",
+                   "long_pass", "long_shot", "steal", "recall", "hit", "mend"]
         },
         "params": { "type": "object" }
       },
@@ -94,7 +94,7 @@
             "properties": {
               "stat": { "enum": ["speed", "shot", "defense", "faceoff", "save"] },
               "amount": { "type": "integer" },
-              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff"] },
+              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist"] },
               "row": { "enum": ["defense", "midfield", "forward"] }
             } } } } },
         { "if": { "properties": { "effect": { "const": "draw_on_win" } } },
@@ -109,11 +109,15 @@
           "then": { "properties": { "params": {
             "type": "object", "required": ["count"], "additionalProperties": false,
             "properties": { "count": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "const": "hit" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["strength"], "additionalProperties": false,
+            "properties": { "strength": { "$ref": "#/$defs/count" } } } } } },
         { "if": { "properties": { "effect": { "const": "long_shot" } } },
           "then": { "properties": { "params": {
             "type": "object", "required": ["penalty"], "additionalProperties": false,
             "properties": { "penalty": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["shield", "scry", "swap", "long_pass"] } } },
+        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "scry", "swap", "long_pass", "mend"] } } },
           "then": { "properties": { "params": {
             "type": "object", "maxProperties": 0 } } } }
       ]

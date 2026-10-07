@@ -1,6 +1,6 @@
 // Plain-language names for positions, stats, and elements, from the person's point of view.
 
-import type { Area, CardDef, StatName } from '../engine';
+import type { Area, CardDef, InjuryDef, StatName } from '../engine';
 import type { Pos } from '../engine';
 
 export function laneName(lane: number, lanes: number): string {
@@ -35,6 +35,14 @@ const ELEMENT_COLOR: Record<string, string> = {
 
 export function elementColor(element: string | null): string {
   return element ? ELEMENT_COLOR[element] ?? '#888' : '#888';
+}
+
+/** "−1 Speed", "−2 Save", or "−1 to all stats". A goalie loses the biggest penalty from Save. */
+export function injuryEffect(injury: InjuryDef, def?: CardDef): string {
+  const entries = Object.entries(injury.penalty).filter(([, n]) => n);
+  if (def?.kind === 'goalie') return `−${Math.max(...entries.map(([, n]) => n!))} Save`;
+  if (entries.length >= 4) return `−${entries[0]![1]} to all stats`;
+  return entries.map(([stat, n]) => `−${n} ${STAT_LABEL[stat as StatName]}`).join(', ');
 }
 
 export function capitalize(text: string): string {

@@ -15,6 +15,11 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
     s.pending = { kind: 'gameOver' };
     return;
   }
+  // An injured (or carried-off) player's owner brings on a substitute before anything else.
+  if (s.forcedSub) {
+    s.pending = { kind: 'forcedSub', side: s.forcedSub.side, pos: s.forcedSub.pos };
+    return;
+  }
   if (s.shootout) {
     nextPenalty(s, ev);
     return;

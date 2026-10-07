@@ -86,7 +86,12 @@ button { font: inherit; color: inherit; }
 .card.back { display: flex; align-items: center; justify-content: center; border: none; color: rgba(255, 255, 255, 0.85); }
 .back-mark { font-size: 1.2rem; font-weight: 700; }
 .back-label { position: absolute; bottom: 2px; font-size: 0.6rem; }
-.card.empty { background: transparent; border: 1px dashed var(--field-line); cursor: default; }
+.card.empty { background: transparent; border: 1px dashed var(--field-line); cursor: default; display: flex; align-items: center; justify-content: center; }
+.empty-label { color: rgba(255, 255, 255, 0.8); font-size: 0.7rem; text-transform: uppercase; }
+.injury { margin-top: 2px; color: #fff; background: var(--bad); border-radius: 4px; padding: 0 4px; font-size: 0.64rem; font-weight: 600; display: inline-block; }
+.injury.on-back { position: absolute; bottom: 3px; left: 3px; right: 3px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.injury-text { color: var(--bad); font-weight: 600; }
+.prompt.urgent { border-color: var(--bad); box-shadow: 0 0 0 2px rgba(181, 70, 46, 0.25); }
 .ball {
   position: absolute; top: 3px; right: 3px; width: 14px; height: 14px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #ffe08a, var(--accent) 70%);

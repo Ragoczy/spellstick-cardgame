@@ -10,14 +10,16 @@
 // - Ball value grows the closer the ball is to the other goal.
 // - Reaction spells are saved for contests that matter (shots, defending near its own goal).
 // - Casters are chosen to match the spell's element, preferring players already face up.
+// - Hits go after strong revealed players, the ball carrier, or the goalie before a shot.
+// - Dirty plays go into contests it expects to win. Mend goes on players it values.
 
 import { affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
 import { NUMERIC_EFFECTS, type Area, type CardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
-import type { GameConfig } from '../engine/config';
+import type { GameConfig, InjuryDef, InjuryStat } from '../engine/config';
 import { DEFAULT_CONFIG } from '../engine/config';
 import type { CardView } from '../engine/events';
-import { isFieldPos, opposite, type FieldPos, type Pos, type Side } from '../engine/field';
+import { isFieldPos, opposite, samePos, type FieldPos, type Pos, type Side } from '../engine/field';
 import { nextRandom, seedToState } from '../engine/rng';
 import { scoreSide } from '../engine/score';
 import type { Affinity, Contest, ContestRole, Modifier } from '../engine/state';
@@ -40,7 +42,13 @@ const UNKNOWN_STATS: Record<'goal' | Area, Partial<Record<StatName, number>>> = 
 /** Rough worth of keeping a card in hand. */
 const SPELL_VALUE: Record<string, number> = {
   boost: 0.12, shield: 0.13, steal: 0.07, long_pass: 0.06, long_shot: 0.06, recall: 0.05, scry: 0.03, swap: 0.02,
+  hit: 0.08, dirty_play: 0.07, mend: 0.04,
 };
+
+/** Rough worth of injuring an opposing player (on top of what the contest itself is worth). */
+const INJURY_WORTH = 0.06;
+/** Rough worth of carrying off an opposing player who is already injured. */
+const CARRY_OFF_WORTH = 0.12;
 
 /** Holding the ball without passing or shooting counts for this share of its value. */
 const STALL_DISCOUNT = 0.5;
@@ -55,10 +63,22 @@ function slotOf(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): SlotVie
   return pos.area === 'goal' ? team.goalie : team.lineup[pos.area][pos.lane]!;
 }
 
-/** A player card this side can see at a position (its own, or an opponent's face-up/scried card). */
-function knownPlayer(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): PlayerCardDef | null {
+/** A card this side can see at a position (its own, or an opponent's face-up/scried card). */
+function knownCard(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): CardView | null {
   const slot = slotOf(view, owner, pos);
-  return slot.state === 'faceDown' || slot.state === 'revealed' ? (slot.card.def as PlayerCardDef) : null;
+  return slot.state === 'faceDown' || slot.state === 'revealed' ? slot.card : null;
+}
+
+function knownPlayer(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): PlayerCardDef | null {
+  return (knownCard(view, owner, pos)?.def as PlayerCardDef | undefined) ?? null;
+}
+
+/** The injury showing on a spot (injury cards are face up, even on unknown players). */
+function visibleInjury(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): InjuryDef | null {
+  const slot = slotOf(view, owner, pos);
+  if (slot.state === 'unknown') return slot.injury ?? null;
+  if (slot.state === 'faceDown' || slot.state === 'revealed') return slot.card.injury ?? null;
+  return null;
 }
 
 function isFaceDown(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
@@ -141,7 +161,17 @@ class Thinker {
       case 'substitute': return this.currentValue() + this.substituteGain(action.pos, this.handCard(action.card));
       case 'regroup': return this.currentValue() + action.discard.reduce((sum, uid) => sum + 0.05 - this.cardValue(this.handCard(uid)), 0);
       case 'cast': return this.castValue(action);
+      case 'forcedSub': return this.scoreForcedSub(this.handCard(action.card));
     }
+  }
+
+  /** Choosing who comes on after an injury: the best fit for the spot, preferring healthy players. */
+  private scoreForcedSub(card: CardDef): number {
+    const pending = this.view.pending;
+    if (pending.kind !== 'forcedSub' || card.kind === 'spell') return -1;
+    const injured = this.view.mine.hand.find((c) => c.def === card)?.injury ? -1 : 0;
+    if (pending.pos.area === 'goal') return card.kind === 'goalie' ? card.save + injured : -1;
+    return card.kind === 'field' ? fit(card, pending.pos.area) + injured + this.random() * 0.1 : -1;
   }
 
   // ---- Setup ----
@@ -166,15 +196,24 @@ class Thinker {
   // ---- Estimating contest values ----
 
   private myValue(pos: Pos, stat: StatName, use: StatUse, modifiers: Modifier[] = []): number {
-    const player = knownPlayer(this.view, 'mine', pos);
-    if (!player) return 0;
-    return scoreSide({ player, side: { stat, use, pos, modifiers }, spell: null, shielded: false }, this.config).total;
+    const card = knownCard(this.view, 'mine', pos);
+    if (!card) return 0;
+    const player = card.def as PlayerCardDef;
+    return scoreSide({ player, injury: card.injury, side: { stat, use, pos, modifiers }, spell: null, shielded: false }, this.config).total;
   }
 
   private theirValue(pos: Pos, stat: StatName, use: StatUse): number {
-    const player = knownPlayer(this.view, 'opponent', pos);
-    if (player) return scoreSide({ player, side: { stat, use, pos, modifiers: [] }, spell: null, shielded: false }, this.config).total;
-    return UNKNOWN_STATS[pos.area][stat] ?? 3;
+    const slot = slotOf(this.view, 'opponent', pos);
+    if (slot.state === 'empty') return 0;
+    const card = knownCard(this.view, 'opponent', pos);
+    if (card) {
+      const player = card.def as PlayerCardDef;
+      return scoreSide({ player, injury: card.injury, side: { stat, use, pos, modifiers: [] }, spell: null, shielded: false }, this.config).total;
+    }
+    // Unknown player: assume average for the position, minus any injury showing.
+    const injury = visibleInjury(this.view, 'opponent', pos);
+    const penalty = injury ? (stat === 'save' ? Math.max(0, ...Object.values(injury.penalty).map((n) => n ?? 0)) : injury.penalty[stat as InjuryStat] ?? 0) : 0;
+    return Math.max(0, (UNKNOWN_STATS[pos.area][stat] ?? 3) - penalty);
   }
 
   /** The biggest boost this side could add with a reaction spell cast by the player at `pos`. */
@@ -258,15 +297,39 @@ class Thinker {
   // ---- Other actions ----
 
   private substituteGain(pos: Pos, incoming: CardDef): number {
+    const incomingInjured = this.view.mine.hand.find((c) => c.def === incoming)?.injury ? 0.03 : 0;
     const outgoing = knownPlayer(this.view, 'mine', pos);
-    if (!outgoing) return -1;
+    // Filling an empty spot (a player was carried off) is well worth an action.
+    if (!outgoing) return (pos.area === 'goal' ? incoming.kind === 'goalie' : incoming.kind === 'field') ? 0.15 - incomingInjured : -1;
+    // Taking off an injured player is worth more.
+    const outgoingInjured = visibleInjury(this.view, 'mine', pos) ? 0.03 : 0;
     const hidesRevealed = isFaceDown(this.view, 'mine', pos) ? 0 : 0.01;
     if (pos.area === 'goal') {
       if (incoming.kind !== 'goalie' || outgoing.kind !== 'goalie') return -1;
-      return 0.04 * (incoming.save - outgoing.save) + hidesRevealed - 0.02;
+      return 0.04 * (incoming.save - outgoing.save) + hidesRevealed + outgoingInjured - incomingInjured - 0.02;
     }
     if (incoming.kind !== 'field') return -1;
-    return 0.03 * (fit(incoming, pos.area) - fit(outgoing, pos.area)) + hidesRevealed - 0.02;
+    return 0.03 * (fit(incoming, pos.area) - fit(outgoing, pos.area)) + hidesRevealed + outgoingInjured - incomingInjured - 0.02;
+  }
+
+  /** How much injuring the opposing player at `pos` is worth. */
+  private injuryWorth(pos: Pos): number {
+    const slot = slotOf(this.view, 'opponent', pos);
+    if (slot.state === 'empty') return 0;
+    if (visibleInjury(this.view, 'opponent', pos)) return pos.area === 'goal' && !this.config.goalieCarryOff ? 0 : CARRY_OFF_WORTH;
+    let worth = INJURY_WORTH;
+    const ball = this.view.ball;
+    if (ball && ball.side !== this.me && samePos(ball.pos, pos)) worth += 0.05; // the ball carrier
+    const player = knownPlayer(this.view, 'opponent', pos);
+    if (player?.kind === 'field') worth += 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4);
+    if (player?.kind === 'goalie') worth += 0.02;
+    // Softening the goalie when I'm about to shoot.
+    if (pos.area === 'goal' && ball?.side === this.me && (ball.pos.area === 'forward' || ball.pos.area === 'midfield')) {
+      const save = this.theirValue(pos, 'save', 'save');
+      const shot = this.myValue(ball.pos, 'shot', 'shoot') + 0.6 * this.bestBoost(ball.pos);
+      worth += winChance(shot, Math.max(0, save - 1.7), false) - winChance(shot, save, false);
+    }
+    return worth;
   }
 
   private castValue(action: Extract<Action, { type: 'cast' }>): number {
@@ -303,6 +366,28 @@ class Thinker {
         const useful = target.pos.area === 'goal' && ballIsMine ? 0.04 : 0.015;
         return base + useful - cost;
       }
+      case 'hit': {
+        if (target.kind !== 'hit' || !isFieldPos(action.caster)) return -1;
+        const targetPos: Pos = target.at === 'goalie' ? { area: 'goal' } : opposite(action.caster);
+        const strength = this.adjusted(ability.params.strength, affinity) + 0.6 * this.bestBoost(action.caster);
+        const resist = this.theirValue(targetPos, targetPos.area === 'goal' ? 'save' : 'defense', 'resist');
+        const p = winChance(strength, resist, false);
+        return base + p * this.injuryWorth(targetPos) - cost;
+      }
+      case 'mend': {
+        let card: CardView | null | undefined = null;
+        let onField = false;
+        if (target.kind === 'mendField') {
+          card = knownCard(this.view, 'mine', target.pos);
+          onField = true;
+        } else if (target.kind === 'mendHand') {
+          card = this.view.mine.hand.find((c) => c.uid === target.card);
+        }
+        if (!card?.injury) return -1;
+        const def = card.def as PlayerCardDef;
+        const worth = def.kind === 'goalie' ? 0.06 : 0.02 + 0.02 * Math.max(0, bestFit(def) - 3);
+        return base + (onField ? worth : worth * 0.5) - cost;
+      }
       case 'swap': {
         if (target.kind !== 'swap') return -1;
         const a = knownPlayer(this.view, 'mine', target.a);
@@ -325,10 +410,13 @@ class Thinker {
     const other: ContestRole = role === 'attacker' ? 'defender' : 'attacker';
     const me = contest[role];
     const them = contest[other];
-    const myPlayer = knownPlayer(this.view, 'mine', me.pos)!;
-    const theirPlayer = knownPlayer(this.view, 'opponent', them.pos)!;
+    const myCard = knownCard(this.view, 'mine', me.pos)!;
+    const myPlayer = myCard.def as PlayerCardDef;
+    const theirCard = knownCard(this.view, 'opponent', them.pos);
+    const theirPlayer = (theirCard?.def as PlayerCardDef | undefined) ?? null;
     const theirSpell = this.playedSpell(them.spell?.uid ?? null, them.spell?.affinity, them.spell?.fizzled);
     const theyShieldMe = theirSpell?.def.ability.effect === 'shield';
+    const theyDirty = theirSpell?.def.ability.effect === 'dirty_play';
 
     const mySpell = uid ? this.handCard(uid) as SpellCardDef : null;
     const myAffinity = mySpell ? this.affinity(myPlayer, mySpell) : 'neutral';
@@ -336,10 +424,10 @@ class Thinker {
     const iShield = mySpellWorks && mySpell.ability.effect === 'shield';
 
     const myTotal = scoreSide({
-      player: myPlayer, side: me, shielded: theyShieldMe,
+      player: myPlayer, injury: myCard.injury, side: me, shielded: theyShieldMe,
       spell: mySpellWorks ? { def: mySpell, affinity: myAffinity } : null,
     }, this.config).total;
-    const theirTotal = scoreSide({ player: theirPlayer, side: them, spell: theirSpell, shielded: !!iShield }, this.config).total;
+    const theirTotal = scoreSide({ player: theirPlayer, injury: theirCard?.injury, side: them, spell: theirSpell, shielded: !!iShield }, this.config).total;
 
     const iWinTies = contest.tiesGoTo === role;
     // The defender reacts last, so knows the outcome. The attacker has to allow for a reply.
@@ -349,7 +437,14 @@ class Thinker {
 
     const reactionsInHand = this.view.mine.hand.filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction').length;
     const cost = mySpell ? (reactionsInHand > 1 ? 0.08 : 0.12) : 0;
-    return this.importance(contest, role) * pWin - cost;
+    let importance = this.importance(contest, role);
+    // Winning also injures their player if I play a dirty play; losing injures mine if they did.
+    const iDirty = mySpellWorks && mySpell.ability.effect === 'dirty_play';
+    if (iDirty) importance += this.injuryWorth(them.pos);
+    if (theyDirty) importance += INJURY_WORTH;
+    // In a hit, the defender losing means an injury.
+    if (contest.kind === 'hit' && role === 'defender') importance += INJURY_WORTH;
+    return importance * pWin - cost;
   }
 
   private playedSpell(uid: string | null, affinity?: Affinity, fizzled?: boolean): { def: SpellCardDef; affinity: Affinity } | null {
@@ -364,6 +459,7 @@ class Thinker {
     switch (contest.kind) {
       case 'shot': return 1;
       case 'penalty': return 1;
+      case 'hit': return role === 'attacker' ? this.injuryWorth(contest.defender.pos) : 0.05;
       case 'faceoff': return 0.5;
       case 'pass':
         if (attackerArea === 'forward') return role === 'attacker' ? 0.6 : 0.7;
@@ -387,12 +483,22 @@ class Thinker {
   }
 
   private cardValue(def: CardDef): number {
-    if (def.kind === 'spell') return SPELL_VALUE[def.ability.effect] ?? 0.05;
+    if (def.kind === 'spell') {
+      if (def.ability.effect === 'mend' && this.hasInjuredPlayer()) return 0.08;
+      return SPELL_VALUE[def.ability.effect] ?? 0.05;
+    }
     if (def.kind === 'goalie') {
       const current = knownPlayer(this.view, 'mine', { area: 'goal' });
       const currentSave = current?.kind === 'goalie' ? current.save : 4;
       return 0.02 + 0.03 * Math.max(0, def.save - currentSave);
     }
-    return 0.02 + 0.015 * Math.max(0, bestFit(def) - 3);
+    const injured = this.view.mine.hand.find((c) => c.def === def)?.injury ? 0.015 : 0;
+    return 0.02 + 0.015 * Math.max(0, bestFit(def) - 3) - injured;
+  }
+
+  private hasInjuredPlayer(): boolean {
+    const field = [this.view.mine.goalie, ...Object.values(this.view.mine.lineup).flat()];
+    return field.some((slot) => (slot.state === 'faceDown' || slot.state === 'revealed') && slot.card.injury) ||
+      this.view.mine.hand.some((c) => c.injury);
   }
 }

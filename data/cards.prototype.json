@@ -1,5 +1,5 @@
 {
-  "version": "0.3-prototype",
+  "version": "0.5-prototype",
   "elements": [
     "fire",
     "water",
@@ -533,70 +533,6 @@
       "id": "a-s-01",
       "team": "A",
       "kind": "spell",
-      "name": "Fire Boost",
-      "spellType": "reaction",
-      "element": "fire",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-02",
-      "team": "A",
-      "kind": "spell",
-      "name": "Water Boost",
-      "spellType": "reaction",
-      "element": "water",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-03",
-      "team": "A",
-      "kind": "spell",
-      "name": "Earth Boost",
-      "spellType": "reaction",
-      "element": "earth",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-04",
-      "team": "A",
-      "kind": "spell",
-      "name": "Air Boost",
-      "spellType": "reaction",
-      "element": "air",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-05",
-      "team": "A",
-      "kind": "spell",
       "name": "Neutral Boost",
       "spellType": "reaction",
       "element": null,
@@ -610,7 +546,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-06",
+      "id": "a-s-02",
       "team": "A",
       "kind": "spell",
       "name": "Earth Shield",
@@ -624,7 +560,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-07",
+      "id": "a-s-03",
       "team": "A",
       "kind": "spell",
       "name": "Water Shield",
@@ -638,7 +574,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-08",
+      "id": "a-s-04",
       "team": "A",
       "kind": "spell",
       "name": "Water Scry",
@@ -652,7 +588,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-09",
+      "id": "a-s-05",
       "team": "A",
       "kind": "spell",
       "name": "Air Scry",
@@ -666,21 +602,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-10",
-      "team": "A",
-      "kind": "spell",
-      "name": "Earth Swap",
-      "spellType": "action",
-      "element": "earth",
-      "ability": {
-        "effect": "swap",
-        "params": {}
-      },
-      "text": "Swap two of your face-down players.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-11",
+      "id": "a-s-06",
       "team": "A",
       "kind": "spell",
       "name": "Air Long Pass",
@@ -694,7 +616,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-12",
+      "id": "a-s-07",
       "team": "A",
       "kind": "spell",
       "name": "Air Long Pass",
@@ -708,7 +630,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-13",
+      "id": "a-s-08",
       "team": "A",
       "kind": "spell",
       "name": "Fire Long Shot",
@@ -724,7 +646,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-14",
+      "id": "a-s-09",
       "team": "A",
       "kind": "spell",
       "name": "Fire Steal",
@@ -740,7 +662,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-15",
+      "id": "a-s-10",
       "team": "A",
       "kind": "spell",
       "name": "Earth Steal",
@@ -756,7 +678,7 @@
       "placeholder": true
     },
     {
-      "id": "a-s-16",
+      "id": "a-s-11",
       "team": "A",
       "kind": "spell",
       "name": "Neutral Recall",
@@ -769,6 +691,82 @@
         }
       },
       "text": "Draw 2 cards.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-12",
+      "team": "A",
+      "kind": "spell",
+      "name": "Late Hit",
+      "spellType": "reaction",
+      "element": null,
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-13",
+      "team": "A",
+      "kind": "spell",
+      "name": "Mend",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "mend",
+        "params": {}
+      },
+      "text": "Remove the injury from one of your players, on the field or in your hand.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-14",
+      "team": "A",
+      "kind": "spell",
+      "name": "Flamb\u00e9",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-15",
+      "team": "A",
+      "kind": "spell",
+      "name": "Flamb\u00e9",
+      "spellType": "action",
+      "element": "fire",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "placeholder": true
+    },
+    {
+      "id": "a-s-16",
+      "team": "A",
+      "kind": "spell",
+      "name": "Thunderclap",
+      "spellType": "action",
+      "element": "air",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
       "placeholder": true
     },
     {
@@ -1251,70 +1249,6 @@
       "id": "b-s-01",
       "team": "B",
       "kind": "spell",
-      "name": "Fire Boost",
-      "spellType": "reaction",
-      "element": "fire",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-02",
-      "team": "B",
-      "kind": "spell",
-      "name": "Water Boost",
-      "spellType": "reaction",
-      "element": "water",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-03",
-      "team": "B",
-      "kind": "spell",
-      "name": "Earth Boost",
-      "spellType": "reaction",
-      "element": "earth",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-04",
-      "team": "B",
-      "kind": "spell",
-      "name": "Air Boost",
-      "spellType": "reaction",
-      "element": "air",
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-05",
-      "team": "B",
-      "kind": "spell",
       "name": "Neutral Boost",
       "spellType": "reaction",
       "element": null,
@@ -1328,7 +1262,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-06",
+      "id": "b-s-02",
       "team": "B",
       "kind": "spell",
       "name": "Earth Shield",
@@ -1342,7 +1276,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-07",
+      "id": "b-s-03",
       "team": "B",
       "kind": "spell",
       "name": "Water Shield",
@@ -1356,7 +1290,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-08",
+      "id": "b-s-04",
       "team": "B",
       "kind": "spell",
       "name": "Water Scry",
@@ -1370,7 +1304,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-09",
+      "id": "b-s-05",
       "team": "B",
       "kind": "spell",
       "name": "Air Scry",
@@ -1384,21 +1318,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-10",
-      "team": "B",
-      "kind": "spell",
-      "name": "Earth Swap",
-      "spellType": "action",
-      "element": "earth",
-      "ability": {
-        "effect": "swap",
-        "params": {}
-      },
-      "text": "Swap two of your face-down players.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-11",
+      "id": "b-s-06",
       "team": "B",
       "kind": "spell",
       "name": "Air Long Pass",
@@ -1412,7 +1332,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-12",
+      "id": "b-s-07",
       "team": "B",
       "kind": "spell",
       "name": "Air Long Pass",
@@ -1426,7 +1346,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-13",
+      "id": "b-s-08",
       "team": "B",
       "kind": "spell",
       "name": "Fire Long Shot",
@@ -1442,7 +1362,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-14",
+      "id": "b-s-09",
       "team": "B",
       "kind": "spell",
       "name": "Fire Steal",
@@ -1458,7 +1378,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-15",
+      "id": "b-s-10",
       "team": "B",
       "kind": "spell",
       "name": "Earth Steal",
@@ -1474,7 +1394,7 @@
       "placeholder": true
     },
     {
-      "id": "b-s-16",
+      "id": "b-s-11",
       "team": "B",
       "kind": "spell",
       "name": "Neutral Recall",
@@ -1487,6 +1407,82 @@
         }
       },
       "text": "Draw 2 cards.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-12",
+      "team": "B",
+      "kind": "spell",
+      "name": "Late Hit",
+      "spellType": "reaction",
+      "element": null,
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-13",
+      "team": "B",
+      "kind": "spell",
+      "name": "Mend",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "mend",
+        "params": {}
+      },
+      "text": "Remove the injury from one of your players, on the field or in your hand.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-14",
+      "team": "B",
+      "kind": "spell",
+      "name": "Water Spear",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-15",
+      "team": "B",
+      "kind": "spell",
+      "name": "Water Spear",
+      "spellType": "action",
+      "element": "water",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
+      "placeholder": true
+    },
+    {
+      "id": "b-s-16",
+      "team": "B",
+      "kind": "spell",
+      "name": "Earth Crush",
+      "spellType": "action",
+      "element": "earth",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot (a forward may attack the goalie instead): strength 3 against their Defense (or Save). If it lands, they're injured.",
       "placeholder": true
     },
     {

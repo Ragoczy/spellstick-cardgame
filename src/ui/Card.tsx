@@ -1,8 +1,8 @@
 // Placeholder card frames (CLAUDE.md "Art and print"): name, stats, ability text, team color.
 
 import { createContext, useContext } from 'react';
-import type { CardDef } from '../engine';
-import { capitalize, cardText, elementColor } from './labels';
+import type { CardDef, InjuryDef } from '../engine';
+import { capitalize, cardText, elementColor, injuryEffect } from './labels';
 
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
@@ -40,6 +40,8 @@ function Stats({ def }: { def: CardDef }) {
 
 export interface CardProps {
   def: CardDef;
+  /** An injury card attached to this player (injury cards are face up). */
+  injury?: InjuryDef;
   /** Your own card that the opponent can't see. */
   faceDown?: boolean;
   /** The opponent has scried this face-down card (or you scried theirs). */
@@ -53,7 +55,7 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, faceDown, scried, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, faceDown, scried, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
   const classes = ['card', def.kind, faceDown ? 'face-down' : '', selected ? 'selected' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
@@ -66,6 +68,7 @@ export function Card({ def, faceDown, scried, hasBall, selected, highlight, flip
       </div>
       <Stats def={def} />
       <Resonants def={def} />
+      {injury ? <div className="injury" title={`${injury.name}: ${injuryEffect(injury, def)}`}>✚ {injury.name} {injuryEffect(injury, def)}</div> : null}
       {showText && cardText(def) ? <div className="card-text">{cardText(def)}</div> : null}
       {faceDown ? <span className="tag">{scried ? 'seen' : 'hidden'}</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}
@@ -73,12 +76,13 @@ export function Card({ def, faceDown, scried, hasBall, selected, highlight, flip
   );
 }
 
-export function CardBack({ team, hasBall, highlight, onClick, label }: { team: string; hasBall?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string }) {
+export function CardBack({ team, hasBall, highlight, onClick, label, injury }: { team: string; hasBall?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef }) {
   const colors = useContext(TeamColors);
   return (
     <button type="button" className={`card back ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
       <span className="back-mark">?</span>
       {label ? <span className="back-label">{label}</span> : null}
+      {injury ? <span className="injury on-back" title={injury.name}>✚ {injury.name}</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}
     </button>
   );

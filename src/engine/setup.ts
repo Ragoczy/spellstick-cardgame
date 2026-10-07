@@ -1,10 +1,10 @@
 // Creating a new game (RULES.md "Setup").
 
 import { buildDeck, type CardDef, type CardSet } from './cards';
-import { makeConfig, type GameConfig } from './config';
+import { makeConfig, type GameConfig, type InjuryDef } from './config';
 import type { GameEvent } from './events';
 import { AREAS, SIDES, type Side } from './field';
-import { randomInt, seedToState } from './rng';
+import { randomInt, seedToState, shuffle } from './rng';
 import type { GameState, TeamState, Uid } from './state';
 
 export interface GameSetup {
@@ -61,6 +61,15 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   [coin, rng] = randomInt(rng, 2);
   const firstSide: Side = coin === 0 ? 'A' : 'B';
 
+  // The shared injury deck: one card id per injury card, shuffled.
+  const injuryCards: Record<string, InjuryDef> = {};
+  let n = 0;
+  for (const injury of config.injuries) {
+    for (let i = 0; i < injury.count; i++) injuryCards[`I${String(++n).padStart(2, '0')}`] = injury;
+  }
+  let injuryDeck: string[];
+  [injuryDeck, rng] = shuffle(Object.keys(injuryCards), rng);
+
   const state: GameState = {
     config,
     elements: [...setup.cardSet.elements],
@@ -79,6 +88,10 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     score: { A: 0, B: 0 },
     endgame: { finalTurnFor: null },
     shootout: null,
+    injuryDeck,
+    injuryCards,
+    injuries: {},
+    forcedSub: null,
     pending: { kind: 'chooseGoalie', side: 'A' },
     result: null,
   };

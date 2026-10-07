@@ -3,8 +3,8 @@
 // this player has scried them. The opponent's hand and both decks appear only as counts.
 
 import type { Area } from './cards';
-import type { GameConfig } from './config';
-import { cardView } from './board';
+import type { GameConfig, InjuryDef } from './config';
+import { cardView, injuryOf } from './board';
 import type { CardView, GameEvent } from './events';
 import { AREAS, otherSide, type Pos, type Side } from './field';
 import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
@@ -12,7 +12,7 @@ import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
 export type SlotView =
   | { state: 'empty' }
   /** An opponent's face-down card you haven't seen. */
-  | { state: 'unknown' }
+  | { state: 'unknown'; injury?: InjuryDef }
   /** Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried. */
   | { state: 'faceDown'; card: CardView; scried: boolean }
   | { state: 'revealed'; card: CardView };
@@ -34,6 +34,10 @@ export interface PlayerView {
   faceoffChooser: Side;
   endgame: { finalTurnFor: Side | null };
   shootout: Shootout | null;
+  /** Injury cards left in the shared injury deck. */
+  injuryDeckCount: number;
+  /** A forced substitution waiting to happen (public). */
+  forcedSub: { side: Side; pos: Pos } | null;
   /** What the game is waiting for. All of it is public information. */
   pending: Pending;
   /** Actions the active player has left this turn. */
@@ -59,7 +63,9 @@ function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
   if (!slot) return { state: 'empty' };
   if (slot.revealed) return { state: 'revealed', card: cardView(s, slot.uid) };
   if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried };
-  return { state: 'unknown' };
+  // Injury cards are face up, so an injury shows even on a player you can't see.
+  const injury = injuryOf(s, slot.uid);
+  return injury ? { state: 'unknown', injury } : { state: 'unknown' };
 }
 
 function lineupView(s: GameState, side: Side, mine: boolean): Record<Area, SlotView[]> {
@@ -86,7 +92,10 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     ballProtected: s.ballProtected,
     faceoffChooser: s.faceoffChooser,
     endgame: s.endgame,
-    shootout: s.shootout,
+    // Only your own shooters are listed (the screen only needs to know who of yours has shot).
+    shootout: s.shootout ? { ...s.shootout, shooters: s.shootout.shooters.filter((uid) => uid.startsWith(me)) } : null,
+    injuryDeckCount: s.injuryDeck.length,
+    forcedSub: s.forcedSub ? { side: s.forcedSub.side, pos: s.forcedSub.pos } : null,
     pending: s.pending,
     actionsLeft: s.actionsLeft,
     result: s.result,

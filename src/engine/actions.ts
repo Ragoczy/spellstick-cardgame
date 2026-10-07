@@ -11,7 +11,13 @@ export type SpellTarget =
   /** swap: two of your own face-down field players. */
   | { kind: 'swap'; a: FieldPos; b: FieldPos }
   /** long_pass: the receiver. */
-  | { kind: 'pass'; to: FieldPos };
+  | { kind: 'pass'; to: FieldPos }
+  /** hit: the opposing player in the caster's spot, or (forwards only) the opposing goalie. */
+  | { kind: 'hit'; at: 'slot' | 'goalie' }
+  /** mend: one of your injured players on the field... */
+  | { kind: 'mendField'; pos: Pos }
+  /** ...or in your hand. */
+  | { kind: 'mendHand'; card: Uid };
 
 export type Action =
   // Setup
@@ -30,4 +36,6 @@ export type Action =
   // End of turn, one card at a time
   | { type: 'discard'; side: Side; card: Uid }
   // Penalty shootout: choose a field player who hasn't shot yet
-  | { type: 'shootoutPick'; side: Side; pos: FieldPos };
+  | { type: 'shootoutPick'; side: Side; pos: FieldPos }
+  // A player was injured or carried off: bring on a substitute from your hand
+  | { type: 'forcedSub'; side: Side; card: Uid };

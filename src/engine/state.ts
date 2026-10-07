@@ -2,7 +2,7 @@
 // computer) must never read it directly; they read viewFor(state, side) instead.
 
 import type { Area, CardDef, Element, StatName, StatUse } from './cards';
-import type { GameConfig } from './config';
+import type { GameConfig, InjuryDef } from './config';
 import type { Pos, Side } from './field';
 
 /** A card instance id within one game, e.g. "A07". Every physical card has its own. */
@@ -23,8 +23,9 @@ export interface TeamState {
   hand: Uid[];
   /** Public. Newest card last. */
   discard: Uid[];
+  /** null during setup, or if the goalie was carried off with nobody to replace them. */
   goalie: Slot | null;
-  /** Indexed by lane. null only during setup. */
+  /** Indexed by lane. null during setup, or if a player was carried off with nobody to replace them. */
   lineup: Record<Area, (Slot | null)[]>;
 }
 
@@ -52,9 +53,11 @@ export interface ContestSide {
   spell: PlayedSpell | null;
   /** Bonuses from the action spell that started the contest (steal, long shot). */
   modifiers: Modifier[];
+  /** A hit's strength, used instead of the player's stat (no abilities or injuries apply). */
+  power?: { label: string; value: number };
 }
 
-export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty';
+export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty' | 'hit';
 export type ContestRole = 'attacker' | 'defender';
 
 export interface Contest {
@@ -74,6 +77,8 @@ export type Pending =
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'discard'; side: Side; count: number }
+  /** A player was injured or carried off: their owner must bring on a substitute from hand. */
+  | { kind: 'forcedSub'; side: Side; pos: Pos }
   | { kind: 'shootoutPick'; side: Side }
   | { kind: 'gameOver' };
 
@@ -126,6 +131,14 @@ export interface GameState {
   };
   /** The penalty shootout, once it has started. */
   shootout: Shootout | null;
+  /** The shared injury deck: injury card ids, top of the deck last. */
+  injuryDeck: string[];
+  /** The kind of each injury card, by injury card id (e.g. "I03" -> Singed hair). */
+  injuryCards: Record<string, InjuryDef>;
+  /** Injuries attached to players, by player card id -> injury card id. */
+  injuries: Record<Uid, string>;
+  /** A forced substitution waiting to happen. `injured` is the injured player still in the spot (null if carried off). */
+  forcedSub: { side: Side; pos: Pos; injured: Uid | null } | null;
   pending: Pending;
   result: GameResult | null;
 }

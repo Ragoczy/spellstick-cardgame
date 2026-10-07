@@ -2,16 +2,20 @@
 // 1. Reveal both players.
 // 2. The attacker may play one reaction spell, cast by its player in the contest. Then the
 //    defender, having seen it, may do the same. (In a faceoff, the chooser goes first.)
-// 3. Apply abilities and spells.
-// 4. The attacker wins only with a higher value. Ties go to the defender, except at faceoffs,
-//    where they go to the chooser.
+// 3. Apply abilities, injuries, and spells.
+// 4. The attacker wins only with a higher value. Ties go to the defender, except in passes
+//    (the receiver) and faceoffs (the chooser).
+// 5. Then injuries: a hit that lands, and a dirty play by the winning side.
+//
+// An empty spot (a player carried off) counts as 0 and can't play reaction spells.
 
 import { affinityFor, spellFizzles } from './affinity';
-import { cardView, defOf, drawCards, hasReactionSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
-import type { SpellCardDef } from './cards';
+import { cardView, defOf, drawCards, hasReactionSpell, injuryOf, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
+import type { PlayerCardDef, SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
 import { continueGame, recordPenalty, scoreGoal } from './flow';
+import { injurePlayer } from './injuries';
 import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
 
@@ -31,11 +35,11 @@ export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): v
   askForReaction(s, contest, 'attacker', ev);
 }
 
-/** Waits for a side's reaction spell, or moves on if they have none to play. */
+/** Waits for a side's reaction spell, or moves on if they have none (or no player to cast it). */
 function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
-  const side = contest[role].side;
-  if (hasReactionSpell(s, side)) {
-    s.pending = { kind: 'reaction', side, role, contest };
+  const me = contest[role];
+  if (hasReactionSpell(s, me.side) && slotAt(s, me.side, me.pos)) {
+    s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }
   afterReaction(s, contest, role, ev);
@@ -63,41 +67,65 @@ export function playReaction(s: GameState, card: Uid | null, ev: GameEvent[]): v
   afterReaction(s, contest, role, ev);
 }
 
-function isActiveShield(s: GameState, side: ContestSide): boolean {
+/** The reaction spell a side played, if it took effect and has the given effect. */
+function activeSpell(s: GameState, side: ContestSide, effect: string): boolean {
   if (!side.spell || side.spell.fizzled) return false;
   const spell = defOf(s, side.spell.uid);
-  return isReactionSpell(spell) && spell.ability.effect === 'shield';
+  return isReactionSpell(spell) && spell.ability.effect === effect;
 }
 
 /** Works out one side's value in a contest, with a breakdown for plain-language explanations. */
 export function contestValue(s: GameState, contest: Contest, role: ContestRole): Breakdown {
   const me = contest[role];
   const them = contest[otherRole(role)];
-  const slot = slotAt(s, me.side, me.pos)!;
+  const slot = slotAt(s, me.side, me.pos);
   const spell = me.spell && !me.spell.fizzled
     ? { def: defOf(s, me.spell.uid) as SpellCardDef, affinity: me.spell.affinity }
     : null;
-  const score = scoreSide({ player: playerAt(s, me.side, me.pos), side: me, spell, shielded: isActiveShield(s, them) }, s.config);
-  return { side: me.side, pos: me.pos, card: cardView(s, slot.uid), stat: me.stat, ...score };
+  const player = slot ? (defOf(s, slot.uid) as PlayerCardDef) : null;
+  const injury = slot ? injuryOf(s, slot.uid) : null;
+  const score = scoreSide({ player, injury, side: me, spell, shielded: activeSpell(s, them, 'shield') }, s.config);
+  return {
+    side: me.side,
+    pos: me.pos,
+    card: slot ? cardView(s, slot.uid) : null,
+    stat: me.stat,
+    ...(me.power ? { baseLabel: me.power.label } : {}),
+    ...score,
+  };
 }
 
 function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   const attacker = contestValue(s, contest, 'attacker');
   const defender = contestValue(s, contest, 'defender');
-  const attackerWins =
+  // An empty goal can't save: any shot scores.
+  const emptyGoal = (contest.kind === 'shot' || contest.kind === 'penalty') && !defender.card;
+  const attackerWins = emptyGoal ||
     attacker.total > defender.total || (attacker.total === defender.total && contest.tiesGoTo === 'attacker');
   const winnerRole: ContestRole = attackerWins ? 'attacker' : 'defender';
   const winner = contest[winnerRole];
+  const loser = contest[otherRole(winnerRole)];
   ev.push({ type: 'contestResolved', kind: contest.kind, attacker, defender, winner: winner.side, winnerRole });
 
   // draw_on_win: ignored if the winner was shielded.
-  const winnerDef = playerAt(s, winner.side, winner.pos);
+  const winnerSlot = slotAt(s, winner.side, winner.pos);
+  const winnerDef = winnerSlot ? (defOf(s, winnerSlot.uid) as PlayerCardDef) : null;
   const winnerShielded = attackerWins ? attacker.shielded : defender.shielded;
-  if (winnerDef.ability?.effect === 'draw_on_win' && !winnerShielded) {
+  if (winnerDef?.ability?.effect === 'draw_on_win' && !winnerShielded) {
     drawCards(s, winner.side, winnerDef.ability.params.count, 'ability', ev);
   }
 
   applyOutcome(s, contest, attackerWins, ev);
+
+  // Injuries: a hit that lands injures its target; a dirty play by the winner injures the loser.
+  if (!s.result) {
+    if (contest.kind === 'hit' && attackerWins) {
+      injurePlayer(s, contest.defender.side, contest.defender.pos, 'hit', contest.attacker.power?.label ?? 'Hit', ev);
+    }
+    if (activeSpell(s, winner, 'dirty_play')) {
+      injurePlayer(s, loser.side, loser.pos, 'dirty_play', defOf(s, winner.spell!.uid).name, ev);
+    }
+  }
   continueGame(s, ev);
 }
 
@@ -110,14 +138,23 @@ function giveBall(s: GameState, side: Side, pos: ContestSide['pos'], ev: GameEve
 function applyOutcome(s: GameState, contest: Contest, attackerWins: boolean, ev: GameEvent[]): void {
   const { attacker, defender } = contest;
   switch (contest.kind) {
-    case 'faceoff':
+    case 'faceoff': {
+      // The winner's midfielder takes the ball; if that spot is empty, the other midfielder does.
+      const winner = attackerWins ? attacker : defender;
+      const other = attackerWins ? defender : attacker;
+      if (slotAt(s, winner.side, winner.pos)) giveBall(s, winner.side, winner.pos, ev);
+      else if (slotAt(s, other.side, other.pos)) giveBall(s, other.side, other.pos, ev);
+      else giveBall(s, attacker.side, GOAL, ev);
+      break;
+    }
     case 'pass': {
       // The winner's player in the contest takes the ball (a lost pass is an interception).
-      const winner = attackerWins ? attacker : defender;
+      // An empty spot can't intercept.
+      const winner = attackerWins || !slotAt(s, defender.side, defender.pos) ? attacker : defender;
       giveBall(s, winner.side, winner.pos, ev);
       // Experimental: a caught pass can't be tackled until the catcher's team's next turn.
       const protect = s.config.protectCatch;
-      if (contest.kind === 'pass' && attackerWins && (protect === 'all' || (protect === 'forward' && attacker.pos.area === 'forward'))) {
+      if (attackerWins && (protect === 'all' || (protect === 'forward' && attacker.pos.area === 'forward'))) {
         s.ballProtected = true;
       }
       break;
@@ -132,6 +169,9 @@ function applyOutcome(s: GameState, contest: Contest, attackerWins: boolean, ev:
       break;
     case 'penalty':
       recordPenalty(s, attacker.side, attackerWins, ev);
+      break;
+    case 'hit':
+      // The ball doesn't move; the injury is applied after the outcome.
       break;
   }
 }

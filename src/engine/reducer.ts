@@ -4,13 +4,14 @@
 import type { Action } from './actions';
 import { adjustAmount, adjustPenalty, affinityFor, spellFizzles } from './affinity';
 import {
-  cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, playerAt, reveal, setSlotAt, slotAt, takeFromHand,
+  cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
 } from './board';
 import type { ActionSpellDef } from './cards';
 import { playReaction, startContest } from './contest';
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
+import { completeForcedSub, mend } from './injuries';
 import { shuffle } from './rng';
 import type { ContestSide, GameState, Modifier } from './state';
 import { validateAction } from './validate';
@@ -38,6 +39,10 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'regroup': regroup(s, side, action.discard, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
     case 'shootoutPick': penalty(s, side, action.pos, ev); break;
+    case 'forcedSub':
+      completeForcedSub(s, action.card, ev);
+      continueGame(s, ev);
+      break;
     case 'discard':
       discardFromHand(s, side, [action.card], ev);
       continueGame(s, ev);
@@ -184,18 +189,44 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
       drawCards(s, side, adjustAmount(ability.params.count, affinity, s.config), 'recall', ev);
       continueGame(s, ev);
       return;
+    case 'hit': {
+      if (target.kind !== 'hit') break;
+      // The caster attacks the opposing player in its own spot (or, for a forward, the goalie).
+      const targetPos = target.at === 'goalie' ? GOAL : opposite(caster as FieldPos);
+      const strength = adjustAmount(ability.params.strength, affinity, s.config);
+      startContest(s, {
+        kind: 'hit',
+        attacker: { side, pos: caster, stat: 'defense', use: 'resist', spell: null, modifiers: [], power: { label: spell.name, value: strength } },
+        defender: { side: otherSide(side), pos: targetPos, stat: targetPos.area === 'goal' ? 'save' : 'defense', use: 'resist', spell: null, modifiers: [] },
+        tiesGoTo: 'defender',
+      }, ev);
+      return;
+    }
+    case 'mend': {
+      if (target.kind === 'mendField') mend(s, side, slotAt(s, side, target.pos)!.uid, ev);
+      else if (target.kind === 'mendHand') mend(s, side, target.card, ev);
+      else break;
+      continueGame(s, ev);
+      return;
+    }
   }
   throw new Error(`Spell ${spell.id} has a target that doesn't fit its effect`);
 }
 
 function substitute(s: GameState, action: Extract<Action, { type: 'substitute' }>, ev: GameEvent[]): void {
   const { side, pos, card } = action;
-  const old = slotAt(s, side, pos)!;
+  const old = slotAt(s, side, pos);
   takeFromHand(s, side, card);
-  s.teams[side].discard.push(old.uid);
   // The substitute comes in face down. If the old player held the ball, the substitute does.
+  // (The spot may be empty after a player was carried off.)
   setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false });
-  ev.push({ type: 'substituted', side, pos, removed: cardView(s, old.uid) });
+  if (old) {
+    const removed = cardView(s, old.uid);
+    toDiscard(s, side, old.uid);
+    ev.push({ type: 'substituted', side, pos, removed });
+  } else {
+    ev.push({ type: 'forcedSub', side, pos, toHand: null });
+  }
   continueGame(s, ev);
 }
 

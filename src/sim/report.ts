@@ -9,6 +9,8 @@ export interface KeyMetrics {
   teamAWinRate: number;
   goalEndShare: number;
   shootoutShare: number;
+  injuriesPerGame: number;
+  moreInjuredWinRate: number;
   avgTurns: number;
   avgGoals: number;
   drawShare: number;
@@ -22,6 +24,8 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     teamAWinRate: decided ? s.wins.A / decided : NaN,
     goalEndShare: s.games ? s.reasons.goals / s.games : NaN,
     shootoutShare: s.games ? s.reasons.shootout / s.games : NaN,
+    injuriesPerGame: s.games ? (s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play) / s.games : NaN,
+    moreInjuredWinRate: s.moreInjured.games ? s.moreInjured.wins / s.moreInjured.games : NaN,
     avgTurns: average(s.turns),
     avgGoals: s.games ? s.goals / s.games : NaN,
     drawShare: s.games ? s.wins.draws / s.games : NaN,
@@ -53,6 +57,8 @@ export const TARGETS: Target[] = [
   { label: 'Goals per game', goal: '1–2', value: (m) => m.avgGoals, format: (n) => n.toFixed(2), low: 1, high: 2 },
   { label: 'Games drawn', goal: 'under 20%', value: (m) => m.drawShare, format: pctOf, low: 0, high: 0.1999 },
   { label: 'Average turns per game', goal: '30–50', value: (m) => m.avgTurns, format: (n) => n.toFixed(1), low: 30, high: 50 },
+  { label: 'Injuries per game', goal: '2–4', value: (m) => m.injuriesPerGame, format: (n) => n.toFixed(2), low: 2, high: 4 },
+  { label: 'More-injured team wins (decided games)', goal: '≥ 35%', value: (m) => m.moreInjuredWinRate, format: pctOf, low: 0.35, high: 1 },
 ];
 
 export interface Experiment {
@@ -157,10 +163,10 @@ export function buildReport(input: ReportInput): string {
       const k = keyMetrics(e.result.stats);
       return [
         e.name, k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
-        k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate),
+        k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate), k.injuriesPerGame.toFixed(2), pctOf(k.moreInjuredWinRate),
       ];
     });
-    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins'], rows));
+    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins'], rows));
     out.push('');
     for (const e of input.experiments) out.push(`- **${e.name}:** ${e.description}`);
     out.push('');
@@ -205,9 +211,9 @@ export function buildReport(input: ReportInput): string {
 
   out.push('### Contests');
   out.push('');
-  out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot or penalty scores, or the team choosing the faceoff lane wins it.');
+  out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot or penalty scores, the hit lands, or the team choosing the faceoff lane wins it.');
   out.push('');
-  const contestRows = (['pass', 'tackle', 'shot', 'faceoff', 'penalty'] as const).map((k) => {
+  const contestRows = (['pass', 'tackle', 'shot', 'faceoff', 'penalty', 'hit'] as const).map((k) => {
     const c = s.contests[k];
     return [k, (c.count / s.games).toFixed(1), pct(c.attackerWins, c.count)];
   });
@@ -217,6 +223,25 @@ export function buildReport(input: ReportInput): string {
     const p = s.passesTo[area];
     return [area, (p.count / s.games).toFixed(1), pct(p.attackerWins, p.count)];
   })));
+  out.push('');
+
+  out.push('### Injuries');
+  out.push('');
+  const injuryRate = (n: number) => (n / s.games).toFixed(2);
+  const hits = s.contests.hit;
+  out.push(table(['Measure', 'Value'], [
+    ['Injuries per game (carry-offs included)', injuryRate(s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play)],
+    ['…suffered by Team A', injuryRate(s.injuries.A.hit + s.injuries.A.dirty_play)],
+    ['…suffered by Team B', injuryRate(s.injuries.B.hit + s.injuries.B.dirty_play)],
+    ['…caused by hits', injuryRate(s.injuries.A.hit + s.injuries.B.hit)],
+    ['…caused by dirty plays', injuryRate(s.injuries.A.dirty_play + s.injuries.B.dirty_play)],
+    ['Players carried off per game', injuryRate(s.carriedOff)],
+    ['Games where a spot sat empty', `${s.gamesWithEmptySlot} (${pct(s.gamesWithEmptySlot, s.games)})`],
+    ['Goals scored into an empty goal, per game', injuryRate(s.emptyGoalGoals)],
+    ['Hits per game', injuryRate(hits.count)],
+    ['Hits that land', pct(hits.attackerWins, hits.count)],
+    ['More-injured team won (decided games with unequal injuries)', `${pct(s.moreInjured.wins, s.moreInjured.games)} of ${s.moreInjured.games}`],
+  ]));
   out.push('');
 
   out.push('### Spells by affinity');

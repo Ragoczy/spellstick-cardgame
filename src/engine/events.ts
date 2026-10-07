@@ -3,13 +3,15 @@
 // the other player's copy.
 
 import type { CardDef, StatName } from './cards';
+import type { InjuryDef } from './config';
 import type { FieldPos, Pos, Side } from './field';
 import type { Affinity, ContestKind, ContestRole, GameResult, Uid } from './state';
 
-/** A card as a player sees it. */
+/** A card as a player sees it. Injury cards are face up, so an injury is shown with its player. */
 export interface CardView {
   uid: Uid;
   def: CardDef;
+  injury?: InjuryDef;
 }
 
 export interface BreakdownPart {
@@ -21,8 +23,11 @@ export interface BreakdownPart {
 export interface Breakdown {
   side: Side;
   pos: Pos;
-  card: CardView;
+  /** null if the spot is empty (a player was carried off). */
+  card: CardView | null;
   stat: StatName;
+  /** Shown instead of the stat name when the value isn't a stat (a hit's strength). */
+  baseLabel?: string;
   /** The printed stat, or 0 if shielded. */
   base: number;
   /** Abilities, spells, and modifiers added to the base. */
@@ -32,6 +37,7 @@ export interface Breakdown {
 }
 
 export type DrawReason = 'setup' | 'turn' | 'recall' | 'ability' | 'regroup';
+export type InjurySource = 'hit' | 'dirty_play';
 
 export type GameEvent =
   | { type: 'gameStarted'; firstSide: Side }
@@ -60,5 +66,23 @@ export type GameEvent =
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
   | { type: 'discarded'; side: Side; cards: CardView[] }
   | { type: 'shootoutStarted'; first: Side }
+  | {
+      type: 'injured';
+      side: Side;
+      pos: Pos;
+      card: CardView;
+      /** The injury card drawn, or null if the injury deck was empty or the player was carried off. */
+      injury: InjuryDef | null;
+      source: InjurySource;
+      /** The spell that did it, e.g. "Flambé" or "Late Hit". */
+      cause: string;
+      /** Already injured, so carried off and discarded. */
+      carriedOff: boolean;
+    }
+  /** A forced substitution: a new player comes on face down. `toHand` is the injured player going to hand. */
+  | { type: 'forcedSub'; side: Side; pos: Pos; toHand: CardView | null }
+  /** Nobody could replace a carried-off player: the spot is empty. */
+  | { type: 'slotEmptied'; side: Side; pos: Pos }
+  | { type: 'mended'; side: Side; card: CardView; injury: InjuryDef }
   | { type: 'penalty'; side: Side; scored: boolean; goals: Record<Side, number>; taken: Record<Side, number> }
   | { type: 'gameOver'; result: GameResult };

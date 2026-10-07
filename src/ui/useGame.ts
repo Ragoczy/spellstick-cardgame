@@ -20,7 +20,7 @@ const COMPUTER_DELAY_MS = 650;
 const ANNOUNCEMENT_MS = 2600;
 
 const CONTEST_TITLE: Record<ContestKind, string> = {
-  pass: 'Pass', tackle: 'Tackle', shot: 'Shot on goal', faceoff: 'Faceoff', penalty: 'Penalty',
+  pass: 'Pass', tackle: 'Tackle', shot: 'Shot on goal', faceoff: 'Faceoff', penalty: 'Penalty', hit: 'Hit',
 };
 
 export interface GameController {
@@ -61,6 +61,9 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
         const mine = e.attacker.side === session.human ? e.attacker : e.defender;
         const theirs = e.attacker.side === session.human ? e.defender : e.attacker;
         announcements.push({ id: nextId.current++, title: CONTEST_TITLE[e.kind], text: line.text, tone: line.tone, contest: { kind: e.kind, mine, theirs } });
+      }
+      if (e.type === 'injured' && line) {
+        announcements.push({ id: nextId.current++, title: e.carriedOff ? 'Carried off!' : 'Injury!', text: line.text, tone: line.tone });
       }
       if ((e.type === 'goal' || e.type === 'shootoutStarted' || e.type === 'gameOver') && line) {
         const title = e.type === 'goal' ? 'Goal!' : e.type === 'shootoutStarted' ? 'Penalty shootout' : 'Game over';

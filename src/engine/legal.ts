@@ -42,6 +42,13 @@ function spellTargets(s: GameState, side: Side, effect: string): SpellTarget[] {
     case 'long_pass':
       if (!s.ball || s.ball.side !== side) return [];
       return passTargets(s.ball.pos, lanes, true).map((to) => ({ kind: 'pass', to }));
+    case 'hit':
+      return [{ kind: 'hit', at: 'slot' }, { kind: 'hit', at: 'goalie' }];
+    case 'mend':
+      return [
+        ...playerPositions(s).map((pos): SpellTarget => ({ kind: 'mendField', pos })),
+        ...s.teams[side].hand.map((card): SpellTarget => ({ kind: 'mendHand', card })),
+      ];
     default:
       return [{ kind: 'none' }];
   }
@@ -76,6 +83,10 @@ export function legalActions(s: GameState, side: Side): Action[] {
 
     case 'discard':
       for (const card of hand) candidates.push({ type: 'discard', side, card });
+      break;
+
+    case 'forcedSub':
+      for (const card of hand) candidates.push({ type: 'forcedSub', side, card });
       break;
 
     case 'shootoutPick':

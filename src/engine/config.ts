@@ -1,6 +1,19 @@
 // Every tuning number in the rules lives here (marked ⚙ in docs/RULES.md).
 // Balance changes should be one-line edits to DEFAULT_CONFIG.
 
+/** Stats an injury can lower. A goalie loses the injury's biggest penalty from Save instead. */
+export type InjuryStat = 'speed' | 'shot' | 'defense' | 'faceoff';
+
+/** One kind of injury card in the shared injury deck. */
+export interface InjuryDef {
+  id: string;
+  name: string;
+  /** How many of this card are in the injury deck. */
+  count: number;
+  /** Points taken off each stat while injured. */
+  penalty: Partial<Record<InjuryStat, number>>;
+}
+
 export interface GameConfig {
   /** Lanes on the field. Base game 2, center-lane add-on 3. */
   lanes: number;
@@ -28,10 +41,14 @@ export interface GameConfig {
   penaltyBonus: number;
   /** Who wins a tied pass: 'attacker' = the receiver catches it. */
   passTiesGoTo: 'defender' | 'attacker';
+  /** The shared injury deck (12 cards), shuffled at setup. */
+  injuries: InjuryDef[];
 
   // Experimental rule switch, used only by simulation what-ifs. Not in RULES.md.
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
+  /** Whether an injured goalie injured again is carried off. The rules say true. */
+  goalieCarryOff: boolean;
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
@@ -48,7 +65,15 @@ export const DEFAULT_CONFIG: GameConfig = {
   shootoutRounds: 3,
   penaltyBonus: 0,
   passTiesGoTo: 'attacker',
+  injuries: [
+    { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
+    { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },
+    { id: 'twisted-ankle', name: 'Twisted ankle', count: 3, penalty: { speed: 2 } },
+    { id: 'bruised-ribs', name: 'Bruised ribs', count: 2, penalty: { defense: 2 } },
+    { id: 'concussion', name: 'Concussion', count: 1, penalty: { speed: 1, shot: 1, defense: 1, faceoff: 1 } },
+  ],
   protectCatch: 'off',
+  goalieCarryOff: true,
 };
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {

@@ -3,6 +3,7 @@
 
 import type { GameRecord } from '../ai/runGame';
 import type { Area, CardDef } from '../engine/cards';
+import type { InjurySource } from '../engine/events';
 import type { Side } from '../engine/field';
 import type { Affinity, ContestKind, EndReason } from '../engine/state';
 
@@ -43,7 +44,17 @@ export class SimStats {
     tackle: { count: 0, attackerWins: 0 },
     shot: { count: 0, attackerWins: 0 },
     penalty: { count: 0, attackerWins: 0 },
+    hit: { count: 0, attackerWins: 0 },
   };
+  /** Injuries suffered, by the injured team and by what caused them (carry-offs included). */
+  injuries: Record<Side, Record<InjurySource, number>> = { A: { hit: 0, dirty_play: 0 }, B: { hit: 0, dirty_play: 0 } };
+  carriedOff = 0;
+  /** Goals (and shootout penalties) scored into an empty goal. */
+  emptyGoalGoals = 0;
+  /** Games where a spot sat empty because nobody could replace a carried-off player. */
+  gamesWithEmptySlot = 0;
+  /** Decided games where one team suffered more injuries: how often that team still won. */
+  moreInjured = { games: 0, wins: 0 };
   /** Passes by the row of the receiver: how often the receiver keeps the ball. */
   passesTo: Record<Area | 'goal', { count: number; attackerWins: number }> = {
     goal: { count: 0, attackerWins: 0 },
@@ -84,8 +95,18 @@ export class SimStats {
 
     // Spells cast since the last contest started belong to the next contest to resolve.
     let spellsInPlay: { side: Side; id: string; affinity: Affinity }[] = [];
+    const injuredThisGame: Record<Side, number> = { A: 0, B: 0 };
+    let emptySlot = false;
     for (const e of record.events) {
       switch (e.type) {
+        case 'injured':
+          this.injuries[e.side][e.source] += 1;
+          injuredThisGame[e.side] += 1;
+          if (e.carriedOff) this.carriedOff += 1;
+          break;
+        case 'slotEmptied':
+          emptySlot = true;
+          break;
         case 'turnStarted':
         case 'faceoffStarted':
           spellsInPlay = [];
@@ -103,6 +124,7 @@ export class SimStats {
           c.count += 1;
           if (e.winnerRole === 'attacker') c.attackerWins += 1;
           const won = e.winnerRole === 'attacker' ? 1 : 0;
+          if ((e.kind === 'shot' || e.kind === 'penalty') && !e.defender.card) this.emptyGoalGoals += won;
           if (e.kind === 'shot') {
             this.shots += 1;
             this.shotGoals += won;
@@ -114,6 +136,7 @@ export class SimStats {
             this.passesTo[e.attacker.pos.area].attackerWins += won;
           }
           for (const side of [e.attacker, e.defender]) {
+            if (!side.card) continue; // an empty spot
             const stats = this.card(side.card.def.id);
             stats.played += 1;
             stats.inContest += 1;
@@ -135,6 +158,16 @@ export class SimStats {
           break;
       }
     }
+    this.finishInjuries(injuredThisGame, emptySlot, result.winner);
+  }
+
+  /** Called at the end of add() for each game's injury totals. */
+  private finishInjuries(injured: Record<Side, number>, emptySlot: boolean, winner: Side | null): void {
+    if (emptySlot) this.gamesWithEmptySlot += 1;
+    if (winner === null || injured.A === injured.B) return;
+    const moreInjured: Side = injured.A > injured.B ? 'A' : 'B';
+    this.moreInjured.games += 1;
+    if (winner === moreInjured) this.moreInjured.wins += 1;
   }
 
   private card(id: string): CardStats {

@@ -18,11 +18,12 @@ const END_REASON: Record<EndReason, string> = {
   turn_cap: 'turn limit reached — this is a bug',
 };
 
-const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty' } as const;
+const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit' } as const;
 
 /** "Speed 5 + Fire Boost 3 = 8", or "Defense 0 (shielded)". */
 export function describeValue(b: Breakdown): string {
-  let text = `${STAT_LABEL[b.stat]} ${b.base}${b.shielded ? ' (shielded)' : ''}`;
+  if (!b.card) return 'empty spot 0';
+  let text = `${b.baseLabel ?? STAT_LABEL[b.stat]} ${b.base}${b.shielded ? ' (shielded)' : ''}`;
   for (const part of b.parts) text += ` ${part.amount < 0 ? '−' : '+'} ${part.label} ${Math.abs(part.amount)}`;
   if (b.parts.length > 0) text += ` = ${b.total}`;
   return text;
@@ -76,6 +77,15 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `Full time, and it's a tie: penalty shootout! ${names[e.first]} shoots first.`;
     case 'penalty':
       return `${e.scored ? 'Penalty scored' : 'Penalty saved'}. Shootout: ${names.A} ${e.goals.A}, ${names.B} ${e.goals.B}.`;
+    case 'injured':
+      if (e.carriedOff) return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} was already hurt and is carried off.`;
+      return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is injured${e.injury ? `: ${e.injury.name}` : ' (no injury cards left)'}.`;
+    case 'forcedSub':
+      return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
+    case 'slotEmptied':
+      return `${names[e.side]} has nobody to replace them: ${posLabel(e.pos)} is empty.`;
+    case 'mended':
+      return `${names[e.side]} mends ${e.card.def.name} (${e.injury.name}).`;
     case 'gameOver':
       return `Game over: ${e.result.winner === null ? 'a draw' : `${names[e.result.winner]} wins`} (${END_REASON[e.result.reason]}).`;
   }

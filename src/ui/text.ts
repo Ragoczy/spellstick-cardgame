@@ -3,7 +3,7 @@
 
 import { NUMERIC_EFFECTS, otherSide, type Breakdown, type EndReason, type GameEvent, type Side } from '../engine';
 import { describeValue } from '../text/describe';
-import { capitalize, laneName, posName } from './labels';
+import { capitalize, injuryEffect, laneName, posName } from './labels';
 
 export type Tone = 'turn' | 'good' | 'bad' | 'goal' | 'info';
 
@@ -61,6 +61,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
         case 'tackle': return info(`${who(a.side)} ${verb(a.side, 'try', 'tries')} to tackle ${at(e.defender.side, e.defender.pos)}.`);
         case 'shot': return info(`${who(a.side)} ${verb(a.side, 'shoot', 'shoots')} with ${at(a.side, a.pos)}!`);
         case 'penalty': return info(`${who(a.side)} ${verb(a.side, 'take', 'takes')} a penalty with ${at(a.side, a.pos)}.`);
+        case 'hit': return info(`${capitalize(at(a.side, a.pos))} goes after ${at(e.defender.side, e.defender.pos)}!`);
         case 'faceoff': return null;
       }
       return null;
@@ -104,6 +105,9 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
         case 'penalty':
           outcome = attackerWon ? 'Scored!' : 'Saved!';
           break;
+        case 'hit':
+          outcome = attackerWon ? 'It lands!' : `${who(defender)} ${verb(defender, 'shrug', 'shrugs')} it off.`;
+          break;
       }
       const tieNote = tie ? ` Ties go to ${isMe(e.winner) ? 'you' : 'the computer'}.` : '';
       return { text: `${sentence}${tieNote} ${outcome}`, tone: iWon ? 'good' : 'bad' };
@@ -123,6 +127,26 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return info(`The computer looks at ${at(me, e.target)}.`);
     case 'discarded':
       return info(`${who(e.side)} ${verb(e.side, 'discard', 'discards')} ${e.cards.map((c) => c.def.name).join(', ')}.`);
+    case 'injured': {
+      const where = capitalize(at(e.side, e.pos));
+      if (e.carriedOff) {
+        return { text: `${e.cause}! ${where} (${e.card.def.name}) was already hurt and is carried off.`, tone: isMe(e.side) ? 'bad' : 'good' };
+      }
+      const hurt = e.injury
+        ? `${where} has ${e.injury.name.toLowerCase()}: ${injuryEffect(e.injury, e.card.def)}.`
+        : `${where} is hurt, but the injury deck is empty, so there's no injury card.`;
+      return { text: `${e.cause}! ${hurt}`, tone: isMe(e.side) ? 'bad' : 'good' };
+    }
+    case 'forcedSub':
+      if (e.toHand) {
+        return info(`${who(e.side)} ${verb(e.side, 'bring', 'brings')} on a substitute for ${at(e.side, e.pos)}, face down. ` +
+          `${e.toHand.def.name} goes to ${whose(e.side)} hand to recover.`);
+      }
+      return info(`${who(e.side)} ${verb(e.side, 'fill', 'fills')} ${at(e.side, e.pos)} spot with a new player, face down.`);
+    case 'slotEmptied':
+      return { text: `Nobody can replace ${at(e.side, e.pos)}: the spot is empty and counts as 0 until it's filled.`, tone: isMe(e.side) ? 'bad' : 'good' };
+    case 'mended':
+      return info(`${who(e.side)} ${verb(e.side, 'mend', 'mends')} ${e.card.def.name}: no more ${e.injury.name.toLowerCase()}.`);
     case 'shootoutStarted':
       return { text: `Full time, and it's a tie: penalty shootout! ${who(e.first)} ${verb(e.first, 'shoot', 'shoots')} first.`, tone: 'goal' };
     case 'penalty':

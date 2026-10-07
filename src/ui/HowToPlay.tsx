@@ -1,4 +1,4 @@
-// A short, player-facing version of docs/RULES.md (v0.4). If the rules change, update this too.
+// A short, player-facing version of docs/RULES.md (v0.5). If the rules change, update this too.
 
 export function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
@@ -44,6 +44,20 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         Both players are revealed. The attacker may play one <b>reaction spell</b>, then the defender may answer
         with one. Highest value wins.
       </p>
+
+      <h3>Hits and injuries</h3>
+      <p>
+        Spellstick is rough. A <b>hit</b> spell attacks the opposing player in your caster's spot (a forward can go
+        after the goalie): the spell's strength against their Defense, or Save. A <b>dirty play</b> is a reaction
+        spell: if your side wins the contest, the player you beat is injured.
+      </p>
+      <ul>
+        <li>An injured player gets a face-up <b>injury card</b> that lowers a stat (for example, Singed hair: −1 Speed).</li>
+        <li>If you have a player in hand, you must bring them on straight away, face down. It's free. The injured player goes to your hand.</li>
+        <li>No one to bring on? The injured player keeps playing, hurt.</li>
+        <li>Injured again? They're <b>carried off</b>. If nobody replaces them, the spot is empty and counts as 0.</li>
+        <li><b>Mend</b> heals one of your players, on the field or in your hand.</li>
+      </ul>
 
       <h3>Faceoffs and goals</h3>
       <p>

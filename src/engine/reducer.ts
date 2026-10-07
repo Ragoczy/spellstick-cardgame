@@ -102,7 +102,7 @@ function faceoff(s: GameState, chooser: Side, lane: number, ev: GameEvent[]): vo
 }
 
 function pass(s: GameState, side: Side, to: FieldPos, ev: GameEvent[]): void {
-  // Experimental: a passing bonus for the receiver.
+  // The receiver gets a bonus in every pass (RULES.md "Pass").
   const modifiers: Modifier[] = s.config.passBonus ? [{ label: 'Pass', amount: s.config.passBonus }] : [];
   startContest(s, {
     kind: 'pass',

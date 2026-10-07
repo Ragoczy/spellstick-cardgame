@@ -87,6 +87,9 @@ function diceFor(options: ScenarioOptions): Record<Side, number> {
   return { A: n, B: n };
 }
 
+/** Scenario contests are decided by printed numbers unless a test turns these back on. */
+export const PLAIN_CONTESTS: Partial<GameConfig> = { passBonus: 0, shotDie: 0, penaltyBonus: 0 };
+
 /** The injury deck in a fixed, unshuffled order: the first injury in config is drawn last. */
 export function injuryDeckFor(config: GameConfig): { injuryDeck: string[]; injuryCards: Record<string, InjuryDef> } {
   const injuryCards: Record<string, InjuryDef> = {};
@@ -99,7 +102,9 @@ export function injuryDeckFor(config: GameConfig): { injuryDeck: string[]; injur
 
 /** Builds a game in the middle of play: it's `active`'s turn and they must choose an action. */
 export function scenario(options: ScenarioOptions = {}): GameState {
-  const config = makeConfig({ ...options.config, lanes: options.lanes ?? options.config?.lanes ?? 2 });
+  // Plain contests unless the test asks otherwise: no pass bonus, no rolled shots, no penalty bonus,
+  // so printed numbers decide. Those rules have their own tests (pass, shoot, and endgame).
+  const config = makeConfig({ ...PLAIN_CONTESTS, ...options.config, lanes: options.lanes ?? options.config?.lanes ?? 2 });
   const cards: Record<Uid, CardDef> = {};
   const teams = {} as Record<Side, TeamState>;
   const active = options.active ?? 'A';

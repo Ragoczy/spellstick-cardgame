@@ -1,4 +1,4 @@
-# Spellstick — rules v0.6
+# Spellstick — rules v0.7
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -150,16 +150,18 @@ scored on takes the next turn, whoever won the faceoff.
 - any row backward, any lane (never to the goalie).
 
 The receiver and the opponent's player in the receiver's slot are both revealed, then contest:
-receiver's **Speed** against the opponent's **Defense**. The passer isn't part of the contest
-and isn't revealed. If the receiver's value is **equal or higher**, they catch it and hold the
-ball. If not, the opponent's player intercepts and holds the ball. You can't pass to an empty spot,
+receiver's **Speed +2** ⚙ against the opponent's **Defense**. (The +2 is the pass itself: a good
+pass is hard to cut out.) The passer isn't part of the contest and isn't revealed. If the
+receiver's value is **equal or higher**, they catch it and hold the ball. If not, the opponent's player intercepts and holds the ball. You can't pass to an empty spot,
 and an empty spot can't intercept.
 
 A goalie holding the ball may pass to any of its defenders the same way.
 
 **Shoot.** Only a forward holding the ball. The opposing goalie is revealed. Contest: forward's
-**Shot** against goalie's **Save**. If the forward wins, you score. If not, the goalie holds
-the ball.
+**Shot** against goalie's **Save**, and **every shot is rolled**: the shooter and the goalie each
+roll a six-sided die ⚙ and add it. If the forward's total is higher, you score. If not, the
+goalie holds the ball. Goalies are strong (Save 6 in the prototype decks), so most shots are
+saved: about 1 in 4 goes in. Roll tokens can't be spent on a shot, since it's already rolled.
 
 A forward can only get the ball by beating the defender in its slot (winning a pass against
 their Defense, or a tackle), so a goal always means the forward beat both the defender and the
@@ -181,7 +183,7 @@ hand (field player for field player, goalie for goalie), **face down**. The repl
 your discard pile, face up. If the replaced player held the ball, the substitute holds it. You can
 also fill an empty spot this way.
 
-**Regroup.** Discard up to 2 cards ⚙, then draw that many. Discarding none is allowed: the
+**Regroup.** Discard up to 1 card ⚙, then draw that many. Discarding none is allowed: the
 action does nothing.
 
 ## Contests
@@ -210,8 +212,9 @@ reaction spells or roll.
 Each player starts the game with **5 roll tokens** ⚙, kept face up so everyone can see how many
 are left.
 
-- In any contest, after both players are revealed and before reaction spells, the attacker may
-  **call for dice** by spending one token. If the attacker doesn't, the defender may.
+- In any contest except shots and penalties (those are always rolled), after both players are
+  revealed and before reaction spells, the attacker may **call for dice** by spending one token.
+  If the attacker doesn't, the defender may.
 - When someone calls for dice, **both players roll a six-sided die** ⚙ and add it to their value.
   Only the caller spends a token; the other player's roll is free.
 - Dice can be called at most once per contest. Reaction spells are played after the roll, so both
@@ -259,8 +262,9 @@ and the team that was scored on chooses the lane.
 - If the score is tied at full time, there is a **penalty shootout**:
   - The team that didn't take the last turn shoots first; then the teams take turns.
   - For each penalty, choose one of your field players who hasn't taken a penalty yet. They shoot
-    at the opposing goalie: their **Shot** against the goalie's **Save**, as a normal contest
-    (both revealed, reaction spells allowed, ties go to the goalie).
+    at the opposing goalie: their **Shot +3** ⚙ against the goalie's **Save**, rolled like any
+    shot (both revealed, both roll, reaction spells allowed, ties go to the goalie). About half
+    of penalties score.
   - Each team takes 3 penalties ⚙. Stop early as soon as one team can't catch up.
   - If still tied after 3 each, keep going one penalty each until one team scores and the other
     doesn't.
@@ -325,6 +329,12 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.7 — Passing: the receiver gets +2 in every pass, so most passes are caught (about 9 in 10). Paul: moving the ball upfield should usually work.
+- v0.7 — Shots: every shot and penalty is rolled (shooter and goalie each roll a die); goalies are Save 6, so about 1 shot in 4 scores. Paul: goalies should stop most shots.
+- v0.7 — Penalty shots get +3, so about half score and shootouts end quickly.
+- v0.7 — Regroup swaps at most 1 card (was 2), so games last longer (about 33 turns) and teams get more shots.
+- v0.7 — Prototype decks: both teams use the same mix of player types; Defense capped at 5; both goalies Save 6 (was 3 and 2, so one was never picked).
 
 - v0.6 — Dice: each player has 5 roll tokens a game. In a contest, a player may spend one to "call for dice": both players roll a six-sided die and add it; only the caller pays. Chosen after simulation showed printed stats decided about 9 contests in 10.
 

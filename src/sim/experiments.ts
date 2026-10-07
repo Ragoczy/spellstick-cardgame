@@ -46,38 +46,29 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'Pass bonus +2',
-    description: 'The receiver adds 2 to their Speed in every pass.',
-    config: { passBonus: 2 },
+    name: 'Goalies Save 5',
+    description: 'Weaker goalies: more shots score.',
+    cards: goaliesAt(5),
   },
   {
-    name: 'Rolled shots, Save 6',
-    description: 'Pass bonus +2. Every shot and penalty is rolled (shooter and goalie each roll a die). Goalies Save 6.',
-    config: { passBonus: 2, shotDie: 6 },
-    cards: goaliesAt(6),
-  },
-  {
-    name: 'Rolled shots, Save 6, penalties +3',
-    description: 'As above, and penalty shots get +3.',
-    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3 },
-    cards: goaliesAt(6),
-  },
-  {
-    name: 'Hockey package',
-    description: 'As above, and Regroup swaps at most 1 card (games run longer, more shots).',
-    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3, regroupMax: 1 },
-    cards: goaliesAt(6),
-  },
-  {
-    name: 'Hockey package, Save 7',
-    description: 'The hockey package with tougher goalies (Save 7) and penalties +4.',
-    config: { passBonus: 2, shotDie: 6, penaltyBonus: 4, regroupMax: 1 },
+    name: 'Goalies Save 7',
+    description: 'Tougher goalies (penalties +4 to keep shootouts short).',
+    config: { penaltyBonus: 4 },
     cards: goaliesAt(7),
   },
   {
-    name: 'Hockey package, no Regroup',
-    description: 'The hockey package, but Regroup only skips the action (no card swaps): longer games.',
-    config: { passBonus: 2, shotDie: 6, penaltyBonus: 3, regroupMax: 0 },
-    cards: goaliesAt(6),
+    name: 'Pass bonus +1',
+    description: 'The receiver adds 1 to their Speed in every pass instead of 2.',
+    config: { passBonus: 1 },
+  },
+  {
+    name: 'Regroup 2 cards',
+    description: 'Regroup swaps up to 2 cards (the rule before v0.7): shorter games.',
+    config: { regroupMax: 2 },
+  },
+  {
+    name: 'No Regroup',
+    description: 'Regroup only skips the action: longer games, more shots.',
+    config: { regroupMax: 0 },
   },
 ];

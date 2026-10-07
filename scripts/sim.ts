@@ -6,7 +6,7 @@
 //   npm run sim -- --set goalsToWin=2          (try a different config value, without changing the game)
 //   npm run sim -- --experiments               (also run the what-if experiments in src/sim/experiments.ts)
 //   npm run sim -- --experiment-games 300      (games per experiment; default: same as --games)
-//   npm run sim -- --cards data/cards.balanced.json   (use a different card file)
+//   npm run sim -- --cards data/my-cards.json         (use a different card file)
 //
 // Exits with an error if any game crashed, reached an impossible state, or hit the turn cap.
 

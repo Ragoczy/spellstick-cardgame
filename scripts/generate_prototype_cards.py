@@ -4,14 +4,9 @@ Everything here is a placeholder: names, elements, and numbers exist only so the
 simulator have something to run. Real rosters come in milestone M5.
 
 Usage: python3 scripts/generate_prototype_cards.py > data/cards.prototype.json
-       python3 scripts/generate_prototype_cards.py --balanced > data/cards.balanced.json
-         (candidate rosters: Defense capped at 5, the same mix of player types for both teams)
 """
 import json
 import random
-import sys
-
-BALANCED = "--balanced" in sys.argv
 
 ELEMENTS = ["fire", "water", "earth", "air"]  # placeholders until canon is set
 OPPOSED = [["fire", "water"], ["earth", "air"]]
@@ -26,25 +21,25 @@ RESONANT_NAMES = {"fire": "Anger", "water": "Love", "earth": "Pain", "air": "Joy
 ARCHETYPES = {
     "runner":    (5, 3, 2, 4),
     "striker":   (3, 5, 2, 2),
-    "stopper":   (3, 2, 5, 2) if BALANCED else (2, 2, 6, 2),  # balanced: Defense capped at 5, the point moved to Speed
+    "stopper":   (3, 2, 5, 2),  # Defense capped at 5 (v0.7; was 2/2/6/2)
     "anchor":    (3, 2, 5, 3),
     "playmaker": (4, 3, 3, 5),
     "allround":  (3, 4, 3, 3),
 }
 
-# Balanced candidate: both teams use the same mix of player types.
+# Both teams use the same mix of player types (v0.7; Team A used to lean attack, Team B defense).
 BALANCED_MIX = {"runner": 4, "striker": 4, "playmaker": 4, "allround": 4, "anchor": 3, "stopper": 3}
 
 # Per-team archetype mix (22 field players) and element weighting.
 TEAMS = {
     "A": {
         "name": "Placeholder Team A", "color": "#B5462E",
-        "mix": BALANCED_MIX if BALANCED else {"runner": 5, "striker": 5, "playmaker": 4, "allround": 3, "anchor": 3, "stopper": 2},
+        "mix": BALANCED_MIX,
         "elements": ["fire", "fire", "air", "air", "earth", "water"],
     },
     "B": {
         "name": "Placeholder Team B", "color": "#2E6FB5",
-        "mix": BALANCED_MIX if BALANCED else {"stopper": 5, "anchor": 5, "allround": 4, "playmaker": 3, "runner": 3, "striker": 2},
+        "mix": BALANCED_MIX,
         "elements": ["water", "water", "earth", "earth", "fire", "air"],
     },
 }
@@ -128,7 +123,7 @@ def build():
                     card["text"] = text
                 idx += 1
                 cards.append(card)
-        for g, save in ((1, 3), (2, 2)):  # lowered from 5/4 after the M2 simulations
+        for g, save in ((1, 6), (2, 6)):  # v0.7: both Save 6, since shots are rolled (was 3/2)
             cards.append({
                 "id": f"{team_id.lower()}-g-{g:02d}",
                 "team": team_id, "kind": "goalie",
@@ -172,7 +167,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.5-prototype-balanced" if BALANCED else "0.5-prototype",
+        "version": "0.7-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

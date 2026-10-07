@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { Action } from '../../src/engine/actions';
 import type { FieldCardDef } from '../../src/engine/cards';
 import { allFieldPositions, type FieldPos, type Side } from '../../src/engine/field';
+import { DEFAULT_CONFIG } from '../../src/engine/config';
 import { applyAction } from '../../src/engine/reducer';
 import type { GameState } from '../../src/engine/state';
 import type { GameEvent } from '../../src/engine/events';
@@ -99,12 +100,24 @@ describe.each(LANE_COUNTS)('end of the game (%i lanes)', (lanes) => {
     expect(after.pending).toEqual({ kind: 'shootoutPick', side: 'B' });
   });
 
-  it('adds the penalty bonus (a tuning value, 0 by default) to the shooter', () => {
-    const s = shootout(lanes, { lineup: allShooters(lanes, 3, 'A') }, { goalie: goalie('B goalie', 4) });
-    s.config = { ...s.config, penaltyBonus: 2 };
+  it('adds the penalty bonus (+3) to the shooter', () => {
+    const s = shootout(lanes, { lineup: allShooters(lanes, 3, 'A') }, { goalie: goalie('B goalie', 5) });
+    s.config = { ...s.config, penaltyBonus: DEFAULT_CONFIG.penaltyBonus };
+    expect(DEFAULT_CONFIG.penaltyBonus).toBe(3);
     const { events } = shoot(s, [dfn(0)]);
-    expect(lastContest(events).attacker.total).toBe(5);
+    expect(lastContest(events).attacker.parts).toContainEqual({ label: 'Penalty', amount: 3 });
+    expect(lastContest(events).attacker.total).toBe(6);
     expect(lastContest(events).winner).toBe('A');
+  });
+
+  it('rolls penalties like shots: the shooter and the goalie each roll a die', () => {
+    const s = shootout(lanes, { lineup: allShooters(lanes, 3, 'A') }, { goalie: goalie('B goalie', 5) });
+    s.config = { ...s.config, shotDie: DEFAULT_CONFIG.shotDie };
+    const { events } = shoot(s, [dfn(0)]);
+    const started = eventsOfType(events, 'contestStarted').find((e) => e.kind === 'penalty')!;
+    expect(started.attacker.roll).toBeGreaterThanOrEqual(1);
+    expect(started.defender.roll).toBeGreaterThanOrEqual(1);
+    expect(lastContest(events).attacker.total).toBe(3 + started.attacker.roll!);
   });
 
   it('stops early once one team cannot catch up in the first 3 rounds', () => {

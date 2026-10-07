@@ -41,6 +41,10 @@ export interface GameConfig {
   penaltyBonus: number;
   /** Who wins a tied pass: 'attacker' = the receiver catches it. */
   passTiesGoTo: 'defender' | 'attacker';
+  /** Added to the receiver's Speed in every pass. */
+  passBonus: number;
+  /** Shots and penalties are always rolled: the shooter and the goalie each roll a die this size and add it (0 = off). */
+  shotDie: number;
   /** The shared injury deck (12 cards), shuffled at setup. */
   injuries: InjuryDef[];
 
@@ -50,14 +54,10 @@ export interface GameConfig {
   budgetDie: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
-  /** Added to the receiver's value in every pass (0 = off). */
-  passBonus: number;
   /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
   diceMode: 'both' | 'self';
   /** Each player in every contest rolls a die this size and adds it (0 = off). */
   contestDie: number;
-  /** Shots and penalties only: the shooter and the goalie always roll a die this size and add it (0 = off). */
-  shotDie: number;
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
 }
@@ -67,15 +67,17 @@ export const DEFAULT_CONFIG: GameConfig = {
   goalsToWin: 3,
   handLimit: 7,
   setupExtraCards: 4,
-  regroupMax: 2,
+  regroupMax: 1,
   affinityMatchBonus: 1,
   affinityOpposedPenalty: 1,
   maxTurns: 300,
   deckSize: 40,
   actionsPerTurn: 2,
   shootoutRounds: 3,
-  penaltyBonus: 0,
+  penaltyBonus: 3,
   passTiesGoTo: 'attacker',
+  passBonus: 2,
+  shotDie: 6,
   diceBudget: 5,
   budgetDie: 6,
   injuries: [
@@ -87,8 +89,6 @@ export const DEFAULT_CONFIG: GameConfig = {
   ],
   protectCatch: 'off',
   contestDie: 0,
-  shotDie: 0,
-  passBonus: 0,
   diceMode: 'both',
 };
 

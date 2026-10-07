@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { prototypeCards } from '../src/data/prototype';
 import { viewFor, type GameEvent } from '../src/engine';
 import { GameSession } from '../src/ui/session';
-import { dicePreview, matchup, reactionPreview } from '../src/ui/preview';
-import { LANE_COUNTS, boost, dfn, fwd, play, player, scenario } from './helpers';
+import { dicePreview, matchup, reactionPreview, shotPreview } from '../src/ui/preview';
+import { LANE_COUNTS, boost, dfn, fwd, goalie, play, player, scenario } from './helpers';
 
 describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
@@ -26,6 +26,24 @@ describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
     const { state } = play(s, { type: 'tackle', side: 'A' });
     const preview = reactionPreview(viewFor(state, 'A'))!;
     expect([preview.mine, preview.theirs]).toEqual([4, 2]);
+  });
+
+  it('show the chance of scoring for a rolled shot (Shot 5 vs Save 6: 10 in 36)', () => {
+    const s = scenario({
+      lanes,
+      config: { shotDie: 6 },
+      ball: { side: 'A', pos: fwd(LAST) },
+      A: { lineup: { forward: { [LAST]: player('A fwd', { shot: 5 }) } } },
+      B: { goalie: goalie('B goalie', 6), revealed: [{ area: 'goal' }] },
+    });
+    const preview = shotPreview(viewFor(s, 'A'), fwd(LAST))!;
+    expect(preview).toMatchObject({ mine: 5, theirs: 6 });
+    expect(preview.chance).toBeCloseTo(10 / 36);
+  });
+
+  it("don't guess a shot chance against a face-down goalie you haven't seen", () => {
+    const s = scenario({ lanes, config: { shotDie: 6 }, ball: { side: 'A', pos: fwd(LAST) } });
+    expect(shotPreview(viewFor(s, 'A'), fwd(LAST))).toBeNull();
   });
 
   it('still offer the reaction prompt when the opposing spot is empty (it counts as 0)', () => {

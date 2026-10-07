@@ -27,7 +27,7 @@ function otherRole(role: ContestRole): ContestRole {
 export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   reveal(s, contest.attacker.side, contest.attacker.pos, ev);
   reveal(s, contest.defender.side, contest.defender.pos, ev);
-  // Experimental dice: each player in the contest rolls, before any reaction spells.
+  // Shots and penalties are always rolled (RULES.md "Shoot"); the experimental contestDie rolls in every contest.
   const isShot = contest.kind === 'shot' || contest.kind === 'penalty';
   const die = s.config.contestDie || (isShot ? s.config.shotDie : 0);
   if (die > 0) {

@@ -1,5 +1,6 @@
 // RULES.md "Pass".
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_CONFIG } from '../../src/engine/config';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { LANE_COUNTS, GOAL_POS, dfn, eventsOfType, fwd, lastContest, mid, play, player, scenario } from '../helpers';
 
@@ -18,6 +19,19 @@ describe.each(LANE_COUNTS)('pass (%i lanes)', (lanes) => {
     expect(contest.attacker).toMatchObject({ side: 'A', stat: 'speed', total: 5 });
     expect(contest.defender).toMatchObject({ side: 'B', stat: 'defense', total: 4 });
     expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) });
+  });
+
+  it('gives the receiver +2 (the pass bonus)', () => {
+    expect(DEFAULT_CONFIG.passBonus).toBe(2);
+    const s = scenario({
+      lanes,
+      config: { passBonus: DEFAULT_CONFIG.passBonus },
+      A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 3 }) } } },
+      B: { lineup: { defense: { [LAST]: player('B def', { defense: 5 }) } } },
+    });
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    expect(lastContest(events).attacker).toMatchObject({ total: 5, parts: [{ label: 'Pass', amount: 2 }] });
+    expect(state.ball).toEqual({ side: 'A', pos: fwd(LAST) }); // 5 vs 5: a tie goes to the receiver
   });
 
   it('is caught on a tie', () => {

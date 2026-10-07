@@ -1,4 +1,4 @@
-// A short, player-facing version of docs/RULES.md (v0.6). If the rules change, update this too.
+// A short, player-facing version of docs/RULES.md (v0.7). If the rules change, update this too.
 
 export function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
@@ -31,12 +31,12 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
 
       <h3>Actions</h3>
       <ul>
-        <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed against the opponent's Defense. Ties are caught; otherwise it's intercepted.</li>
-        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save. Ties go to the goalie.</li>
+        <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed <b>+2</b> against the opponent's Defense. Ties are caught; otherwise it's intercepted. Most passes get through.</li>
+        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 1 shot in 4 goes in, more with a good shooter or a spell.</li>
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
         <li><b>Substitute</b> a player from your hand, face down.</li>
-        <li><b>Regroup:</b> discard up to 2 cards and draw that many (or do nothing).</li>
+        <li><b>Regroup:</b> discard 1 card and draw 1 (or do nothing).</li>
       </ul>
 
       <h3>Contests</h3>
@@ -49,6 +49,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
       <p>
         You have <b>5 rolls</b> a game. Losing a contest that matters? Spend one to call for dice: you <i>both</i> roll a
         die and add it, but only you use up a roll. The attacker gets the first chance to call, then the defender.
+        (Shots and penalties are always rolled, so you don't spend rolls on them.)
       </p>
 
       <h3>Hits and injuries</h3>
@@ -76,7 +77,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         The decks are the game clock. When a player can't draw, they finish that turn, the other player takes one
         last turn, and it's <b>full time</b>: more goals wins. A team that reaches 3 goals wins straight away.
         If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
-        haven't shot yet, three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
+        haven't shot yet (penalty shots get +3, and are rolled), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
       </p>
       <button type="button" className="primary" onClick={onBack}>Got it</button>
     </div>

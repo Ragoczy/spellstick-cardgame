@@ -58,12 +58,13 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(eventsOfType(events, 'turnStarted')[0]?.side).toBe('B');
   });
 
-  it('regroup: discard up to 2 cards, then draw that many', () => {
-    const s = scenario({ lanes, A: { hand: [player('x'), player('y'), player('z')] } });
-    const { state, events } = play(s, { type: 'regroup', side: 'A', discard: [uid(s, 'A', 'x'), uid(s, 'A', 'y')] });
-    expect(state.teams.A.hand).toHaveLength(3);
-    expect(eventsOfType(events, 'discarded')[0]?.cards.map((c) => c.def.name)).toEqual(['x', 'y']);
-    expect(() => applyAction(s, { type: 'regroup', side: 'A', discard: [uid(s, 'A', 'x'), uid(s, 'A', 'y'), uid(s, 'A', 'z')] })).toThrow(IllegalActionError);
+  it('regroup: discard 1 card, then draw 1 (no more than 1)', () => {
+    const s = scenario({ lanes, A: { hand: [player('x'), player('y')] } });
+    expect(s.config.regroupMax).toBe(1);
+    const { state, events } = play(s, { type: 'regroup', side: 'A', discard: [uid(s, 'A', 'x')] });
+    expect(state.teams.A.hand).toHaveLength(2);
+    expect(eventsOfType(events, 'discarded')[0]?.cards.map((c) => c.def.name)).toEqual(['x']);
+    expect(() => applyAction(s, { type: 'regroup', side: 'A', discard: [uid(s, 'A', 'x'), uid(s, 'A', 'y')] })).toThrow(IllegalActionError);
   });
 
   it('regroup with no cards is always legal, so there is always something to do', () => {

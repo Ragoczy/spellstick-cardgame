@@ -92,6 +92,23 @@ export function matchup(
   };
 }
 
+/**
+ * Your chance of scoring if you shoot now: your Shot against their goalie's Save, with both
+ * rolling (shots are always rolled). Null if their goalie is face down and you haven't seen it.
+ */
+export function shotPreview(view: PlayerView, from: Pos): { mine: number; theirs: number; chance: number } | null {
+  const m = matchup(view, { pos: from, stat: 'shot', use: 'shoot' }, { pos: { area: 'goal' }, stat: 'save', use: 'save' });
+  if (!m || m.theirs === null) return null;
+  const goalieThere = !!cardAt(view, 'opponent', { area: 'goal' });
+  const die = view.config.shotDie;
+  if (!die) return { mine: m.mine, theirs: m.theirs, chance: m.mine > m.theirs ? 1 : 0 };
+  let wins = 0;
+  for (let a = 1; a <= die; a++) {
+    for (let b = 1; b <= die; b++) if (m.mine + a > m.theirs + (goalieThere ? b : 0)) wins++;
+  }
+  return { mine: m.mine, theirs: m.theirs, chance: wins / (die * die) };
+}
+
 export interface DicePreview {
   mine: number;
   theirs: number;

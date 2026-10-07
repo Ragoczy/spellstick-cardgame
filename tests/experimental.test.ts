@@ -11,8 +11,6 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
   it('are off by default', () => {
     expect(DEFAULT_CONFIG.protectCatch).toBe('off');
     expect(DEFAULT_CONFIG.contestDie).toBe(0);
-    expect(DEFAULT_CONFIG.shotDie).toBe(0);
-    expect(DEFAULT_CONFIG.passBonus).toBe(0);
     expect(DEFAULT_CONFIG.diceMode).toBe('both');
   });
 
@@ -39,17 +37,6 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
     expect(rolled.attackerRoll).toBeGreaterThanOrEqual(1);
     expect(rolled.defenderRoll).toBeUndefined();
     expect(state.pending).toMatchObject({ kind: 'callDice', side: 'B' });
-  });
-
-  it('shotDie: shots are always rolled (shooter and goalie), passes are not', () => {
-    const s = scenario({ lanes, config: { shotDie: 6, diceBudget: 5 }, dice: 5, ball: { side: 'A', pos: fwd(LAST) } });
-    const shot = eventsOfType(play(s, { type: 'shoot', side: 'A' }).events, 'contestStarted')[0]!;
-    expect(shot.attacker.roll).toBeGreaterThanOrEqual(1);
-    expect(shot.defender.roll).toBeGreaterThanOrEqual(1);
-    // Already rolled, so nobody is asked to call for dice.
-    expect(play(s, { type: 'shoot', side: 'A' }).state.pending.kind).not.toBe('callDice');
-    const pass = eventsOfType(play(s, { type: 'pass', side: 'A', to: mid(LAST) }).events, 'contestStarted')[0]!;
-    expect(pass.attacker.roll).toBeUndefined();
   });
 
   it('contestDie: the same seed gives the same rolls', () => {

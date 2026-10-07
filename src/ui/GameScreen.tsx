@@ -7,7 +7,7 @@ import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
-import { casterAffinity, dicePreview, matchup, reactionPreview } from './preview';
+import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
 import { posKey, useGame, type Announcement } from './useGame';
 import type { SessionOptions } from './session';
 
@@ -280,7 +280,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   /** "your Shot 5 vs their Save 3" (or "?" for a face-down player you haven't seen). */
   const versus = (m: ReturnType<typeof matchup>, mineLabel: string, theirsLabel: string) =>
     m ? ` (your ${mineLabel} ${m.mine} vs their ${theirsLabel} ${m.theirs ?? '?'})` : '';
-  const shootLabel = myBall ? versus(matchup(view, { pos: myBall, stat: 'shot', use: 'shoot' }, { pos: { area: 'goal' }, stat: 'save', use: 'save' }), 'Shot', 'Save') : '';
+  // Shots are rolled, so show the chance of scoring rather than win or lose.
+  const shot = myBall ? shotPreview(view, myBall) : null;
+  const shootLabel = !myBall ? ''
+    : shot ? ` (your Shot ${shot.mine} vs their Save ${shot.theirs}, both roll: about ${Math.round(shot.chance * 100)}% to score)`
+    : versus(matchup(view, { pos: myBall, stat: 'shot', use: 'shoot' }, { pos: { area: 'goal' }, stat: 'save', use: 'save' }), 'Shot', 'Save');
   const tackleLabel = view.ball && view.ball.side === them && view.ball.pos.area !== 'goal'
     ? versus(matchup(view, { pos: opposite(view.ball.pos), stat: 'defense', use: 'tackle' }, { pos: view.ball.pos, stat: 'speed', use: 'evade' }), 'Defense', 'Speed')
     : '';
@@ -301,7 +305,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         : selection.first ? 'Now tap the second player to swap.' : targetHelp;
     }
     if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
-    if (selection.kind === 'regroup') help = `Tap up to ${view.config.regroupMax} cards to discard, then confirm. You draw the same number.`;
+    if (selection.kind === 'regroup') {
+      help = view.config.regroupMax === 1
+        ? 'Tap a card to discard, then confirm. You draw a new one.'
+        : `Tap up to ${view.config.regroupMax} cards to discard, then confirm. You draw the same number.`;
+    }
     return (
       <div className="prompt">
         <strong>Your turn</strong> · {left} action{left === 1 ? '' : 's'} left. {help}

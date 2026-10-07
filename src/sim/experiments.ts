@@ -43,28 +43,28 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
+    name: 'No dice',
+    description: 'No roll tokens (the rules before v0.6).',
+    config: { diceBudget: 0 },
+  },
+  {
+    name: '3 rolls each',
+    description: 'Each player has 3 roll tokens instead of 5.',
+    config: { diceBudget: 3 },
+  },
+  {
+    name: '8 rolls each',
+    description: 'Each player has 8 roll tokens instead of 5.',
+    config: { diceBudget: 8 },
+  },
+  {
+    name: 'Roll for yourself',
+    description: 'A spent roll adds a die to your side only (the other player may answer with their own token).',
+    config: { diceMode: 'self' },
+  },
+  {
     name: 'd6 every contest',
-    description: 'Each player in every contest rolls a d6 and adds it, before reaction spells.',
-    config: { contestDie: 6 },
-  },
-  {
-    name: 'Call for dice: 3 each',
-    description: 'Each player may spend 3 rolls a game. Spending one makes both players roll a d6; only the caller pays.',
-    config: { diceBudget: 3, diceMode: 'both' },
-  },
-  {
-    name: 'Call for dice: 5 each',
-    description: 'As above, with 5 rolls each.',
-    config: { diceBudget: 5, diceMode: 'both' },
-  },
-  {
-    name: 'Call for dice: 8 each',
-    description: 'As above, with 8 rolls each.',
-    config: { diceBudget: 8, diceMode: 'both' },
-  },
-  {
-    name: 'Roll for yourself: 5 each',
-    description: 'Each player may spend 5 rolls a game; a spent roll adds a d6 to your side only. The other player may answer with their own.',
-    config: { diceBudget: 5, diceMode: 'self' },
+    description: 'No tokens; both players roll a d6 in every contest.',
+    config: { diceBudget: 0, contestDie: 6 },
   },
 ];

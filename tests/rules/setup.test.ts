@@ -117,7 +117,11 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(s.pending).toEqual({ kind: 'faceoffLane', side: second });
     expect(s.ball).toBeNull();
     s = applyAction(s, { type: 'faceoffLane', side: second, lane: lanes - 1 }).state;
-    while (s.pending.kind === 'reaction') s = applyAction(s, { type: 'react', side: s.pending.side, card: null }).state;
+    while (s.pending.kind === 'reaction' || s.pending.kind === 'callDice') {
+      s = applyAction(s, s.pending.kind === 'reaction'
+        ? { type: 'react', side: s.pending.side, card: null }
+        : { type: 'callDice', side: s.pending.side, roll: false }).state;
+    }
     expect(s.turn).toBe(1);
     expect(s.pending).toEqual({ kind: 'action', side: s.firstSide });
     expect(s.ball?.pos).toEqual({ area: 'midfield', lane: lanes - 1 });

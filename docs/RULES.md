@@ -1,4 +1,4 @@
-# Spellstick — rules v0.5
+# Spellstick — rules v0.6
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -29,6 +29,7 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 - A field mat (see "The field").
 - A ball token and a score tracker.
 - A shared **injury deck** of 12 cards ⚙ (see "Injuries").
+- Two six-sided dice, and 5 roll tokens ⚙ per player (see "Dice").
 
 ## The field
 
@@ -188,12 +189,13 @@ action does nothing.
 Every contest has an attacker (the side taking the action) and a defender.
 
 1. Reveal both players involved.
-2. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
+2. **Dice:** the attacker may call for dice; if not, the defender may (see "Dice").
+3. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
    having seen it, may do the same. Each side plays at most one.
-3. Apply abilities, injuries, and spells. A value can't go below 0.
-4. **The attacker wins only if their value is higher.** Ties go to the defender, except in
+4. Apply abilities, injuries, spells, and dice. A value can't go below 0.
+5. **The attacker wins only if their value is higher.** Ties go to the defender, except in
    passes (ties go to the receiver) and faceoffs (ties go to the chooser).
-5. **Injuries:** a hit that lands injures its target, and a dirty play injures the losing player
+6. **Injuries:** a hit that lands injures its target, and a dirty play injures the losing player
    if its side won (see "Injuries").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
@@ -201,7 +203,19 @@ tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser 
 attacker and wins ties.
 
 An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
-reaction spells.
+reaction spells or roll.
+
+## Dice
+
+Each player starts the game with **5 roll tokens** ⚙, kept face up so everyone can see how many
+are left.
+
+- In any contest, after both players are revealed and before reaction spells, the attacker may
+  **call for dice** by spending one token. If the attacker doesn't, the defender may.
+- When someone calls for dice, **both players roll a six-sided die** ⚙ and add it to their value.
+  Only the caller spends a token; the other player's roll is free.
+- Dice can be called at most once per contest. Reaction spells are played after the roll, so both
+  players can see the dice before deciding.
 
 ## Injuries
 
@@ -311,6 +325,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.6 — Dice: each player has 5 roll tokens a game. In a contest, a player may spend one to "call for dice": both players roll a six-sided die and add it; only the caller pays. Chosen after simulation showed printed stats decided about 9 contests in 10.
 
 - v0.5 — New spells: Hit (attack the player in your spot), Dirty play (a reaction that injures the loser if you win), and Mend.
 - v0.5 — Hitting the goalie isn't allowed: goalies can't be injured by hits or dirty plays (Paul's ruling; fouls and penalties to come).

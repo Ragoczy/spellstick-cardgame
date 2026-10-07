@@ -7,7 +7,7 @@ import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
-import { casterAffinity, matchup, reactionPreview } from './preview';
+import { casterAffinity, dicePreview, matchup, reactionPreview } from './preview';
 import { posKey, useGame, type Announcement } from './useGame';
 import type { SessionOptions } from './session';
 
@@ -245,6 +245,8 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         );
       case 'reaction':
         return <ReactionPrompt view={view} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
+      case 'callDice':
+        return <DicePrompt view={view} onChoose={(roll) => act({ type: 'callDice', side: me, roll })} />;
       case 'discard':
         return <div className="prompt"><strong>Too many cards.</strong> Tap {pending.count} card{pending.count === 1 ? '' : 's'} in your hand to discard (you can hold 7).</div>;
       case 'shootoutPick':
@@ -270,6 +272,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       : h.type === 'cast' ? `cast ${view.mine.hand.find((c) => c.uid === h.card)?.def.name}`
       : h.type === 'substitute' ? `substitute your ${posName(h.pos, view.lanes)}`
       : h.type === 'regroup' ? (h.discard.length ? 'regroup (swap out weak cards)' : 'pass this action')
+      : h.type === 'callDice' ? (h.roll ? 'call for dice' : 'not roll')
       : h.type;
     setHintText(`The computer would ${text}.`);
   };
@@ -328,7 +331,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       <header className="scorebar">
         <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> Computer</span>
         <span className="meta">
-          Turn {view.turn} · Decks {view.mine.deckCount} / {view.opponent.deckCount}
+          Turn {view.turn} · Decks {view.mine.deckCount} / {view.opponent.deckCount} · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
           {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
         </span>
         <button type="button" className="quiet" onClick={onQuit}>Quit</button>
@@ -380,6 +383,24 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       </div>
 
       {game.announcement ? <AnnouncementView a={game.announcement} onClose={game.dismissAnnouncement} /> : null}
+    </div>
+  );
+}
+
+function DicePrompt({ view, onChoose }: { view: PlayerView; onChoose: (roll: boolean) => void }) {
+  const preview = dicePreview(view);
+  if (!preview) return null;
+  const winning = preview.mine > preview.theirs || (preview.mine === preview.theirs && preview.iWinTies);
+  const chance = Math.round(preview.chanceIfRolled * 100);
+  return (
+    <div className="prompt">
+      <strong>Call for dice?</strong> Right now it's {preview.mine}–{preview.theirs}: you'd {winning ? 'win' : 'lose'}
+      {preview.mine === preview.theirs ? ' (tie)' : ''}. If you call, you both roll a die and add it: you'd win about {chance}% of the
+      time. It costs one of your rolls ({preview.rollsLeft} left this game); the computer's roll is free.
+      <div className="buttons">
+        <button type="button" className={!winning && chance >= 40 ? 'primary' : ''} onClick={() => onChoose(true)}>🎲 Call for dice ({chance}%)</button>
+        <button type="button" onClick={() => onChoose(false)}>No dice</button>
+      </div>
     </div>
   );
 }

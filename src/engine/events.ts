@@ -73,8 +73,8 @@ export type GameEvent =
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
   | { type: 'discarded'; side: Side; cards: CardView[] }
   | { type: 'shootoutStarted'; first: Side }
-  /** Experimental: a player spent a roll. The rolls made (in 'both' mode, both players roll). */
-  | { type: 'diceRolled'; caller: Side; attackerRoll?: number; defenderRoll?: number; left: Record<Side, number> }
+  /** A player called for dice: both players rolled (only the caller spent a roll). */
+  | { type: 'diceRolled'; caller: Side; attacker: Side; attackerRoll?: number; defenderRoll?: number; left: Record<Side, number> }
   | {
       type: 'injured';
       side: Side;

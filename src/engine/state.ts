@@ -55,7 +55,7 @@ export interface ContestSide {
   modifiers: Modifier[];
   /** A hit's strength, used instead of the player's stat (no abilities or injuries apply). */
   power?: { label: string; value: number };
-  /** Experimental (config.contestDie): this side's die roll. */
+  /** This side's die roll in this contest, if dice were called. */
   roll?: number;
 }
 
@@ -78,7 +78,7 @@ export type Pending =
   | { kind: 'faceoffLane'; side: Side }
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
-  /** Experimental (config.diceBudget): spend one of your rolls in this contest? */
+  /** Call for dice in this contest (spend one of your rolls)? */
   | { kind: 'callDice'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'discard'; side: Side; count: number }
   /** A player was injured or carried off: their owner must bring on a substitute from hand. */
@@ -141,7 +141,7 @@ export interface GameState {
   injuryCards: Record<string, InjuryDef>;
   /** Injuries attached to players, by player card id -> injury card id. */
   injuries: Record<Uid, string>;
-  /** Experimental (config.diceBudget): rolls each side has left to spend this game. */
+  /** Rolls each side has left to spend this game (config.diceBudget at the start). */
   diceLeft: Record<Side, number>;
   /** A forced substitution waiting to happen. `injured` is the injured player still in the spot (null if carried off). */
   forcedSub: { side: Side; pos: Pos; injured: Uid | null } | null;

@@ -447,7 +447,7 @@ class Thinker {
     }
   }
 
-  // ---- Spending rolls (experimental) ----
+  // ---- Calling for dice ----
 
   /** Worth of spending a roll now: the gain in win chance in a contest that matters, minus the roll's value. */
   private scoreDice(): number {

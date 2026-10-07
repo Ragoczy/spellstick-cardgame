@@ -1,4 +1,4 @@
-// A short, player-facing version of docs/RULES.md (v0.5). If the rules change, update this too.
+// A short, player-facing version of docs/RULES.md (v0.6). If the rules change, update this too.
 
 export function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
@@ -41,8 +41,14 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
 
       <h3>Contests</h3>
       <p>
-        Both players are revealed. The attacker may play one <b>reaction spell</b>, then the defender may answer
-        with one. Highest value wins.
+        Both players are revealed. Either side may <b>call for dice</b> (see below). Then the attacker may play one
+        <b> reaction spell</b>, and the defender may answer with one. Highest value wins.
+      </p>
+
+      <h3>Dice</h3>
+      <p>
+        You have <b>5 rolls</b> a game. Losing a contest that matters? Spend one to call for dice: you <i>both</i> roll a
+        die and add it, but only you use up a roll. The attacker gets the first chance to call, then the defender.
       </p>
 
       <h3>Hits and injuries</h3>

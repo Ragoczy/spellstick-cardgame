@@ -46,7 +46,7 @@ export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): v
   askForDice(s, contest, 'attacker', ev);
 }
 
-// ---- Experimental: spending rolls (config.diceBudget) ----
+// ---- Calling for dice (RULES.md "Dice") ----
 
 /** Asks a side whether to spend a roll, if it can; otherwise moves on. */
 function askForDice(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
@@ -81,6 +81,7 @@ export function callDice(s: GameState, roll: boolean, ev: GameEvent[]): void {
     ev.push({
       type: 'diceRolled',
       caller: me.side,
+      attacker: contest.attacker.side,
       ...(contest.attacker.roll ? { attackerRoll: contest.attacker.roll } : {}),
       ...(contest.defender.roll ? { defenderRoll: contest.defender.roll } : {}),
       left: { ...s.diceLeft },

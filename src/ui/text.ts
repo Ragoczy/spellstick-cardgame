@@ -152,8 +152,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return info(`${who(e.side)} ${verb(e.side, 'mend', 'mends')} ${e.card.def.name}: no more ${e.injury.name.toLowerCase()}.`);
     case 'diceRolled': {
       const left = e.left[e.caller];
-      return info(`${who(e.caller)} ${verb(e.caller, 'spend', 'spends')} a roll (${left} left). ` +
-        `Rolls: ${[e.attackerRoll, e.defenderRoll].filter((r) => r !== undefined).join(' and ')}.`);
+      const myRoll = isMe(e.attacker) ? e.attackerRoll : e.defenderRoll;
+      const theirRoll = isMe(e.attacker) ? e.defenderRoll : e.attackerRoll;
+      return { text: `🎲 ${who(e.caller)} ${verb(e.caller, 'call', 'calls')} for dice (${left} roll${left === 1 ? '' : 's'} left). ` +
+        `You roll ${myRoll ?? '–'}, the computer rolls ${theirRoll ?? '–'}.`, tone: 'turn' };
     }
     case 'shootoutStarted':
       return { text: `Full time, and it's a tie: penalty shootout! ${who(e.first)} ${verb(e.first, 'shoot', 'shoots')} first.`, tone: 'goal' };

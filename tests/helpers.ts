@@ -76,8 +76,15 @@ export interface ScenarioOptions {
   turn?: number;
   /** Actions the active player has left this turn. Default 1: their last action. */
   actionsLeft?: number;
+  /** Rolls each player has left to call for dice. Default 0. */
+  dice?: number;
   A?: SideSpec;
   B?: SideSpec;
+}
+
+function diceFor(options: ScenarioOptions): Record<Side, number> {
+  const n = options.dice ?? options.config?.diceBudget ?? 0;
+  return { A: n, B: n };
 }
 
 /** The injury deck in a fixed, unshuffled order: the first injury in config is drawn last. */
@@ -147,7 +154,9 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     ...injuryDeckFor(config),
     injuries: {},
     forcedSub: null,
-    diceLeft: { A: config.diceBudget, B: config.diceBudget },
+    // No rolls unless the test asks for them (via options.dice or an explicit config.diceBudget),
+    // so contests don't stop to ask about dice.
+    diceLeft: diceFor(options),
     pending: { kind: 'action', side: active },
     result: null,
   };

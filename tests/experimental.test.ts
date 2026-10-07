@@ -11,6 +11,7 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
   it('are off by default', () => {
     expect(DEFAULT_CONFIG.protectCatch).toBe('off');
     expect(DEFAULT_CONFIG.contestDie).toBe(0);
+    expect(DEFAULT_CONFIG.diceMode).toBe('both');
   });
 
   it('contestDie: each player rolls before reaction spells, and the roll is added to their value', () => {
@@ -27,32 +28,6 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
     expect(contest.attacker.total).toBe(3 + started.attacker.roll!);
     expect(contest.attacker.printed).toBe(3);
     expect(contest.defender.parts).toEqual([{ label: 'Roll', amount: started.defender.roll }]);
-  });
-
-  it("diceBudget ('both'): spending a roll makes both players roll, and only the caller pays", () => {
-    const s = scenario({ lanes, config: { diceBudget: 3, diceMode: 'both' } });
-    const { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
-    expect(state.pending).toMatchObject({ kind: 'callDice', side: 'A', role: 'attacker' });
-    const { state: after, events } = play(state, { type: 'callDice', side: 'A', roll: true });
-    const rolled = eventsOfType(events, 'diceRolled')[0]!;
-    expect(rolled.attackerRoll).toBeGreaterThanOrEqual(1);
-    expect(rolled.defenderRoll).toBeGreaterThanOrEqual(1);
-    expect(after.diceLeft).toEqual({ A: 2, B: 3 });
-    // The defender isn't asked: both have already rolled.
-    const contest = lastContest(events);
-    expect(contest.attacker.total).toBe(3 + rolled.attackerRoll!);
-    expect(contest.defender.total).toBe(3 + rolled.defenderRoll!);
-  });
-
-  it("diceBudget: if the attacker doesn't roll, the defender may; with none left, nobody is asked", () => {
-    const s = scenario({ lanes, config: { diceBudget: 1, diceMode: 'both' } });
-    let { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'callDice', side: 'A', roll: false });
-    expect(state.pending).toMatchObject({ kind: 'callDice', side: 'B', role: 'defender' });
-    ({ state } = play(state, { type: 'callDice', side: 'B', roll: true }));
-    expect(state.diceLeft).toEqual({ A: 1, B: 0 });
-    expect(() => applyAction({ ...s, diceLeft: { A: 0, B: 0 } }, { type: 'pass', side: 'A', to: fwd(LAST) })).not.toThrow();
-    const none = play({ ...s, diceLeft: { A: 0, B: 0 } }, { type: 'pass', side: 'A', to: fwd(LAST) }).state;
-    expect(none.pending.kind).not.toBe('callDice');
   });
 
   it("diceBudget ('self'): a spent roll adds a die to your side only, and the other player may answer", () => {

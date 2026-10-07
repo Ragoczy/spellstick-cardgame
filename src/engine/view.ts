@@ -36,7 +36,7 @@ export interface PlayerView {
   shootout: Shootout | null;
   /** Injury cards left in the shared injury deck. */
   injuryDeckCount: number;
-  /** Experimental: rolls each side has left to spend (public). */
+  /** Rolls each side has left to spend (public). */
   diceLeft: Record<Side, number>;
   /** A forced substitution waiting to happen (public). */
   forcedSub: { side: Side; pos: Pos } | null;

@@ -44,15 +44,16 @@ export interface GameConfig {
   /** The shared injury deck (12 cards), shuffled at setup. */
   injuries: InjuryDef[];
 
-  // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
-  /** Each player in a contest rolls a die this size and adds it (0 = no dice). Rolled before reaction spells. */
-  contestDie: number;
-  /** Rolls each player may spend in a game (0 = off). Spent after the reveal, before reaction spells. */
+  /** Rolls each player may spend in a game ("call for dice"). Spent after the reveal, before reaction spells. */
   diceBudget: number;
-  /** 'both': spending a roll makes both players roll (only the caller pays). 'self': only the spender rolls. */
-  diceMode: 'both' | 'self';
-  /** The die used for spent rolls. */
+  /** The die used when someone calls for dice. */
   budgetDie: number;
+
+  // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
+  /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
+  diceMode: 'both' | 'self';
+  /** Each player in every contest rolls a die this size and adds it (0 = off). */
+  contestDie: number;
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
 }
@@ -71,6 +72,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   shootoutRounds: 3,
   penaltyBonus: 0,
   passTiesGoTo: 'attacker',
+  diceBudget: 5,
+  budgetDie: 6,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },
@@ -80,9 +83,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   ],
   protectCatch: 'off',
   contestDie: 0,
-  diceBudget: 0,
   diceMode: 'both',
-  budgetDie: 6,
 };
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {

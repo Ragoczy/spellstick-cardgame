@@ -55,6 +55,8 @@ export interface ContestSide {
   modifiers: Modifier[];
   /** A hit's strength, used instead of the player's stat (no abilities or injuries apply). */
   power?: { label: string; value: number };
+  /** Experimental (config.contestDie): this side's die roll. */
+  roll?: number;
 }
 
 export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty' | 'hit';

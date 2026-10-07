@@ -34,6 +34,8 @@ export interface Breakdown {
   parts: BreakdownPart[];
   total: number;
   shielded: boolean;
+  /** The value from the printed card alone (stat, ability, injury), before spells and dice. */
+  printed: number;
 }
 
 export type DrawReason = 'setup' | 'turn' | 'recall' | 'ability' | 'regroup';
@@ -48,7 +50,12 @@ export type GameEvent =
   | { type: 'turnStarted'; side: Side; turn: number }
   | { type: 'deckOut'; side: Side; finalTurnFor: Side }
   | { type: 'revealed'; side: Side; pos: Pos; card: CardView }
-  | { type: 'contestStarted'; kind: ContestKind; attacker: { side: Side; pos: Pos }; defender: { side: Side; pos: Pos } }
+  | {
+      type: 'contestStarted';
+      kind: ContestKind;
+      attacker: { side: Side; pos: Pos; roll?: number };
+      defender: { side: Side; pos: Pos; roll?: number };
+    }
   | {
       type: 'spellCast';
       side: Side;

@@ -44,7 +44,9 @@ export interface GameConfig {
   /** The shared injury deck (12 cards), shuffled at setup. */
   injuries: InjuryDef[];
 
-  // Experimental rule switch, used only by simulation what-ifs. Not in RULES.md.
+  // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
+  /** Each player in a contest rolls a die this size and adds it (0 = no dice). Rolled before reaction spells. */
+  contestDie: number;
   /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
   protectCatch: 'off' | 'forward' | 'all';
 }
@@ -71,6 +73,7 @@ export const DEFAULT_CONFIG: GameConfig = {
     { id: 'concussion', name: 'Concussion', count: 1, penalty: { speed: 1, shot: 1, defense: 1, faceoff: 1 } },
   ],
   protectCatch: 'off',
+  contestDie: 0,
 };
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {

@@ -56,13 +56,16 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return info(`${capitalize(at(e.side, e.pos))} is revealed: ${e.card.def.name}.`);
     case 'contestStarted': {
       const a = e.attacker;
+      const rolls = a.roll || e.defender.roll
+        ? ` Rolls: ${isMe(a.side) ? 'you' : 'the computer'} ${a.roll ?? '–'}, ${isMe(e.defender.side) ? 'you' : 'the computer'} ${e.defender.roll ?? '–'}.`
+        : '';
       switch (e.kind) {
-        case 'pass': return info(`${who(a.side)} ${verb(a.side, 'pass', 'passes')} to ${at(a.side, a.pos)}.`);
-        case 'tackle': return info(`${who(a.side)} ${verb(a.side, 'try', 'tries')} to tackle ${at(e.defender.side, e.defender.pos)}.`);
-        case 'shot': return info(`${who(a.side)} ${verb(a.side, 'shoot', 'shoots')} with ${at(a.side, a.pos)}!`);
-        case 'penalty': return info(`${who(a.side)} ${verb(a.side, 'take', 'takes')} a penalty with ${at(a.side, a.pos)}.`);
-        case 'hit': return info(`${capitalize(at(a.side, a.pos))} goes after ${at(e.defender.side, e.defender.pos)}!`);
-        case 'faceoff': return null;
+        case 'pass': return info(`${who(a.side)} ${verb(a.side, 'pass', 'passes')} to ${at(a.side, a.pos)}.${rolls}`);
+        case 'tackle': return info(`${who(a.side)} ${verb(a.side, 'try', 'tries')} to tackle ${at(e.defender.side, e.defender.pos)}.${rolls}`);
+        case 'shot': return info(`${who(a.side)} ${verb(a.side, 'shoot', 'shoots')} with ${at(a.side, a.pos)}!${rolls}`);
+        case 'penalty': return info(`${who(a.side)} ${verb(a.side, 'take', 'takes')} a penalty with ${at(a.side, a.pos)}.${rolls}`);
+        case 'hit': return info(`${capitalize(at(a.side, a.pos))} goes after ${at(e.defender.side, e.defender.pos)}!${rolls}`);
+        case 'faceoff': return rolls ? info(rolls.trim()) : null;
       }
       return null;
     }

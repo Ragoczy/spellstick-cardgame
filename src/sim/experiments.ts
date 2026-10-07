@@ -43,9 +43,19 @@ const milderInjuries: InjuryDef[] = DEFAULT_CONFIG.injuries.map((injury) => ({
 
 export const EXPERIMENTS: ExperimentDef[] = [
   {
-    name: 'Hit strength 2',
-    description: 'Hits have strength 2 instead of 3 (match 3, opposed 1).',
-    cards: hitStrength(2),
+    name: 'd3 per contest',
+    description: 'Each player in a contest rolls a d3 (1–3) and adds it, before reaction spells.',
+    config: { contestDie: 3 },
+  },
+  {
+    name: 'd4 per contest',
+    description: 'Each player in a contest rolls a d4 (1–4) and adds it, before reaction spells.',
+    config: { contestDie: 4 },
+  },
+  {
+    name: 'd6 per contest',
+    description: 'Each player in a contest rolls a d6 (1–6) and adds it, before reaction spells.',
+    config: { contestDie: 6 },
   },
   {
     name: 'Two hits per team',
@@ -53,19 +63,8 @@ export const EXPERIMENTS: ExperimentDef[] = [
     cards: twoHitsPerTeam,
   },
   {
-    name: 'Milder injuries',
-    description: 'Every injury takes off 1 point instead of 2 (Concussion stays −1 to all).',
-    config: { injuries: milderInjuries },
-  },
-  {
     name: 'Goalies Save +1',
-    description: 'Goalies at Save 4 and 3, so they resist hits (and shots) better.',
+    description: 'Goalies at Save 4 and 3.',
     cards: goalieSave(1),
-  },
-  {
-    name: 'Two hits + milder injuries',
-    description: 'Both changes together.',
-    config: { injuries: milderInjuries },
-    cards: twoHitsPerTeam,
   },
 ];

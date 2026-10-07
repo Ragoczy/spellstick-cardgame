@@ -11,6 +11,7 @@ export interface KeyMetrics {
   shootoutShare: number;
   injuriesPerGame: number;
   moreInjuredWinRate: number;
+  upsetRate: number;
   avgTurns: number;
   avgGoals: number;
   drawShare: number;
@@ -26,6 +27,7 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     shootoutShare: s.games ? s.reasons.shootout / s.games : NaN,
     injuriesPerGame: s.games ? (s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play) / s.games : NaN,
     moreInjuredWinRate: s.moreInjured.games ? s.moreInjured.wins / s.moreInjured.games : NaN,
+    upsetRate: s.upsets.contests ? s.upsets.weakerWon / s.upsets.contests : NaN,
     avgTurns: average(s.turns),
     avgGoals: s.games ? s.goals / s.games : NaN,
     drawShare: s.games ? s.wins.draws / s.games : NaN,
@@ -163,10 +165,12 @@ export function buildReport(input: ReportInput): string {
       const k = keyMetrics(e.result.stats);
       return [
         e.name, k.avgGoals.toFixed(2), pctOf(k.shotSuccess), pctOf(k.drawShare), pctOf(k.shootoutShare),
-        k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate), k.injuriesPerGame.toFixed(2), pctOf(k.moreInjuredWinRate),
+        k.avgTurns.toFixed(1), pctOf(k.firstWinRate), pctOf(k.teamAWinRate), k.injuriesPerGame.toFixed(2), pctOf(k.moreInjuredWinRate), pctOf(k.upsetRate),
       ];
     });
-    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins'], rows));
+    out.push(table(['Change', 'Goals/game', 'Shots scoring', 'Draws', 'Shootouts', 'Turns', 'First player wins', 'Team A wins', 'Injuries/game', 'More-injured team wins', 'Upsets'], rows));
+    out.push('');
+    out.push('"Upsets": contests where the weaker printed card (stat, ability, injury) won anyway, thanks to spells or dice.');
     out.push('');
     for (const e of input.experiments) out.push(`- **${e.name}:** ${e.description}`);
     out.push('');
@@ -212,6 +216,8 @@ export function buildReport(input: ReportInput): string {
   out.push('### Contests');
   out.push('');
   out.push('"Attacker wins" means: the pass is caught, the tackle takes the ball, the shot or penalty scores, the hit lands, or the team choosing the faceoff lane wins it.');
+  out.push('');
+  out.push(`Upsets (the weaker printed card won, thanks to spells or dice): ${pct(s.upsets.weakerWon, s.upsets.contests)} of ${s.upsets.contests} contests.`);
   out.push('');
   const contestRows = (['pass', 'tackle', 'shot', 'faceoff', 'penalty', 'hit'] as const).map((k) => {
     const c = s.contests[k];

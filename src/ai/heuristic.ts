@@ -108,9 +108,17 @@ function bestFit(card: PlayerCardDef): number {
 }
 
 /** Chance that "my" side wins a contest, from the two expected values. Smooth, to allow for unseen spells. */
-function winChance(mine: number, theirs: number, iWinTies: boolean): number {
+function winChance(mine: number, theirs: number, iWinTies: boolean, steepness = 1.1): number {
   const d = mine - theirs + (iWinTies ? 0.5 : -0.5);
-  return 1 / (1 + Math.exp(-1.1 * d));
+  return 1 / (1 + Math.exp(-steepness * d));
+}
+
+/** With dice in contests (an experimental option), outcomes are less certain, so the curve is flatter. */
+function steepnessFor(config: GameConfig): number {
+  const die = config.contestDie;
+  if (!die) return 1.1;
+  const diceVariance = 2 * (die * die - 1) / 12; // the difference of two rolls
+  return 1.1 * 1.5 / Math.sqrt(1.5 * 1.5 + diceVariance);
 }
 
 export function heuristicAgent(seed: number, config: GameConfig = DEFAULT_CONFIG): Agent {
@@ -148,6 +156,8 @@ export function explainChoice(view: PlayerView, legal: Action[], config: GameCon
 /** Scores actions for one decision. Built fresh for each decision from the current view. */
 class Thinker {
   private readonly me: Side;
+  /** winChance, allowing for dice if the game uses them. */
+  private readonly chance: (mine: number, theirs: number, iWinTies: boolean) => number;
 
   constructor(
     private readonly view: PlayerView,
@@ -155,6 +165,8 @@ class Thinker {
     private readonly random: () => number,
   ) {
     this.me = view.me;
+    const steepness = steepnessFor(config);
+    this.chance = (mine, theirs, iWinTies) => winChance(mine, theirs, iWinTies, steepness);
   }
 
   score(action: Action): number {
@@ -200,7 +212,7 @@ class Thinker {
 
   private scoreFaceoffLane(lane: number): number {
     const pos: FieldPos = { area: 'midfield', lane };
-    return winChance(this.myValue(pos, 'faceoff', 'faceoff'), this.theirValue(pos, 'faceoff', 'faceoff'), true);
+    return this.chance(this.myValue(pos, 'faceoff', 'faceoff'), this.theirValue(pos, 'faceoff', 'faceoff'), true);
   }
 
   // ---- Estimating contest values ----
@@ -280,7 +292,7 @@ class Thinker {
     const worth = pos.area === 'forward' ? Math.max(BALL_VALUE.midfield, this.shotChance(pos, [])) : BALL_VALUE[pos.area];
     if (safeFromTackles) return worth;
     const tackler = opposite(pos);
-    const keep = winChance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos), this.theirValue(tackler, 'defense', 'tackle'), true);
+    const keep = this.chance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos), this.theirValue(tackler, 'defense', 'tackle'), true);
     const lose = 0.7 * (1 - keep); // the opponent tackles when it looks worthwhile
     return (1 - lose) * worth - lose * BALL_VALUE[tackler.area];
   }
@@ -299,7 +311,7 @@ class Thinker {
   private passValue(to: FieldPos, modifiers: Modifier[]): number {
     const interceptor = opposite(to);
     const mine = this.myValue(to, 'speed', 'receive', modifiers) + 0.6 * this.bestBoost(to);
-    const p = winChance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
+    const p = this.chance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
     const protect = this.config.protectCatch;
     const safe = protect === 'all' || (protect === 'forward' && to.area === 'forward');
     return p * this.afterGaining(to, safe) - (1 - p) * BALL_VALUE[interceptor.area];
@@ -318,7 +330,7 @@ class Thinker {
   /** Chance a shot from `from` goes in. */
   private shotChance(from: Pos, modifiers: Modifier[]): number {
     const mine = this.myValue(from, 'shot', 'shoot', modifiers) + 0.6 * this.bestBoost(from);
-    return winChance(mine, this.theirValue({ area: 'goal' }, 'save', 'save'), false);
+    return this.chance(mine, this.theirValue({ area: 'goal' }, 'save', 'save'), false);
   }
 
   private shotValue(from: Pos, modifiers: Modifier[], extraCost: number): number {
@@ -330,7 +342,7 @@ class Thinker {
     const holder = this.view.ball!.pos as FieldPos;
     const tackler = opposite(holder);
     const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler);
-    const p = winChance(mine, this.theirValue(holder, 'speed', 'evade'), false);
+    const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
     return p * this.afterGaining(tackler) - (1 - p) * BALL_VALUE[holder.area];
   }
 
@@ -404,7 +416,7 @@ class Thinker {
         const targetPos = opposite(action.caster);
         const strength = this.adjusted(ability.params.strength, affinity) + 0.6 * this.bestBoost(action.caster);
         const resist = this.theirValue(targetPos, 'defense', 'resist');
-        const p = winChance(strength, resist, false);
+        const p = this.chance(strength, resist, false);
         return base + p * this.injuryWorth(targetPos) - cost;
       }
       case 'mend': {
@@ -466,7 +478,7 @@ class Thinker {
     // The defender reacts last, so knows the outcome. The attacker has to allow for a reply.
     const pWin = role === 'defender'
       ? (myTotal > theirTotal || (myTotal === theirTotal && iWinTies) ? 1 : 0)
-      : winChance(myTotal, theirTotal, iWinTies);
+      : this.chance(myTotal, theirTotal, iWinTies);
 
     const reactionsInHand = this.view.mine.hand.filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction').length;
     const cost = mySpell ? (reactionsInHand > 1 ? 0.08 : 0.12) : 0;

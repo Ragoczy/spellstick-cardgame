@@ -51,6 +51,8 @@ export class SimStats {
   carriedOff = 0;
   /** Goals (and shootout penalties) scored into an empty goal. */
   emptyGoalGoals = 0;
+  /** Contests between two players where the printed cards differed: how often the weaker card won. */
+  upsets = { contests: 0, weakerWon: 0 };
   /** Games where a spot sat empty because nobody could replace a carried-off player. */
   gamesWithEmptySlot = 0;
   /** Decided games where one team suffered more injuries: how often that team still won. */
@@ -125,6 +127,12 @@ export class SimStats {
           if (e.winnerRole === 'attacker') c.attackerWins += 1;
           const won = e.winnerRole === 'attacker' ? 1 : 0;
           if ((e.kind === 'shot' || e.kind === 'penalty') && !e.defender.card) this.emptyGoalGoals += won;
+          if (e.attacker.card && e.defender.card && e.attacker.printed !== e.defender.printed) {
+            this.upsets.contests += 1;
+            const winner = e.winnerRole === 'attacker' ? e.attacker : e.defender;
+            const loser = e.winnerRole === 'attacker' ? e.defender : e.attacker;
+            if (winner.printed < loser.printed) this.upsets.weakerWon += 1;
+          }
           if (e.kind === 'shot') {
             this.shots += 1;
             this.shotGoals += won;

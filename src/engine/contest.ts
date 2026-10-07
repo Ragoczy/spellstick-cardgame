@@ -16,6 +16,7 @@ import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
 import { continueGame, recordPenalty, scoreGoal } from './flow';
 import { injurePlayer } from './injuries';
+import { randomInt } from './rng';
 import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
 
@@ -26,11 +27,21 @@ function otherRole(role: ContestRole): ContestRole {
 export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   reveal(s, contest.attacker.side, contest.attacker.pos, ev);
   reveal(s, contest.defender.side, contest.defender.pos, ev);
+  // Experimental dice: each player in the contest rolls, before any reaction spells.
+  if (s.config.contestDie > 0) {
+    for (const side of [contest.attacker, contest.defender]) {
+      if (!slotAt(s, side.side, side.pos)) continue; // an empty spot doesn't roll
+      let roll: number;
+      [roll, s.rng] = randomInt(s.rng, s.config.contestDie);
+      side.roll = roll + 1;
+    }
+  }
+  const rollOf = (side: ContestSide) => (side.roll ? { roll: side.roll } : {});
   ev.push({
     type: 'contestStarted',
     kind: contest.kind,
-    attacker: { side: contest.attacker.side, pos: contest.attacker.pos },
-    defender: { side: contest.defender.side, pos: contest.defender.pos },
+    attacker: { side: contest.attacker.side, pos: contest.attacker.pos, ...rollOf(contest.attacker) },
+    defender: { side: contest.defender.side, pos: contest.defender.pos, ...rollOf(contest.defender) },
   });
   askForReaction(s, contest, 'attacker', ev);
 }

@@ -85,7 +85,11 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
     setLog([{ text: 'Choose your goalie to begin.', tone: 'turn' }, ...opening]);
   }, [session]);
 
-  const act = useCallback((action: Action) => handleEvents(session.act(action)), [session, handleEvents]);
+  // When you act, any pop-ups still showing are out of date: clear them, then show the new ones.
+  const act = useCallback((action: Action) => {
+    setQueue([]);
+    handleEvents(session.act(action));
+  }, [session, handleEvents]);
 
   const announcement = queue[0] ?? null;
   const dismissAnnouncement = useCallback(() => setQueue((old) => old.slice(1)), []);

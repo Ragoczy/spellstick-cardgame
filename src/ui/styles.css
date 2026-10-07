@@ -134,10 +134,15 @@ button { font: inherit; color: inherit; }
 
 /* ---- Announcement pop-up ---- */
 .announcement {
-  position: fixed; inset: 0; background: rgba(20, 24, 20, 0.55); display: flex; align-items: center; justify-content: center;
-  padding: 16px; z-index: 10; cursor: pointer; animation: fade 0.2s ease-out;
+  position: fixed; inset: 0; background: rgba(20, 24, 20, 0.35); display: flex; align-items: center; justify-content: center;
+  padding: 16px; z-index: 10; animation: fade 0.2s ease-out;
+  /* Taps outside the pop-up go through to the game, so you can keep playing (for example, discard). */
+  pointer-events: none;
 }
-.announcement-card { background: var(--panel); border-radius: 14px; padding: 16px; max-width: 420px; width: 100%; text-align: center; }
+.announcement-card {
+  background: var(--panel); border-radius: 14px; padding: 16px; max-width: 420px; width: 100%; text-align: center;
+  pointer-events: auto; cursor: pointer; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
 .announcement-card h3 { margin: 0 0 8px; font-size: 1.3rem; }
 .announcement.tone-good h3 { color: var(--good); }
 .announcement.tone-bad h3 { color: var(--bad); }

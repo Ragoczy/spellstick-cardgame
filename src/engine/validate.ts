@@ -117,6 +117,12 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'draw': {
+      if (p.kind !== 'draw') return "It isn't the draw step.";
+      if (s.teams[side][action.pile].length === 0) return 'That pile is empty.';
+      return null;
+    }
+
     case 'discard': {
       if (p.kind !== 'discard') return "It isn't the discard step.";
       if (!inHand(s, side, action.card)) return 'Discard a card from your hand.';

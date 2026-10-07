@@ -38,43 +38,25 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(state.teams.A.hand.map((u) => state.cards[u]!.kind)).toEqual(['goalie', 'goalie']);
   });
 
-  it('puts the chosen goalie face down in goal and shuffles the other into the deck', () => {
+  it('puts the chosen goalie face down in goal and shuffles the other into the Players pile', () => {
     const { state } = createGame({ seed: 1, cardSet: prototypeCards, config: { lanes } });
     const [chosen, other] = state.teams.A.hand;
     const s = applyAction(state, { type: 'chooseGoalie', side: 'A', card: chosen! }).state;
     expect(s.teams.A.goalie).toEqual({ uid: chosen, revealed: false, scried: false });
-    expect([...s.teams.A.deck, ...s.teams.A.hand]).toContain(other);
-    expect(s.teams.A.deck.length + s.teams.A.hand.length).toBe(39);
+    expect([...s.teams.A.players, ...s.teams.A.hand]).toContain(other);
+    expect(s.teams.A.players.length + s.teams.A.spells.length + s.teams.A.hand.length).toBe(39);
+    expect(s.teams.A.players.every((u) => s.cards[u]!.kind !== 'spell')).toBe(true);
+    expect(s.teams.A.spells.every((u) => s.cards[u]!.kind === 'spell')).toBe(true);
   });
 
-  it(`draws ${spots} + 4 cards`, () => {
-    // Pick a seed where the first draw already has enough field players.
-    for (let seed = 1; seed < 50; seed++) {
+  it(`draws ${spots} + 2 players and 2 spells`, () => {
+    for (let seed = 1; seed <= 10; seed++) {
       const s = chooseFirstGoalie(createGame({ seed, cardSet: prototypeCards, config: { lanes } }).state);
-      const fieldCount = s.teams.A.hand.filter((u) => s.cards[u]!.kind === 'field').length;
-      if (s.teams.A.hand.length === spots + 4) {
-        expect(fieldCount).toBeGreaterThanOrEqual(spots);
-        return;
-      }
-    }
-    throw new Error('No seed drew exactly the normal setup hand');
-  });
-
-  it('keeps drawing one card at a time until every spot can be filled', () => {
-    // A deck with only just enough field players, so the normal draw usually falls short.
-    const cards = [
-      goalie('G1'), goalie('G2'),
-      ...Array.from({ length: spots }, (_, i) => player(`P${i}`)),
-      ...Array.from({ length: 30 }, (_, i) => actionSpell(`S${i}`, { effect: 'recall', params: { count: 1 } })),
-    ].map((c) => ({ ...c, team: 'X' }));
-    const cardSet: CardSet = { version: 't', elements: ELEMENTS, opposedPairs: OPPOSED, teams: [], cards };
-    for (let seed = 1; seed <= 5; seed++) {
-      const s = chooseFirstGoalie(createGame({ seed, cardSet, teams: { A: 'X', B: 'X' }, config: { lanes, deckSize: cards.length } }).state);
-      const hand = s.teams.A.hand;
-      expect(hand.filter((u) => s.cards[u]!.kind === 'field')).toHaveLength(spots);
-      expect(hand.length).toBeGreaterThanOrEqual(spots + 4);
-      // The last card drawn was the field player that completed the lineup (unless the normal draw was enough).
-      if (hand.length > spots + 4) expect(s.cards[hand[hand.length - 1]!]!.kind).toBe('field');
+      const hand = s.teams.A.hand.map((u) => s.cards[u]!.kind);
+      expect(hand).toHaveLength(spots + 4);
+      expect(hand.filter((k) => k === 'spell')).toHaveLength(2);
+      // At most one of the players drawn is the spare goalie, so every spot can be filled.
+      expect(hand.filter((k) => k === 'field').length).toBeGreaterThanOrEqual(spots);
     }
   });
 
@@ -123,7 +105,8 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
         : { type: 'callDice', side: s.pending.side, roll: false }).state;
     }
     expect(s.turn).toBe(1);
-    expect(s.pending).toEqual({ kind: 'action', side: s.firstSide });
+    // Turn 1 starts with the draw step: both piles have cards, so the player chooses.
+    expect(s.pending).toEqual({ kind: 'draw', side: s.firstSide });
     expect(s.ball?.pos).toEqual({ area: 'midfield', lane: lanes - 1 });
   });
 });

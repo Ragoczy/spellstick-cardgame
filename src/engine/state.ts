@@ -17,9 +17,14 @@ export interface Slot {
   scried: boolean;
 }
 
+/** The two face-down draw piles each team has. */
+export type Pile = 'players' | 'spells';
+
 export interface TeamState {
-  /** Top of the deck is the end of the list. */
-  deck: Uid[];
+  /** Draw pile of field players (and the spare goalie). Top of the pile is the end of the list. */
+  players: Uid[];
+  /** Draw pile of spells. Top of the pile is the end of the list. */
+  spells: Uid[];
   hand: Uid[];
   /** Public. Newest card last. */
   discard: Uid[];
@@ -76,6 +81,8 @@ export type Pending =
   | { kind: 'chooseGoalie'; side: Side }
   | { kind: 'placeLineup'; side: Side }
   | { kind: 'faceoffLane'; side: Side }
+  /** Draw step: choose which pile to draw from (only asked when both piles have cards). */
+  | { kind: 'draw'; side: Side }
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
   /** Call for dice in this contest (spend one of your rolls)? */

@@ -1,4 +1,4 @@
-// A short, player-facing version of docs/RULES.md (v0.7). If the rules change, update this too.
+// A short, player-facing version of docs/RULES.md (v0.8). If the rules change, update this too.
 
 export function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
@@ -24,8 +24,8 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
 
       <h3>Your turn</h3>
       <ol>
-        <li>Draw a card.</li>
-        <li>Take <b>two actions</b> (the same one twice is fine). Scoring ends your turn.</li>
+        <li>Draw a card: choose a <b>player</b> or a <b>spell</b> (your deck is two piles).</li>
+        <li>Take <b>one action</b>.</li>
         <li>If you have more than 7 cards, discard down to 7.</li>
       </ol>
 
@@ -36,7 +36,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
         <li><b>Substitute</b> a player from your hand, face down.</li>
-        <li><b>Regroup:</b> discard 1 card and draw 1 (or do nothing).</li>
+        <li><b>Regroup:</b> discard 1 card and draw a new one of the same kind (or do nothing).</li>
       </ul>
 
       <h3>Contests</h3>
@@ -74,7 +74,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
 
       <h3>Winning</h3>
       <p>
-        The decks are the game clock. When a player can't draw, they finish that turn, the other player takes one
+        The decks are the game clock. When a player has no cards left in either pile, they finish that turn, the other player takes one
         last turn, and it's <b>full time</b>: more goals wins. A team that reaches 3 goals wins straight away.
         If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
         haven't shot yet (penalty shots get +3, and are rolled), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.

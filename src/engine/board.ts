@@ -6,7 +6,7 @@ import type { InjuryDef } from './config';
 import type { CardView, DrawReason, GameEvent } from './events';
 import { type Pos, type Side } from './field';
 import { shuffle } from './rng';
-import type { GameState, Slot, TeamState, Uid } from './state';
+import type { GameState, Pile, Slot, TeamState, Uid } from './state';
 
 export function cardView(s: GameState, uid: Uid): CardView {
   const injury = injuryOf(s, uid);
@@ -99,17 +99,33 @@ export function discardFromHand(s: GameState, side: Side, uids: Uid[], ev: GameE
   ev.push({ type: 'discarded', side, cards: uids.map((uid) => cardView(s, uid)) });
 }
 
+/** Cards left in both draw piles. */
+export function cardsLeft(team: TeamState): number {
+  return team.players.length + team.spells.length;
+}
+
+/** The pile a card belongs in. */
+export function pileFor(def: CardDef): Pile {
+  return def.kind === 'spell' ? 'spells' : 'players';
+}
+
 /**
- * Draws up to `count` cards. If the deck runs short, draws what's left: only the Draw step at
- * the start of a turn can end the game (RULES.md "End of the game").
+ * Draws up to `count` cards from `pile`, switching to the other pile once that one is empty.
+ * Draws by spells and abilities use the Spells pile. If both piles run out, draws what's left:
+ * only the Draw step at the start of a turn can end the game (RULES.md "End of the game").
  */
-export function drawCards(s: GameState, side: Side, count: number, reason: DrawReason, ev: GameEvent[]): number {
+export function drawCards(s: GameState, side: Side, count: number, reason: DrawReason, ev: GameEvent[], pile: Pile = 'spells'): number {
   const team = s.teams[side];
+  const other: Pile = pile === 'players' ? 'spells' : 'players';
   const drawn: Uid[] = [];
-  for (let i = 0; i < count && team.deck.length > 0; i++) drawn.push(team.deck.pop()!);
+  for (let i = 0; i < count; i++) {
+    const from = team[pile].length > 0 ? team[pile] : team[other];
+    if (from.length === 0) break;
+    drawn.push(from.pop()!);
+  }
   team.hand.push(...drawn);
   if (drawn.length > 0) {
-    ev.push({ type: 'drew', side, count: drawn.length, reason, secret: { cards: drawn.map((uid) => cardView(s, uid)) } });
+    ev.push({ type: 'drew', side, count: drawn.length, reason, pile, secret: { cards: drawn.map((uid) => cardView(s, uid)) } });
   }
   return drawn.length;
 }

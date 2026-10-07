@@ -1,4 +1,4 @@
-# Spellstick — rules v0.7
+# Spellstick — rules v0.8
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -25,7 +25,9 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 
 ## Components
 
-- Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells.
+- Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells. Each deck is kept as
+  two face-down **draw piles**: **Players** (field players, plus the spare goalie once the game
+  starts) and **Spells**.
 - A field mat (see "The field").
 - A ball token and a score tracker.
 - A shared **injury deck** of 12 cards ⚙ (see "Injuries").
@@ -112,11 +114,11 @@ will be until the caster is revealed.
 ## Setup
 
 1. Each player chooses one of their 2 goalies, places it **face down** in goal, and shuffles the
-   other into their deck.
-2. Each player draws 10 cards ⚙ (the number of field slots plus 4). If you don't have enough field
-   players to fill every slot, keep drawing one card at a time until you do. Place field players
-   **face down**, one in each of your defense, midfield, and forward slots, and keep the rest as
-   your hand.
+   other into their Players pile. Shuffle both piles.
+2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 2 ⚙
+   from their Spells pile. Place field players **face down**, one in each of your defense,
+   midfield, and forward slots, and keep the rest as your hand. (At most one card drawn can be
+   the spare goalie, so there are always enough field players.)
 3. Shuffle the injury deck.
 4. Choose the first player at random.
 5. Start with a **faceoff** (below). The second player chooses the lane.
@@ -136,10 +138,10 @@ scored on takes the next turn, whoever won the faceoff.
 
 ## Turn sequence
 
-1. **Draw** one card. If you can't because your deck is empty, see "End of the game".
-2. **Act.** Take two actions ⚙, one after the other. They can be the same action twice (for
-   example, pass and then shoot). Scoring a goal ends your turn: after the faceoff, go straight to
-   your discard step.
+1. **Draw** one card from the pile of your choice: Players or Spells. If one pile is empty, draw
+   from the other. If both are empty, see "End of the game".
+2. **Act.** Take one action ⚙. If you score, the faceoff happens straight away, then go to your
+   discard step.
 3. **Discard** down to 7 cards ⚙ if you have more.
 
 ## Actions with possession
@@ -183,8 +185,9 @@ hand (field player for field player, goalie for goalie), **face down**. The repl
 your discard pile, face up. If the replaced player held the ball, the substitute holds it. You can
 also fill an empty spot this way.
 
-**Regroup.** Discard up to 1 card ⚙, then draw that many. Discarding none is allowed: the
-action does nothing.
+**Regroup.** Discard up to 1 card ⚙, then draw a card from the same pile (a player for a
+player, a spell for a spell; from the other pile if that one is empty). Discarding none is
+allowed: the action does nothing.
 
 ## Contests
 
@@ -255,8 +258,10 @@ and the team that was scored on chooses the lane.
 
 - The first team to 3 goals ⚙ wins straight away.
 - Otherwise the decks are the game clock. Only the Draw step at the start of a turn can end the
-  game; cards drawn by spells, abilities, or Regroup just come from whatever is left in the deck.
-- If your deck is empty at your Draw step, skip the draw and take the rest of your turn as
+  game; cards drawn by spells, abilities, or Regroup just come from whatever is left in your piles.
+  Cards drawn by spells and abilities come from your Spells pile (from Players once Spells is
+  empty).
+- If both your piles are empty at your Draw step, skip the draw and take the rest of your turn as
   normal. Then your opponent takes one final turn, and it's **full time**: the team with more
   goals wins. (Both players get the same number of turns.)
 - If the score is tied at full time, there is a **penalty shootout**:
@@ -309,7 +314,7 @@ engine together. "Numeric" effects are adjusted by affinity.
   opposed: +1 penalty).
 - `steal` — `{ amount }`, numeric. Make a Tackle now and add `amount` to your value. Needs a
   legal Tackle.
-- `recall` — `{ count }`, numeric. Draw `count` cards.
+- `recall` — `{ count }`, numeric. Draw `count` cards (from your Spells pile, then Players).
 - `hit` — `{ strength }`, numeric. The caster (a field player, not the goalie) attacks the
   opposing player in its own spot. Goalies can't be hit. This is a contest with the casting team
   as attacker: the spell's strength against the target's Defense. Both sides may play reaction
@@ -329,6 +334,9 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.8 — One action per turn again (was two). Paul's call.
+- v0.8 — Two draw piles per team, Players and Spells. At your Draw step you choose which to draw from. Setup draws 8 players and 2 spells. Regroup draws from the same pile as the card you discarded; spells and abilities draw from Spells. The game clock runs out when both piles are empty.
 
 - v0.7 — Passing: the receiver gets +2 in every pass, so most passes are caught (about 9 in 10). Paul: moving the ball upfield should usually work.
 - v0.7 — Shots: every shot and penalty is rolled (shooter and goalie each roll a die); goalies are Save 6, so about 1 shot in 4 scores. Paul: goalies should stop most shots.

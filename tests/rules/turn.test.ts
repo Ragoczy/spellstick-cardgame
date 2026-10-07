@@ -21,17 +21,43 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(state.teams.B.hand.length).toBe(before + 1);
   });
 
-  it("gives each player two actions per turn, then it is the other player's turn", () => {
-    const s = scenario({ lanes, actionsLeft: 2 });
-    let { state } = play(s, pass);
-    expect(state.pending).toEqual({ kind: 'action', side: 'A' });
-    ({ state } = play(state, pass));
+  it("gives each player one action per turn, then it is the other player's turn", () => {
+    const s = scenario({ lanes });
+    expect(s.config.actionsPerTurn).toBe(1);
+    const { state } = play(s, pass);
     expect(state.pending).toEqual({ kind: 'action', side: 'B' });
-    expect(state.actionsLeft).toBe(2);
+    expect(state.actionsLeft).toBe(1);
     expect(() => applyAction(state, pass)).toThrow("It isn't your decision right now.");
   });
 
-  it('allows the same action twice in a turn (pass, then shoot)', () => {
+  it('lets you choose which pile to draw from when both have cards', () => {
+    const recall = actionSpell('B recall', { effect: 'recall', params: { count: 1 } });
+    const s = scenario({ lanes, B: { deck: [player('B top player'), recall] } });
+    let { state, events } = play(s, pass);
+    expect(state.pending).toEqual({ kind: 'draw', side: 'B' });
+    expect(eventsOfType(events, 'drew')).toHaveLength(0);
+    // You can't act before drawing.
+    expect(() => applyAction(state, { type: 'regroup', side: 'B', discard: [] })).toThrow(IllegalActionError);
+    ({ state, events } = play(state, { type: 'draw', side: 'B', pile: 'spells' }));
+    expect(eventsOfType(events, 'drew')[0]).toMatchObject({ side: 'B', count: 1, reason: 'turn', pile: 'spells' });
+    expect(state.teams.B.hand.map((u) => state.cards[u]!.name)).toContain('B recall');
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+  });
+
+  it("draws from the other pile without asking when one is empty, and can't choose an empty pile", () => {
+    const s = scenario({ lanes, B: { deck: [player('B only player')] } });
+    const { state, events } = play(s, pass);
+    expect(eventsOfType(events, 'drew')[0]).toMatchObject({ pile: 'players' });
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+    const both = scenario({ lanes, B: { deck: [player('p'), actionSpell('r', { effect: 'recall', params: { count: 1 } })] } });
+    const atDraw = play(both, pass).state;
+    expect(legalActions(atDraw, 'B')).toEqual([
+      { type: 'draw', side: 'B', pile: 'players' },
+      { type: 'draw', side: 'B', pile: 'spells' },
+    ]);
+  });
+
+  it('allows the same action twice in a turn when playing with two actions (pass, then shoot)', () => {
     const s = scenario({ lanes, actionsLeft: 2, A: { lineup: { forward: { [LAST]: player('A fwd', { speed: 6, shot: 6 }) } } } });
     const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'shoot', side: 'A' });
     expect(eventsOfType(events, 'goal')).toHaveLength(1);
@@ -56,6 +82,14 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(after.teams.A.hand).toHaveLength(7);
     expect(after.teams.A.discard).toHaveLength(2);
     expect(eventsOfType(events, 'turnStarted')[0]?.side).toBe('B');
+  });
+
+  it('regroup: the new card comes from the same pile as the one you discarded', () => {
+    const recall = actionSpell('A recall', { effect: 'recall', params: { count: 1 } });
+    const s = scenario({ lanes, A: { hand: [recall], deck: [player('A top player'), actionSpell('A top spell', { effect: 'recall', params: { count: 1 } })] } });
+    const { state, events } = play(s, { type: 'regroup', side: 'A', discard: [uid(s, 'A', 'A recall')] });
+    expect(eventsOfType(events, 'drew')[0]).toMatchObject({ reason: 'regroup', pile: 'spells' });
+    expect(state.teams.A.hand.map((u) => state.cards[u]!.name)).toEqual(['A top spell']);
   });
 
   it('regroup: discard 1 card, then draw 1 (no more than 1)', () => {

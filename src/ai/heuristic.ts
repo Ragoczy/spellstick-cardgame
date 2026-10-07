@@ -22,7 +22,7 @@ import type { CardView } from '../engine/events';
 import { isFieldPos, opposite, samePos, type FieldPos, type Pos, type Side } from '../engine/field';
 import { nextRandom, seedToState } from '../engine/rng';
 import { scoreSide } from '../engine/score';
-import type { Affinity, Contest, ContestRole, Modifier } from '../engine/state';
+import type { Affinity, Contest, ContestRole, Modifier, Pile } from '../engine/state';
 import type { PlayerView, SlotView } from '../engine/view';
 import type { Agent } from './agent';
 
@@ -180,6 +180,7 @@ class Thinker {
       case 'callDice': return action.roll ? this.scoreDice() : 0;
       case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
       case 'discard': return -this.cardValue(this.handCard(action.card));
+      case 'draw': return this.scoreDraw(action.pile);
       case 'pass': return this.passValue(action.to, []);
       case 'shoot': return this.shotValue(this.view.ball!.pos, [], 0);
       case 'tackle': return this.tackleValue([]);
@@ -612,6 +613,17 @@ class Thinker {
     }
     const injured = this.view.mine.hand.find((c) => c.def === def)?.injury ? 0.015 : 0;
     return 0.02 + 0.015 * Math.max(0, bestFit(def) - 3) - injured;
+  }
+
+  /** Draw step: a player when short of substitutes (or someone is hurt), otherwise a spell. */
+  private scoreDraw(pile: Pile): number {
+    const hand = this.view.mine.hand;
+    const players = hand.filter((c) => c.def.kind === 'field').length;
+    const spells = hand.filter((c) => c.def.kind === 'spell').length;
+    const want = pile === 'players'
+      ? (players === 0 ? 0.6 : players === 1 ? 0.3 : 0.1) + (this.hasInjuredPlayer() ? 0.1 : 0)
+      : spells === 0 ? 0.6 : spells <= 2 ? 0.4 : 0.15;
+    return want + this.random() * 0.05;
   }
 
   private hasInjuredPlayer(): boolean {

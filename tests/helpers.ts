@@ -129,12 +129,15 @@ export function scenario(options: ScenarioOptions = {}): GameState {
         lineup[area].push(slot(def, { area, lane }));
       }
     }
+    // spec.deck lists cards top first; they go into the Players or Spells pile by kind.
     const deck = (spec.deck ?? Array.from({ length: 10 }, (_, i) => player(`${side} deck filler ${i}`))).map(add);
+    const pile = (kind: 'players' | 'spells') => deck.filter((uid) => (cards[uid]!.kind === 'spell') === (kind === 'spells')).reverse();
     teams[side] = {
       goalie: slot(spec.goalie ?? goalie(`${side} goalie`), { area: 'goal' }),
       lineup,
       hand: (spec.hand ?? []).map(add),
-      deck: deck.reverse(), // top of the deck is the end of the list
+      players: pile('players'), // top of each pile is the end of the list
+      spells: pile('spells'),
       discard: (spec.discard ?? []).map(add),
     };
   }

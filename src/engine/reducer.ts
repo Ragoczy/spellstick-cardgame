@@ -4,7 +4,7 @@
 import type { Action } from './actions';
 import { adjustAmount, adjustPenalty, affinityFor, spellFizzles } from './affinity';
 import {
-  cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
+  cardView, defOf, discardFromHand, drawCards, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
 } from './board';
 import type { ActionSpellDef } from './cards';
 import { callDice, playReaction, startContest } from './contest';
@@ -13,7 +13,7 @@ import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './fi
 import { continueGame } from './flow';
 import { completeForcedSub, mend } from './injuries';
 import { shuffle } from './rng';
-import type { ContestSide, GameState, Modifier } from './state';
+import type { ContestSide, GameState, Modifier, Pile } from './state';
 import { validateAction } from './validate';
 
 export class IllegalActionError extends Error {}
@@ -48,6 +48,9 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
       discardFromHand(s, side, [action.card], ev);
       continueGame(s, ev);
       break;
+    case 'draw':
+      draw(s, side, action.pile, ev);
+      break;
   }
   return { state: s, events: ev };
 }
@@ -60,18 +63,17 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   team.goalie = { uid: card, revealed: false, scried: false };
   ev.push({ type: 'goalieChosen', side, secret: { card: cardView(s, card) } });
 
-  // The other goalie is shuffled into the deck.
-  team.deck.push(...team.hand);
+  // The other goalie is shuffled into the Players pile; both piles are shuffled.
+  team.players.push(...team.hand);
   team.hand = [];
-  [team.deck, s.rng] = shuffle(team.deck, s.rng);
+  [team.players, s.rng] = shuffle(team.players, s.rng);
+  [team.spells, s.rng] = shuffle(team.spells, s.rng);
 
-  // Draw enough to fill every spot plus a few extra. If that isn't enough field players,
-  // keep drawing one card at a time until it is.
+  // Draw a player for every spot plus a few extra, and a few spells. (At most one of the
+  // players drawn can be the spare goalie, so there are always enough to fill every spot.)
   const spots = 3 * s.config.lanes;
-  const fieldPlayersInTop = (n: number) => team.deck.slice(-n).filter((uid) => defOf(s, uid).kind === 'field').length;
-  let count = Math.min(spots + s.config.setupExtraCards, team.deck.length);
-  while (fieldPlayersInTop(count) < spots && count < team.deck.length) count++;
-  drawCards(s, side, count, 'setup', ev);
+  drawCards(s, side, spots + s.config.setupExtraPlayers, 'setup', ev, 'players');
+  drawCards(s, side, s.config.setupSpells, 'setup', ev, 'spells');
 
   s.pending = side === 'A' ? { kind: 'chooseGoalie', side: 'B' } : { kind: 'placeLineup', side: 'A' };
 }
@@ -234,7 +236,14 @@ function substitute(s: GameState, action: Extract<Action, { type: 'substitute' }
 }
 
 function regroup(s: GameState, side: Side, discard: string[], ev: GameEvent[]): void {
+  // Each new card comes from the same pile as the card it replaces.
+  const piles = discard.map((uid) => pileFor(defOf(s, uid)));
   discardFromHand(s, side, discard, ev);
-  drawCards(s, side, discard.length, 'regroup', ev);
+  for (const pile of piles) drawCards(s, side, 1, 'regroup', ev, pile);
   continueGame(s, ev);
+}
+
+function draw(s: GameState, side: Side, pile: Pile, ev: GameEvent[]): void {
+  drawCards(s, side, 1, 'turn', ev, pile);
+  s.pending = { kind: 'action', side };
 }

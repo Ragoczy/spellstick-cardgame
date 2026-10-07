@@ -5,7 +5,7 @@
 import type { CardDef, StatName } from './cards';
 import type { InjuryDef } from './config';
 import type { FieldPos, Pos, Side } from './field';
-import type { Affinity, ContestKind, ContestRole, GameResult, Uid } from './state';
+import type { Affinity, ContestKind, ContestRole, GameResult, Pile, Uid } from './state';
 
 /** A card as a player sees it. Injury cards are face up, so an injury is shown with its player. */
 export interface CardView {
@@ -44,7 +44,7 @@ export type InjurySource = 'hit' | 'dirty_play';
 export type GameEvent =
   | { type: 'gameStarted'; firstSide: Side }
   | { type: 'goalieChosen'; side: Side; secret?: { card: CardView } }
-  | { type: 'drew'; side: Side; count: number; reason: DrawReason; secret?: { cards: CardView[] } }
+  | { type: 'drew'; side: Side; count: number; reason: DrawReason; pile: Pile; secret?: { cards: CardView[] } }
   | { type: 'placed'; side: Side; pos: FieldPos; secret?: { card: CardView } }
   | { type: 'faceoffStarted'; chooser: Side; lane: number }
   | { type: 'turnStarted'; side: Side; turn: number }

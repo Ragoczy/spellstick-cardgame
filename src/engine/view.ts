@@ -47,7 +47,10 @@ export interface PlayerView {
   result: GameResult | null;
   mine: {
     hand: CardView[];
+    /** Cards left in both draw piles, and in each. */
     deckCount: number;
+    playersLeft: number;
+    spellsLeft: number;
     discard: CardView[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
@@ -55,6 +58,8 @@ export interface PlayerView {
   opponent: {
     handCount: number;
     deckCount: number;
+    playersLeft: number;
+    spellsLeft: number;
     discard: CardView[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
@@ -104,14 +109,18 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     result: s.result,
     mine: {
       hand: my.hand.map((uid) => cardView(s, uid)),
-      deckCount: my.deck.length,
+      deckCount: my.players.length + my.spells.length,
+      playersLeft: my.players.length,
+      spellsLeft: my.spells.length,
       discard: my.discard.map((uid) => cardView(s, uid)),
       goalie: slotView(s, my.goalie, true),
       lineup: lineupView(s, me, true),
     },
     opponent: {
       handCount: their.hand.length,
-      deckCount: their.deck.length,
+      deckCount: their.players.length + their.spells.length,
+      playersLeft: their.players.length,
+      spellsLeft: their.spells.length,
       discard: their.discard.map((uid) => cardView(s, uid)),
       goalie: slotView(s, their.goalie, false),
       lineup: lineupView(s, them, false),

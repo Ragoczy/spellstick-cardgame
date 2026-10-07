@@ -247,6 +247,18 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         return <ReactionPrompt view={view} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
       case 'callDice':
         return <DicePrompt view={view} onChoose={(roll) => act({ type: 'callDice', side: me, roll })} />;
+      case 'draw':
+        return (
+          <div className="prompt">
+            <strong>Your turn: draw a card.</strong> Choose a pile.
+            <div className="buttons">
+              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>Draw a player ({view.mine.playersLeft} left)</button>
+              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>Draw a spell ({view.mine.spellsLeft} left)</button>
+              <button type="button" className="quiet" onClick={hint}>Hint</button>
+            </div>
+            {hintText ? <div className="hint">{hintText}</div> : null}
+          </div>
+        );
       case 'discard':
         return <div className="prompt"><strong>Too many cards.</strong> Tap {pending.count} card{pending.count === 1 ? '' : 's'} in your hand to discard (you can hold 7).</div>;
       case 'shootoutPick':
@@ -273,6 +285,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       : h.type === 'substitute' ? `substitute your ${posName(h.pos, view.lanes)}`
       : h.type === 'regroup' ? (h.discard.length ? 'regroup (swap out weak cards)' : 'pass this action')
       : h.type === 'callDice' ? (h.roll ? 'call for dice' : 'not roll')
+      : h.type === 'draw' ? `draw a ${h.pile === 'players' ? 'player' : 'spell'}`
       : h.type;
     setHintText(`The computer would ${text}.`);
   };
@@ -312,7 +325,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     }
     return (
       <div className="prompt">
-        <strong>Your turn</strong> · {left} action{left === 1 ? '' : 's'} left. {help}
+        <strong>Your turn.</strong>{view.config.actionsPerTurn > 1 ? ` ${left} action${left === 1 ? '' : 's'} left.` : ''} {help}
         <div className="buttons">
           {shoot ? <button type="button" className="primary" onClick={() => act(shoot)}>Shoot!{shootLabel}</button> : null}
           {tackle ? <button type="button" onClick={() => act(tackle)}>Tackle{tackleLabel}</button> : null}
@@ -339,7 +352,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       <header className="scorebar">
         <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> Computer</span>
         <span className="meta">
-          Turn {view.turn} · Decks {view.mine.deckCount} / {view.opponent.deckCount} · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
+          Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
           {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
         </span>
         <button type="button" className="quiet" onClick={onQuit}>Quit</button>
@@ -439,8 +452,8 @@ function duelCard(card: import('../engine').CardView | null) {
 
 function AnnouncementView({ a, onClose }: { a: Announcement; onClose: () => void }) {
   return (
-    <div className={`announcement tone-${a.tone}`} onClick={onClose} role="dialog">
-      <div className="announcement-card">
+    <div className={`announcement tone-${a.tone}`} role="dialog">
+      <div className="announcement-card" onClick={onClose}>
         <h3>{a.title}</h3>
         {a.contest ? (
           <div className="duel">

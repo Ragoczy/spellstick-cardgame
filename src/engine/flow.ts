@@ -1,6 +1,6 @@
 // Turn flow, goals, the end of the game, and the penalty shootout.
 
-import { drawCards } from './board';
+import { cardsLeft, drawCards } from './board';
 import type { GameEvent } from './events';
 import { otherSide, type Side } from './field';
 import type { EndReason, GameState } from './state';
@@ -54,9 +54,15 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   if (s.ball?.side === side) s.ballProtected = false;
   ev.push({ type: 'turnStarted', side, turn: s.turn });
 
-  // Draw step. The decks are the game clock.
-  if (s.teams[side].deck.length > 0) {
-    drawCards(s, side, 1, 'turn', ev);
+  // Draw step. The decks are the game clock. With cards in both piles, the player chooses.
+  s.actionsLeft = s.config.actionsPerTurn;
+  const team = s.teams[side];
+  if (team.players.length > 0 && team.spells.length > 0) {
+    s.pending = { kind: 'draw', side };
+    return;
+  }
+  if (cardsLeft(team) > 0) {
+    drawCards(s, side, 1, 'turn', ev, team.players.length > 0 ? 'players' : 'spells');
   } else if (s.endgame.finalTurnFor === null) {
     // This player skips the draw but still takes this turn; then the opponent takes the last turn.
     s.endgame.finalTurnFor = otherSide(side);
@@ -64,7 +70,6 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   }
   // (If the final turn is already set, this player just skips the draw.)
 
-  s.actionsLeft = s.config.actionsPerTurn;
   s.pending = { kind: 'action', side };
 }
 

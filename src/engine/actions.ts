@@ -2,7 +2,7 @@
 // that it's that side's decision.
 
 import type { FieldPos, Pos, Side } from './field';
-import type { Uid } from './state';
+import type { Pile, Uid } from './state';
 
 export type SpellTarget =
   | { kind: 'none' }
@@ -37,6 +37,8 @@ export type Action =
   | { type: 'callDice'; side: Side; roll: boolean }
   // End of turn, one card at a time
   | { type: 'discard'; side: Side; card: Uid }
+  /** Draw step: draw one card from this pile. */
+  | { type: 'draw'; side: Side; pile: Pile }
   // Penalty shootout: choose a field player who hasn't shot yet
   | { type: 'shootoutPick'; side: Side; pos: FieldPos }
   // A player was injured or carried off: bring on a substitute from your hand

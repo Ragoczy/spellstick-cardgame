@@ -17,7 +17,7 @@ import { LANE_COUNTS, dfn, player, scenario } from './helpers';
 /** Every card the given side must not be able to identify right now. */
 function hiddenFrom(state: GameState, viewer: Side): Uid[] {
   const them = state.teams[otherSide(viewer)];
-  const hidden = [...them.hand, ...them.deck, ...state.teams[viewer].deck];
+  const hidden = [...them.hand, ...them.players, ...them.spells, ...state.teams[viewer].players, ...state.teams[viewer].spells];
   const onField = [them.goalie, ...AREAS.flatMap((area) => them.lineup[area])];
   for (const slot of onField) if (slot && !slot.revealed && !slot.scried) hidden.push(slot.uid);
   return hidden;
@@ -54,9 +54,10 @@ describe.each(LANE_COUNTS)('hidden information (%i lanes)', (lanes) => {
 
   it("removes the other player's secrets from events", () => {
     const events: GameEvent[] = [
-      { type: 'drew', side: 'B', count: 1, reason: 'turn', secret: { cards: [{ uid: 'B05', def: player('Drawn') }] } },
+      { type: 'drew', side: 'B', count: 1, reason: 'turn', pile: 'players', secret: { cards: [{ uid: 'B05', def: player('Drawn') }] } },
     ];
-    expect(eventsFor(events, 'A')).toEqual([{ type: 'drew', side: 'B', count: 1, reason: 'turn' }]);
+    // Which pile they drew from is public; the card isn't.
+    expect(eventsFor(events, 'A')).toEqual([{ type: 'drew', side: 'B', count: 1, reason: 'turn', pile: 'players' }]);
     expect(eventsFor(events, 'B')).toEqual(events);
   });
 

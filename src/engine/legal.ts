@@ -89,6 +89,10 @@ export function legalActions(s: GameState, side: Side): Action[] {
       for (const card of hand) candidates.push({ type: 'discard', side, card });
       break;
 
+    case 'draw':
+      candidates.push({ type: 'draw', side, pile: 'players' }, { type: 'draw', side, pile: 'spells' });
+      break;
+
     case 'forcedSub':
       for (const card of hand) candidates.push({ type: 'forcedSub', side, card });
       break;

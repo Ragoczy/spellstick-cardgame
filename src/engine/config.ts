@@ -21,8 +21,10 @@ export interface GameConfig {
   goalsToWin: number;
   /** Discard down to this many cards at the end of your turn. */
   handLimit: number;
-  /** Setup draw = number of field spots + this (10 with 2 lanes, 13 with 3). */
-  setupExtraCards: number;
+  /** Setup: draw players for every field spot + this many more, from the Players pile. */
+  setupExtraPlayers: number;
+  /** Setup: draw this many from the Spells pile. */
+  setupSpells: number;
   /** Regroup: discard up to this many cards, then draw that many. */
   regroupMax: number;
   /** Numeric spell effects get this much stronger when the caster's affinity matches. */
@@ -66,13 +68,14 @@ export const DEFAULT_CONFIG: GameConfig = {
   lanes: 2,
   goalsToWin: 3,
   handLimit: 7,
-  setupExtraCards: 4,
+  setupExtraPlayers: 2,
+  setupSpells: 2,
   regroupMax: 1,
   affinityMatchBonus: 1,
   affinityOpposedPenalty: 1,
   maxTurns: 300,
   deckSize: 40,
-  actionsPerTurn: 2,
+  actionsPerTurn: 1,
   shootoutRounds: 3,
   penaltyBonus: 3,
   passTiesGoTo: 'attacker',

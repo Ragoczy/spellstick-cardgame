@@ -58,10 +58,9 @@ describe.each(LANE_COUNTS)('experimental switches (%i lanes)', (lanes) => {
     let { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
     expect(state.ballProtected).toBe(true);
     expect(() => applyAction(state, { type: 'tackle', side: 'B' })).toThrow("can't be tackled");
-    // B's turn (two actions) ends, and protection ends when A's next turn starts.
+    // B's turn ends, and protection ends when A's next turn starts.
     ({ state } = play(state, { type: 'regroup', side: 'B', discard: [] }));
-    expect(state.ballProtected).toBe(true);
-    ({ state } = play(state, { type: 'regroup', side: 'B', discard: [] }));
+    expect(state.pending).toMatchObject({ side: 'A' });
     expect(state.ballProtected).toBe(false);
   });
 

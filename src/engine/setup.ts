@@ -48,7 +48,8 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     if (fieldCount < spots) throw new SetupError(`Team ${teamIds[side]} needs at least ${spots} field players.`);
     // The goalies start in hand so the player can choose one; everything else is the deck.
     teams[side] = {
-      deck: uids.filter((uid) => cards[uid]!.kind !== 'goalie'),
+      players: uids.filter((uid) => cards[uid]!.kind === 'field'),
+      spells: uids.filter((uid) => cards[uid]!.kind === 'spell'),
       hand: goalies,
       discard: [],
       goalie: null,

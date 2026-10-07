@@ -74,9 +74,9 @@ describe.each(LANE_COUNTS)('end of the game (%i lanes)', (lanes) => {
     expect(state.pending).toEqual({ kind: 'action', side: 'A' });
     expect(eventsOfType(events, 'drew')).toHaveLength(0);
 
-    ({ state } = idle(state, 2)); // A's two actions
+    ({ state } = idle(state, 1)); // A's action
     expect(state.pending).toEqual({ kind: 'action', side: 'B' });
-    ({ state } = idle(state, 2)); // B's last turn
+    ({ state } = idle(state, 1)); // B's last turn
     expect(state.result).toEqual({ winner: 'A', reason: 'time' });
   });
 

@@ -36,7 +36,9 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
     case 'goalieChosen':
       return isMe(e.side) && e.secret ? info(`You put ${e.secret.card.def.name} in goal, face down.`) : null;
     case 'drew': {
-      if (e.reason === 'turn') return null;
+      if (e.reason === 'turn') {
+        return isMe(e.side) ? null : info(`The computer draws a ${e.pile === 'players' ? 'player' : 'spell'}.`);
+      }
       if (!isMe(e.side)) return e.reason === 'setup' ? null : info(`The computer draws ${e.count} card${e.count === 1 ? '' : 's'}.`);
       const names = e.secret?.cards.map((c) => c.def.name).join(', ');
       return info(`You draw ${e.count} card${e.count === 1 ? '' : 's'}${names ? `: ${names}` : ''}.`);

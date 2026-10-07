@@ -7,9 +7,14 @@ import {
 } from '../engine';
 
 function playerAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): PlayerCardDef | null {
-  const team = view[owner];
-  const slot = pos.area === 'goal' ? team.goalie : team.lineup[pos.area][pos.lane];
-  return slot && (slot.state === 'revealed' || slot.state === 'faceDown') ? (slot.card.def as PlayerCardDef) : null;
+  return (cardAt(view, owner, pos)?.def as PlayerCardDef | undefined) ?? null;
+}
+
+/** A player's value in a contest, from the card you can see (including any injury). */
+function valueOf(view: PlayerView, owner: 'mine' | 'opponent', side: Parameters<typeof scoreSide>[0]['side'],
+  spell: { def: SpellCardDef; affinity: Affinity } | null, shielded: boolean): number {
+  const card = cardAt(view, owner, side.pos);
+  return scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, side, spell, shielded }, view.config).total;
 }
 
 export function casterAffinity(view: PlayerView, caster: Pos, spell: CardDef): Affinity | null {
@@ -38,8 +43,8 @@ export function reactionPreview(view: PlayerView): ReactionPreview | null {
   const me = contest[role];
   const them = contest[otherRoleName];
   const myPlayer = playerAt(view, 'mine', me.pos);
-  const theirPlayer = playerAt(view, 'opponent', them.pos);
-  if (!myPlayer || !theirPlayer) return null;
+  if (!myPlayer) return null;
+  // Their spot may be empty (a player was carried off): it counts as 0.
 
   const theirSpellCard = them.spell && !them.spell.fizzled
     ? [...view.opponent.discard, ...view.mine.discard].find((c) => c.uid === them.spell!.uid)
@@ -50,8 +55,8 @@ export function reactionPreview(view: PlayerView): ReactionPreview | null {
   const score = (mySpell: { def: SpellCardDef; affinity: Affinity } | null) => {
     const iShield = mySpell?.def.ability.effect === 'shield';
     return {
-      mine: scoreSide({ player: myPlayer, side: me, spell: mySpell, shielded: theyShield }, view.config).total,
-      theirs: scoreSide({ player: theirPlayer, side: them, spell: theirSpell, shielded: !!iShield }, view.config).total,
+      mine: valueOf(view, 'mine', me, mySpell, theyShield),
+      theirs: valueOf(view, 'opponent', them, theirSpell, !!iShield),
     };
   };
 
@@ -78,12 +83,13 @@ export function matchup(
   mine: { pos: Pos; stat: StatName; use: StatUse },
   theirs: { pos: Pos; stat: StatName; use: StatUse },
 ): { mine: number; theirs: number | null } | null {
-  const myPlayer = playerAt(view, 'mine', mine.pos);
-  if (!myPlayer) return null;
-  const theirPlayer = playerAt(view, 'opponent', theirs.pos);
-  const value = (player: PlayerCardDef, side: typeof mine) =>
-    scoreSide({ player, side: { ...side, modifiers: [] }, spell: null, shielded: false }, view.config).total;
-  return { mine: value(myPlayer, mine), theirs: theirPlayer ? value(theirPlayer, theirs) : null };
+  if (!playerAt(view, 'mine', mine.pos)) return null;
+  const theirSlot = theirs.pos.area === 'goal' ? view.opponent.goalie : view.opponent.lineup[theirs.pos.area][theirs.pos.lane];
+  const theirsKnown = !!playerAt(view, 'opponent', theirs.pos) || theirSlot?.state === 'empty';
+  return {
+    mine: valueOf(view, 'mine', { ...mine, modifiers: [] }, null, false),
+    theirs: theirsKnown ? valueOf(view, 'opponent', { ...theirs, modifiers: [] }, null, false) : null,
+  };
 }
 
 export interface DicePreview {

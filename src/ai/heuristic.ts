@@ -46,13 +46,19 @@ const POSITION_ADJUST: Record<Area, Partial<Record<StatName, number>>> = {
 /** Rough worth of keeping a card in hand. */
 const SPELL_VALUE: Record<string, number> = {
   boost: 0.12, shield: 0.13, steal: 0.07, long_pass: 0.06, long_shot: 0.06, recall: 0.05, scry: 0.03, swap: 0.02,
-  hit: 0.08, dirty_play: 0.07, mend: 0.04,
+  hit: 0.08, dirty_play: 0.07, mend: 0.04, decoy_pass: 0.07, mirror_images: 0.05,
 };
 
 /** Rough worth of injuring an opposing player (on top of what the contest itself is worth). */
 const INJURY_WORTH = 0.06;
 /** Rough worth of carrying off an opposing player who is already injured. */
 const CARRY_OFF_WORTH = 0.12;
+
+/**
+ * Rough worth of mirror images that last until found: protection from later tackles (players
+ * who often hold the ball) and hits.
+ */
+const IMAGES_WORTH: Record<Area, number> = { forward: 0.06, midfield: 0.06, defense: 0.035 };
 
 /** Holding the ball without passing or shooting counts for this share of its value. */
 const STALL_DISCOUNT = 0.5;
@@ -87,6 +93,12 @@ function visibleInjury(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): 
 
 function isFaceDown(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
   return slotOf(view, owner, pos).state !== 'revealed';
+}
+
+/** Whether the player at a spot has mirror images (public). */
+function hasImages(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
+  const slot = slotOf(view, owner, pos);
+  return slot.state === 'revealed' && !!slot.images;
 }
 
 /** Placement fit: how well a field player suits an area. */
@@ -291,13 +303,14 @@ class Thinker {
    * Value of my holding the ball at `pos`, allowing for the chance of being tackled before I act
    * again. A forward is worth what its shot is worth; other spots are worth a fixed amount.
    */
-  private holdValue(pos: Pos, safeFromTackles = false): number {
+  private holdValue(pos: Pos, safeFromTackles = false, images = hasImages(this.view, 'mine', pos)): number {
     if (!isFieldPos(pos)) return this.ladder().goal;
     const worth = pos.area === 'forward' ? Math.max(this.ladder().midfield, this.shotChance(pos, [])) : this.ladder()[pos.area];
     if (safeFromTackles) return worth;
     const tackler = opposite(pos);
     const keep = this.chance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos), this.theirValue(tackler, 'defense', 'tackle'), true);
-    const lose = 0.7 * (1 - keep); // the opponent tackles when it looks worthwhile
+    // The opponent tackles when it looks worthwhile; images make most tackles miss.
+    const lose = 0.7 * (1 - keep) * (images ? this.findsRealPlayer() : 1);
     return (1 - lose) * worth - lose * this.ladder()[tackler.area];
   }
 
@@ -380,7 +393,17 @@ class Thinker {
     const tackler = opposite(holder);
     const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler);
     const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
-    return p * this.afterGaining(tackler) - (1 - p) * this.ladder()[holder.area];
+    const lost = -this.ladder()[holder.area];
+    const tackled = p * this.afterGaining(tackler) + (1 - p) * lost;
+    // Against mirror images, the tackle usually goes for an image and changes nothing.
+    if (!hasImages(this.view, 'opponent', holder)) return tackled;
+    const real = this.findsRealPlayer();
+    return real * tackled + (1 - real) * lost;
+  }
+
+  /** Chance that a tackle or hit on a player with mirror images finds the real one. */
+  private findsRealPlayer(): number {
+    return 1 / (this.config.mirrorImages + 1);
   }
 
   // ---- Other actions ----
@@ -437,6 +460,17 @@ class Thinker {
       }
       case 'long_pass':
         return target.kind === 'pass' ? this.passValue(target.to, []) - cost : -1;
+      case 'decoy_pass':
+        // Can't be intercepted; the receiver stays hidden and one of theirs is revealed.
+        return target.kind === 'decoyPass' ? this.afterGaining(target.to) + 0.01 * unit - cost : -1;
+      case 'mirror_images': {
+        // Safer to hold the ball now (if the caster has it), and protection from later tackles and hits.
+        if (!isFieldPos(action.caster)) return -1;
+        const ball = this.view.ball;
+        const holding = ball?.side === this.me && samePos(ball.pos, action.caster);
+        const hold = holding ? STALL_DISCOUNT * this.holdValue(action.caster, this.view.ballProtected, true) : base;
+        return hold + IMAGES_WORTH[action.caster.area] * unit - cost;
+      }
       case 'long_shot': {
         const penalty = affinity === 'match'
           ? Math.max(0, ability.params.penalty - this.config.affinityMatchBonus)
@@ -454,7 +488,8 @@ class Thinker {
         const targetPos = opposite(action.caster);
         const strength = this.adjusted(ability.params.strength, affinity) + 0.6 * this.bestBoost(action.caster);
         const resist = this.theirValue(targetPos, 'defense', 'resist');
-        const p = this.chance(strength, resist, false);
+        const real = hasImages(this.view, 'opponent', targetPos) ? this.findsRealPlayer() : 1;
+        const p = real * this.chance(strength, resist, false);
         return base + p * this.injuryWorth(targetPos) - cost;
       }
       case 'mend': {

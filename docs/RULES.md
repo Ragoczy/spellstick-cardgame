@@ -1,4 +1,4 @@
-# Spellstick — rules v0.8
+# Spellstick — rules v0.9
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -106,7 +106,7 @@ Player abilities are never changed by affinity.
 | recall (2) | draw 3 | 2 | 1 |
 | long_shot (−2 Shot) | −1 | −2 | −3 |
 | hit (strength 3) | strength 4 | 3 | 2 |
-| shield, dirty_play, scry, swap, long_pass, mend | works | works | fails |
+| shield, dirty_play, scry, swap, long_pass, mend, decoy_pass, mirror_images | works | works | fails |
 
 Because your opponent can't see your face-down players, they don't know how strong your spell
 will be until the caster is revealed.
@@ -176,6 +176,7 @@ goalie.
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
 ball. If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
+If the holder has mirror images, roll for them first (see `mirror_images`).
 
 ## Actions any time
 
@@ -320,9 +321,21 @@ engine together. "Numeric" effects are adjusted by affinity.
 - `hit` — `{ strength }`, numeric. The caster (a field player, not the goalie) attacks the
   opposing player in its own spot. Goalies can't be hit. This is a contest with the casting team
   as attacker: the spell's strength against the target's Defense. Both sides may play reaction
-  spells as usual. If the hit lands, the target is injured.
+  spells as usual. If the hit lands, the target is injured. If the target has mirror images, roll
+  for them first (see `mirror_images`).
 - `mend` — `{}`, non-numeric. Remove the injury from one of your players, on the field or in your
   hand. The injury card goes back to the injury deck.
+- `decoy_pass` — `{}`, non-numeric. Your ball holder makes a Pass (the usual targets), but your
+  opponent thinks it went to another lane of the receiver's row (with 2 lanes, the other lane;
+  with more, you choose). Their player in that lane is revealed instead. There is no contest:
+  nobody can intercept, so the receiver catches it and stays face down. (If that spot is empty,
+  nobody is revealed.)
+- `mirror_images` — `{}`, non-numeric. The caster (a field player, not the goalie) gets 2 ⚙ false
+  images. Leave the card next to them as a reminder. Whenever your opponent tackles (a Steal
+  included) or hits that player, roll a die first: on 1–4 they go for an image and miss. Nothing
+  happens, except that the tackler is revealed and any spell they used is spent. On 5–6 they find
+  the real player: the images vanish (discard the card) and the action goes ahead as normal. The
+  images also vanish when the player leaves the field. A player can only have one set of images.
 
 ## Add-on: center lane
 
@@ -336,6 +349,9 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.9 — New spells: Glamour Ball (`decoy_pass`: a pass the opponent thinks went to the other lane, so it can't be intercepted and the receiver stays hidden) and Glamour Self (`mirror_images`: two images, so 2 in 3 tackles and hits miss until one finds the real player). Paul's spells; the details (no contest at all, images last until found, tackles and hits only) are Claude's simplest reading.
+- v0.9 — Prototype decks: each team swaps one Air Scry for Glamour Self and one Air Long Pass for Glamour Ball, so decks stay at 40 cards.
 
 - v0.8 — One action per turn again (was two). Paul's call.
 - v0.8 — Full hand: with 7 or more cards you don't draw; the top card of a pile of your choice goes to your discard pile instead. With one action a turn, players otherwise had to discard about every other turn.

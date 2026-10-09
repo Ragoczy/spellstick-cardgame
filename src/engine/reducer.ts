@@ -12,7 +12,7 @@ import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
 import { completeForcedSub, mend } from './injuries';
-import { shuffle } from './rng';
+import { randomInt, shuffle } from './rng';
 import type { ContestSide, GameState, Modifier, Pile } from './state';
 import { validateAction } from './validate';
 
@@ -127,7 +127,44 @@ function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]
   const holderPos = s.ball!.pos as FieldPos;
   const attacker: ContestSide = { side, pos: opposite(holderPos), stat: 'defense', use: 'tackle', spell: null, modifiers };
   const defender: ContestSide = { side: otherSide(side), pos: holderPos, stat: 'speed', use: 'evade', spell: null, modifiers: [] };
+  // The tackler is revealed by going for the holder, even if they only find an image.
+  reveal(s, side, attacker.pos, ev);
+  if (fooledByImages(s, defender.side, holderPos, 'tackle', ev)) {
+    continueGame(s, ev);
+    return;
+  }
   startContest(s, { kind: 'tackle', attacker, defender, tiesGoTo: 'defender' }, ev);
+}
+
+/**
+ * mirror_images: a tackle or hit on a player with images goes for an image (and misses) with a
+ * chance of images in (images + 1). If it finds the real player, the images are gone.
+ */
+function fooledByImages(s: GameState, side: Side, pos: FieldPos, action: 'tackle' | 'hit', ev: GameEvent[]): boolean {
+  const slot = slotAt(s, side, pos);
+  if (!slot?.images) return false;
+  let pick: number;
+  [pick, s.rng] = randomInt(s.rng, s.config.mirrorImages + 1);
+  const fooled = pick < s.config.mirrorImages;
+  if (!fooled) delete slot.images;
+  ev.push({ type: 'imagesTested', side, pos, action, fooled });
+  return fooled;
+}
+
+/**
+ * decoy_pass: the opponent thinks the ball went to `decoyLane` of the receiver's row. Their
+ * player there is revealed, and the pass is caught without a contest, so the receiver stays
+ * face down.
+ */
+function decoyPass(s: GameState, side: Side, to: FieldPos, decoyLane: number, ev: GameEvent[]): void {
+  const decoy = opposite({ area: to.area, lane: decoyLane });
+  ev.push({ type: 'decoyPass', side, to, decoy });
+  reveal(s, otherSide(side), decoy, ev);
+  s.ball = { side, pos: to };
+  // Experimental: a caught pass can't be tackled until the catcher's team's next turn.
+  const protect = s.config.protectCatch;
+  s.ballProtected = protect === 'all' || (protect === 'forward' && to.area === 'forward');
+  ev.push({ type: 'ballMoved', side, pos: to });
 }
 
 function penalty(s: GameState, side: Side, pos: FieldPos, ev: GameEvent[]): void {
@@ -180,6 +217,19 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
       if (target.kind !== 'pass') break;
       pass(s, side, target.to, ev);
       return;
+    case 'decoy_pass':
+      if (target.kind !== 'decoyPass') break;
+      decoyPass(s, side, target.to, target.decoyLane, ev);
+      continueGame(s, ev);
+      return;
+    case 'mirror_images':
+      // The caster (just revealed by casting) gets the images. On the table the card stays by the
+      // player as a reminder; here it goes to the discard pile straight away, which only changes
+      // the order of the discard pile.
+      slotAt(s, side, caster)!.images = true;
+      ev.push({ type: 'imagesCast', side, pos: caster as FieldPos });
+      continueGame(s, ev);
+      return;
     case 'long_shot': {
       const penalty = adjustPenalty(ability.params.penalty, affinity, s.config);
       shoot(s, side, penalty > 0 ? [{ label: spell.name, amount: -penalty }] : [], ev);
@@ -198,6 +248,10 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
       if (target.kind !== 'hit') break;
       // The caster attacks the opposing player in its own spot. Goalies can't be hit.
       const targetPos = opposite(caster as FieldPos);
+      if (fooledByImages(s, otherSide(side), targetPos, 'hit', ev)) {
+        continueGame(s, ev);
+        return;
+      }
       const strength = adjustAmount(ability.params.strength, affinity, s.config);
       startContest(s, {
         kind: 'hit',

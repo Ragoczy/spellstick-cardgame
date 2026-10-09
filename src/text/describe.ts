@@ -71,6 +71,14 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} swaps two face-down players (${posLabel(e.a)} and ${posLabel(e.b)}).`;
     case 'scried':
       return `${names[e.side]} looks at the face-down card at ${posLabel(e.target)}.`;
+    case 'decoyPass':
+      return `${names[e.side]} passes to ${posLabel(e.to)}, but the other team goes for ${posLabel(e.decoy)}. The pass can't be intercepted.`;
+    case 'imagesCast':
+      return `${names[e.side]}'s player at ${posLabel(e.pos)} is surrounded by mirror images.`;
+    case 'imagesTested':
+      return e.fooled
+        ? `The ${e.action} goes for an image of ${names[e.side]}'s player at ${posLabel(e.pos)} and misses.`
+        : `The ${e.action} finds ${names[e.side]}'s real player at ${posLabel(e.pos)}; the images vanish.`;
     case 'discarded':
       return `${names[e.side]} discards ${e.cards.map((c) => c.def.name).join(', ')}.`;
     case 'shootoutStarted':

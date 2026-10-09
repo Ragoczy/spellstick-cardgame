@@ -37,7 +37,9 @@ export type ActionEffect =
   | { effect: 'steal'; params: { amount: number } }
   | { effect: 'recall'; params: { count: number } }
   | { effect: 'hit'; params: { strength: number } }
-  | { effect: 'mend'; params: Record<string, never> };
+  | { effect: 'mend'; params: Record<string, never> }
+  | { effect: 'decoy_pass'; params: Record<string, never> }
+  | { effect: 'mirror_images'; params: Record<string, never> };
 
 export type SpellEffect = ReactionEffect | ActionEffect;
 
@@ -114,7 +116,7 @@ const STATS: StatName[] = ['speed', 'shot', 'defense', 'faceoff', 'save'];
 const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff', 'resist'];
 const AREAS: Area[] = ['defense', 'midfield', 'forward'];
 const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play'];
-const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall', 'hit', 'mend'];
+const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall', 'hit', 'mend', 'decoy_pass', 'mirror_images'];
 
 export class CardDataError extends Error {}
 
@@ -161,6 +163,8 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
     case 'scry':
     case 'swap':
     case 'long_pass':
+    case 'decoy_pass':
+    case 'mirror_images':
       break;
     default:
       fail(where, `unknown effect "${String(effect)}"`);

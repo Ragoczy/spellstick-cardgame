@@ -191,6 +191,21 @@ export function validateAction(s: GameState, action: Action): string | null {
         case 'long_pass':
           if (target.kind !== 'pass') return 'Choose who receives the long pass.';
           return canPass(s, side, target.to, true);
+        case 'decoy_pass': {
+          if (target.kind !== 'decoyPass') return 'Choose who receives the pass.';
+          const lane = target.decoyLane;
+          if (!Number.isInteger(lane) || lane < 0 || lane >= s.config.lanes || lane === target.to?.lane) {
+            return 'The opponent has to think the ball went to another lane of that row.';
+          }
+          return canPass(s, side, target.to, false);
+        }
+        case 'mirror_images': {
+          if (target.kind !== 'none') return 'Mirror images have no target.';
+          // Goalies can't be tackled or hit, so images would do nothing there.
+          if (!isFieldPos(action.caster)) return 'A goalie has no use for images.';
+          if (slotAt(s, side, action.caster)!.images) return 'That player already has images.';
+          return null;
+        }
         case 'long_shot':
           if (target.kind !== 'none') return 'A long shot has no target.';
           return canShoot(s, side, 'midfield');

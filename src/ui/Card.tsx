@@ -46,6 +46,8 @@ export interface CardProps {
   faceDown?: boolean;
   /** The opponent has scried this face-down card (or you scried theirs). */
   scried?: boolean;
+  /** The player has mirror images around them. */
+  images?: boolean;
   hasBall?: boolean;
   selected?: boolean;
   /** Highlight: something you can do with this card or spot. */
@@ -55,9 +57,9 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, faceDown, scried, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, faceDown, scried, images, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
-  const classes = ['card', def.kind, faceDown ? 'face-down' : '', selected ? 'selected' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
+  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
     .join(' ');
   return (
@@ -71,6 +73,7 @@ export function Card({ def, injury, faceDown, scried, hasBall, selected, highlig
       {injury ? <div className="injury" title={`${injury.name}: ${injuryEffect(injury, def)}`}>✚ {injury.name} {injuryEffect(injury, def)}</div> : null}
       {showText && cardText(def) ? <div className="card-text">{cardText(def)}</div> : null}
       {faceDown ? <span className="tag">{scried ? 'seen' : 'hidden'}</span> : null}
+      {images ? <span className="tag images" title="Mirror images: most tackles and hits go for an image and miss">images</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}
     </button>
   );

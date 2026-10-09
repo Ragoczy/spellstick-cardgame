@@ -35,7 +35,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     );
   }
   if (slot.state === 'unknown') return <CardBack team={team} injury={slot.injury} {...common} />;
-  return <Card def={slot.card.def} injury={slot.card.injury} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried} {...common} />;
+  return <Card def={slot.card.def} injury={slot.card.injury} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried} images={slot.state === 'revealed' && slot.images} {...common} />;
 }
 
 export function Board(props: BoardProps) {

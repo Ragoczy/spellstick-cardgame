@@ -42,6 +42,16 @@ function spellTargets(s: GameState, side: Side, effect: string): SpellTarget[] {
     case 'long_pass':
       if (!s.ball || s.ball.side !== side) return [];
       return passTargets(s.ball.pos, lanes, true).map((to) => ({ kind: 'pass', to }));
+    case 'decoy_pass': {
+      if (!s.ball || s.ball.side !== side) return [];
+      const targets: SpellTarget[] = [];
+      for (const to of passTargets(s.ball.pos, lanes)) {
+        for (let decoyLane = 0; decoyLane < lanes; decoyLane++) {
+          if (decoyLane !== to.lane) targets.push({ kind: 'decoyPass', to, decoyLane });
+        }
+      }
+      return targets;
+    }
     case 'hit':
       return [{ kind: 'hit' }];
     case 'mend':

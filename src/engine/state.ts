@@ -15,6 +15,11 @@ export interface Slot {
   revealed: boolean;
   /** The opponent has looked at this face-down card with a scry. Follows the card if swapped. */
   scried: boolean;
+  /**
+   * mirror_images: this player has false images around them (public). Stays with the slot, so it
+   * ends when the player leaves the field.
+   */
+  images?: boolean;
 }
 
 /** The two face-down draw piles each team has. */

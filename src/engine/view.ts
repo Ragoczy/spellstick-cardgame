@@ -15,7 +15,8 @@ export type SlotView =
   | { state: 'unknown'; injury?: InjuryDef }
   /** Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried. */
   | { state: 'faceDown'; card: CardView; scried: boolean }
-  | { state: 'revealed'; card: CardView };
+  /** images: the player has mirror images around them (public). */
+  | { state: 'revealed'; card: CardView; images?: boolean };
 
 export interface PlayerView {
   me: Side;
@@ -68,7 +69,7 @@ export interface PlayerView {
 
 function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
   if (!slot) return { state: 'empty' };
-  if (slot.revealed) return { state: 'revealed', card: cardView(s, slot.uid) };
+  if (slot.revealed) return slot.images ? { state: 'revealed', card: cardView(s, slot.uid), images: true } : { state: 'revealed', card: cardView(s, slot.uid) };
   if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried };
   // Injury cards are face up, so an injury shows even on a player you can't see.
   const injury = injuryOf(s, slot.uid);

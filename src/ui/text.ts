@@ -130,6 +130,18 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
         return info(`You look at ${at(them, e.target)}: ${e.secret?.card.def.name ?? 'a card'}. It stays face down.`);
       }
       return info(`The computer looks at ${at(me, e.target)}.`);
+    case 'decoyPass': {
+      const fooled = otherSide(e.side);
+      return { text: `${who(e.side)} ${verb(e.side, 'pass', 'passes')} to ${at(e.side, e.to)}, but ${isMe(fooled) ? 'you think' : 'the computer thinks'} ` +
+        `it went to the ${laneName(e.decoy.lane, lanes)} lane. Nobody can intercept it.`, tone: isMe(e.side) ? 'good' : 'bad' };
+    }
+    case 'imagesCast':
+      return info(`Mirror images of ${at(e.side, e.pos)} appear. Tackles and hits on them will often go for an image instead.`);
+    case 'imagesTested':
+      if (e.fooled) {
+        return { text: `The ${e.action} goes for an image of ${at(e.side, e.pos)} and finds only air.`, tone: isMe(e.side) ? 'good' : 'bad' };
+      }
+      return info(`The ${e.action} finds the real ${posName(e.pos, lanes)}. The images vanish.`);
     case 'discarded':
       if (e.fromPile) {
         const pile = e.fromPile === 'players' ? 'Players' : 'Spells';

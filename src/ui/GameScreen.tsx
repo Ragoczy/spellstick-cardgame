@@ -53,10 +53,13 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const castsFor = (card: string, caster?: Pos) =>
     casts.filter((a) => a.card === card && (!caster || samePos(a.caster, caster)));
 
+  /** Glamour Ball: the opposing spot the computer will think the ball went to. */
+  const decoySpot = (t: Extract<SpellTarget, { kind: 'decoyPass' }>): FieldPos => opposite({ area: t.to.area, lane: t.decoyLane });
+
   /** The spots on the board a spell target points at (hand targets are handled separately). */
   const targetPos = (t: SpellTarget, caster: Pos): { side: Side; pos: Pos }[] => {
     if (t.kind === 'opponent') return [{ side: them, pos: t.pos }];
-    if (t.kind === 'pass') return [{ side: me, pos: t.to }];
+    if (t.kind === 'pass' || t.kind === 'decoyPass') return [{ side: me, pos: t.to }];
     if (t.kind === 'swap') return [{ side: me, pos: t.a }, { side: me, pos: t.b }];
     if (t.kind === 'hit') return isFieldPos(caster) ? [{ side: them, pos: opposite(caster) }] : [];
     if (t.kind === 'mendField') return [{ side: me, pos: t.pos }];
@@ -94,6 +97,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
           }
         } else {
           for (const a of castsFor(selection.card, selection.caster)) {
+            // Glamour Ball, second step: where the computer will think the ball went.
+            if (a.target.kind === 'decoyPass' && selection.first) {
+              if (samePos(a.target.to, selection.first)) map.set(posKey(them, decoySpot(a.target)), 'target');
+              continue;
+            }
             for (const t of targetPos(a.target, a.caster)) {
               if (selection.first && a.target.kind === 'swap' && !(samePos(a.target.a, selection.first) || samePos(a.target.b, selection.first))) continue;
               map.set(posKey(t.side, t.pos), 'target');
@@ -143,8 +151,15 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         return setSelection({ ...selection, caster: pos });
       }
       const options = castsFor(selection.card, selection.caster);
+      if (selection.first && options[0]?.target.kind === 'decoyPass') {
+        const decoy = options.find((a) => a.target.kind === 'decoyPass' && samePos(a.target.to, selection.first!) && side === them && samePos(decoySpot(a.target), pos));
+        if (decoy) act(decoy);
+        return;
+      }
       const hit = options.filter((a) => targetPos(a.target, a.caster).some((t) => t.side === side && samePos(t.pos, pos)));
       if (!hit.length) return;
+      // Glamour Ball with 3 or more lanes: then choose which lane the computer will think it went to.
+      if (hit[0]!.target.kind === 'decoyPass' && hit.length > 1) return setSelection({ ...selection, first: pos as FieldPos });
       if (hit[0]!.target.kind === 'swap') {
         if (!selection.first) return setSelection({ ...selection, first: pos as FieldPos });
         const pair = hit.find((a) => a.target.kind === 'swap' && (samePos(a.target.a, selection.first!) || samePos(a.target.b, selection.first!)));
@@ -302,8 +317,13 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const shootLabel = !myBall ? ''
     : shot ? ` (your Shot ${shot.mine} vs their Save ${shot.theirs}, both roll: about ${Math.round(shot.chance * 100)}% to score)`
     : versus(matchup(view, { pos: myBall, stat: 'shot', use: 'shoot' }, { pos: { area: 'goal' }, stat: 'save', use: 'save' }), 'Shot', 'Save');
-  const tackleLabel = view.ball && view.ball.side === them && view.ball.pos.area !== 'goal'
-    ? versus(matchup(view, { pos: opposite(view.ball.pos), stat: 'defense', use: 'tackle' }, { pos: view.ball.pos, stat: 'speed', use: 'evade' }), 'Defense', 'Speed')
+  const theirHolder = view.ball && view.ball.side === them && view.ball.pos.area !== 'goal' ? view.ball.pos : null;
+  const holderSlot = theirHolder ? view.opponent.lineup[theirHolder.area][theirHolder.lane] : null;
+  const imagesNote = holderSlot?.state === 'revealed' && holderSlot.images
+    ? ` (mirror images: ${view.config.mirrorImages} in ${view.config.mirrorImages + 1} tackles miss)`
+    : '';
+  const tackleLabel = theirHolder
+    ? versus(matchup(view, { pos: opposite(theirHolder), stat: 'defense', use: 'tackle' }, { pos: theirHolder, stat: 'speed', use: 'evade' }), 'Defense', 'Speed') + imagesNote
     : '';
 
   function actionPrompt() {
@@ -316,10 +336,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       const effect = def?.kind === 'spell' ? def.ability.effect : '';
       const targetHelp = effect === 'hit' ? 'Now tap the opposing player in that spot to hit them.'
         : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
+        : effect === 'decoy_pass' ? "Now tap the teammate to pass to. The computer will think it went to another lane, so it can't be intercepted."
         : 'Now choose the target.';
       help = !selection.caster
         ? `Choose who casts ${def?.name}. Green = affinity match (stronger), red = opposed (weaker).`
-        : selection.first ? 'Now tap the second player to swap.' : targetHelp;
+        : selection.first ? (effect === 'decoy_pass' ? 'Now tap the spot where the computer will think the ball went.' : 'Now tap the second player to swap.') : targetHelp;
     }
     if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
     if (selection.kind === 'regroup') {

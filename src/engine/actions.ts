@@ -12,6 +12,8 @@ export type SpellTarget =
   | { kind: 'swap'; a: FieldPos; b: FieldPos }
   /** long_pass: the receiver. */
   | { kind: 'pass'; to: FieldPos }
+  /** decoy_pass: the receiver, and the lane (in the receiver's row) the opponent thinks the ball went to. */
+  | { kind: 'decoyPass'; to: FieldPos; decoyLane: number }
   /** hit: the opposing player in the caster's spot (goalies can't be hit). */
   | { kind: 'hit' }
   /** mend: one of your injured players on the field... */

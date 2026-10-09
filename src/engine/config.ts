@@ -54,6 +54,11 @@ export interface GameConfig {
   diceBudget: number;
   /** The die used when someone calls for dice. */
   budgetDie: number;
+  /**
+   * mirror_images: how many false images a glamoured player has. Each tackle or hit against them
+   * finds the real one with a chance of 1 in (images + 1).
+   */
+  mirrorImages: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -83,6 +88,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   shotDie: 6,
   diceBudget: 5,
   budgetDie: 6,
+  mirrorImages: 2,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

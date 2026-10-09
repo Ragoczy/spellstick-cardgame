@@ -1,5 +1,5 @@
 {
-  "version": "0.8-prototype",
+  "version": "0.9-prototype",
   "elements": [
     "fire",
     "water",
@@ -591,14 +591,14 @@
       "id": "a-s-05",
       "team": "A",
       "kind": "spell",
-      "name": "Air Scry",
+      "name": "Glamour Self",
       "spellType": "action",
       "element": "air",
       "ability": {
-        "effect": "scry",
+        "effect": "mirror_images",
         "params": {}
       },
-      "text": "Look at one of your opponent's face-down cards.",
+      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish.",
       "placeholder": true
     },
     {
@@ -619,14 +619,14 @@
       "id": "a-s-07",
       "team": "A",
       "kind": "spell",
-      "name": "Air Long Pass",
+      "name": "Glamour Ball",
       "spellType": "action",
       "element": "air",
       "ability": {
-        "effect": "long_pass",
+        "effect": "decoy_pass",
         "params": {}
       },
-      "text": "Pass, skipping one row forward.",
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down.",
       "placeholder": true
     },
     {
@@ -1307,14 +1307,14 @@
       "id": "b-s-05",
       "team": "B",
       "kind": "spell",
-      "name": "Air Scry",
+      "name": "Glamour Self",
       "spellType": "action",
       "element": "air",
       "ability": {
-        "effect": "scry",
+        "effect": "mirror_images",
         "params": {}
       },
-      "text": "Look at one of your opponent's face-down cards.",
+      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish.",
       "placeholder": true
     },
     {
@@ -1335,14 +1335,14 @@
       "id": "b-s-07",
       "team": "B",
       "kind": "spell",
-      "name": "Air Long Pass",
+      "name": "Glamour Ball",
       "spellType": "action",
       "element": "air",
       "ability": {
-        "effect": "long_pass",
+        "effect": "decoy_pass",
         "params": {}
       },
-      "text": "Pass, skipping one row forward.",
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down.",
       "placeholder": true
     },
     {

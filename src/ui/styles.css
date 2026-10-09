@@ -82,6 +82,8 @@ button { font: inherit; color: inherit; }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0, 0, 0, 0.2); }
 .card-text { margin-top: 3px; color: var(--ink); font-size: 0.7rem; white-space: normal; }
 .card .tag { position: absolute; right: 3px; bottom: 2px; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; }
+.card .tag.images { color: #6a4fb3; font-weight: 700; }
+.card.has-images { box-shadow: 3px 3px 0 -1px rgba(106, 79, 179, 0.45), 6px 6px 0 -2px rgba(106, 79, 179, 0.25); }
 .card.face-down { background: repeating-linear-gradient(135deg, #fff, #fff 6px, #f1eee6 6px, #f1eee6 12px); opacity: 0.92; }
 .card.back { display: flex; align-items: center; justify-content: center; border: none; color: rgba(255, 255, 255, 0.85); }
 .back-mark { font-size: 1.2rem; font-weight: 700; }

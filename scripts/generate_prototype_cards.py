@@ -63,8 +63,10 @@ ABILITIES = [
 SPELLS = [
     ("boost",     "reaction", {"amount": 2},  [None], "+2 to your side in this contest."),
     ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat counts as 0 in this contest."),
-    ("scry",      "action",   {},             ["water", "air"], "Look at one of your opponent's face-down cards."),
-    ("long_pass", "action",   {},             ["air", "air"], "Pass, skipping one row forward."),
+    ("scry",      "action",   {},             ["water"], "Look at one of your opponent's face-down cards."),
+    ("mirror_images", "action", {},           ["air"], "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."),
+    ("long_pass", "action",   {},             ["air"], "Pass, skipping one row forward."),
+    ("decoy_pass", "action",  {},             ["air"], "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."),
     ("long_shot", "action",   {"penalty": 2}, ["fire"], "A midfielder holding the ball may shoot, with -2 Shot."),
     ("steal",     "action",   {"amount": 2},  ["fire", "earth"], "Tackle with +2."),
     ("recall",    "action",   {"count": 2},   [None], "Draw 2 cards."),
@@ -80,7 +82,7 @@ HITS = {
 }
 
 # Placeholder names for spells that don't follow the "<Element> <Effect>" pattern.
-SPELL_NAMES = {"dirty_play": "Late Hit", "mend": "Mend"}
+SPELL_NAMES = {"dirty_play": "Late Hit", "mend": "Mend", "mirror_images": "Glamour Self", "decoy_pass": "Glamour Ball"}
 
 
 def resonant(element):
@@ -167,7 +169,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.8-prototype",
+        "version": "0.9-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

@@ -15,6 +15,15 @@ None of these block M1 or M2.
   placeholder for air.
 - Do the positions have canon names (attack, middie, defense, goalie, or something else)?
 
+## Rules details to confirm
+
+- Glamour spells (rules v0.9) use Claude's simplest reading. Confirm or change:
+  - Glamour Ball: no contest at all. The fooled player is revealed but can't react, and the
+    receiver stays face down.
+  - Glamour Self: the images last until a tackle or hit finds the real player (not just one turn).
+    They only affect tackles and hits, not interceptions or anything else.
+  - Both are air spells (placeholder element).
+
 ## Content (needed by M5)
 
 - Which in-world teams are the two decks? An academy team and a rival, two pro clubs, or

@@ -71,6 +71,18 @@ export type GameEvent =
   | { type: 'substituted'; side: Side; pos: Pos; removed: CardView }
   | { type: 'swapped'; side: Side; a: FieldPos; b: FieldPos }
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
+  /**
+   * decoy_pass: `side` passed to `to` without a contest; the opponent went for `decoy` (their own
+   * spot in another lane of that row) instead. The receiver stays face down.
+   */
+  | { type: 'decoyPass'; side: Side; to: FieldPos; decoy: FieldPos }
+  /** mirror_images: `side`'s player at `pos` now has false images around them. */
+  | { type: 'imagesCast'; side: Side; pos: FieldPos }
+  /**
+   * A tackle or hit went for `side`'s glamoured player at `pos`. fooled: it went for an image and
+   * missed. Otherwise it found the real player, the images are gone, and the action goes ahead.
+   */
+  | { type: 'imagesTested'; side: Side; pos: FieldPos; action: 'tackle' | 'hit'; fooled: boolean }
   /** fromPile: a full hand at the draw step, so the top card of that pile went to the discard pile. */
   | { type: 'discarded'; side: Side; cards: CardView[]; fromPile?: Pile }
   | { type: 'shootoutStarted'; first: Side }

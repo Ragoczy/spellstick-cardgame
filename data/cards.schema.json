@@ -83,7 +83,8 @@
       "properties": {
         "effect": {
           "enum": ["bonus", "draw_on_win", "boost", "shield", "dirty_play", "scry", "swap",
-                   "long_pass", "long_shot", "steal", "recall", "hit", "mend"]
+                   "long_pass", "long_shot", "steal", "recall", "hit", "mend",
+                   "decoy_pass", "mirror_images"]
         },
         "params": { "type": "object" }
       },
@@ -117,7 +118,7 @@
           "then": { "properties": { "params": {
             "type": "object", "required": ["penalty"], "additionalProperties": false,
             "properties": { "penalty": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "scry", "swap", "long_pass", "mend"] } } },
+        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "scry", "swap", "long_pass", "mend", "decoy_pass", "mirror_images"] } } },
           "then": { "properties": { "params": {
             "type": "object", "maxProperties": 0 } } } }
       ]

@@ -66,6 +66,9 @@ const STALL_DISCOUNT = 0.5;
 /** Cost of revealing a face-down player just to cast a spell. */
 const REVEAL_COST = 0.015;
 
+/** Worth of substituting out a player who has no spells left, so they recharge in hand. */
+const RECHARGE_WORTH = 0.02;
+
 // ---- Helpers for reading the view ----
 
 function slotOf(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): SlotView {
@@ -416,12 +419,15 @@ class Thinker {
     // Taking off an injured player is worth more.
     const outgoingInjured = visibleInjury(this.view, 'mine', pos) ? 0.03 : 0;
     const hidesRevealed = isFaceDown(this.view, 'mine', pos) ? 0 : 0.01;
+    // A player who has cast all the spells they can recharges by resting in hand.
+    const outgoingSlot = slotOf(this.view, 'mine', pos);
+    const recharges = outgoingSlot.state === 'revealed' && outgoingSlot.castsLeft === 0 ? RECHARGE_WORTH : 0;
     if (pos.area === 'goal') {
       if (incoming.kind !== 'goalie' || outgoing.kind !== 'goalie') return -1;
-      return 0.04 * (incoming.save - outgoing.save) + hidesRevealed + outgoingInjured - incomingInjured - 0.02;
+      return 0.04 * (incoming.save - outgoing.save) + hidesRevealed + recharges + outgoingInjured - incomingInjured - 0.02;
     }
     if (incoming.kind !== 'field') return -1;
-    return 0.03 * (fit(incoming, pos.area) - fit(outgoing, pos.area)) + hidesRevealed + outgoingInjured - incomingInjured - 0.02;
+    return 0.03 * (fit(incoming, pos.area) - fit(outgoing, pos.area)) + hidesRevealed + recharges + outgoingInjured - incomingInjured - 0.02;
   }
 
   /** How much injuring the opposing player at `pos` is worth. */

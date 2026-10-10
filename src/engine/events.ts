@@ -68,7 +68,8 @@ export type GameEvent =
   | { type: 'contestResolved'; kind: ContestKind; attacker: Breakdown; defender: Breakdown; winner: Side; winnerRole: ContestRole }
   | { type: 'ballMoved'; side: Side; pos: Pos }
   | { type: 'goal'; side: Side; score: Record<Side, number> }
-  | { type: 'substituted'; side: Side; pos: Pos; removed: CardView }
+  /** The replaced player goes to hand. `removed` is null if they were face down (only their owner knows who). */
+  | { type: 'substituted'; side: Side; pos: Pos; removed: CardView | null; secret?: { removed: CardView } }
   | { type: 'swapped'; side: Side; a: FieldPos; b: FieldPos }
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }
   /**

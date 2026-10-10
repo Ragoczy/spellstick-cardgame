@@ -20,6 +20,11 @@ export interface Slot {
    * ends when the player leaves the field.
    */
   images?: boolean;
+  /**
+   * Spells this player has cast since coming on the field (public: casting reveals the caster).
+   * Starts again when they leave the field, so it follows the card if swapped.
+   */
+  casts?: number;
 }
 
 /** The two face-down draw piles each team has. */

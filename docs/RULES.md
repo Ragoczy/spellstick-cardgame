@@ -1,4 +1,4 @@
-# Spellstick — rules v0.9
+# Spellstick — rules v0.10
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -32,6 +32,7 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 - A ball token and a score tracker.
 - A shared **injury deck** of 12 cards ⚙ (see "Injuries").
 - Two six-sided dice, and 5 roll tokens ⚙ per player (see "Dice").
+- Spell markers (any small tokens) to show which players have cast (see "Casting limit").
 
 ## The field
 
@@ -111,6 +112,21 @@ Player abilities are never changed by affinity.
 Because your opponent can't see your face-down players, they don't know how strong your spell
 will be until the caster is revealed.
 
+## Casting limit
+
+Casting tires a player out. While on the field, a player (goalie included) can cast **one spell
+per Resonant** ⚙: a player with 2 Resonants can cast 2 spells, then no more.
+
+- Both action spells and reaction spells count, including spells that fail from an opposed
+  affinity.
+- Put a spell marker on the player each time they cast. Everyone can see the markers, since
+  casting reveals the caster.
+- A player with no spells left can't cast. In a contest, that means their side can't play a
+  reaction spell.
+- To **recharge**, substitute the player out. They go back to your hand, lose their markers, and
+  can come back on later with all their spells. Since a Substitute is your action for the turn,
+  a tired player is off the field for at least a turn.
+
 ## Setup
 
 1. Each player chooses one of their 2 goalies, places it **face down** in goal, and shuffles the
@@ -180,13 +196,15 @@ If the holder has mirror images, roll for them first (see `mirror_images`).
 
 ## Actions any time
 
-**Cast.** Play an action spell with a caster you choose, and resolve it. You can only cast a
+**Cast.** Play an action spell with a caster you choose (one with a spell left; see "Casting
+limit"), and resolve it. You can only cast a
 spell when it could do something (see each effect).
 
 **Substitute.** Replace one of your field players or your goalie with a matching card from your
-hand (field player for field player, goalie for goalie), **face down**. The replaced card goes to
-your discard pile, face up. If the replaced player held the ball, the substitute holds it. You can
-also fill an empty spot this way.
+hand (field player for field player, goalie for goalie), **face down**. The replaced player goes
+back to your hand, injury and all, and recharges their spells (see "Casting limit"). If they were
+face down, your opponent doesn't see who it was. If the replaced player held the ball, the
+substitute holds it. You can also fill an empty spot this way.
 
 **Regroup.** Discard up to 1 card ⚙, then draw a card from the same pile (a player for a
 player, a spell for a spell; from the other pile if that one is empty). Discarding none is
@@ -211,7 +229,8 @@ tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser 
 attacker and wins ties.
 
 An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
-reaction spells or roll.
+reaction spells or roll. A player with no spells left (see "Casting limit") can't play reaction
+spells either.
 
 ## Dice
 
@@ -349,6 +368,10 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.10 — Casting limit: a player on the field can cast one spell per Resonant (action and reaction spells both count), then has to be substituted out to recharge. Paul's idea; counting reactions and failed spells is Claude's simplest reading.
+- v0.10 — Substitute sends the replaced player back to your hand (it used to discard them), so tired players can rest and return. A face-down player stays secret. Injuries stay attached, as with forced substitutions.
+- v0.10 — Prototype decks: most players have 2 Resonants. Of each team's 24 players (goalies included), 18 have 2, 5 have 1, and 1 has 3 (Paul: about 75%, 20%, 5%). Stats are unchanged.
 
 - v0.9 — New spells: Glamour Ball (`decoy_pass`: a pass the opponent thinks went to the other lane, so it can't be intercepted and the receiver stays hidden) and Glamour Self (`mirror_images`: two images, so 2 in 3 tackles and hits miss until one finds the real player). Paul's spells; the details (no contest at all, images last until found, tackles and hits only) are Claude's simplest reading.
 - v0.9 — Prototype decks: each team swaps one Air Scry for Glamour Self and one Air Long Pass for Glamour Ball, so decks stay at 40 cards.

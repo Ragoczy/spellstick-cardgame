@@ -4,7 +4,7 @@
 
 import type { Area } from './cards';
 import type { GameConfig, InjuryDef } from './config';
-import { cardView, injuryOf } from './board';
+import { cardView, castsLeftIn, injuryOf } from './board';
 import type { CardView, GameEvent } from './events';
 import { AREAS, otherSide, type Pos, type Side } from './field';
 import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
@@ -13,10 +13,13 @@ export type SlotView =
   | { state: 'empty' }
   /** An opponent's face-down card you haven't seen. */
   | { state: 'unknown'; injury?: InjuryDef }
-  /** Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried. */
-  | { state: 'faceDown'; card: CardView; scried: boolean }
-  /** images: the player has mirror images around them (public). */
-  | { state: 'revealed'; card: CardView; images?: boolean };
+  /**
+   * Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried.
+   * castsLeft: spells this player can still cast before they need a rest (left out when there is no limit).
+   */
+  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number }
+  /** images: the player has mirror images around them (public). castsLeft is public too. */
+  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number };
 
 export interface PlayerView {
   me: Side;
@@ -67,10 +70,17 @@ export interface PlayerView {
   };
 }
 
+/** Spells a player can still cast (RULES.md "Casting limit"), or {} when there is no limit. */
+function castsLeftOf(s: GameState, slot: Slot): { castsLeft?: number } {
+  return s.config.castsPerResonant > 0 ? { castsLeft: castsLeftIn(s, slot) } : {};
+}
+
 function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
   if (!slot) return { state: 'empty' };
-  if (slot.revealed) return slot.images ? { state: 'revealed', card: cardView(s, slot.uid), images: true } : { state: 'revealed', card: cardView(s, slot.uid) };
-  if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried };
+  if (slot.revealed) {
+    return { state: 'revealed', card: cardView(s, slot.uid), ...(slot.images ? { images: true } : {}), ...castsLeftOf(s, slot) };
+  }
+  if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried, ...castsLeftOf(s, slot) };
   // Injury cards are face up, so an injury shows even on a player you can't see.
   const injury = injuryOf(s, slot.uid);
   return injury ? { state: 'unknown', injury } : { state: 'unknown' };

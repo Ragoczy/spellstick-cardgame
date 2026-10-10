@@ -50,7 +50,9 @@ describe.each(LANE_COUNTS)('hit (%i lanes)', (lanes) => {
   });
 
   it('is a normal contest: both sides may play reaction spells, and a shield stops it', () => {
-    const s = scenario({ lanes, A: { hand: [hit(), boost('A boost')] }, B: { hand: [shield('B shield')], lineup: { defense: { [LAST]: player('B def', { defense: 1 }) } } } });
+    // The hitter needs two Resonants to cast both the hit and a reaction (RULES.md "Casting limit").
+    const hitter = player('A fwd', {}, { affinities: ['earth', 'fire'] });
+    const s = scenario({ lanes, A: { hand: [hit(), boost('A boost')], lineup: { forward: { [LAST]: hitter } } }, B: { hand: [shield('B shield')], lineup: { defense: { [LAST]: player('B def', { defense: 1 }) } } } });
     let { state } = castHit(s, fwd(LAST));
     ({ state } = play(state, { type: 'react', side: 'A', card: uid(s, 'A', 'A boost') }));
     const { events } = play(state, { type: 'react', side: 'B', card: uid(s, 'B', 'B shield') });

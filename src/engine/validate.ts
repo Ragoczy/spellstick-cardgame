@@ -2,7 +2,7 @@
 // if it's fine. legalActions() uses this too, so there is one source of truth for legality.
 
 import type { Action } from './actions';
-import { defOf, isActionSpell, isReactionSpell, slotAt } from './board';
+import { castsLeft, defOf, isActionSpell, isReactionSpell, slotAt } from './board';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 
@@ -53,6 +53,8 @@ function faceoffLaneOk(s: GameState, lane: number): boolean {
   return !Array.from({ length: s.config.lanes }, (_, l) => l).some(hasMid);
 }
 
+const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
+
 /** Whether a card (on the field or in hand) is one of your injured players. */
 function isInjured(s: GameState, uid: string | undefined): boolean {
   return !!uid && !!s.injuries[uid];
@@ -97,6 +99,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (p.kind !== 'reaction') return 'There is no contest to react to.';
       if (action.card === null) return null;
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
+      if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
       return null;
     }
 
@@ -169,6 +172,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       const spell = defOf(s, action.card);
       if (!isActionSpell(spell)) return isReactionSpell(spell) ? 'Reaction spells can only be played during a contest.' : 'That card is not a spell.';
       if (!validPos(s, action.caster) || !slotAt(s, side, action.caster)) return 'Choose one of your players to cast the spell.';
+      if (castsLeft(s, side, action.caster) <= 0) return NEEDS_REST;
       const target = action.target;
 
       switch (spell.ability.effect) {

@@ -53,6 +53,29 @@ export function playerAt(s: GameState, side: Side, pos: Pos): PlayerCardDef {
   return defOf(s, slot.uid) as PlayerCardDef;
 }
 
+/**
+ * How many more spells the player at a spot can cast before they have to be substituted out to
+ * recharge (RULES.md "Casting limit"). 0 for an empty spot; Infinity when there is no limit.
+ */
+export function castsLeft(s: GameState, side: Side, pos: Pos): number {
+  const slot = slotAt(s, side, pos);
+  return slot ? castsLeftIn(s, slot) : 0;
+}
+
+/** castsLeft() for a player already looked up. */
+export function castsLeftIn(s: GameState, slot: Slot): number {
+  const perResonant = s.config.castsPerResonant;
+  if (perResonant <= 0) return Infinity;
+  const player = defOf(s, slot.uid) as PlayerCardDef;
+  return Math.max(0, player.resonants.length * perResonant - (slot.casts ?? 0));
+}
+
+/** Counts a spell cast by the player at a spot. */
+export function countCast(s: GameState, side: Side, pos: Pos): void {
+  const slot = slotAt(s, side, pos);
+  if (slot) slot.casts = (slot.casts ?? 0) + 1;
+}
+
 /** Puts a card on its owner's discard pile. An injured player's injury goes back to the injury deck. */
 export function toDiscard(s: GameState, side: Side, uid: Uid): void {
   releaseInjury(s, uid);

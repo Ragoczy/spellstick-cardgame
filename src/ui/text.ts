@@ -121,8 +121,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return null;
     case 'goal':
       return { text: `GOAL! ${who(e.side)} ${verb(e.side, 'score', 'scores')}. You ${e.score[me]}, the computer ${e.score[them]}.`, tone: 'goal' };
-    case 'substituted':
-      return info(`${who(e.side)} ${verb(e.side, 'substitute', 'substitutes')} ${at(e.side, e.pos)}. ${e.removed.def.name} goes to the discard pile.`);
+    case 'substituted': {
+      const name = e.removed?.def.name ?? e.secret?.removed.def.name ?? 'The face-down player';
+      return info(`${who(e.side)} ${verb(e.side, 'substitute', 'substitutes')} ${at(e.side, e.pos)}. ${name} goes to ${isMe(e.side) ? 'your' : 'their'} hand to rest.`);
+    }
     case 'swapped':
       return info(`${who(e.side)} ${verb(e.side, 'swap', 'swaps')} two face-down players: ${at(e.side, e.a)} and ${posName(e.b, lanes)}.`);
     case 'scried':

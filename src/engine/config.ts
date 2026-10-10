@@ -59,6 +59,11 @@ export interface GameConfig {
    * finds the real one with a chance of 1 in (images + 1).
    */
   mirrorImages: number;
+  /**
+   * Casting limit: a player on the field can cast this many spells per Resonant, then has to be
+   * substituted out to recharge. 0 = no limit.
+   */
+  castsPerResonant: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -89,6 +94,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   diceBudget: 5,
   budgetDie: 6,
   mirrorImages: 2,
+  castsPerResonant: 1,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

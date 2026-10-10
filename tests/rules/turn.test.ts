@@ -131,7 +131,7 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(legalActions(s, 'A')).toContainEqual(pass);
   });
 
-  it('substitute: the new player comes in face down, the old one is discarded for all to see, and keeps the ball', () => {
+  it('substitute: the new player comes in face down and keeps the ball; the old one goes to hand', () => {
     const s = scenario({
       lanes,
       ball: { side: 'A', pos: mid(LAST) },
@@ -139,8 +139,9 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     });
     const { state, events } = play(s, { type: 'substitute', side: 'A', pos: mid(LAST), card: uid(s, 'A', 'new') });
     expect(state.teams.A.lineup.midfield[LAST]).toEqual({ uid: uid(s, 'A', 'new'), revealed: false, scried: false });
-    expect(state.teams.A.discard).toEqual([uid(s, 'A', 'old')]);
-    expect(eventsOfType(events, 'substituted')[0]?.removed.def.name).toBe('old');
+    expect(state.teams.A.hand).toEqual([uid(s, 'A', 'old')]);
+    expect(state.teams.A.discard).toEqual([]);
+    expect(eventsOfType(events, 'substituted')[0]?.removed?.def.name).toBe('old');
     expect(state.ball).toEqual({ side: 'A', pos: mid(LAST) });
   });
 

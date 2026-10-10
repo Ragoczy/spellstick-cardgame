@@ -7,10 +7,11 @@
 //    (the receiver) and faceoffs (the chooser).
 // 5. Then injuries: a hit that lands, and a dirty play by the winning side.
 //
-// An empty spot (a player carried off) counts as 0 and can't play reaction spells.
+// An empty spot (a player carried off) counts as 0 and can't play reaction spells. Nor can a
+// player who has used up their casting limit.
 
 import { affinityFor, spellFizzles } from './affinity';
-import { cardView, defOf, drawCards, hasReactionSpell, injuryOf, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
+import { cardView, castsLeft, countCast, defOf, drawCards, hasReactionSpell, injuryOf, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
 import type { PlayerCardDef, SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
@@ -95,7 +96,8 @@ export function callDice(s: GameState, roll: boolean, ev: GameEvent[]): void {
 /** Waits for a side's reaction spell, or moves on if they have none (or no player to cast it). */
 function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
   const me = contest[role];
-  if (hasReactionSpell(s, me.side) && slotAt(s, me.side, me.pos)) {
+  // The player in the contest casts it, so they need a spell left (RULES.md "Casting limit").
+  if (hasReactionSpell(s, me.side) && castsLeft(s, me.side, me.pos) > 0) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }
@@ -119,6 +121,7 @@ export function playReaction(s: GameState, card: Uid | null, ev: GameEvent[]): v
     const fizzled = spellFizzles(spell, affinity);
     me.spell = { uid: card, affinity, fizzled };
     moveHandToDiscard(s, me.side, card);
+    countCast(s, me.side, me.pos);
     ev.push({ type: 'spellCast', side: me.side, card: cardView(s, card), caster: me.pos, affinity, fizzled });
   }
   afterReaction(s, contest, role, ev);

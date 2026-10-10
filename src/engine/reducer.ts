@@ -4,7 +4,7 @@
 import type { Action } from './actions';
 import { adjustAmount, adjustPenalty, affinityFor, spellFizzles } from './affinity';
 import {
-  cardView, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand, toDiscard,
+  cardView, countCast, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand,
 } from './board';
 import type { ActionSpellDef } from './cards';
 import { callDice, playReaction, startContest } from './contest';
@@ -184,6 +184,7 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
   const spell = defOf(s, card) as ActionSpellDef;
   moveHandToDiscard(s, side, card);
   reveal(s, side, caster, ev);
+  countCast(s, side, caster);
   const affinity = affinityFor(playerAt(s, side, caster), spell.element, s.opposedPairs);
   const fizzled = spellFizzles(spell, affinity);
   ev.push({ type: 'spellCast', side, card: cardView(s, card), caster, affinity, fizzled });
@@ -280,9 +281,13 @@ function substitute(s: GameState, action: Extract<Action, { type: 'substitute' }
   // (The spot may be empty after a player was carried off.)
   setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false });
   if (old) {
+    // The old player goes to hand (injury and all), where they recharge their spells. Only a
+    // player who was face up is public.
+    s.teams[side].hand.push(old.uid);
     const removed = cardView(s, old.uid);
-    toDiscard(s, side, old.uid);
-    ev.push({ type: 'substituted', side, pos, removed });
+    ev.push(old.revealed
+      ? { type: 'substituted', side, pos, removed }
+      : { type: 'substituted', side, pos, removed: null, secret: { removed } });
   } else {
     ev.push({ type: 'forcedSub', side, pos, toHand: null });
   }

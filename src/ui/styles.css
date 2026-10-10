@@ -44,6 +44,47 @@ button { font: inherit; color: inherit; }
 
 .rules p, .rules li { line-height: 1.5; }
 
+/* ---- Game layout: turn steps to the left of the game ---- */
+.app.app-game { max-width: 1000px; }
+.game-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }
+
+/* ---- Turn steps ---- */
+.turn-steps {
+  position: sticky; top: 12px; margin-top: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+.turn-heading { font-weight: 700; font-size: 0.95rem; }
+.turn-heading.mine { color: var(--accent); }
+.turn-note { margin-top: 2px; font-size: 0.8rem; font-weight: 600; color: var(--bad); }
+.steps { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; gap: 8px; align-items: flex-start; }
+.step-mark {
+  flex: 0 0 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; border: 1.5px solid var(--line); color: var(--muted); background: var(--panel);
+}
+.step-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.step-title { font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; }
+.step-text { font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
+.step-detail { font-size: 0.78rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.now { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; color: white; background: var(--accent); border-radius: 999px; padding: 1px 6px; }
+.step.current .step-mark { background: var(--accent); border-color: var(--accent); color: white; }
+.step.done .step-mark { background: var(--good); border-color: var(--good); color: white; }
+.step.done .step-title, .step.done .step-text { color: var(--muted); }
+.step.done .step-text { display: none; }
+.step.upcoming .step-title { color: var(--muted); }
+.steps.shootout p { margin: 0; font-size: 0.85rem; }
+.turn-next { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+
+/* Narrow screens: the steps become a strip above the game. */
+@media (max-width: 760px) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .turn-steps { position: static; margin-top: 4px; padding: 8px 10px; }
+  .steps { flex-direction: row; gap: 10px; margin-top: 6px; }
+  .step { flex: 1; min-width: 0; }
+  .step-text, .turn-next { display: none; }
+  .step-detail { font-size: 0.7rem; }
+}
+
 /* ---- Score bar ---- */
 .scorebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 6px 0; }
 .scorebar .score { font-size: 1.15rem; }
@@ -78,8 +119,11 @@ button { font: inherit; color: inherit; }
 .stats b { color: var(--ink); }
 .spell-line { display: flex; gap: 6px; align-items: center; }
 .chip { color: white; border-radius: 999px; padding: 0 6px; font-size: 0.68rem; }
-.resonants { display: flex; gap: 3px; margin-top: 2px; }
+.resonants { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+.resonants .rest { margin-left: 2px; font-size: 0.6rem; line-height: 1; color: var(--bad); font-weight: 700; text-transform: uppercase; }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0, 0, 0, 0.2); }
+/* A Resonant whose spell has been cast: hollow until the player is substituted out to recharge. */
+.dot.used { background: transparent !important; border: 1.5px solid rgba(0, 0, 0, 0.45); }
 .card-text { margin-top: 3px; color: var(--ink); font-size: 0.7rem; white-space: normal; }
 .card .tag { position: absolute; right: 3px; bottom: 2px; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; }
 .card .tag.images { color: #6a4fb3; font-weight: 700; }

@@ -44,8 +44,9 @@ TEAMS = {
     },
 }
 
-# Share of field players who get a second Resonant.
-SECOND_RESONANT_CHANCE = 0.3
+# How many of each team's 24 players (22 field players and 2 goalies) get 1, 2, or 3 Resonants.
+# Paul (v0.10): most players have two; about 20% have one and 5% have three.
+RESONANT_COUNTS = {1: 5, 2: 18, 3: 1}
 
 # Abilities given to some players. Players with an ability lose 1 point from their highest stat.
 ABILITIES = [
@@ -89,12 +90,24 @@ def resonant(element):
     return {"name": RESONANT_NAMES[element], "affinity": element}
 
 
+def resonants_for(first, count, extra_rng):
+    """The player's first Resonant, plus extra ones with other elements."""
+    elements = [first]
+    while len(elements) < count:
+        elements.append(extra_rng.choice([e for e in ELEMENTS if e not in elements]))
+    return [resonant(e) for e in elements]
+
+
 def build():
     rng = random.Random(42)
-    # Separate generator for second Resonants, so adding them doesn't reshuffle everything else.
+    # Separate generator for extra Resonants, so changing them doesn't reshuffle everything else.
     extra_rng = random.Random(7)
     cards = []
     for team_id, t in TEAMS.items():
+        # Resonant counts for the 22 field players, then the 2 goalies, in a shuffled order.
+        counts = [k for k, v in RESONANT_COUNTS.items() for _ in range(v)]
+        assert len(counts) == 24, len(counts)
+        extra_rng.shuffle(counts)
         n = 0
         ability_slots = set(rng.sample(range(22), 6))
         idx = 0
@@ -103,10 +116,7 @@ def build():
                 n += 1
                 sp, sh, de, fo = ARCHETYPES[arch]
                 first = rng.choice(t["elements"])
-                resonants = [resonant(first)]
-                if extra_rng.random() < SECOND_RESONANT_CHANCE:
-                    second = extra_rng.choice([e for e in ELEMENTS if e != first])
-                    resonants.append(resonant(second))
+                resonants = resonants_for(first, counts[idx], extra_rng)
                 card = {
                     "id": f"{team_id.lower()}-p-{n:02d}",
                     "team": team_id,
@@ -130,7 +140,7 @@ def build():
                 "id": f"{team_id.lower()}-g-{g:02d}",
                 "team": team_id, "kind": "goalie",
                 "name": f"{team_id} Goalie {g:02d}",
-                "resonants": [resonant(rng.choice(t["elements"]))],
+                "resonants": resonants_for(rng.choice(t["elements"]), counts[21 + g], extra_rng),
                 "save": save,
                 "placeholder": True,
             })
@@ -169,7 +179,7 @@ def build():
         "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks.",
     })
     return {
-        "version": "0.9-prototype",
+        "version": "0.10-prototype",
         "elements": ELEMENTS,
         "opposedPairs": OPPOSED,
         "teams": [{"id": k, "name": v["name"], "color": v["color"], "placeholder": True}

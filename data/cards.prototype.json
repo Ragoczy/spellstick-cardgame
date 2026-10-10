@@ -1,5 +1,5 @@
 {
-  "version": "0.9-prototype",
+  "version": "0.10-prototype",
   "elements": [
     "fire",
     "water",
@@ -40,6 +40,10 @@
         {
           "name": "Anger",
           "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 4,
@@ -140,8 +144,8 @@
           "affinity": "earth"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -161,8 +165,8 @@
           "affinity": "air"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -180,6 +184,14 @@
         {
           "name": "Anger",
           "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -227,6 +239,10 @@
         {
           "name": "Anger",
           "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -255,8 +271,8 @@
           "affinity": "earth"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 4,
@@ -276,8 +292,8 @@
           "affinity": "earth"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 4,
@@ -295,6 +311,10 @@
         {
           "name": "Anger",
           "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 4,
@@ -312,6 +332,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -329,10 +353,6 @@
         {
           "name": "Anger",
           "affinity": "fire"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -350,6 +370,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -367,6 +391,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -384,10 +412,6 @@
         {
           "name": "Love",
           "affinity": "water"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -407,8 +431,8 @@
           "affinity": "earth"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -467,6 +491,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -493,6 +521,10 @@
         {
           "name": "Anger",
           "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -524,6 +556,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "save": 4,
@@ -780,8 +816,8 @@
           "affinity": "water"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 5,
@@ -799,6 +835,14 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 5,
@@ -816,6 +860,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 5,
@@ -852,8 +900,8 @@
           "affinity": "earth"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -897,6 +945,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -923,6 +975,10 @@
         {
           "name": "Joy",
           "affinity": "air"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -940,6 +996,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -966,6 +1026,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 4,
@@ -1009,6 +1073,10 @@
         {
           "name": "Joy",
           "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 4,
@@ -1026,10 +1094,6 @@
         {
           "name": "Anger",
           "affinity": "fire"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -1047,6 +1111,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -1075,8 +1143,8 @@
           "affinity": "air"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -1094,6 +1162,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -1111,6 +1183,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -1128,6 +1204,10 @@
         {
           "name": "Joy",
           "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "speed": 3,
@@ -1145,6 +1225,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -1162,6 +1246,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -1179,10 +1267,6 @@
         {
           "name": "Love",
           "affinity": "water"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -1209,6 +1293,10 @@
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -1226,6 +1314,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "save": 4,
@@ -1240,6 +1332,10 @@
         {
           "name": "Pain",
           "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
         }
       ],
       "save": 4,

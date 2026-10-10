@@ -163,11 +163,14 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     expect(state.injuryDeck).toHaveLength(before + 1);
     expect(state.injuries[uid(s, 'A', 'Hurt')]).toBeUndefined();
 
+  });
+
+  it('stay with a player substituted out to hand', () => {
     const onField = scenario({ lanes, A: { hand: [player('Sub')], lineup: { forward: { 0: player('Hurt') } } } });
     injure(onField, uid(onField, 'A', 'Hurt'));
     const replaced = play(onField, { type: 'substitute', side: 'A', pos: fwd(0), card: uid(onField, 'A', 'Sub') }).state;
-    expect(replaced.injuries[uid(onField, 'A', 'Hurt')]).toBeUndefined();
-    expect(replaced.injuryDeck).toHaveLength(12);
+    expect(replaced.teams.A.hand).toContain(uid(onField, 'A', 'Hurt'));
+    expect(replaced.injuries[uid(onField, 'A', 'Hurt')]).toBeDefined();
   });
 
   it('have no effect beyond the forced substitution when the injury deck is empty', () => {

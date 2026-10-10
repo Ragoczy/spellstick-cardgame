@@ -7,13 +7,18 @@ import { capitalize, cardText, elementColor, injuryEffect } from './labels';
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
 
-function Resonants({ def }: { def: CardDef }) {
+/** Resonant dots. On the field, a dot goes hollow for each Resonant's worth of spells cast. */
+function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: number; castsLeft?: number }) {
   if (def.kind === 'spell') return null;
+  const title = castsLeft === undefined ? undefined
+    : castsLeft === 0 ? 'No spells left. Substitute this player out to recharge.'
+    : `${castsLeft} ${castsLeft === 1 ? 'spell' : 'spells'} left before this player needs a rest`;
   return (
-    <span className="resonants">
-      {def.resonants.map((r) => (
-        <span key={r.name} className="dot" style={{ background: elementColor(r.affinity) }} title={`${r.name} Resonant: ${capitalize(r.affinity)} Affinity`} />
+    <span className="resonants" title={title}>
+      {def.resonants.map((r, i) => (
+        <span key={r.name} className={`dot ${i < usedDots ? 'used' : ''}`} style={{ background: elementColor(r.affinity) }} title={title ? undefined : `${r.name} Resonant: ${capitalize(r.affinity)} Affinity`} />
       ))}
+      {castsLeft === 0 ? <span className="rest">needs rest</span> : null}
     </span>
   );
 }
@@ -48,6 +53,10 @@ export interface CardProps {
   scried?: boolean;
   /** The player has mirror images around them. */
   images?: boolean;
+  /** On the field: spells this player can still cast before they need a rest. */
+  castsLeft?: number;
+  /** On the field: how many Resonant dots to show as used up. */
+  usedDots?: number;
   hasBall?: boolean;
   selected?: boolean;
   /** Highlight: something you can do with this card or spot. */
@@ -57,7 +66,7 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, faceDown, scried, images, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
   const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
@@ -69,7 +78,7 @@ export function Card({ def, injury, faceDown, scried, images, hasBall, selected,
         {def.name}
       </div>
       <Stats def={def} />
-      <Resonants def={def} />
+      <Resonants def={def} usedDots={usedDots} castsLeft={castsLeft} />
       {injury ? <div className="injury" title={`${injury.name}: ${injuryEffect(injury, def)}`}>✚ {injury.name} {injuryEffect(injury, def)}</div> : null}
       {showText && cardText(def) ? <div className="card-text">{cardText(def)}</div> : null}
       {faceDown ? <span className="tag">{scried ? 'seen' : 'hidden'}</span> : null}

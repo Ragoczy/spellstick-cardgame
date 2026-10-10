@@ -8,6 +8,7 @@ import { Card, CardBack, type CardProps } from './Card';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
+import { TurnSteps } from './TurnSteps';
 import { posKey, useGame, type Announcement } from './useGame';
 import type { SessionOptions } from './session';
 
@@ -373,62 +374,65 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     : selection.kind === 'cast' && selection.caster ? posKey(me, selection.caster) : null;
 
   return (
-    <div className="screen game">
-      <header className="scorebar">
-        <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> Computer</span>
-        <span className="meta">
-          Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
-          {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
-        </span>
-        <button type="button" className="quiet" onClick={onQuit}>Quit</button>
-      </header>
+    <div className="game-layout">
+      <TurnSteps view={view} />
+      <div className="screen game">
+        <header className="scorebar">
+          <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> Computer</span>
+          <span className="meta">
+            Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
+            {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
+          </span>
+          <button type="button" className="quiet" onClick={onQuit}>Quit</button>
+        </header>
 
-      <div className="opponent-hand">
-        <span>Computer's hand</span>
-        {Array.from({ length: view.opponent.handCount }, (_, i) => <CardBack key={i} team={teams[them]} />)}
-      </div>
+        <div className="opponent-hand">
+          <span>Computer's hand</span>
+          {Array.from({ length: view.opponent.handCount }, (_, i) => <CardBack key={i} team={teams[them]} />)}
+        </div>
 
-      <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
+        <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
-      {prompt()}
+        {prompt()}
 
-      <div className="hand">
-        {view.mine.hand.map((c) => (
-          <Card
-            key={c.uid}
-            def={c.def}
-            injury={c.injury}
-            showText
-            selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-            highlight={myDecision && (handTargets.has(c.uid) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
-            onClick={() => onHandCard(c.uid, c.def, c.injury)}
-          />
-        ))}
-        {view.mine.hand.length === 0 ? <span className="empty-hand">Your hand is empty.</span> : null}
-      </div>
+        <div className="hand">
+          {view.mine.hand.map((c) => (
+            <Card
+              key={c.uid}
+              def={c.def}
+              injury={c.injury}
+              showText
+              selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
+              highlight={myDecision && (handTargets.has(c.uid) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+              onClick={() => onHandCard(c.uid, c.def, c.injury)}
+            />
+          ))}
+          {view.mine.hand.length === 0 ? <span className="empty-hand">Your hand is empty.</span> : null}
+        </div>
 
-      {inspected ? (
-        <div className="inspector" onClick={() => setInspected(null)}>
-          <Card def={inspected.def} injury={inspected.injury} showText />
-          <div className="inspector-text">
-            {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
-            {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
-            {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
+        {inspected ? (
+          <div className="inspector" onClick={() => setInspected(null)}>
+            <Card def={inspected.def} injury={inspected.injury} showText />
+            <div className="inspector-text">
+              {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
+              {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
+              {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="log">
+          <button type="button" className="quiet" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} play-by-play</button>
+          <ul>
+            {(showLog ? game.log : game.log.slice(0, 4)).map((line, i) => <li key={i} className={`tone-${line.tone}`}>{line.text}</li>)}
+          </ul>
+          <div className="piles">
+            Your discard pile: {view.mine.discard.length} · Their discard pile: {view.opponent.discard.length}
           </div>
         </div>
-      ) : null}
 
-      <div className="log">
-        <button type="button" className="quiet" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} play-by-play</button>
-        <ul>
-          {(showLog ? game.log : game.log.slice(0, 4)).map((line, i) => <li key={i} className={`tone-${line.tone}`}>{line.text}</li>)}
-        </ul>
-        <div className="piles">
-          Your discard pile: {view.mine.discard.length} · Their discard pile: {view.opponent.discard.length}
-        </div>
+        {game.announcement ? <AnnouncementView a={game.announcement} onClose={game.dismissAnnouncement} /> : null}
       </div>
-
-      {game.announcement ? <AnnouncementView a={game.announcement} onClose={game.dismissAnnouncement} /> : null}
     </div>
   );
 }

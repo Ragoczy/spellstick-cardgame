@@ -1,4 +1,4 @@
-// A short, player-facing version of docs/RULES.md (v0.8). If the rules change, update this too.
+// A short, player-facing version of docs/RULES.md (v0.10). If the rules change, update this too.
 
 export function HowToPlay({ onBack }: { onBack: () => void }) {
   return (
@@ -20,6 +20,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         <li><b>Goalies</b> have Save.</li>
         <li>Players have 1–3 <b>Resonants</b>, emotions like Anger, each with an elemental <b>Affinity</b> (the colored dots).</li>
         <li><b>Spells</b> have an element. Cast by a player whose Affinity matches, number effects get +1. Cast by a player with the opposite element (fire–water, earth–air), they get −1, and other effects fail.</li>
+        <li>Casting is tiring. A player on the field can cast <b>one spell per Resonant</b> (each cast empties a dot). Then they need a rest: substitute them out to your hand, and they come back fresh.</li>
       </ul>
 
       <h3>Your turn</h3>
@@ -35,7 +36,7 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 2 shots in 5 go in, more with a good shooter or a spell.</li>
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
-        <li><b>Substitute</b> a player from your hand, face down.</li>
+        <li><b>Substitute</b> a player from your hand, face down. The player you take off goes back to your hand to rest.</li>
         <li><b>Regroup:</b> discard 1 card and draw a new one of the same kind (or do nothing).</li>
       </ul>
 

@@ -27,7 +27,7 @@ export function App() {
 
   return (
     <TeamColors.Provider value={teamColors}>
-      <main className="app">
+      <main className={screen.kind === 'game' ? 'app app-game' : 'app'}>
         {screen.kind === 'start' ? (
           <div className="screen start">
             <h1>Spellstick</h1>

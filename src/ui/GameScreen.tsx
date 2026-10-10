@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { isFieldPos, opposite, samePos, type Action, type CardDef, type FieldPos, type InjuryDef, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
 import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
+import { Clocks } from './Clocks';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
@@ -259,8 +260,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const leaveLabel = online ? 'Back to your matches' : 'New game';
 
   const prompt = (): React.ReactNode => {
-    if (online?.match.result?.reason === 'resigned') {
-      const headline = online.match.result.outcome === 'won' ? `${opp.Name} resigned. You win!` : 'You resigned.';
+    if (online?.match.result && online.match.result.reason !== 'played') {
+      const { outcome, reason } = online.match.result;
+      const headline = reason === 'resigned'
+        ? (outcome === 'won' ? `${opp.Name} resigned. You win!` : 'You resigned.')
+        : (outcome === 'won' ? `${opp.Name} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
       return (
         <div className="prompt">
           <strong>{headline}</strong>
@@ -420,6 +424,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       <div className="screen game">
         <header className="scorebar">
           <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> {opp.Name}</span>
+          {online ? <Clocks match={online.match} receivedAt={online.receivedAt} opp={opp} /> : null}
           <span className="meta">
             Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
             {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
@@ -436,6 +441,12 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
         {online?.problem ? <div className="prompt notice">{online.problem}</div> : null}
+        {online?.match.status === 'active' && online.match.autopilot.you ? (
+          <div className="prompt notice">Your time ran out, so the computer is making your decisions for the rest of the match.</div>
+        ) : null}
+        {online?.match.status === 'active' && online.match.autopilot.them ? (
+          <div className="prompt notice">{opp.Name} ran out of time, so the computer is making their decisions for the rest of the match.</div>
+        ) : null}
         {prompt()}
         {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
 

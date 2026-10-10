@@ -64,6 +64,8 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     },
     adminDiscordIds: [ADMIN_ID],
     sessionDays: 7,
+    // Tests run the clock checks themselves.
+    clockCheckMs: 0,
     ...overrides,
   };
 }

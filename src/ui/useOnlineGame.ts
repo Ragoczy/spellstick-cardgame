@@ -25,6 +25,7 @@ export function useOnlineGame(initial: MatchDetail): GameController {
   const feed = usePlayByPlay(opp);
   const { show, setLog, clearAnnouncements } = feed;
   const [detail, setDetail] = useState(initial);
+  const [receivedAt, setReceivedAt] = useState(() => Date.now());
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const seat = useMemo(() => new OnlineSeat(detail), [detail]);
@@ -36,6 +37,7 @@ export function useOnlineGame(initial: MatchDetail): GameController {
   const [client] = useState(() => new OnlineMatchClient(matchApi, initial, {
     onUpdate: (next, events) => {
       setDetail(next);
+      setReceivedAt(Date.now());
       showRef.current(events, new OnlineSeat(next));
     },
     onSending: setSending,
@@ -102,6 +104,6 @@ export function useOnlineGame(initial: MatchDetail): GameController {
     act,
     autoPlace,
     opp,
-    online: { match: detail.match, sending, problem, resign },
+    online: { match: detail.match, sending, problem, resign, receivedAt },
   };
 }

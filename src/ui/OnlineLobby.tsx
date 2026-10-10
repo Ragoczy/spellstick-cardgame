@@ -3,7 +3,8 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { prototypeCards } from '../data/prototype';
-import type { MatchDetail, MatchSummary, PlayerListing } from '../shared/matchApi';
+import type { MatchDetail, MatchSummary, Pace, PlayerListing } from '../shared/matchApi';
+import { clockText } from './labels';
 import { GameScreen } from './GameScreen';
 import { liveConnected, listenLive } from './live';
 import { acceptChallenge, declineChallenge, findPlayers, listMatches, matchApi, sendChallenge } from './online';
@@ -13,6 +14,9 @@ import { useOnlineGame } from './useOnlineGame';
 const LIST_CHECK_MS = 15_000;
 
 const lanesText = (lanes: number) => (lanes === 3 ? 'three lanes' : 'two lanes');
+const paceText = (pace: Pace | null) => (pace === 'live' ? ', live' : '');
+/** " (35 h 12 m left)" for your own bank, when the match is timed. */
+const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
 
 export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; onBack: () => void }) {
@@ -86,7 +90,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
           <li key={m.id} className="match-row yours">
             {m.status === 'challenged' ? (
               <>
-                <span><strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}, you play {teamName(m.team)}).</span>
+                <span><strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}{paceText(m.pace)}, you play {teamName(m.team)}).</span>
                 <span className="buttons">
                   <button type="button" className="primary" onClick={() => accept(m.id)}>Accept</button>
                   <button type="button" onClick={() => run(() => declineChallenge(m.id))}>Decline</button>
@@ -94,7 +98,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
               </>
             ) : (
               <>
-                <span>Your move against <strong>{m.opponent.name}</strong>.</span>
+                <span>Your move against <strong>{m.opponent.name}</strong>{yourTimeLeft(m)}.</span>
                 <span className="buttons"><button type="button" className="primary" onClick={() => onOpen(m.id)}>Play</button></span>
               </>
             )}
@@ -108,7 +112,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
           <li key={m.id} className="match-row">
             {m.status === 'challenged' ? (
               <>
-                <span>Waiting for <strong>{m.opponent.name}</strong> to accept ({lanesText(m.lanes)}).</span>
+                <span>Waiting for <strong>{m.opponent.name}</strong> to accept ({lanesText(m.lanes)}{paceText(m.pace)}).</span>
                 <span className="buttons"><button type="button" onClick={() => run(() => declineChallenge(m.id))}>Withdraw</button></span>
               </>
             ) : (
@@ -144,7 +148,8 @@ function finishedText(m: MatchSummary): string {
   const name = m.opponent.name;
   if (m.status === 'declined') return m.youChallenged ? `Your challenge to ${name} was called off.` : `Challenge from ${name} called off.`;
   const r = m.result!;
-  const resigned = r.reason === 'resigned' ? (r.outcome === 'won' ? ` (${name} resigned)` : ' (you resigned)') : '';
+  const resigned = r.reason === 'resigned' ? (r.outcome === 'won' ? ` (${name} resigned)` : ' (you resigned)')
+    : r.reason === 'forfeit' ? (r.outcome === 'won' ? ` (${name} ran out of time)` : ' (you ran out of time)') : '';
   if (r.outcome === 'draw') return `Draw with ${name}.`;
   return r.outcome === 'won' ? `You beat ${name}${resigned}.` : `${name} beat you${resigned}.`;
 }
@@ -155,6 +160,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
   const [found, setFound] = useState<PlayerListing[]>([]);
   const [picked, setPicked] = useState<PlayerListing | null>(null);
   const [lanes, setLanes] = useState(2);
+  const [pace, setPace] = useState<Pace>('async');
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
@@ -174,7 +180,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
     setSending(true);
     onProblem(null);
     try {
-      await sendChallenge(picked.id, lanes, team);
+      await sendChallenge(picked.id, lanes, team, pace);
       setSent(`Challenge sent to ${picked.name}.`);
       setPicked(null);
       setSearch('');
@@ -220,7 +226,15 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
             <option value={3}>Three lanes (center-lane add-on)</option>
           </select>
         </label>
+        <label>
+          Pace
+          <select value={pace} onChange={(e) => setPace(e.target.value as Pace)}>
+            <option value="async">At your own pace (36 hours each)</option>
+            <option value="live">Live (25 minutes each)</option>
+          </select>
+        </label>
       </div>
+      <p className="small">Each player has a time bank that only runs while the game is waiting on them. If yours runs out, the computer makes the rest of your moves (or, if you never moved, you lose by forfeit).</p>
       <div className="buttons">
         <button type="submit" className="primary" disabled={!picked || sending}>Send challenge</button>
       </div>

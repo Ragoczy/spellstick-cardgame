@@ -21,6 +21,7 @@ function fakeServer() {
       id: 1, status: state.result ? 'finished' : 'active', side: 'A', opponent: { id: 2, name: 'Bob Wands' }, youChallenged: true,
       lanes: 2, team: 'A', opponentTeam: 'B', yourMove: state.pending.kind !== 'gameOver' && state.pending.side === 'A',
       moveCount: events.length - 1, waitingSince: new Date().toISOString(), result: null, createdAt: new Date().toISOString(),
+      pace: null, clock: null, autopilot: { you: false, them: false },
     },
     game: {
       view: viewFor(state, 'A'),
@@ -136,5 +137,16 @@ describe('online match client', () => {
     expect(seat.waitingFor).toBe('human');
     expect(seat.teams).toEqual({ A: 'A', B: 'B' });
     expect(seat.hint()).not.toBeNull();
+  });
+});
+
+describe('time bank display', () => {
+  it('shows hours and minutes, or minutes and seconds under an hour', async () => {
+    const { clockText } = await import('../src/ui/labels');
+    expect(clockText(36 * 3600_000)).toBe('36 h 0 m');
+    expect(clockText(35 * 3600_000 + 12 * 60_000 + 30_000)).toBe('35 h 12 m');
+    expect(clockText(25 * 60_000)).toBe('25:00');
+    expect(clockText(65_400)).toBe('1:06');
+    expect(clockText(-5)).toBe('0:00');
   });
 });

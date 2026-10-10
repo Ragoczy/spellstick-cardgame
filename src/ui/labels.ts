@@ -55,3 +55,13 @@ export function cardText(def: CardDef): string {
   if (def.kind === 'spell') return def.ability.effect;
   return '';
 }
+
+/** Time left in a time bank: "35 h 12 m", or "4:05" under an hour. */
+export function clockText(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours} h ${minutes} m`;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}

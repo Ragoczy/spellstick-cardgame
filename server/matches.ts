@@ -1,27 +1,37 @@
-// Online matches: challenges, moves, and what each player is allowed to see.
+// Online matches: challenges, moves, time banks, and what each player is allowed to see.
 //
 // The server is the referee. A match's game state is never stored: it is rebuilt from the
 // setup and the list of moves with the rules engine (about 40 ms for a whole game). Every move
 // must be one of the engine's legal actions for that player. Players only ever get their own
 // view of the game (viewFor and eventsFor), so the other side's face-down cards never leave
 // the server.
+//
+// Time banks (docs/spellstick-multiplayer-design.md, "Time banks"): each player has one bank per
+// match, used up only while the match waits on them. When it runs out, the computer makes the
+// rest of their decisions, or, if they never made a move at all, they forfeit.
 
 import { randomInt } from 'node:crypto';
 import type pg from 'pg';
+import { heuristicAgent } from '../src/ai/heuristic';
 import { prototypeCards } from '../src/data/prototype';
 import {
   applyAction, createGame, eventsFor, legalActions, makeConfig, otherSide, viewFor,
   type Action, type GameEvent, type GameSetup, type GameState, type Side,
 } from '../src/engine';
-import type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, PlayerListing } from '../src/shared/matchApi';
+import type { MatchChange, MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing } from '../src/shared/matchApi';
 import type { User } from './users';
 
-export type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, PlayerListing };
+export type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing };
 
 /** Most matches a player can have going at once (challenges included), so nobody gets flooded. */
 export const MAX_OPEN_MATCHES = 20;
 /** Field sizes a challenge can use: the base game and the center-lane add-on. */
 export const LANE_CHOICES = [2, 3];
+/** Each player's time bank. Starting values from the design; tune after the beta. */
+export const TIME_BANKS: Record<Pace, number> = {
+  live: 25 * 60_000,
+  async: 36 * 60 * 60_000,
+};
 
 /** A problem to report to the player, with the HTTP status to send. */
 export class MatchError extends Error {
@@ -42,12 +52,24 @@ interface MatchRow {
   waiting_since: Date;
   move_count: number;
   winner: string | null;
-  end_reason: 'played' | 'resigned' | null;
+  end_reason: 'played' | 'resigned' | 'forfeit' | null;
   created_at: Date;
+  pace: Pace | null;
+  bank_a_ms: string | null;
+  bank_b_ms: string | null;
+  autopilot_a: boolean;
+  autopilot_b: boolean;
+  /** Milliseconds since waiting_since, by the database's clock. */
+  waited_ms: string;
+  /** True when the waiting player's bank has run out. */
+  overdue: boolean;
 }
 
 const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ua.display_name as a_name, ub.display_name as b_name, m.setup,
-  m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at`;
+  m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at,
+  m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,
+  floor(extract(epoch from (now() - m.waiting_since)) * 1000)::bigint as waited_ms,
+  coalesce(m.waiting_due <= now(), false) as overdue`;
 const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub on ub.id = m.player_b';
 
 // ---- Rebuilding a game ----
@@ -101,6 +123,31 @@ function playerOn(row: MatchRow, side: Side): number {
   return Number(side === 'A' ? row.player_a : row.player_b);
 }
 
+/** The side the match is waiting on, if any. */
+function waitingSide(row: MatchRow): Side | null {
+  if (row.waiting_on === null) return null;
+  return Number(row.waiting_on) === Number(row.player_a) ? 'A' : 'B';
+}
+
+function autopilotOf(row: MatchRow): Record<Side, boolean> {
+  return { A: row.autopilot_a, B: row.autopilot_b };
+}
+
+/** Each bank as it was at waiting_since (null for untimed matches). */
+function storedBanks(row: MatchRow): Record<Side, number> | null {
+  if (row.bank_a_ms === null || row.bank_b_ms === null) return null;
+  return { A: Number(row.bank_a_ms), B: Number(row.bank_b_ms) };
+}
+
+/** Each bank right now: the waiting player has also used the time since waiting_since. */
+function banksNow(row: MatchRow): Record<Side, number> | null {
+  const banks = storedBanks(row);
+  if (!banks) return null;
+  const waiting = row.status === 'active' ? waitingSide(row) : null;
+  if (waiting) banks[waiting] = Math.max(0, banks[waiting] - Number(row.waited_ms));
+  return banks;
+}
+
 function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
   const them = otherSide(side);
   const theirName = them === 'A' ? row.a_name : row.b_name;
@@ -109,6 +156,9 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     const outcome = row.winner === null ? 'draw' : Number(row.winner) === userId ? 'won' : 'lost';
     result = { outcome, reason: row.end_reason ?? 'played' };
   }
+  const banks = banksNow(row);
+  const waiting = row.status === 'active' ? waitingSide(row) : null;
+  const autopilot = autopilotOf(row);
   return {
     id: Number(row.id),
     status: row.status,
@@ -121,19 +171,26 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     yourMove: row.waiting_on !== null && Number(row.waiting_on) === userId,
     moveCount: row.move_count,
     waitingSince: row.waiting_since.toISOString(),
+    pace: row.pace,
+    clock: banks ? { you: banks[side], them: banks[them], running: waiting === null ? null : waiting === side ? 'you' : 'them' } : null,
+    autopilot: { you: autopilot[side], them: autopilot[them] },
     result,
     createdAt: row.created_at.toISOString(),
   };
 }
 
-/** The match row, only if this player is in it. Others get "not found", so match ids reveal nothing. */
-async function loadRow(db: pg.Pool | pg.PoolClient, matchId: number, user: User, lock = false): Promise<{ row: MatchRow; side: Side }> {
-  if (!Number.isSafeInteger(matchId) || matchId < 1) throw new MatchError(404, 'No such match.');
+async function loadRowById(db: pg.Pool | pg.PoolClient, matchId: number, lock = false): Promise<MatchRow | null> {
+  if (!Number.isSafeInteger(matchId) || matchId < 1) return null;
   const { rows } = await db.query<MatchRow>(
     `select ${MATCH_COLUMNS} from ${MATCH_FROM} where m.id = $1 ${lock ? 'for update of m' : ''}`,
     [matchId],
   );
-  const row = rows[0];
+  return rows[0] ?? null;
+}
+
+/** The match row, only if this player is in it. Others get "not found", so match ids reveal nothing. */
+async function loadRow(db: pg.Pool | pg.PoolClient, matchId: number, user: User, lock = false): Promise<{ row: MatchRow; side: Side }> {
+  const row = await loadRowById(db, matchId, lock);
   const side = row ? sideOf(row, user) : null;
   if (!row || !side) throw new MatchError(404, 'No such match.');
   return { row, side };
@@ -156,7 +213,7 @@ function detail(row: MatchRow, side: Side, userId: number, game: { state: GameSt
     match,
     game: {
       view: viewFor(game.state, side),
-      // A match that ended by resigning still has a game in progress underneath: nobody can move.
+      // A match that ended by resigning or forfeit still has a game in progress underneath: nobody can move.
       legal: row.status === 'active' ? legalActions(game.state, side) : [],
       events,
     },
@@ -227,17 +284,88 @@ function needsName(user: User): void {
   if (!user.displayName) throw new MatchError(400, 'Pick a team or manager name first.');
 }
 
+/** A move to save: who it was for, and whether the computer made it for them. */
+interface NewMove {
+  action: Action;
+  side: Side;
+  byComputer: boolean;
+}
+
 /**
- * Challenges another player. The challenger picks the field size and their team; the other
- * player gets the other team. (Drafts replace team picks in a later step.)
+ * While the game waits on a player whose time ran out, the computer makes their decisions.
+ * Stops when it's a person's decision again, or the game is over.
+ */
+function computerMoves(row: MatchRow, game: { state: GameState; events: GameEvent[][] }, autopilot: Record<Side, boolean>): NewMove[] {
+  const moves: NewMove[] = [];
+  // A game always ends (the engine has a turn limit), so this is only a safety net.
+  for (let guard = 0; guard < 10_000; guard++) {
+    const pending = game.state.pending;
+    if (pending.kind === 'gameOver' || !autopilot[pending.side]) break;
+    const agent = heuristicAgent(row.setup.seed + game.events.length, game.state.config);
+    const action = agent.chooseAction(viewFor(game.state, pending.side), legalActions(game.state, pending.side));
+    const result = applyAction(game.state, action);
+    game.state = result.state;
+    game.events.push(result.events);
+    moves.push({ action, side: pending.side, byComputer: true });
+  }
+  return moves;
+}
+
+/**
+ * Saves new moves and brings the match up to date: whose decision it is, both time banks, and
+ * the result. The player the match was waiting on is charged for the time since waiting_since,
+ * and the next player's clock starts now.
+ */
+async function saveProgress(
+  client: pg.PoolClient, row: MatchRow, game: { state: GameState }, moves: NewMove[],
+  changes: { autopilot?: Record<Side, boolean>; forfeitBy?: Side } = {},
+): Promise<void> {
+  let seq = row.move_count;
+  for (const move of moves) {
+    seq += 1;
+    await client.query('insert into match_events (match_id, seq, player_id, move, by_computer) values ($1, $2, $3, $4, $5)', [
+      row.id, seq, playerOn(row, move.side), JSON.stringify(move.action), move.byComputer,
+    ]);
+  }
+
+  const banks = banksNow(row);
+  const autopilot = changes.autopilot ?? autopilotOf(row);
+  const pending = game.state.pending;
+  const over = game.state.result;
+  const finished = over !== null || changes.forfeitBy !== undefined;
+  const next: Side | null = finished || pending.kind === 'gameOver' ? null : pending.side;
+  // The next player's bank runs out this many milliseconds from now (never for the computer).
+  const dueIn = banks && next && !autopilot[next] ? banks[next] : null;
+  const winner = changes.forfeitBy ? playerOn(row, otherSide(changes.forfeitBy)) : over?.winner ? playerOn(row, over.winner) : null;
+
+  await client.query(
+    `update matches set move_count = $2, waiting_on = $3, waiting_since = now(),
+       waiting_due = case when $4::bigint is null then null else now() + make_interval(secs => $4::bigint / 1000.0) end,
+       bank_a_ms = $5, bank_b_ms = $6, autopilot_a = $7, autopilot_b = $8,
+       status = $9, winner = $10, end_reason = $11, finished_at = case when $9 = 'finished' then now() end
+     where id = $1`,
+    [
+      row.id, seq, next ? playerOn(row, next) : null, dueIn,
+      banks?.A ?? null, banks?.B ?? null, autopilot.A, autopilot.B,
+      finished ? 'finished' : 'active', winner,
+      changes.forfeitBy ? 'forfeit' : over ? 'played' : null,
+    ],
+  );
+}
+
+/**
+ * Challenges another player. The challenger picks the field size, the pace, and their team; the
+ * other player gets the other team. (Drafts replace team picks in a later step.)
  */
 export async function createChallenge(
-  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown },
+  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown },
 ): Promise<MatchSummary> {
   needsName(user);
   const opponentId = Number(input.opponentId);
   if (opponentId === user.id) throw new MatchError(400, "You can't challenge yourself.");
   if (!LANE_CHOICES.includes(input.lanes as number)) throw new MatchError(400, 'Choose two or three lanes.');
+  const pace = (input.pace ?? 'async') as Pace;
+  if (!(pace in TIME_BANKS)) throw new MatchError(400, 'Choose live or at your own pace.');
   const cardSet = prototypeCards;
   const team = cardSet.teams.find((t) => t.id === input.team);
   if (!team) throw new MatchError(400, 'Choose one of the teams.');
@@ -264,9 +392,11 @@ export async function createChallenge(
   };
   createGame(setup); // throws now, not later, if the setup is broken
 
+  const bank = TIME_BANKS[pace];
   const inserted = await db.query<{ id: string }>(
-    `insert into matches (player_a, player_b, setup, waiting_on) values ($1, $2, $3, $2) returning id`,
-    [user.id, opponentId, JSON.stringify(setup)],
+    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms)
+     values ($1, $2, $3, $2, $4, $5, $5) returning id`,
+    [user.id, opponentId, JSON.stringify(setup), pace, bank],
   );
   const { row, side } = await loadRow(db, Number(inserted.rows[0]!.id), user);
   return toSummary(row, side, user.id);
@@ -278,12 +408,10 @@ export async function acceptChallenge(db: pg.Pool, user: User, matchId: number):
     const { row, side } = await loadRow(client, matchId, user, true);
     if (row.status !== 'challenged') throw new MatchError(409, 'This challenge is no longer open.');
     if (side !== 'B') throw new MatchError(409, 'Only the player you challenged can accept.');
+    // Banks start now: nobody has been waiting on a game yet.
     const { state } = createGame(row.setup);
-    const first = state.pending.kind === 'gameOver' ? null : playerOn(row, state.pending.side);
-    await client.query(
-      `update matches set status = 'active', started_at = now(), waiting_on = $2, waiting_since = now() where id = $1`,
-      [matchId, first],
-    );
+    await saveProgress(client, { ...row, status: 'active', waiting_on: null }, { state }, []);
+    await client.query('update matches set started_at = now() where id = $1', [matchId]);
   });
   return getMatch(db, user, matchId);
 }
@@ -303,9 +431,12 @@ export async function resign(db: pg.Pool, user: User, matchId: number): Promise<
   await inTransaction(db, async (client) => {
     const { row, side } = await loadRow(client, matchId, user, true);
     if (row.status !== 'active') throw new MatchError(409, 'This match is not in progress.');
+    const banks = banksNow(row);
     await client.query(
-      `update matches set status = 'finished', waiting_on = null, winner = $2, end_reason = 'resigned', finished_at = now() where id = $1`,
-      [matchId, playerOn(row, otherSide(side))],
+      `update matches set status = 'finished', waiting_on = null, waiting_due = null, bank_a_ms = $3, bank_b_ms = $4,
+         winner = $2, end_reason = 'resigned', finished_at = now()
+       where id = $1`,
+      [matchId, playerOn(row, otherSide(side)), banks?.A ?? null, banks?.B ?? null],
     );
   });
   const { row, side } = await loadRow(db, matchId, user);
@@ -315,7 +446,8 @@ export async function resign(db: pg.Pool, user: User, matchId: number): Promise<
 /**
  * Makes one move. seen is the match's move count when the player chose it; if the match has
  * moved on since (a double click, or another tab), the move is refused and the player should
- * reload. Returns the player's updated view and the events from their move.
+ * reload. If the other player is out of time, the computer's moves for them follow straight
+ * away. Returns the player's updated view and the events since their move.
  */
 export async function makeMove(db: pg.Pool, user: User, matchId: number, sent: unknown, seen: unknown): Promise<MatchDetail> {
   return inTransaction(db, async (client) => {
@@ -324,9 +456,10 @@ export async function makeMove(db: pg.Pool, user: User, matchId: number, sent: u
     if (row.status === 'challenged') throw new MatchError(409, "This match hasn't started yet.");
     if (row.status !== 'active') throw new MatchError(409, 'This match is over.');
     if (seen !== row.move_count) throw new MatchError(409, 'The match has moved on. Reload to see the latest.', 'stale');
+    if (row.overdue) throw new MatchError(409, 'Your time ran out. Reload to see the latest.', 'stale');
 
     const game = rebuild(row.setup, await loadMoves(client, matchId));
-    const legal = legalActions(game.state, side);
+    const legal = autopilotOf(row)[side] ? [] : legalActions(game.state, side);
     if (!legal.length) throw new MatchError(409, "It isn't your decision right now.");
     const move = findLegal(legal, sent);
     if (!move) throw new MatchError(400, "That move isn't allowed right now.");
@@ -334,29 +467,61 @@ export async function makeMove(db: pg.Pool, user: User, matchId: number, sent: u
     const result = applyAction(game.state, move);
     game.state = result.state;
     game.events.push(result.events);
-    const seq = row.move_count + 1;
-    await client.query('insert into match_events (match_id, seq, player_id, move) values ($1, $2, $3, $4)', [
-      matchId, seq, user.id, JSON.stringify(move),
-    ]);
+    const moves: NewMove[] = [{ action: move, side, byComputer: false }, ...computerMoves(row, game, autopilotOf(row))];
+    await saveProgress(client, row, game, moves);
 
-    const pending = game.state.pending;
-    const over = game.state.result;
-    await client.query(
-      `update matches set move_count = $2, waiting_on = $3,
-         -- The clock for "waiting since" restarts only when the decision passes to the other player.
-         waiting_since = case when waiting_on is distinct from $3 then now() else waiting_since end,
-         status = $4, winner = $5, end_reason = $6, finished_at = case when $4 = 'finished' then now() end
-       where id = $1`,
-      [
-        matchId,
-        seq,
-        pending.kind === 'gameOver' ? null : playerOn(row, pending.side),
-        over ? 'finished' : 'active',
-        over?.winner ? playerOn(row, over.winner) : null,
-        over ? 'played' : null,
-      ],
-    );
     const after = await loadRow(client, matchId, user);
     return detail(after.row, side, user.id, game, row.move_count);
   });
+}
+
+// ---- Running out of time ----
+
+/** A match changed without either player asking (a bank ran out): who to tell, and what to say. */
+export interface ClockNotice {
+  playerIds: number[];
+  change: MatchChange;
+}
+
+/**
+ * Deals with every match whose waiting player has run out of time. Called every half minute
+ * and before handling match requests, so a deadline is kept even if the server was asleep when
+ * it passed. Returns the matches that changed.
+ */
+export async function settleOverdue(db: pg.Pool): Promise<ClockNotice[]> {
+  const { rows } = await db.query<{ id: string }>(
+    `select id from matches where status = 'active' and waiting_due <= now() order by waiting_due limit 50`,
+  );
+  const notices: ClockNotice[] = [];
+  for (const { id } of rows) {
+    const notice = await inTransaction(db, (client) => runOutOfTime(client, Number(id)));
+    if (notice) notices.push(notice);
+  }
+  return notices;
+}
+
+async function runOutOfTime(client: pg.PoolClient, matchId: number): Promise<ClockNotice | null> {
+  const row = await loadRowById(client, matchId, true);
+  // Someone else may have dealt with it already.
+  if (!row || row.status !== 'active' || !row.overdue) return null;
+  const side = waitingSide(row)!;
+  const game = rebuild(row.setup, await loadMoves(client, matchId));
+
+  const { rows } = await client.query<{ n: number }>(
+    'select count(*)::int as n from match_events where match_id = $1 and player_id = $2 and not by_computer',
+    [matchId, playerOn(row, side)],
+  );
+  if (rows[0]!.n === 0) {
+    // Never made a move: a no-show forfeits.
+    await saveProgress(client, row, game, [], { forfeitBy: side });
+  } else {
+    const autopilot = { ...autopilotOf(row), [side]: true };
+    await saveProgress(client, row, game, computerMoves(row, game, autopilot), { autopilot });
+  }
+
+  const after = (await loadRowById(client, matchId))!;
+  return {
+    playerIds: [Number(row.player_a), Number(row.player_b)],
+    change: { matchId, status: after.status, moveCount: after.move_count },
+  };
 }

@@ -35,6 +35,8 @@ export interface OnlineControls {
   /** Something went wrong, in plain language. */
   problem: string | null;
   resign: () => void;
+  /** When `match` arrived from the server (Date.now()), for counting the time banks down. */
+  receivedAt: number;
 }
 
 export interface GameController {

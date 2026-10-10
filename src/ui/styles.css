@@ -267,3 +267,9 @@ button { font: inherit; color: inherit; }
   .stats { grid-template-columns: 1fr 1fr; gap: 0 3px; }
   .hand .card { flex-basis: 108px; }
 }
+
+/* Time banks (online matches) */
+.clocks { font-size: 0.85rem; color: var(--muted); }
+.clock b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.clock.running b { color: var(--accent); }
+.clock.low b { color: var(--bad); }

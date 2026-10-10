@@ -3,7 +3,7 @@
 //
 //   GET  /api/players?name=Riv           players to challenge (names starting with the text)
 //   GET  /api/matches                    your matches
-//   POST /api/matches                    challenge someone: { opponentId, lanes, team }
+//   POST /api/matches                    challenge someone: { opponentId, lanes, team, pace }
 //   GET  /api/matches/:id?since=n        one match: your view, your legal moves, and events after move n
 //   POST /api/matches/:id/accept         accept a challenge
 //   POST /api/matches/:id/decline        turn down a challenge, or withdraw your own
@@ -15,7 +15,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AppDeps } from '../app';
 import { currentUser } from '../auth/current-user';
 import {
-  acceptChallenge, createChallenge, declineChallenge, findPlayers, getMatch, listMatches, makeMove, MatchError, resign,
+  acceptChallenge, createChallenge, declineChallenge, findPlayers, getMatch, listMatches, makeMove, MatchError, resign, settleOverdue,
   type MatchDetail, type MatchSummary,
 } from '../matches';
 import type { LiveHub } from '../live';
@@ -33,10 +33,25 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub):
     return result;
   }
 
+  /** Deals with any time banks that have run out, and tells the players. */
+  async function settleClocks(): Promise<void> {
+    for (const notice of await settleOverdue(db)) live.matchChanged(notice.playerIds, notice.change);
+  }
+
+  // Check the clocks every so often. (Requests check too, so a deadline is kept even when the
+  // server was asleep at the time.)
+  if (deps.config.clockCheckMs > 0) {
+    const timer = setInterval(() => {
+      settleClocks().catch((err) => app.log.error(err, 'clock check failed'));
+    }, deps.config.clockCheckMs);
+    app.addHook('onClose', async () => clearInterval(timer));
+  }
+
   /** Runs a handler for a signed-in player, turning MatchErrors into plain-language answers. */
   async function signedIn<T>(req: FastifyRequest, reply: FastifyReply, handler: (user: User) => Promise<T>) {
     const user = await currentUser(db, req);
     if (!user) return reply.code(401).send({ error: 'Not signed in.' });
+    await settleClocks();
     try {
       return await handler(user);
     } catch (err) {
@@ -50,10 +65,10 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub):
 
   app.get('/api/matches', (req, reply) => signedIn(req, reply, (user) => listMatches(db, user)));
 
-  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown } | undefined }>('/api/matches', (req, reply) =>
+  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown; pace?: unknown } | undefined }>('/api/matches', (req, reply) =>
     signedIn(req, reply, async (user) => {
       const body = req.body ?? {};
-      const match = await createChallenge(db, user, { opponentId: body.opponentId, lanes: body.lanes, team: body.team });
+      const match = await createChallenge(db, user, { opponentId: body.opponentId, lanes: body.lanes, team: body.team, pace: body.pace });
       return reply.code(201).send(changed(user, match));
     }));
 

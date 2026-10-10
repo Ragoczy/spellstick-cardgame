@@ -41,6 +41,8 @@ export interface Config {
   /** Discord user IDs that are always allowed in as admins, even without a role (so the owner can't be locked out). */
   adminDiscordIds: string[];
   sessionDays: number;
+  /** How often to look for time banks that have run out, in milliseconds (0: never, for tests). */
+  clockCheckMs: number;
 }
 
 function required(env: NodeJS.ProcessEnv, name: string): string {
@@ -82,5 +84,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     adminDiscordIds: list(env.ADMIN_DISCORD_IDS),
     sessionDays: Number(env.SESSION_DAYS ?? 7),
+    clockCheckMs: Number(env.CLOCK_CHECK_MS ?? 30_000),
   };
 }

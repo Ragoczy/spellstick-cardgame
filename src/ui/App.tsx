@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { prototypeCards } from '../data/prototype';
 import { Account } from './Account';
+import { IN_DISCORD, MENU_PRESENCE, setDiscordPresence } from './discord';
 import { ONLINE, type Me } from './online';
 import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
 import { TeamColors } from './Card';
@@ -38,6 +39,12 @@ export function App() {
   const [lanes, setLanes] = useState(2);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
 
+  // Inside Discord: game screens set their own presence; everything else is "In the menu".
+  const inGame = screen.kind === 'game' || screen.kind === 'match';
+  useEffect(() => {
+    if (!inGame) setDiscordPresence(MENU_PRESENCE);
+  }, [inGame]);
+
   const start = () => setScreen({ kind: 'game', id: Date.now(), options: { seed: newSeed(), cardSet: prototypeCards, lanes, team } });
 
   return (
@@ -47,7 +54,8 @@ export function App() {
           <div className="screen start">
             <h1>Spellstick</h1>
             <p className="tagline">Magical lacrosse from the Warlock series. Hide your best players, pass to find the gaps, and let the spells fly.</p>
-            {ONLINE ? <Account onChange={setMe} /> : null}
+            {ONLINE && !IN_DISCORD ? <Account onChange={setMe} /> : null}
+            {ONLINE && IN_DISCORD ? <p className="small">Online matches aren't available inside Discord yet. Open the game in your browser to play other readers.</p> : null}
             <div className="options">
               <label>
                 Your team

@@ -1,11 +1,12 @@
 // The game screen. It shows the person's view and turns taps into legal actions. It never
 // decides what is legal itself: everything clickable comes from the seat's legal actions.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { isFieldPos, opposite, samePos, type Action, type CardDef, type FieldPos, type InjuryDef, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
 import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
 import { Clocks } from './Clocks';
+import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
@@ -47,6 +48,12 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   /** Why the card just tapped can't be played right now. */
   const [notice, setNotice] = useState<string | null>(null);
   const pending = view.pending;
+
+  // Inside Discord: show the turn and score on the player's profile.
+  const [startedAt] = useState(Date.now);
+  const presence = gamePresence(view, them, online !== null, startedAt);
+  useEffect(() => setDiscordPresence(presence), [presence.details, presence.state]);
+
   // While a move is on its way to the server, nothing else can be chosen.
   const myDecision = seat.waitingFor === 'human' && !online?.sending;
 

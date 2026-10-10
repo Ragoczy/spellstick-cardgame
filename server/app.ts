@@ -8,6 +8,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import type pg from 'pg';
+import { ACTIVITY_TOKEN_PATH, activityOrigin, discordActivityRoutes } from './api/discord-activity';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import type { DiscordApi } from './auth/discord';
@@ -35,22 +36,33 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   await app.register(fastifyCookie);
 
   const publicOrigin = new URL(deps.config.publicUrl).origin;
+  // Inside Discord the game is served from Discord's address, so its posts come from there.
+  // Null when the Discord Activity is off.
+  const activity = deps.config.discordActivity;
+  const discordOrigin = activity ? activityOrigin(activity.clientId) : null;
   app.addHook('onRequest', async (req, reply) => {
     // Refuse form posts from other websites. (The SameSite cookie setting already blocks most of this.)
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       const origin = req.headers.origin;
-      if (origin && origin !== publicOrigin) return reply.code(403).send({ error: 'Wrong origin.' });
+      const fromDiscord = discordOrigin !== null && origin === discordOrigin && req.url.split('?')[0] === ACTIVITY_TOKEN_PATH;
+      if (origin && origin !== publicOrigin && !fromDiscord) return reply.code(403).send({ error: 'Wrong origin.' });
     }
   });
+  // Only this site and Discord (for the Activity) may show the game inside a frame.
+  const frameAncestors = [
+    "'self'",
+    ...(discordOrigin ? ['https://discord.com', 'https://ptb.discord.com', 'https://canary.discord.com', discordOrigin] : []),
+  ].join(' ');
   app.addHook('onSend', async (_req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'same-origin');
-    reply.header('Content-Security-Policy', "frame-ancestors 'self'");
+    reply.header('Content-Security-Policy', `frame-ancestors ${frameAncestors}`);
   });
 
   app.get('/healthz', async () => ({ ok: true }));
   authRoutes(app, deps);
   meRoutes(app, deps);
+  if (activity) discordActivityRoutes(app, deps);
   const live = new LiveHub();
   matchRoutes(app, deps, live);
   // Live connections never end by themselves, so end them first when the server is shutting down.

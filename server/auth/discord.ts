@@ -25,6 +25,31 @@ export interface DiscordApi {
   getUser(accessToken: string): Promise<DiscordUser>;
   /** Null when the person isn't in the server. */
   getMember(accessToken: string, guildId: string): Promise<DiscordMember | null>;
+  /**
+   * The game inside Discord (a Discord Activity) gets a one-time code from the Discord app and
+   * trades it here for an access token, using the Activity app's secret. No return address.
+   */
+  exchangeActivityCode(code: string): Promise<string>;
+}
+
+interface AppCredentials {
+  clientId: string;
+  clientSecret: string;
+}
+
+/** Trades a one-time code for an access token. */
+async function exchangeForToken(app: AppCredentials, params: Record<string, string>): Promise<string> {
+  const res = await fetch(`${API}/oauth2/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(`${app.clientId}:${app.clientSecret}`).toString('base64')}`,
+    },
+    body: new URLSearchParams({ grant_type: 'authorization_code', ...params }),
+  });
+  if (!res.ok) throw new Error(`Discord token exchange failed: ${res.status}`);
+  const body = (await res.json()) as { access_token: string };
+  return body.access_token;
 }
 
 export function authorizeUrl(clientId: string, redirectUri: string, state: string): string {
@@ -39,20 +64,13 @@ export function authorizeUrl(clientId: string, redirectUri: string, state: strin
   return url.toString();
 }
 
-export function discordApi(clientId: string, clientSecret: string): DiscordApi {
+/** signIn: the shared sign-in app. activity: the app that runs the game inside Discord (may be the same one; null = off). */
+export function discordApi(signIn: AppCredentials, activity: AppCredentials | null): DiscordApi {
   return {
-    async exchangeCode(code, redirectUri) {
-      const res = await fetch(`${API}/oauth2/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
-        },
-        body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri }),
-      });
-      if (!res.ok) throw new Error(`Discord token exchange failed: ${res.status}`);
-      const body = (await res.json()) as { access_token: string };
-      return body.access_token;
+    exchangeCode: (code, redirectUri) => exchangeForToken(signIn, { code, redirect_uri: redirectUri }),
+    exchangeActivityCode: async (code) => {
+      if (!activity) throw new Error('The Discord Activity is off.');
+      return exchangeForToken(activity, { code });
     },
 
     async getUser(accessToken) {

@@ -14,7 +14,7 @@ if (existsSync('server/.env')) process.loadEnvFile('server/.env');
 
 const config = readConfig();
 const db = createPool(config.database);
-const app = await buildApp({ config, db, discord: discordApi(config.discord.clientId, config.discord.clientSecret) }, true);
+const app = await buildApp({ config, db, discord: discordApi(config.discord, config.discordActivity) }, true);
 
 const applied = await migrate(db, config.migrationsDir);
 if (applied.length) app.log.info({ applied }, 'database updated');

@@ -50,6 +50,7 @@ export const PLAYERS_ROLE = '2000';
 export const MODS_ROLE = '2001';
 export const ADMINS_ROLE = '2002';
 export const ADMIN_ID = '771010532458233888';
+export const ACTIVITY_CLIENT_ID = '3000';
 
 export function testConfig(overrides: Partial<Config> = {}): Config {
   return {
@@ -62,6 +63,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
       clientId: 'client-id', clientSecret: 'client-secret', guildId: GUILD_ID,
       playerRoleIds: [PLAYERS_ROLE], moderatorRoleIds: [MODS_ROLE], adminRoleIds: [ADMINS_ROLE], allowedRoleIds: [],
     },
+    discordActivity: { clientId: ACTIVITY_CLIENT_ID, clientSecret: 'activity-secret' },
     adminDiscordIds: [ADMIN_ID],
     sessionDays: 7,
     // Tests run the clock checks themselves.
@@ -98,6 +100,11 @@ export function fakeDiscord(codes: Record<string, FakePerson>): DiscordApi & { e
     },
     async getMember(token) {
       return codes[token.replace('token-for-', '')]!.member;
+    },
+    async exchangeActivityCode(code) {
+      exchanged.push(code);
+      if (!codes[code]) throw new Error('bad code');
+      return `activity-token-for-${code}`;
     },
   };
 }

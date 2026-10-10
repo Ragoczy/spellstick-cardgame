@@ -38,6 +38,13 @@ export interface Config {
      */
     allowedRoleIds: string[];
   };
+  /**
+   * The Discord app that runs the game inside Discord (a Discord Activity; see
+   * docs/discord-activity.md). For now this is the shared sign-in app above. Setting
+   * DISCORD_ACTIVITY_CLIENT_ID and DISCORD_ACTIVITY_CLIENT_SECRET switches to its own app.
+   * Null (the Activity is off) when only the ID is set: a warning, not a crash.
+   */
+  discordActivity: { clientId: string; clientSecret: string } | null;
   /** Discord user IDs that are always allowed in as admins, even without a role (so the owner can't be locked out). */
   adminDiscordIds: string[];
   sessionDays: number;
@@ -55,7 +62,20 @@ function list(value: string | undefined): string[] {
   return (value ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
+/** The Discord Activity settings. Half set up turns the Activity off, so the rest of the game keeps running. */
+function readActivity(env: NodeJS.ProcessEnv, shared: { clientId: string; clientSecret: string }, warn: (message: string) => void): Config['discordActivity'] {
+  const clientId = env.DISCORD_ACTIVITY_CLIENT_ID?.trim();
+  const clientSecret = env.DISCORD_ACTIVITY_CLIENT_SECRET?.trim();
+  if (!clientId) return shared;
+  if (!clientSecret) {
+    warn('DISCORD_ACTIVITY_CLIENT_ID is set but DISCORD_ACTIVITY_CLIENT_SECRET is missing, so the game is off inside Discord. Everything else works. See docs/discord-activity.md.');
+    return null;
+  }
+  return { clientId, clientSecret };
+}
+
+/** warn: told about settings that are wrong but not serious enough to stop the server. */
+export function readConfig(env: NodeJS.ProcessEnv = process.env, warn: (message: string) => void = console.warn): Config {
   const database: DatabaseConfig = env.DATABASE_URL
     ? { url: env.DATABASE_URL }
     : {
@@ -67,6 +87,9 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
         },
       };
 
+  const discordClientId = required(env, 'DISCORD_CLIENT_ID');
+  const discordClientSecret = required(env, 'DISCORD_CLIENT_SECRET');
+
   return {
     port: Number(env.PORT ?? 8080),
     publicUrl: required(env, 'PUBLIC_URL').replace(/\/$/, ''),
@@ -74,14 +97,15 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     migrationsDir: env.MIGRATIONS_DIR ?? 'server/migrations',
     database,
     discord: {
-      clientId: required(env, 'DISCORD_CLIENT_ID'),
-      clientSecret: required(env, 'DISCORD_CLIENT_SECRET'),
+      clientId: discordClientId,
+      clientSecret: discordClientSecret,
       guildId: required(env, 'DISCORD_GUILD_ID'),
       playerRoleIds: list(env.DISCORD_PLAYER_ROLE_IDS),
       moderatorRoleIds: list(env.DISCORD_MODERATOR_ROLE_IDS),
       adminRoleIds: list(env.DISCORD_ADMIN_ROLE_IDS),
       allowedRoleIds: list(env.DISCORD_ALLOWED_ROLE_IDS),
     },
+    discordActivity: readActivity(env, { clientId: discordClientId, clientSecret: discordClientSecret }, warn),
     adminDiscordIds: list(env.ADMIN_DISCORD_IDS),
     sessionDays: Number(env.SESSION_DAYS ?? 7),
     clockCheckMs: Number(env.CLOCK_CHECK_MS ?? 30_000),

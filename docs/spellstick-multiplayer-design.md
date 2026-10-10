@@ -124,7 +124,7 @@ A player account is a Discord account, signed in with Discord OAuth. There are n
 - **Display name:** the player picks a team or manager name; the Discord handle is shown only to moderators.
 - **Alt accounts:** coins, starter packs, and trades make second accounts profitable. Require server membership for at least 14 days and a minimum Discord account age before a player can trade or receive starter cards. Moderators can link suspected alts and freeze trading on them.
 - **Roles:** Player, Moderator (freeze trades, void matches, grant cards), Admin (you: prices, tournaments, card releases). *(Changed 2026-10-10: roles come from the Discord server's Players, Mods, and Admins roles, read at each sign-in, so they're managed in Discord and shared by every Darkspace game.)*
-- **Shared sign-in (added 2026-10-10):** all Darkspace games use one Discord application, "Darkspace Games", and one set of Discord settings in Key Vault (`Integrations--Discord--*`). Each game keeps its own player accounts, keyed by Discord ID, so a shared accounts service can be added later without a redesign.
+- **Shared sign-in (added 2026-10-10):** all Darkspace games use one Discord application, "Darkspace Games", and one set of Discord settings in Key Vault (`Integrations--Discord--*`). Each game keeps its own player accounts, keyed by Discord ID, so a shared accounts service can be added later without a redesign. *(Changed 2026-10-10: the Discord application is now Spellstick's own, and it is also its Discord Activity. Other games will get their own applications. The Discord server, roles, and admin settings stay shared.)*
 - **Patreon (later):** optional Patreon OAuth to gate patron-only tournaments or a monthly patron pack.
 
 ## Cards, collection, and persistent teams

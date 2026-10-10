@@ -6,6 +6,15 @@ game that should use the same Discord login and stored settings as Spellstick.
 The owner is Paul (Discord user ID `771010532458233888`). He is a novelist and .NET developer,
 likes plain readable code, and wants short summaries. Ask him before changing anything shared.
 
+> **Changed 2026-10-10:** the Discord *application* is no longer shared.
+> - **Spellstick's app:** `1558444401032699954` (`Integrations--Discord--ClientId` /
+>   `ClientSecret`) is now Spellstick's own app. It is also Spellstick's Discord Activity, and
+>   Discord shows its name as "Playing …".
+> - **A new game:** creates its own Discord application and keeps that app's client ID and
+>   secret in its own settings. Don't reuse Spellstick's.
+> - **Still shared:** the Discord server, the roles, and the admin settings (`GuildId`,
+>   `*RoleIds`, `AdminUserIds`). Read the rest of this doc with that in mind.
+
 ## What this gives a game
 
 - **Sign in with Discord** through one shared Discord application, "Darkspace Games".

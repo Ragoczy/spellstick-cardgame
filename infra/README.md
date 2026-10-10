@@ -43,7 +43,9 @@ az deployment sub create -l eastus2 -n budget -f infra/budget.bicep -p contactEm
 ## Shared settings (all Darkspace games)
 
 Every Darkspace game signs in through one Discord application, "Darkspace Games", and checks
-the same Discord server and roles. Those settings live once, in Key Vault `kv-ha7siia4h4zia`.
+the same Discord server and roles. *(Changed 2026-10-10: that application is now Spellstick's
+own, and it is also Spellstick's Discord Activity (`docs/discord-activity.md`). Other games will
+get their own Discord applications. The server, roles, and admin settings stay shared.)* Those settings live once, in Key Vault `kv-ha7siia4h4zia`.
 The names follow the .NET convention (`--` means `:`), so aiuthor could read them as
 `Integrations:Discord:*` too.
 

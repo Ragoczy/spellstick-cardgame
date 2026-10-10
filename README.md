@@ -41,7 +41,8 @@ One ruleset drives two products:
 ### Online game (local)
 
 The online game adds a server (`server/`) with Discord sign-in and a Postgres database. The
-plain build above doesn't use it. Design: `docs/spellstick-multiplayer-design.md`.
+plain build above doesn't use it. Design: `docs/spellstick-multiplayer-design.md`. Running it
+inside Discord (a Discord Activity): `docs/discord-activity.md`.
 
 | Command | What it does |
 |---|---|

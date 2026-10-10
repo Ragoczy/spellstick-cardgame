@@ -16,7 +16,11 @@ type Screen =
   // Online build only: your matches, and one match.
   | { kind: 'lobby' } | { kind: 'match'; id: number };
 
-const teamColors = Object.fromEntries(prototypeCards.teams.map((t) => [t.id, t.color]));
+/** The policies for all Darkspace games, on the main Darkspace site. */
+const TERMS_URL = 'https://www.darkspace.press/games-terms/';
+const PRIVACY_URL = 'https://www.darkspace.press/games-privacy/';
+
+const teamColors =Object.fromEntries(prototypeCards.teams.map((t) => [t.id, t.color]));
 
 /** ?autoplay=1 plays your side with the hint: handy for testing and for watching a game. */
 const autoplay = new URLSearchParams(window.location.search).get('autoplay') === '1';
@@ -94,7 +98,8 @@ export function App() {
         ) : null}
         {!inGame ? (
           <footer className="footer">
-            {ONLINE ? <a className="quiet" href="privacy.html">Privacy</a> : null}
+            <a className="quiet" href={TERMS_URL} target="_blank" rel="noopener">Terms of service</a>
+            <a className="quiet" href={PRIVACY_URL} target="_blank" rel="noopener">Privacy</a>
             <ReportProblem reporter={me} />
           </footer>
         ) : null}

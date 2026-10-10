@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { prototypeCards } from '../src/data/prototype';
 import { applyAction, createGame, eventsFor, legalActions, makeConfig, viewFor, type Action, type GameEvent, type GameState } from '../src/engine';
 import type { MatchDetail, MoveEvents } from '../src/shared/matchApi';
-import { OnlineMatchClient, OnlineSeat, StaleMatchError, type MatchApi } from '../src/ui/onlineMatch';
+import { OnlineMatchClient, OnlineSeat, ServerError, StaleMatchError, type MatchApi } from '../src/ui/onlineMatch';
 
 /** A pretend game server for one match, seen by player A. */
 function fakeServer() {
@@ -14,6 +14,7 @@ function fakeServer() {
   let state: GameState = created.state;
   const events: GameEvent[][] = [created.events];
   const calls: string[] = [];
+  const reports: string[] = [];
   let refuseNext: Error | null = null;
 
   const detail = (since: number): MatchDetail => ({
@@ -55,11 +56,14 @@ function fakeServer() {
       play(action);
       return detail(before);
     },
+    async report(_id, kind) {
+      reports.push(kind);
+    },
     async resign() {
       throw new Error('not used');
     },
   };
-  return { api, calls, detail, play, state: () => state, refuse: (err: Error) => { refuseNext = err; } };
+  return { api, calls, reports, detail, play, state: () => state, refuse: (err: Error) => { refuseNext = err; } };
 }
 
 function listen() {
@@ -129,6 +133,20 @@ describe('online match client', () => {
     client.act(client.seat.legal[0]!);
     await client.idle();
     expect(problems.at(-1)).toBeNull();
+  });
+
+  it('reports a move the server refused although it had offered it (for the beta), but not a stale one', async () => {
+    const server = fakeServer();
+    const { listener } = listen();
+    const client = new OnlineMatchClient(server.api, server.detail(-1), listener);
+    server.refuse(new StaleMatchError('moved on'));
+    client.act(client.seat.legal[0]!);
+    await client.idle();
+    expect(server.reports).toEqual([]);
+    server.refuse(new ServerError("That move isn't allowed right now.", 400));
+    client.act(client.seat.legal[0]!);
+    await client.idle();
+    expect(server.reports).toEqual(['refused-move']);
   });
 
   it('knows whose decision it is, and your team colors', () => {

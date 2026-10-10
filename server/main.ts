@@ -5,6 +5,7 @@
 
 import { existsSync } from 'node:fs';
 import { buildApp } from './app';
+import { checkAllMatches } from './beta';
 import { discordApi } from './auth/discord';
 import { loadPlayerCards } from './cardData';
 import { readConfig } from './config';
@@ -23,6 +24,11 @@ const playerCards = await loadPlayerCards(db);
 app.log.info({ playerCards }, 'player cards loaded from the card data');
 
 await app.listen({ port: config.port, host: '0.0.0.0' });
+
+// After a deploy, check that every match still replays the same way (in the background).
+checkAllMatches(db)
+  .then((result) => app.log.info(result, 'matches checked'))
+  .catch((err) => app.log.error(err, 'match check failed'));
 
 // Azure stops the old copy with SIGTERM during a deploy: finish open requests, then exit.
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {

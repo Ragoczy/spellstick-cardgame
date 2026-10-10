@@ -2,7 +2,7 @@
 // static build never calls these.
 
 import type { MatchDetail, MatchSummary, Pace, PlayerListing } from '../shared/matchApi';
-import { StaleMatchError, type MatchApi } from './onlineMatch';
+import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
 
@@ -93,7 +93,7 @@ async function call<T>(method: 'GET' | 'POST', url: string, body?: object): Prom
   if (res.status === 401) throw new Error("You've been signed out. Go back to the start screen and sign in again.");
   if (!res.ok) {
     if (data.code === 'stale') throw new StaleMatchError(data.error);
-    throw new Error(data.error ?? `Something went wrong on the game server (${res.status}).`);
+    throw new ServerError(data.error ?? `Something went wrong on the game server (${res.status}).`, res.status);
   }
   return data as T;
 }
@@ -102,6 +102,11 @@ export const matchApi: MatchApi = {
   get: (id, since) => call('GET', `/api/matches/${id}${since === undefined ? '' : `?since=${since}`}`),
   move: (id, action, seen) => call('POST', `/api/matches/${id}/moves`, { action, seen }),
   resign: (id) => call('POST', `/api/matches/${id}/resign`),
+  report: async (id, kind, detail) => {
+    await fetch(`/api/matches/${id}/problems`, {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, detail }),
+    });
+  },
 };
 
 export const listMatches = () => call<MatchSummary[]>('GET', '/api/matches');
@@ -122,3 +127,17 @@ export interface NotificationSettings {
 export const fetchNotificationSettings = () => call<NotificationSettings>('GET', '/api/me/notifications');
 export const saveNotificationSetting = (kind: string, enabled: boolean) =>
   call<NotificationSettings>('POST', '/api/me/notifications', { kind, enabled });
+
+// ---- Beta dashboard (moderators and admins) ----
+
+export interface BetaOverview {
+  target: number;
+  matches: { finishedPlayed: number; finishedOther: number; active: number; challenged: number; withProblems: number };
+  players: { signedUp: number; played: number };
+  problems: { id: number; matchId: number; kind: string; detail: string; reportedBy: string; createdAt: string; resolved: boolean }[];
+  recent: { id: number; players: [string, string]; status: string; endReason: string | null; moves: number; pace: string | null; draft: boolean; updatedAt: string }[];
+}
+
+export const fetchBetaOverview = () => call<BetaOverview>('GET', '/api/admin/beta');
+export const checkAllMatches = () => call<{ checked: number; newProblems: number }>('POST', '/api/admin/beta/check');
+export const resolveProblem = (id: number) => call<BetaOverview>('POST', `/api/admin/problems/${id}/resolve`);

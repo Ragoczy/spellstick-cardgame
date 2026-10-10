@@ -105,6 +105,47 @@ function pctOf(n: number): string {
   return Number.isNaN(n) ? '—' : `${(n * 100).toFixed(1)}%`;
 }
 
+/**
+ * Win rate by player card (the design's pre-beta balance check): how often a team with this
+ * player in its deck won. Spells aren't listed: each team always has its own, so their rate is
+ * just the team's. With n games, about 100/sqrt(n) points either side of 50% is normal luck.
+ */
+function winRateByCard(players: CardStats[], games: number): string[] {
+  const out: string[] = ['### Win rate by player card', ''];
+  const seen = players.filter((c) => c.deckGames > 0);
+  if (!seen.length) return [];
+  const rate = (wins: number, n: number) => (100 * wins) / n;
+  const noise = (n: number) => 100 / Math.sqrt(n);
+  const typical = Math.round(seen.reduce((sum, c) => sum + c.deckGames, 0) / seen.length);
+  out.push(`Decided games where a team had the player in its deck, and how often that team won. Each player was in about ${typical} of ${games} games, so about ${noise(typical).toFixed(0)} points either side of 50% is normal luck. ⚠ marks rates outside that.`);
+  out.push('');
+  const sorted = [...seen].sort((a, b) => rate(b.deckWins, b.deckGames) - rate(a.deckWins, a.deckGames));
+  const row = (c: CardStats) => {
+    const r = rate(c.deckWins, c.deckGames);
+    const flag = Math.abs(r - 50) > noise(c.deckGames) ? ' ⚠' : '';
+    return [`${c.name} (${c.id})`, c.role ?? c.team, c.deckGames, `${r.toFixed(1)}%${flag}`];
+  };
+  const shown = sorted.length > 20 ? [...sorted.slice(0, 10), ...sorted.slice(-10)] : sorted;
+  if (sorted.length > 20) out.push('The 10 highest and 10 lowest:', '');
+  out.push(table(['Player', 'Type', 'Games', 'Team won'], shown.map(row)));
+  const flagged = sorted.filter((c) => Math.abs(rate(c.deckWins, c.deckGames) - 50) > noise(c.deckGames));
+  out.push('');
+  out.push(`${flagged.length} of ${sorted.length} players are outside normal luck (by chance alone, expect about ${Math.round(sorted.length * 0.05)}).`);
+  out.push('');
+
+  const drafted = seen.filter((c) => c.draftedGames > 0);
+  if (drafted.length) {
+    out.push('### Draft picks', '');
+    out.push('How often each player was drafted, and how often the team that drafted them won. The 10 most drafted:');
+    out.push('');
+    const byPicks = [...drafted].sort((a, b) => b.draftedGames - a.draftedGames).slice(0, 10);
+    out.push(table(['Player', 'Type', 'Drafted in', 'Drafting team won'],
+      byPicks.map((c) => [`${c.name} (${c.id})`, c.role ?? c.team, `${c.draftedGames} games`, `${rate(c.draftedWins, c.draftedGames).toFixed(1)}%`])));
+    out.push('');
+  }
+  return out;
+}
+
 function pct(part: number, whole: number): string {
   return whole ? pctOf(part / whole) : '—';
 }
@@ -293,6 +334,8 @@ export function buildReport(input: ReportInput): string {
     out.push('None.');
   }
   out.push('');
+
+  out.push(...winRateByCard(players, s.games));
 
   out.push('### Spells');
   out.push('');

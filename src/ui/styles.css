@@ -332,3 +332,7 @@ button.danger {
 /* Notification settings */
 .notification-settings .toggle { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.9rem; }
 .notification-settings .toggle input { margin-top: 3px; }
+
+/* Beta dashboard */
+.beta-progress { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 8px 0; max-width: 480px; }
+.beta-progress div { height: 100%; background: var(--good); }

@@ -346,11 +346,21 @@ Draft picks are match events, and the random deck fill comes from the match seed
 - [ ] Prize types for the first tournament (TBD).
 - [ ] HexBot connection details: deferred to the start of phase 4 (Store).
 
+## Running the beta
+
+*Added 2026-10-10.* What phase 1's gate needs, and how it's tracked:
+
+- **Who plays:** by default anyone with the Players role can sign in. To keep it to the beta group, make a Discord role for them and set it as Spellstick's allowed role (`discordAllowedRoleIds`, infra/README.md "Spellstick-only settings"). Moderators and admins can always sign in.
+- **Disagreements:** the server is the only referee and the browser only shows what it sends, so a "disagreement" shows up in one of two ways, and both are recorded in `match_problems`. Players' browsers report a move the server refused although it had offered it, and updates with missing moves. The server replays every match from its saved moves after each deploy (and when a moderator asks) and checks the move count, whose decision it is, and the result. That last check also catches a rules change that would break matches already under way.
+- **Progress:** moderators and admins get a **Beta dashboard** button in the online lobby: matches played to the end out of 100, other finished matches, players who have played, open problems (with "Mark as dealt with"), and recent matches.
+- **Balance:** before the beta, the simulator report now has win rates by player card (`npm run sim`), with a line for what counts as normal luck. Latest runs: `reports/sim-2026-10-10-v12-*.md`.
+
 ## Roadmap
 
 Each phase ships something playable; the gate must pass before the next phase starts.
 
 1. **Online play.** Server referee using the existing engine, Discord login, async 1v1 with time banks, head-to-head draft, Discord bot notifications. *Gate: a 20-reader beta finishes 100 matches with no state disagreements between client and server.*
+   *Status 2026-10-10: built. The beta itself is next (see "Running the beta" below).*
 2. **Collections and teams.** Card definitions and instances, starter deck, persistent teams, Constructed.
 3. **Tournaments and awards.** Swiss plus top cut, deadlines and forfeits, automatic award cards, redeem codes. *Gate: a free beta tournament with no prize at stake.*
 4. **Store.** Coin adapter, ledger, packs, singles, cosmetics, coin rewards for play. *Gate: HexBot's debit and credit endpoints pass a retry and double-spend test.*
@@ -359,6 +369,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Beta readiness: problem reports from browsers, a replay check of every match after each deploy, a moderator Beta dashboard, and win rates by player card in the simulator report. Phase 1 is built; the beta is next.
 - 2026-10-10: Online step 7, Discord notifications: challenge, your move, and time running low, each opt-in and off by default. Waiting on Paul to create the bot and store its token.
 - 2026-10-10: Online step 6, head-to-head draft (rules v0.12). Challenges and practice games can start with a draft: 30 face-up field players, 10 picks each in snake order, goalies and the rest dealt at random. Goalies were taken out of the draft for balance (see Match formats).
 - 2026-10-10: Discord policy features. "Unlink my Discord account" in the player's settings: Discord checks it's them, the game revokes its Discord token, deletes their data and sessions, ends their matches in progress as resigned, and keeps finished matches for opponents with the player shown as "Deleted player". An audit table records only the time. "Report a problem" (footer, help screen, settings) opens a filled-in email to admin@darkspace.press. Notifications must be opt-in and off by default (see Notifications). The Discord Activity no longer asks for the unused `identify` scope.

@@ -20,7 +20,8 @@ const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '');
 const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
 
-export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; onBack: () => void }) {
+/** onDashboard: moderators and admins only (the beta dashboard). */
+export function OnlineLobby({ onOpen, onBack, onDashboard }: { onOpen: (id: number) => void; onBack: () => void; onDashboard?: () => void }) {
   const [matches, setMatches] = useState<MatchSummary[] | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -140,6 +141,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
 
       <div className="buttons">
         <button type="button" onClick={onBack}>Back</button>
+        {onDashboard ? <button type="button" onClick={onDashboard}>Beta dashboard</button> : null}
       </div>
     </div>
   );

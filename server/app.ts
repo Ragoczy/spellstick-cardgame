@@ -9,6 +9,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import type pg from 'pg';
 import { ACTIVITY_TOKEN_PATH, activityOrigin, discordActivityRoutes } from './api/discord-activity';
+import { betaRoutes } from './api/beta';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import { notificationRoutes } from './api/notifications';
@@ -71,6 +72,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   const bot = deps.bot !== undefined ? deps.bot : deps.config.discordBotToken ? discordBot(deps.config.discordBotToken) : null;
   const notifier = new Notifier(deps.db, bot, live, deps.config.publicUrl, (err) => app.log.error(err, 'notification failed'));
   notificationRoutes(app, deps, notifier);
+  betaRoutes(app, deps);
   matchRoutes(app, deps, live, notifier);
   // Live connections never end by themselves, so end them first when the server is shutting down.
   app.addHook('preClose', async () => live.closeAll());

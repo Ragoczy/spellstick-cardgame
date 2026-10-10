@@ -20,6 +20,12 @@ export interface CardStats {
   inContest: number;
   /** Of those, how often this card's side won the contest. */
   contestWins: number;
+  /** Decided games with this card in a team's deck, and how many that team won. */
+  deckGames: number;
+  deckWins: number;
+  /** Draft games: decided games where a team drafted this card, and how many that team won. */
+  draftedGames: number;
+  draftedWins: number;
 }
 
 export interface AffinityStats {
@@ -87,7 +93,10 @@ export class SimStats {
     for (const def of allCards) {
       if (def.promo) continue;
       const role = def.kind === 'spell' ? undefined : def.role;
-      this.cards.set(def.id, { id: def.id, name: def.name, team: def.team, kind: def.kind, role, played: 0, inContest: 0, contestWins: 0 });
+      this.cards.set(def.id, {
+        id: def.id, name: def.name, team: def.team, kind: def.kind, role,
+        played: 0, inContest: 0, contestWins: 0, deckGames: 0, deckWins: 0, draftedGames: 0, draftedWins: 0,
+      });
     }
   }
 
@@ -186,6 +195,29 @@ export class SimStats {
       }
     }
     this.finishInjuries(injuredThisGame, emptySlot, result.winner);
+    this.countDecks(record, result.winner);
+  }
+
+  /** Win rate by card: which cards each team had (and drafted), and whether that team won. */
+  private countDecks(record: GameRecord, winner: Side | null): void {
+    if (winner === null) return;
+    const s = record.final;
+    for (const side of ['A', 'B'] as const) {
+      const won = winner === side ? 1 : 0;
+      const ids = new Set(Object.entries(s.cards).filter(([uid]) => uid.startsWith(side)).map(([, def]) => def.id));
+      for (const id of ids) {
+        const card = this.cards.get(id);
+        if (!card) continue;
+        card.deckGames += 1;
+        card.deckWins += won;
+      }
+      for (const uid of s.draft?.picks[side] ?? []) {
+        const card = this.cards.get(s.cards[uid]!.id);
+        if (!card) continue;
+        card.draftedGames += 1;
+        card.draftedWins += won;
+      }
+    }
   }
 
   /** Called at the end of add() for each game's injury totals. */

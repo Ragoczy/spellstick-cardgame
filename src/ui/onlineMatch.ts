@@ -15,6 +15,15 @@ export interface MatchApi {
   get(id: number, since?: number): Promise<MatchDetail>;
   move(id: number, action: Action, seen: number): Promise<MatchDetail>;
   resign(id: number): Promise<MatchSummary>;
+  /** Tells the server about something that shouldn't happen (for the beta). Best effort. */
+  report?(id: number, kind: 'refused-move' | 'missing-events', detail: string): Promise<void>;
+}
+
+/** The server said no, with this HTTP status. */
+export class ServerError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
 }
 
 /** One player's seat in an online match, from the server's latest answer. */
@@ -139,6 +148,11 @@ export class OnlineMatchClient {
         } catch (err) {
           // Moves queued behind a refused one were chosen from an out-of-date view.
           this.jobs = this.jobs.filter((j) => j.kind !== 'move' && j.kind !== 'autoPlace');
+          // Every move sent was one the server offered, so a flat refusal means the two disagree.
+          if (sending && err instanceof ServerError && err.status === 400) {
+            const what = job.kind === 'move' ? job.action.type : 'automatic lineup placement';
+            this.report('refused-move', `The server refused a ${what} it had offered, at move ${this.current.match.moveCount}: ${err.message}`);
+          }
           if (!(err instanceof StaleMatchError)) this.listener.onProblem((err as Error).message);
           await this.fetchLatest().catch(() => {});
         } finally {
@@ -171,6 +185,10 @@ export class OnlineMatchClient {
     }
   }
 
+  private report(kind: 'refused-move' | 'missing-events', detail: string): void {
+    this.api.report?.(this.id, kind, detail).catch(() => {});
+  }
+
   private async fetchLatest(): Promise<void> {
     this.accept(await this.api.get(this.id, this.current.match.moveCount));
   }
@@ -180,7 +198,13 @@ export class OnlineMatchClient {
     if (!next.game) return;
     const before = this.current.match;
     if (next.match.moveCount === before.moveCount && next.match.status === before.status) return;
-    const events = next.game.events.filter((m) => m.seq > before.moveCount).flatMap((m) => m.events);
+    const fresh = next.game.events.filter((m) => m.seq > before.moveCount);
+    // Each move from the last one seen up to the newest should be there, once, in order.
+    const expected = Array.from({ length: Math.max(0, next.match.moveCount - before.moveCount) }, (_, i) => before.moveCount + 1 + i);
+    if (fresh.map((m) => m.seq).join(',') !== expected.join(',')) {
+      this.report('missing-events', `Expected the events of moves ${expected[0] ?? '-'} to ${expected.at(-1) ?? '-'}, got ${fresh.map((m) => m.seq).join(', ') || 'none'}.`);
+    }
+    const events = fresh.flatMap((m) => m.events);
     this.current = next;
     this.currentSeat = new OnlineSeat(next);
     this.listener.onUpdate(next, events);

@@ -4,6 +4,7 @@ import { Account } from './Account';
 import { IN_DISCORD, MENU_PRESENCE, setDiscordPresence } from './discord';
 import { ONLINE, type Me } from './online';
 import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
+import { BetaDashboard } from './BetaDashboard';
 import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
@@ -14,7 +15,9 @@ import type { SessionOptions } from './session';
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
   // Online build only: your matches, and one match.
-  | { kind: 'lobby' } | { kind: 'match'; id: number };
+  | { kind: 'lobby' } | { kind: 'match'; id: number }
+  // Moderators and admins: the beta dashboard.
+  | { kind: 'beta' };
 
 /** The policies for all Darkspace games, on the main Darkspace site. */
 const TERMS_URL = 'https://www.darkspace.press/games-terms/';
@@ -96,7 +99,14 @@ export function App() {
         {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} reporter={me} /> : null}
         {screen.kind === 'future' ? <FutureFeatures onBack={() => setScreen({ kind: 'start' })} /> : null}
         {screen.kind === 'lobby' ? (
-          <OnlineLobby onOpen={(id) => setScreen({ kind: 'match', id })} onBack={() => setScreen({ kind: 'start' })} />
+          <OnlineLobby
+            onOpen={(id) => setScreen({ kind: 'match', id })}
+            onBack={() => setScreen({ kind: 'start' })}
+            onDashboard={me && me.role !== 'player' ? () => setScreen({ kind: 'beta' }) : undefined}
+          />
+        ) : null}
+        {screen.kind === 'beta' ? (
+          <BetaDashboard onBack={() => setScreen({ kind: 'lobby' })} />
         ) : null}
         {screen.kind === 'match' ? (
           <OnlineMatchScreen key={screen.id} matchId={screen.id} onBack={() => { clearMatchLink(); setScreen({ kind: 'lobby' }); }} />

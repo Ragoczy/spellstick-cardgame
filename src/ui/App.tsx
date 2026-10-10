@@ -9,6 +9,7 @@ import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
+import { RecentChanges } from './RecentChanges';
 import { ReportProblem } from './ReportProblem';
 import type { SessionOptions } from './session';
 
@@ -94,6 +95,7 @@ export function App() {
             </div>
             <p className="small">Prototype: card names, teams, and art are placeholders.</p>
             <button type="button" className="quiet" onClick={() => setScreen({ kind: 'future' })}>Future features</button>
+            <RecentChanges />
           </div>
         ) : null}
         {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} reporter={me} /> : null}

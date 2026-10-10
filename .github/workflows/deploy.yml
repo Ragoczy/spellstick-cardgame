@@ -86,6 +86,12 @@ jobs:
       IMAGE: acrha7siia4h4zia.azurecr.io/spellstick:${{ github.sha }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Enough history for the start screen's "Recent changes" list.
+          fetch-depth: 50
+      # The Docker build can't see .git, so hand it the list as a file (see vite.config.ts).
+      - name: Write the recent changes list
+        run: git log -10 --no-merges --format='%cs%x09%s' > recent-changes.txt
       - uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}

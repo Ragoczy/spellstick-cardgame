@@ -6,3 +6,6 @@ dist-server/
 .env
 *.env
 !*.env.example
+
+# Written by the deploy workflow for the Docker build (see vite.config.ts)
+recent-changes.txt

@@ -30,6 +30,11 @@ button { font: inherit; color: inherit; }
 .tagline { font-size: 1.1rem; color: var(--muted); }
 .small { font-size: 0.85rem; color: var(--muted); }
 
+.recent-changes { margin-top: 24px; }
+.recent-changes ul { margin: 0; padding-left: 18px; font-size: 0.9rem; }
+.recent-changes li { margin: 3px 0; }
+.recent-date { color: var(--muted); white-space: nowrap; margin-right: 4px; }
+
 .options { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
 .options label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; color: var(--muted); }
 .options select { font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }

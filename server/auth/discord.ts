@@ -3,6 +3,10 @@
 // We ask for two permissions ("scopes"): identify (who you are) and guilds.members.read (your
 // membership and roles in our server). The access token is used for these calls and then
 // thrown away. We never store Discord tokens.
+//
+// Unlinking (/auth/discord/unlink in routes.ts) signs in once more to get a fresh token, then
+// revokes it. Revoking any token ends every token of that authorization, so nothing the game
+// was given keeps working.
 
 export const DISCORD_SCOPES = 'identify guilds.members.read';
 const API = 'https://discord.com/api/v10';
@@ -30,11 +34,18 @@ export interface DiscordApi {
    * trades it here for an access token, using the Activity app's secret. No return address.
    */
   exchangeActivityCode(code: string): Promise<string>;
+  /** Revokes a sign-in token, and with it every token of the same authorization. */
+  revokeToken(accessToken: string): Promise<void>;
 }
 
 interface AppCredentials {
   clientId: string;
   clientSecret: string;
+}
+
+/** How our server proves to Discord which app it is. */
+function basicAuth(app: AppCredentials): string {
+  return `Basic ${Buffer.from(`${app.clientId}:${app.clientSecret}`).toString('base64')}`;
 }
 
 /** Trades a one-time code for an access token. */
@@ -43,7 +54,7 @@ async function exchangeForToken(app: AppCredentials, params: Record<string, stri
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${app.clientId}:${app.clientSecret}`).toString('base64')}`,
+      Authorization: basicAuth(app),
     },
     body: new URLSearchParams({ grant_type: 'authorization_code', ...params }),
   });
@@ -71,6 +82,17 @@ export function discordApi(signIn: AppCredentials, activity: AppCredentials | nu
     exchangeActivityCode: async (code) => {
       if (!activity) throw new Error('The Discord Activity is off.');
       return exchangeForToken(activity, { code });
+    },
+
+    // https://docs.discord.com/developers/topics/oauth2 (token revocation): a form post, with
+    // the app's ID and secret as Basic auth.
+    async revokeToken(accessToken) {
+      const res = await fetch(`${API}/oauth2/token/revoke`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: basicAuth(signIn) },
+        body: new URLSearchParams({ token: accessToken, token_type_hint: 'access_token' }),
+      });
+      if (!res.ok) throw new Error(`Discord token revocation failed: ${res.status}`);
     },
 
     async getUser(accessToken) {

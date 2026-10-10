@@ -19,7 +19,8 @@ the page.
    - reads the client ID from the address (`<client id>.discordsays.com`), so there is no
      client-side setting
    - `new DiscordSDK(clientId)`, then `await sdk.ready()`
-   - `sdk.commands.authorize(...)` with scopes `identify` and `rpc.activities.write`. The first
+   - `sdk.commands.authorize(...)` with only the `rpc.activities.write` scope (what `setActivity`
+     needs; `identify` was dropped 2026-10-10 because nothing used it). The first
      time, Discord asks the player to allow it.
    - POSTs the one-time code to `/api/discord/token`. The address is relative, so inside
      Discord it goes to `https://<client id>.discordsays.com/api/discord/token`, and the root

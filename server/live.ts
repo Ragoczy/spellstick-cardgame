@@ -67,6 +67,11 @@ export class LiveHub {
     return n;
   }
 
+  /** Ends one player's connections (they unlinked their account). */
+  closeUser(userId: number): void {
+    for (const connection of [...(this.byUser.get(userId) ?? [])]) this.close(userId, connection);
+  }
+
   /** Ends every connection, so the server can shut down straight away during a deploy. */
   closeAll(): void {
     for (const [userId, list] of this.byUser) for (const connection of [...list]) this.close(userId, connection);

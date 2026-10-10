@@ -1,26 +1,39 @@
 // The sign-in panel on the start screen (online build only): a "Sign in with Discord" button,
-// or who you're signed in as. New players pick a manager name here.
+// or who you're signed in as. New players pick a manager name here. Settings opens below it.
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { fetchMe, saveDisplayName, signOut, SIGN_IN_PROBLEMS, SIGN_IN_URL, type Me } from './online';
+import { AccountSettings } from './AccountSettings';
+import {
+  fetchMe, saveDisplayName, signOut, SIGN_IN_PROBLEMS, SIGN_IN_URL, UNLINK_PROBLEMS, UNLINKED_MESSAGE, type Me,
+} from './online';
 
 type State = { kind: 'loading' } | { kind: 'signedOut' } | { kind: 'signedIn'; me: Me } | { kind: 'offline' };
 
-/** Reads ?signin=<reason> once, then removes it from the address bar. */
-function takeSignInProblem(): string | null {
+type Notice = { text: string; problem: boolean };
+
+/**
+ * Reads what the server sent the player back with, once, then removes it from the address bar:
+ * ?signin=<reason> (sign-in didn't work), ?unlink=<reason> (unlinking didn't), or ?unlinked=1.
+ */
+function takeNotice(): Notice | null {
   const params = new URLSearchParams(window.location.search);
-  const reason = params.get('signin');
-  if (!reason) return null;
-  params.delete('signin');
+  const signin = params.get('signin');
+  const unlink = params.get('unlink');
+  const unlinked = params.get('unlinked');
+  if (!signin && !unlink && !unlinked) return null;
+  for (const name of ['signin', 'unlink', 'unlinked']) params.delete(name);
   const query = params.toString();
   window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : ''));
-  return SIGN_IN_PROBLEMS[reason] ?? SIGN_IN_PROBLEMS.failed!;
+  if (unlinked) return { text: UNLINKED_MESSAGE, problem: false };
+  if (unlink) return { text: UNLINK_PROBLEMS[unlink] ?? UNLINK_PROBLEMS.failed!, problem: true };
+  return { text: SIGN_IN_PROBLEMS[signin!] ?? SIGN_IN_PROBLEMS.failed!, problem: true };
 }
 
 /** onChange: told who is signed in (null when nobody), so the start screen can offer online play. */
 export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
-  const [problem] = useState(takeSignInProblem);
+  const [notice] = useState(takeNotice);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     onChange?.(state.kind === 'signedIn' ? state.me : null);
@@ -39,7 +52,7 @@ export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
 
   return (
     <section className="account" aria-live="polite">
-      {problem ? <p className="account-problem">{problem}</p> : null}
+      {notice ? <p className={notice.problem ? 'account-problem' : 'account-notice'}>{notice.text}</p> : null}
       {state.kind === 'loading' ? <p className="small">Checking sign-in…</p> : null}
       {state.kind === 'offline' ? <p className="small">Online play isn't available right now. You can still play against the computer.</p> : null}
       {state.kind === 'signedOut' ? (
@@ -58,6 +71,12 @@ export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
           <button type="button" className="quiet" onClick={doSignOut}>Sign out</button>
         </div>
       ) : null}
+      {state.kind === 'signedIn' ? (
+        <button type="button" className="quiet" aria-expanded={showSettings} onClick={() => setShowSettings(!showSettings)}>
+          {showSettings ? 'Hide settings' : 'Settings'}
+        </button>
+      ) : null}
+      {state.kind === 'signedIn' && showSettings ? <AccountSettings me={state.me} /> : null}
     </section>
   );
 }

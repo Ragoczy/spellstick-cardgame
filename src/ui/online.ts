@@ -9,6 +9,8 @@ export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
 /** The signed-in player, as GET /api/me returns them. */
 export interface Me {
   displayName: string | null;
+  /** Only shown to the player, in a problem report. */
+  discordId: string;
   discordUsername: string;
   avatarUrl: string | null;
   role: 'player' | 'moderator' | 'admin';
@@ -47,6 +49,30 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
   failed: "Sign-in didn't work. Please try again in a moment.",
   'not-member': 'Online play is for members of our Discord server. Join the server, then sign in again.',
   'no-role': "Your Discord account doesn't have a role that's allowed to play online yet. Ask a moderator on our Discord server if you think it should.",
+};
+
+// ---- Unlinking your Discord account ----
+
+/** What the player types to confirm. The server checks it too (UNLINK_CONFIRMATION). */
+export const UNLINK_WORD = 'UNLINK';
+
+/**
+ * Starts unlinking. The server answers with a Discord address: Discord checks it's really
+ * them, then sends them back, and the server deletes their data. Throws with a message to show.
+ */
+export async function startUnlink(): Promise<void> {
+  const { url } = await call<{ url: string }>('POST', '/auth/discord/unlink', { confirm: UNLINK_WORD });
+  window.location.assign(url);
+}
+
+/** Shown after ?unlinked=1. */
+export const UNLINKED_MESSAGE = 'Your Spellstick data has been deleted and the game is disconnected from Discord. Your Discord account was not affected.';
+
+/** Plain-language explanations for ?unlink=<reason>, when nothing was deleted. */
+export const UNLINK_PROBLEMS: Record<string, string> = {
+  cancelled: 'Unlinking was cancelled. Nothing was deleted.',
+  failed: "Unlinking didn't work, and nothing was deleted. Please try again in a moment.",
+  'wrong-account': 'Discord is signed in to a different account than this one, so nothing was deleted. Switch accounts in Discord and try again.',
 };
 
 // ---- Matches ----

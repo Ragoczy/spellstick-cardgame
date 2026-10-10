@@ -60,10 +60,10 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   });
 
   app.get('/healthz', async () => ({ ok: true }));
-  authRoutes(app, deps);
+  const live = new LiveHub();
+  authRoutes(app, deps, live);
   meRoutes(app, deps);
   if (activity) discordActivityRoutes(app, deps);
-  const live = new LiveHub();
   matchRoutes(app, deps, live);
   // Live connections never end by themselves, so end them first when the server is shutting down.
   app.addHook('preClose', async () => live.closeAll());

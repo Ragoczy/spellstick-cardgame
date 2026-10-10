@@ -40,7 +40,8 @@ export async function connect(): Promise<(presence: Presence) => void> {
     response_type: 'code',
     state: '',
     prompt: 'none',
-    scope: ['identify', 'rpc.activities.write'],
+    // Only what setActivity needs. authorize and authenticate need no scopes of their own.
+    scope: ['rpc.activities.write'],
   });
 
   // A relative address: inside Discord it goes through Discord's proxy to our server.

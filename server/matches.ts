@@ -65,7 +65,9 @@ interface MatchRow {
   overdue: boolean;
 }
 
-const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ua.display_name as a_name, ub.display_name as b_name, m.setup,
+/** A player who unlinked their Discord account (migration 004) shows up as "Former player". */
+const nameOf = (u: string) => `coalesce(${u}.display_name, case when ${u}.unlinked_at is not null then 'Former player' end)`;
+const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ${nameOf('ua')} as a_name, ${nameOf('ub')} as b_name, m.setup,
   m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at,
   m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,
   floor(extract(epoch from (now() - m.waiting_since)) * 1000)::bigint as waited_ms,
@@ -257,7 +259,7 @@ export async function findPlayers(db: pg.Pool, user: User, search: string): Prom
 // ---- Changing matches ----
 
 /** Runs work inside a transaction. */
-async function inTransaction<T>(db: pg.Pool, work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+export async function inTransaction<T>(db: pg.Pool, work: (client: pg.PoolClient) => Promise<T>): Promise<T> {
   const client = await db.connect();
   try {
     await client.query('begin');
@@ -427,20 +429,49 @@ export async function declineChallenge(db: pg.Pool, user: User, matchId: number)
   return toSummary(row, side, user.id);
 }
 
+/** Ends a match in progress: this side gives up and the other side wins. */
+async function resignRow(client: pg.PoolClient, row: MatchRow, side: Side): Promise<void> {
+  const banks = banksNow(row);
+  await client.query(
+    `update matches set status = 'finished', waiting_on = null, waiting_due = null, bank_a_ms = $3, bank_b_ms = $4,
+       winner = $2, end_reason = 'resigned', finished_at = now()
+     where id = $1`,
+    [row.id, playerOn(row, otherSide(side)), banks?.A ?? null, banks?.B ?? null],
+  );
+}
+
 export async function resign(db: pg.Pool, user: User, matchId: number): Promise<MatchSummary> {
   await inTransaction(db, async (client) => {
     const { row, side } = await loadRow(client, matchId, user, true);
     if (row.status !== 'active') throw new MatchError(409, 'This match is not in progress.');
-    const banks = banksNow(row);
-    await client.query(
-      `update matches set status = 'finished', waiting_on = null, waiting_due = null, bank_a_ms = $3, bank_b_ms = $4,
-         winner = $2, end_reason = 'resigned', finished_at = now()
-       where id = $1`,
-      [matchId, playerOn(row, otherSide(side)), banks?.A ?? null, banks?.B ?? null],
-    );
+    await resignRow(client, row, side);
   });
   const { row, side } = await loadRow(db, matchId, user);
   return toSummary(row, side, user.id);
+}
+
+/**
+ * A player is leaving for good (unlinking their Discord account): their matches in progress
+ * count as resigned, so the opponent wins, and open challenges either way are turned down.
+ * Finished matches stay as they are, for the other player's history. Call inside the unlink's
+ * transaction. Returns the changes to tell the opponents about.
+ */
+export async function leaveAllMatches(client: pg.PoolClient, userId: number): Promise<ClockNotice[]> {
+  const { rows } = await client.query<MatchRow>(
+    `select ${MATCH_COLUMNS} from ${MATCH_FROM}
+     where (m.player_a = $1 or m.player_b = $1) and m.status in ('challenged', 'active')
+     order by m.id for update of m`,
+    [userId],
+  );
+  const notices: ClockNotice[] = [];
+  for (const row of rows) {
+    const side: Side = Number(row.player_a) === userId ? 'A' : 'B';
+    if (row.status === 'active') await resignRow(client, row, side);
+    else await client.query(`update matches set status = 'declined', waiting_on = null, finished_at = now() where id = $1`, [row.id]);
+    const after = (await loadRowById(client, Number(row.id)))!;
+    notices.push({ playerIds: [playerOn(row, otherSide(side))], change: { matchId: Number(row.id), status: after.status, moveCount: after.move_count } });
+  }
+  return notices;
 }
 
 /**

@@ -8,6 +8,7 @@ import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
+import { ReportProblem } from './ReportProblem';
 import type { SessionOptions } from './session';
 
 type Screen =
@@ -78,10 +79,9 @@ export function App() {
             </div>
             <p className="small">Prototype: card names, teams, and art are placeholders.</p>
             <button type="button" className="quiet" onClick={() => setScreen({ kind: 'future' })}>Future features</button>
-            {ONLINE ? <a className="quiet" href="privacy.html">Privacy</a> : null}
           </div>
         ) : null}
-        {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} /> : null}
+        {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} reporter={me} /> : null}
         {screen.kind === 'future' ? <FutureFeatures onBack={() => setScreen({ kind: 'start' })} /> : null}
         {screen.kind === 'lobby' ? (
           <OnlineLobby onOpen={(id) => setScreen({ kind: 'match', id })} onBack={() => setScreen({ kind: 'start' })} />
@@ -91,6 +91,12 @@ export function App() {
         ) : null}
         {screen.kind === 'game' ? (
           <LocalGameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />
+        ) : null}
+        {!inGame ? (
+          <footer className="footer">
+            {ONLINE ? <a className="quiet" href="privacy.html">Privacy</a> : null}
+            <ReportProblem reporter={me} />
+          </footer>
         ) : null}
       </main>
     </TeamColors.Provider>

@@ -85,11 +85,17 @@ export function person(id: string, username: string, roles: string[] | null): Fa
   };
 }
 
-/** A fake Discord where each one-time code belongs to one pretend person. */
-export function fakeDiscord(codes: Record<string, FakePerson>): DiscordApi & { exchanged: string[] } {
+/**
+ * A fake Discord where each one-time code belongs to one pretend person. revoked lists the
+ * tokens the game revoked; set failRevoke to make revoking fail.
+ */
+export function fakeDiscord(codes: Record<string, FakePerson>): DiscordApi & { exchanged: string[]; revoked: string[]; failRevoke: boolean } {
   const exchanged: string[] = [];
+  const revoked: string[] = [];
   return {
     exchanged,
+    revoked,
+    failRevoke: false,
     async exchangeCode(code) {
       exchanged.push(code);
       if (!codes[code]) throw new Error('bad code');
@@ -105,6 +111,10 @@ export function fakeDiscord(codes: Record<string, FakePerson>): DiscordApi & { e
       exchanged.push(code);
       if (!codes[code]) throw new Error('bad code');
       return `activity-token-for-${code}`;
+    },
+    async revokeToken(token) {
+      if (this.failRevoke) throw new Error('Discord is down');
+      revoked.push(token);
     },
   };
 }

@@ -1,6 +1,10 @@
 // A short, player-facing version of docs/RULES.md (v0.10). If the rules change, update this too.
 
-export function HowToPlay({ onBack }: { onBack: () => void }) {
+import type { Reporter } from './report';
+import { ReportProblem } from './ReportProblem';
+
+/** reporter: the signed-in player, for "Report a problem" (null when signed out). */
+export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: Reporter | null }) {
   return (
     <div className="screen rules">
       <button type="button" className="quiet" onClick={onBack}>← Back</button>
@@ -89,6 +93,10 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
         haven't shot yet (penalty shots get +3, and are rolled), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
       </p>
+
+      <h3>Something wrong?</h3>
+      <p>Found a bug, or a problem with another player? Let us know.</p>
+      <ReportProblem reporter={reporter} />
       <button type="button" className="primary" onClick={onBack}>Got it</button>
     </div>
   );

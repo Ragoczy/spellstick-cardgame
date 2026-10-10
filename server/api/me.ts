@@ -11,6 +11,8 @@ import { checkDisplayName, normalizeDisplayName, setDisplayName, type User } fro
 /** What the browser gets back. The Discord handle is the player's own, so it's fine to show them. */
 export interface MeResponse {
   displayName: string | null;
+  /** Shown to the player only when they report a problem, so the admin can find their account. */
+  discordId: string;
   discordUsername: string;
   avatarUrl: string | null;
   role: User['role'];
@@ -19,6 +21,7 @@ export interface MeResponse {
 function toResponse(user: User): MeResponse {
   return {
     displayName: user.displayName,
+    discordId: user.discordId,
     discordUsername: user.discordUsername,
     avatarUrl: user.discordAvatar ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.discordAvatar}.png?size=64` : null,
     role: user.role,

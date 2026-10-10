@@ -4,6 +4,7 @@ import { Account } from './Account';
 import { IN_DISCORD, MENU_PRESENCE, setDiscordPresence } from './discord';
 import { ONLINE, type Me } from './online';
 import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
+import { Rankings } from './Rankings';
 import { BetaDashboard } from './BetaDashboard';
 import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
@@ -15,8 +16,8 @@ import type { SessionOptions } from './session';
 
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
-  // Online build only: your matches, and one match.
-  | { kind: 'lobby' } | { kind: 'match'; id: number }
+  // Online build only: your matches, one match, and the rankings.
+  | { kind: 'lobby' } | { kind: 'match'; id: number } | { kind: 'rankings' }
   // Moderators and admins: the beta dashboard.
   | { kind: 'beta' };
 
@@ -104,8 +105,12 @@ export function App() {
           <OnlineLobby
             onOpen={(id) => setScreen({ kind: 'match', id })}
             onBack={() => setScreen({ kind: 'start' })}
+            onRankings={() => setScreen({ kind: 'rankings' })}
             onDashboard={me && me.role !== 'player' ? () => setScreen({ kind: 'beta' }) : undefined}
           />
+        ) : null}
+        {screen.kind === 'rankings' ? (
+          <Rankings onBack={() => setScreen({ kind: 'lobby' })} isAdmin={me?.role === 'admin'} />
         ) : null}
         {screen.kind === 'beta' ? (
           <BetaDashboard onBack={() => setScreen({ kind: 'lobby' })} />

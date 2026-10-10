@@ -22,7 +22,7 @@ function fakeServer() {
       id: 1, status: state.result ? 'finished' : 'active', side: 'A', opponent: { id: 2, name: 'Bob Wands' }, youChallenged: true,
       lanes: 2, team: 'A', opponentTeam: 'B', yourMove: state.pending.kind !== 'gameOver' && state.pending.side === 'A',
       moveCount: events.length - 1, waitingSince: new Date().toISOString(), result: null, createdAt: new Date().toISOString(),
-      pace: null, draft: false, clock: null, autopilot: { you: false, them: false },
+      pace: null, draft: false, ranked: false, clock: null, autopilot: { you: false, them: false },
     },
     game: {
       view: viewFor(state, 'A'),

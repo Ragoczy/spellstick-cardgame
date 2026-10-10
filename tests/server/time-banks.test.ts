@@ -109,8 +109,8 @@ describe.skipIf(!haveDb)('time banks', () => {
     await passTime(id, 36 * HOUR + 1000);
     const bob = await getMatch('bob', id); // any request settles the clocks
     expect(bob.match.status).toBe('finished');
-    expect(bob.match.result).toEqual({ outcome: 'won', reason: 'forfeit' });
-    expect((await getMatch('alice', id)).match.result).toEqual({ outcome: 'lost', reason: 'forfeit' });
+    expect(bob.match.result).toEqual({ outcome: 'won', reason: 'forfeit', ratingChange: null });
+    expect((await getMatch('alice', id)).match.result).toEqual({ outcome: 'lost', reason: 'forfeit', ratingChange: null });
     expect(bob.game!.legal).toEqual([]);
   });
 

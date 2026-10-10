@@ -260,7 +260,7 @@ describe.skipIf(!haveDb)('online matches', () => {
     const id = await newMatch('alice', 'bob');
     const resigned = (await api('alice', 'POST', `/api/matches/${id}/resign`)).json<MatchSummary>();
     expect(resigned).toMatchObject({ status: 'finished', result: { outcome: 'lost', reason: 'resigned' } });
-    expect((await getMatch('bob', id)).match.result).toEqual({ outcome: 'won', reason: 'resigned' });
+    expect((await getMatch('bob', id)).match.result).toEqual({ outcome: 'won', reason: 'resigned', ratingChange: null });
     expect((await getMatch('bob', id)).game!.legal).toEqual([]);
     expect((await api('bob', 'POST', `/api/matches/${id}/resign`)).statusCode).toBe(409);
   });

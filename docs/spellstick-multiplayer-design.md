@@ -30,7 +30,6 @@ This is a deliberate expansion of the project's scope (decided 2026-10-10). The 
 - Real-money purchases or any way to cash cards or coins out (see Risks).
 - Multiplayer (pod) draft. It is designed for here but built in a later phase.
 - Native mobile apps. The browser game stays mobile-friendly instead.
-- Ranked ladder outside tournaments.
 - Card rarity (future feature; see Cards, collection, and persistent teams).
 
 ## Architecture
@@ -221,6 +220,18 @@ Tournaments are Swiss rounds followed by a single-elimination top cut, run entir
 - *(Changed 2026-10-10, Discord policy: DMs and pings are **opt-in**. Each kind (for example your turn, time bank warnings, tournament pairings, trade offers) gets its own toggle in a Notifications section of the player's settings, with a one-line description, and every toggle starts **off** for everyone, existing players included. The server checks the setting before each send; a missing setting means don't send. Messages are about the game only (matches, trades, tournaments): no store links, books, merch, Patreon, or announcements. Every DM ends with "Turn off these alerts in Spellstick → Settings → Notifications." Tournament channel posts aren't DMs and need no opt-in, but are game-only too. Nothing is sent yet, so there are no toggles yet; `tests/discord-messages.test.ts` fails as soon as code that sends Discord messages appears, as a reminder.)*
 - *Built 2026-10-10 (`server/notify.ts`, the only file allowed to send; the tripwire test now checks that): three opt-in kinds in Settings → Notifications, all off by default. **Challenges**: someone challenged you. **Your move**: a match is waiting on you and you don't have the game open, at most once every 30 minutes per match. **Time running low**: once a match, when 6 hours are left in an async bank. Messages link to the match and never ping anyone. A log of what was sent (no message text) stops repeats; unlinking deletes it with the settings. Nothing is sent until a bot token is set up (infra/README.md, "Discord notifications (bot)"). Tournament posts come with tournaments.*
 
+## Ranked play
+
+*Added 2026-10-10 (Paul asked for ranking like chess; it was planned for phase 6).*
+
+- **Elo ratings**, the chess system, in `server/ratings.ts`. Everyone starts at 1200. The winner takes points from the loser; how many depends on how surprising the result was. A draw moves both players toward each other. The most one match can move a rating (the K factor) is 40 for a player's first 20 ranked matches, then 20. Glicko-2 is more accurate for players who play rarely but harder to follow; a small community doesn't need it.
+- **Only ranked challenges count.** The challenge form has Ranked (the default) or Friendly. Ranked matches must be drafts, so owned cards can't buy a rating once Constructed exists. Every ending counts: played out, resigned, forfeit, or finished by the computer after a bank ran out.
+- **Tiers, with the number shown too.** After 5 ranked matches a player gets a tier: Bronze (under 1150), Silver (1150+), Gold (1300+), Spellstick Master (1450+), and a place on the leaderboard. All of these numbers are constants at the top of `server/ratings.ts`.
+- **Where players see it:** a rating line and a Rankings button in the online lobby; the Rankings screen (leaderboard, your record, how ratings work); and "Rating +14." on finished ranked matches and at the end of the game.
+- **Rebuildable.** Ratings are a running total; the ranked matches are the record. Admins can recalculate every rating from the ranked matches (after changing the numbers) or start ratings over (`rating_resets`; plan to do this after the beta). Matches before a reset keep the changes they showed at the time.
+- **Unlinking** deletes the player's rating. Their opponents keep what they gained or lost against them.
+- Not built: a matchmaking queue (players still choose their opponents; beating a much weaker player gains almost nothing, which limits farming), seasons, and seeding tournaments by rating. All three can be added on top of this.
+
 ## Special award cards
 
 Award cards are earned, never bought, and carry a visible record of how they were earned. They come from rules the system checks automatically, plus a manual grant for anything else.
@@ -297,7 +308,7 @@ Trades happen only inside the game, as atomic swaps the server executes: both si
 
 ## Data model
 
-Twelve core tables in Postgres cover every feature in this design; JSON columns hold rules-specific data so the schema doesn't change when card designs do.
+Thirteen core tables in Postgres cover every feature in this design; JSON columns hold rules-specific data so the schema doesn't change when card designs do.
 
 | Table | Key fields | Notes |
 | --- | --- | --- |
@@ -307,7 +318,8 @@ Twelve core tables in Postgres cover every feature in this design; JSON columns 
 | ownership_history | instance_id, from_user, to_user, reason, ref_id, at | Starter, purchase, award, trade |
 | teams | id, owner_id, name, crest, record (JSON), valid | Persistent teams |
 | team_slots | team_id, slot, instance_id | The team's 40-card deck |
-| matches | id, format, tournament_id, round, player_a, player_b, seed, setup (JSON), status, winner, bank_a, bank_b, waiting_on, waiting_since | One per game; banks are remaining time |
+| matches | id, format, tournament_id, round, player_a, player_b, seed, setup (JSON), status, winner, bank_a, bank_b, waiting_on, waiting_since, ranked, rating_change_a, rating_change_b | One per game; banks are remaining time |
+| ratings | user_id, rating, games, wins, losses, draws | Running totals since the last reset (`rating_resets`) |
 | match_events | match_id, seq, player_id, move (JSON), at | Append-only log; state is rebuilt from it |
 | tournaments | id, name, format, points_cap, settings (JSON), status | Includes prize rules and time bank size |
 | registrations | tournament_id, user_id, team_id, record, tiebreakers (JSON), dropped | Swiss standings |
@@ -365,10 +377,11 @@ Each phase ships something playable; the gate must pass before the next phase st
 3. **Tournaments and awards.** Swiss plus top cut, deadlines and forfeits, automatic award cards, redeem codes. *Gate: a free beta tournament with no prize at stake.*
 4. **Store.** Coin adapter, ledger, packs, singles, cosmetics, coin rewards for play. *Gate: HexBot's debit and credit endpoints pass a retry and double-spend test.*
 5. **Trading.** Card-for-card atomic swaps with safeguards and moderator tools.
-6. **Later.** Rarity and Capped Constructed, pod draft, coins in trades, Patreon perks, ranked ladder.
+6. **Later.** Rarity and Capped Constructed, pod draft, coins in trades, Patreon perks. *(Ranked ladder built early, 2026-10-10; see Ranked play.)*
 
 ## Change log
 
+- 2026-10-10: Ranked play, moved forward from phase 6 at Paul's request. Elo ratings for ranked draft challenges, tiers after 5 ranked matches, a leaderboard, and admin tools to recalculate or start over. See Ranked play.
 - 2026-10-10: Beta readiness: problem reports from browsers, a replay check of every match after each deploy, a moderator Beta dashboard, and win rates by player card in the simulator report. Phase 1 is built; the beta is next.
 - 2026-10-10: Online step 7, Discord notifications: challenge, your move, and time running low, each opt-in and off by default. Waiting on Paul to create the bot and store its token.
 - 2026-10-10: Online step 6, head-to-head draft (rules v0.12). Challenges and practice games can start with a draft: 30 face-up field players, 10 picks each in snake order, goalies and the rest dealt at random. Goalies were taken out of the draft for balance (see Match formats).

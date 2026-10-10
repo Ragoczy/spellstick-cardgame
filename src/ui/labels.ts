@@ -65,3 +65,16 @@ export function clockText(ms: number): string {
   if (hours > 0) return `${hours} h ${minutes} m`;
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
+
+/** A ranked match's effect on your rating: "Rating +14.", "Rating −6.", or "Rating unchanged.". */
+export function ratingChangeText(change: number): string {
+  if (change === 0) return 'Rating unchanged.';
+  return `Rating ${change > 0 ? '+' : '−'}${Math.abs(change)}.`;
+}
+
+/** 1 -> "1st", 12 -> "12th", 22 -> "22nd". */
+export function ordinal(n: number): string {
+  const tens = n % 100;
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th';
+  return `${n}${suffix}`;
+}

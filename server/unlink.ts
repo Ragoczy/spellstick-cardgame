@@ -2,7 +2,7 @@
 //
 // What we hold about a player (see the migrations): their users row (Discord ID, username,
 // avatar, Discord account and server-join dates, manager name, role), their sign-in sessions,
-// and their part in matches. Matches are shared with the other player, so those are kept for
+// their rating, and their part in matches. Matches are shared with the other player, so those are kept for
 // the other player's history; the leaving player becomes an empty placeholder row that shows
 // as "Deleted player". A player with no matches is deleted outright.
 //
@@ -21,6 +21,8 @@ export async function unlinkAccount(db: pg.Pool, userId: number): Promise<ClockN
     await client.query('delete from sessions where user_id = $1', [userId]);
     await client.query('delete from notification_settings where user_id = $1', [userId]);
     await client.query('delete from notifications_sent where user_id = $1', [userId]);
+    // Their rating goes too. Their opponents keep what they gained or lost against them.
+    await client.query('delete from ratings where user_id = $1', [userId]);
 
     const { rows } = await client.query<{ n: number }>(
       `select count(*)::int as n from matches where player_a = $1 or player_b = $1`,

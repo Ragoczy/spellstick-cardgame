@@ -1,7 +1,7 @@
 // Talking to the game server. Only used by the online build (VITE_ONLINE=true); the plain
 // static build never calls these.
 
-import type { MatchDetail, MatchSummary, Pace, PlayerListing } from '../shared/matchApi';
+import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
@@ -111,10 +111,17 @@ export const matchApi: MatchApi = {
 
 export const listMatches = () => call<MatchSummary[]>('GET', '/api/matches');
 export const findPlayers = (name: string) => call<PlayerListing[]>('GET', `/api/players?name=${encodeURIComponent(name)}`);
-export const sendChallenge = (opponentId: number, lanes: number, team: string, pace: Pace, draft: boolean) =>
-  call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace, players: draft ? 'draft' : 'dealt' });
+export const sendChallenge = (opponentId: number, lanes: number, team: string, pace: Pace, draft: boolean, ranked: boolean) =>
+  call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace, players: draft ? 'draft' : 'dealt', ranked });
 export const acceptChallenge = (id: number) => call<MatchDetail>('POST', `/api/matches/${id}/accept`);
 export const declineChallenge = (id: number) => call<MatchSummary>('POST', `/api/matches/${id}/decline`);
+
+// ---- Ratings ----
+
+export const fetchRatings = () => call<RatingsBoard>('GET', '/api/ratings');
+/** Admins only. */
+export const recalculateRatings = () => call<{ matches: number }>('POST', '/api/admin/ratings/recalculate');
+export const resetRatings = () => call<{ ok: true }>('POST', '/api/admin/ratings/reset');
 
 // ---- Notification settings ----
 

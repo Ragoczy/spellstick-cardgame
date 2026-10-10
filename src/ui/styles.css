@@ -341,3 +341,12 @@ button.danger {
 /* Beta dashboard */
 .beta-progress { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 8px 0; max-width: 480px; }
 .beta-progress div { height: 100%; background: var(--good); }
+
+/* Rankings */
+.your-rating { margin: 4px 0 12px; }
+.rankings-table { border-collapse: collapse; width: 100%; max-width: 640px; margin: 12px 0; font-size: 0.95rem; }
+.rankings-table th, .rankings-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.rankings-table th { color: var(--muted); font-weight: normal; font-size: 0.85rem; }
+.rankings-table td:first-child, .rankings-table th:first-child { width: 2.5em; color: var(--muted); }
+.rankings-table tr.you td { font-weight: bold; color: var(--ink); }
+.rankings-table td:last-child { white-space: nowrap; }

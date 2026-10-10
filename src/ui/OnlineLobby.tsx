@@ -3,11 +3,11 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { prototypeCards } from '../data/prototype';
-import type { MatchDetail, MatchSummary, Pace, PlayerListing } from '../shared/matchApi';
-import { clockText } from './labels';
+import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
+import { clockText, ordinal, ratingChangeText } from './labels';
 import { GameScreen } from './GameScreen';
 import { liveConnected, listenLive } from './live';
-import { acceptChallenge, declineChallenge, findPlayers, listMatches, matchApi, sendChallenge } from './online';
+import { acceptChallenge, declineChallenge, fetchRatings, findPlayers, listMatches, matchApi, sendChallenge } from './online';
 import { useOnlineGame } from './useOnlineGame';
 
 /** How often the match list checks for changes while it's open, when live updates aren't working. */
@@ -15,14 +15,17 @@ const LIST_CHECK_MS = 15_000;
 
 const lanesText = (lanes: number) => (lanes === 3 ? 'three lanes' : 'two lanes');
 const paceText = (pace: Pace | null) => (pace === 'live' ? ', live' : '');
-const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '');
+const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '') + (m.ranked ? ', ranked' : '');
 /** " (35 h 12 m left)" for your own bank, when the match is timed. */
 const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
 
 /** onDashboard: moderators and admins only (the beta dashboard). */
-export function OnlineLobby({ onOpen, onBack, onDashboard }: { onOpen: (id: number) => void; onBack: () => void; onDashboard?: () => void }) {
+export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard }: {
+  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onDashboard?: () => void;
+}) {
   const [matches, setMatches] = useState<MatchSummary[] | null>(null);
+  const [ratings, setRatings] = useState<RatingsBoard | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -31,6 +34,8 @@ export function OnlineLobby({ onOpen, onBack, onDashboard }: { onOpen: (id: numb
     } catch (err) {
       setProblem((err as Error).message);
     }
+    // Your rating line is a nice extra: if it can't load, the lobby works without it.
+    fetchRatings().then(setRatings).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -81,6 +86,11 @@ export function OnlineLobby({ onOpen, onBack, onDashboard }: { onOpen: (id: numb
         when they next look. Hints are off in online matches.
       </p>
       {problem ? <p className="account-problem">{problem}</p> : null}
+
+      <div className="account-row your-rating">
+        <span>{yourRatingText(ratings)}</span>
+        <button type="button" className="quiet" onClick={onRankings}>Rankings</button>
+      </div>
 
       <ChallengeForm onSent={() => reload()} onProblem={setProblem} />
 
@@ -147,14 +157,27 @@ export function OnlineLobby({ onOpen, onBack, onDashboard }: { onOpen: (id: numb
   );
 }
 
+/** "Your rating: Silver, 1214 (12th)." */
+function yourRatingText(ratings: RatingsBoard | null): string {
+  if (!ratings) return 'Ranked matches change your rating.';
+  const you = ratings.you;
+  if (!you) return `Play ${ratings.placementGames} ranked matches to get a rating tier.`;
+  if (!you.tier) {
+    const left = ratings.placementGames - you.games;
+    return `Your rating: ${you.rating}. ${left} more ranked match${left === 1 ? '' : 'es'} to get your tier.`;
+  }
+  return `Your rating: ${you.tier}, ${you.rating}${you.rank ? ` (${ordinal(you.rank)})` : ''}.`;
+}
+
 function finishedText(m: MatchSummary): string {
   const name = m.opponent.name;
   if (m.status === 'declined') return m.youChallenged ? `Your challenge to ${name} was called off.` : `Challenge from ${name} called off.`;
   const r = m.result!;
   const resigned = r.reason === 'resigned' ? (r.outcome === 'won' ? ` (${name} resigned)` : ' (you resigned)')
     : r.reason === 'forfeit' ? (r.outcome === 'won' ? ` (${name} ran out of time)` : ' (you ran out of time)') : '';
-  if (r.outcome === 'draw') return `Draw with ${name}.`;
-  return r.outcome === 'won' ? `You beat ${name}${resigned}.` : `${name} beat you${resigned}.`;
+  const rating = r.ratingChange === null ? '' : ` ${ratingChangeText(r.ratingChange)}`;
+  if (r.outcome === 'draw') return `Draw with ${name}.${rating}`;
+  return (r.outcome === 'won' ? `You beat ${name}${resigned}.` : `${name} beat you${resigned}.`) + rating;
 }
 
 /** Find a player by name, choose the field and your team, and send a challenge. */
@@ -165,6 +188,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
   const [lanes, setLanes] = useState(2);
   const [pace, setPace] = useState<Pace>('async');
   const [draft, setDraft] = useState(true);
+  const [ranked, setRanked] = useState(true);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
@@ -184,7 +208,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
     setSending(true);
     onProblem(null);
     try {
-      await sendChallenge(picked.id, lanes, team, pace, draft);
+      await sendChallenge(picked.id, lanes, team, pace, draft, draft && ranked);
       setSent(`Challenge sent to ${picked.name}.`);
       setPicked(null);
       setSearch('');
@@ -244,7 +268,15 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
             <option value="dealt">Dealt at random</option>
           </select>
         </label>
+        <label>
+          Rating
+          <select value={draft && ranked ? 'ranked' : 'friendly'} disabled={!draft} onChange={(e) => setRanked(e.target.value === 'ranked')}>
+            <option value="ranked">Ranked</option>
+            <option value="friendly">Friendly (no rating change)</option>
+          </select>
+        </label>
       </div>
+      {!draft ? <p className="small">Only draft matches can be ranked, so everyone picks from the same cards.</p> : null}
       <p className="small">Each player has a time bank that only runs while the game is waiting on them. If yours runs out, the computer makes the rest of your moves (or, if you never moved, you lose by forfeit).</p>
       <div className="buttons">
         <button type="submit" className="primary" disabled={!picked || sending}>Send challenge</button>

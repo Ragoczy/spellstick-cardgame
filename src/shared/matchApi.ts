@@ -30,6 +30,8 @@ export interface MatchSummary {
   pace: Pace | null;
   /** True if the match starts with a head-to-head draft (otherwise players are dealt at random). */
   draft: boolean;
+  /** True if the result changes both players' ratings (draft matches only). */
+  ranked: boolean;
   /**
    * Time left in each player's bank, in milliseconds, at the moment this was sent. running: whose
    * bank is going down now. Null for untimed matches.
@@ -37,8 +39,11 @@ export interface MatchSummary {
   clock: { you: number; them: number; running: 'you' | 'them' | null } | null;
   /** Players whose time ran out: the computer makes their decisions. */
   autopilot: { you: boolean; them: boolean };
-  /** forfeit: a player's time ran out before they had made a single move. */
-  result: { outcome: 'won' | 'lost' | 'draw'; reason: 'played' | 'resigned' | 'forfeit' } | null;
+  /**
+   * forfeit: a player's time ran out before they had made a single move. ratingChange: how much
+   * your rating went up or down (null for unranked matches).
+   */
+  result: { outcome: 'won' | 'lost' | 'draw'; reason: 'played' | 'resigned' | 'forfeit'; ratingChange: number | null } | null;
   createdAt: string;
 }
 
@@ -68,4 +73,35 @@ export interface MatchChange {
   matchId: number;
   status: MatchStatus;
   moveCount: number;
+}
+
+/** A rating tier and the lowest rating in it. */
+export interface RatingTier {
+  name: string;
+  from: number;
+}
+
+/** A player's ranked record since ratings last started over. */
+export interface RatingRecord {
+  rating: number;
+  games: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  /** Null until the player has finished their first few ranked matches (placementGames). */
+  tier: string | null;
+}
+
+/** GET /api/ratings: the leaderboard, and where you stand. */
+export interface RatingsBoard {
+  /** Null if you haven't finished a ranked match since ratings last started over. */
+  you: (RatingRecord & { rank: number | null }) | null;
+  /** Players with a tier, best first. Players with the same rating share a rank. */
+  players: (RatingRecord & { rank: number; name: string; you: boolean })[];
+  /** Ranked matches a player finishes before they get a tier and a place on the board. */
+  placementGames: number;
+  /** Highest first. */
+  tiers: RatingTier[];
+  /** When ratings last started over (null if never). */
+  since: string | null;
 }

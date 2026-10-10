@@ -7,7 +7,7 @@ import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
 import { Clocks } from './Clocks';
 import { gamePresence, setDiscordPresence } from './discord';
-import { capitalize, injuryEffect, laneName, posName } from './labels';
+import { capitalize, injuryEffect, laneName, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
@@ -286,6 +286,9 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const leaveLabel = online ? 'Back to your matches' : 'New game';
 
   const prompt = (): React.ReactNode => {
+    // Ranked matches: how the result changed your rating.
+    const ratingChange = online?.match.result?.ratingChange ?? null;
+    const rating = ratingChange === null ? '' : ` ${ratingChangeText(ratingChange)}`;
     if (online?.match.result && online.match.result.reason !== 'played') {
       const { outcome, reason } = online.match.result;
       const headline = reason === 'resigned'
@@ -293,7 +296,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         : (outcome === 'won' ? `${opp.Name} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
       return (
         <div className="prompt">
-          <strong>{headline}</strong>
+          <strong>{headline}</strong>{rating}
           <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
         </div>
       );
@@ -304,7 +307,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       return (
         <div className="prompt">
           <strong>{headline}</strong> Final score: you {view.score[me]}, {opp.name} {view.score[them]}
-          {view.shootout ? ` (shootout ${view.shootout.goals[me]}–${view.shootout.goals[them]})` : ''}.
+          {view.shootout ? ` (shootout ${view.shootout.goals[me]}–${view.shootout.goals[them]})` : ''}.{rating}
           <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
         </div>
       );

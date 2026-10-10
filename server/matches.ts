@@ -9,6 +9,8 @@
 // Time banks (docs/spellstick-multiplayer-design.md, "Time banks"): each player has one bank per
 // match, used up only while the match waits on them. When it runs out, the computer makes the
 // rest of their decisions, or, if they never made a move at all, they forfeit.
+//
+// Ranked matches (draft only) change both players' ratings when they end (ratings.ts).
 
 import { randomInt } from 'node:crypto';
 import type pg from 'pg';
@@ -19,6 +21,7 @@ import {
   type Action, type GameEvent, type GameSetup, type GameState, type Side,
 } from '../src/engine';
 import type { MatchChange, MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing } from '../src/shared/matchApi';
+import { recordRankedResult } from './ratings';
 import type { User } from './users';
 
 export type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing };
@@ -54,6 +57,9 @@ interface MatchRow {
   winner: string | null;
   end_reason: 'played' | 'resigned' | 'forfeit' | null;
   created_at: Date;
+  ranked: boolean;
+  rating_change_a: number | null;
+  rating_change_b: number | null;
   pace: Pace | null;
   bank_a_ms: string | null;
   bank_b_ms: string | null;
@@ -69,7 +75,7 @@ interface MatchRow {
 const nameOf = (u: string) => `coalesce(${u}.display_name, case when ${u}.unlinked_at is not null then 'Deleted player' end)`;
 const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ${nameOf('ua')} as a_name, ${nameOf('ub')} as b_name, m.setup,
   m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at,
-  m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,
+  m.ranked, m.rating_change_a, m.rating_change_b, m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,
   floor(extract(epoch from (now() - m.waiting_since)) * 1000)::bigint as waited_ms,
   coalesce(m.waiting_due <= now(), false) as overdue`;
 const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub on ub.id = m.player_b';
@@ -166,7 +172,8 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
   let result: MatchSummary['result'] = null;
   if (row.status === 'finished') {
     const outcome = row.winner === null ? 'draw' : Number(row.winner) === userId ? 'won' : 'lost';
-    result = { outcome, reason: row.end_reason ?? 'played' };
+    const ratingChange = side === 'A' ? row.rating_change_a : row.rating_change_b;
+    result = { outcome, reason: row.end_reason ?? 'played', ratingChange: row.ranked ? ratingChange : null };
   }
   const banks = banksNow(row);
   const waiting = row.status === 'active' ? waitingSide(row) : null;
@@ -185,6 +192,7 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     waitingSince: row.waiting_since.toISOString(),
     pace: row.pace,
     draft: (row.setup.config?.draftPicks ?? 0) > 0,
+    ranked: row.ranked,
     clock: banks ? { you: banks[side], them: banks[them], running: waiting === null ? null : waiting === side ? 'you' : 'them' } : null,
     autopilot: { you: autopilot[side], them: autopilot[them] },
     result,
@@ -364,14 +372,16 @@ async function saveProgress(
       changes.forfeitBy ? 'forfeit' : over ? 'played' : null,
     ],
   );
+  if (finished) await recordRankedResult(client, Number(row.id));
 }
 
 /**
  * Challenges another player. The challenger picks the field size, the pace, and their team; the
- * other player gets the other team. (Drafts replace team picks in a later step.)
+ * other player gets the other team. (Drafts replace team picks in a later step.) A ranked
+ * challenge must be a draft, so owned cards (when they come) can't buy a rating.
  */
 export async function createChallenge(
-  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown; players?: unknown },
+  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown; players?: unknown; ranked?: unknown },
 ): Promise<MatchSummary> {
   needsName(user);
   const opponentId = Number(input.opponentId);
@@ -382,6 +392,9 @@ export async function createChallenge(
   // Head-to-head draft, or players dealt at random (when not given, as before drafts existed).
   const players = input.players ?? 'dealt';
   if (players !== 'draft' && players !== 'dealt') throw new MatchError(400, 'Choose a draft or players dealt at random.');
+  const ranked = input.ranked ?? false;
+  if (typeof ranked !== 'boolean') throw new MatchError(400, 'Choose ranked or not.');
+  if (ranked && players !== 'draft') throw new MatchError(400, 'Ranked matches use a draft. Choose Draft, or turn Ranked off.');
   const cardSet = prototypeCards;
   const team = cardSet.teams.find((t) => t.id === input.team);
   if (!team) throw new MatchError(400, 'Choose one of the teams.');
@@ -410,9 +423,9 @@ export async function createChallenge(
 
   const bank = TIME_BANKS[pace];
   const inserted = await db.query<{ id: string }>(
-    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms, format)
-     values ($1, $2, $3, $2, $4, $5, $5, $6) returning id`,
-    [user.id, opponentId, JSON.stringify(setup), pace, bank, players === 'draft' ? 'draft' : 'prototype'],
+    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms, format, ranked)
+     values ($1, $2, $3, $2, $4, $5, $5, $6, $7) returning id`,
+    [user.id, opponentId, JSON.stringify(setup), pace, bank, players === 'draft' ? 'draft' : 'prototype', ranked],
   );
   const { row, side } = await loadRow(db, Number(inserted.rows[0]!.id), user);
   return toSummary(row, side, user.id);
@@ -452,6 +465,7 @@ async function resignRow(client: pg.PoolClient, row: MatchRow, side: Side): Prom
      where id = $1`,
     [row.id, playerOn(row, otherSide(side)), banks?.A ?? null, banks?.B ?? null],
   );
+  await recordRankedResult(client, Number(row.id));
 }
 
 export async function resign(db: pg.Pool, user: User, matchId: number): Promise<MatchSummary> {

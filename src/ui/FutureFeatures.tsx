@@ -40,7 +40,6 @@ export function FutureFeatures({ onBack }: { onBack: () => void }) {
       <ul>
         <li>Card rarity, and tournaments with a cap on how many rare cards a team can use.</li>
         <li>Group drafts for 4 to 8 players, passing packs around the table.</li>
-        <li>A ranked ladder outside tournaments.</li>
         <li>Patron perks.</li>
       </ul>
       <button type="button" className="primary" onClick={onBack}>Back to start</button>

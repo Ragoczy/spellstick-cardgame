@@ -114,8 +114,7 @@ describe.skipIf(!haveDb)('time banks', () => {
     expect(bob.game!.legal).toEqual([]);
   });
 
-  // Plays a whole game through the API, so it needs longer than the default 5 seconds.
-  it('after a player has moved, running out hands their decisions to the computer', { timeout: 120_000 }, async () => {
+  it('after a player has moved, running out hands their decisions to the computer', async () => {
     const id = await newMatch();
     await shortGame(id);
     await playOne('alice', id); // Alice's goalie

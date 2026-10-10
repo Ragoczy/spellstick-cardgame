@@ -28,7 +28,8 @@ param discordSecretName string = 'SpellstickCardgame'
 param resourceGroupName string = 'rg-spellstick'
 param appName string = 'ca-spellstick'
 param databaseName string = 'spellstick'
-param githubRepo string = 'Ragoczy/spellstick-cardgame'
+@description('GitHub repo as GitHub names it in sign-in tokens: owner@ownerId/repo@repoId. The IDs stop a renamed or re-created repo from inheriting access.')
+param githubRepo string = 'Ragoczy@2834782/spellstick-cardgame@1407928591'
 
 param discordClientId string
 param discordGuildId string

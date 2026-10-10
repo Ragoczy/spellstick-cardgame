@@ -44,14 +44,14 @@ flowchart TB
     subgraph Server["Game server: TypeScript on Azure Container Apps (1 replica)"]
         API["API and auth<br/>Discord OAuth, sessions<br/>Player-filtered views"]
         Ref["Match referee<br/>Shared rules engine<br/>Seeded RNG, event log"]
-        Live["Live updates<br/>WebSocket push to players<br/>Time banks"]
+        Live["Live updates<br/>Server-Sent Events to players<br/>Time banks"]
         Tourney["Tournament scheduler<br/>Swiss pairing, deadlines<br/>Awards on results"]
         Store["Store and trades<br/>Purchases, atomic swaps<br/>Coin ledger and adapter"]
         Bot["Notification bot<br/>Your-turn DMs, pairings<br/>Standings and bracket posts"]
     end
     DB[("Azure Database for PostgreSQL<br/>Users, cards, teams, matches<br/>Event log, trades, coin ledger")]
     Hex["HexBot (coin bot)<br/>Source of truth for balances<br/>Debit and credit with idempotency keys"]
-    Browser <-->|HTTPS and WebSocket| Server
+    Browser <-->|HTTPS and live updates| Server
     Discord <-->|OAuth and bot API| Server
     Server <-->|SQL| DB
     Server <-->|Debit and credit| Hex
@@ -64,12 +64,12 @@ The browser shows each player only their filtered view and sends moves; the matc
 - **Server:** Node.js and TypeScript in one container, so the rules engine runs unchanged on server and browser.
 - **Repo layout:** same repo. The server goes in its own folder (for example `server/`) and imports `src/engine/` directly. The browser build stays a static site; the server is deployed separately. Pushing to `main` still redeploys the GitHub Pages site, so server work should not break the browser build.
 - **Shared Azure resources (added 2026-10-10):** Spellstick reuses the existing aiuthor Container Apps environment, Postgres server (its own `spellstick` database and login), container registry, Key Vault (access to its own secret only), and log workspace in `rg-aiuthor`. Its own app and identities live in `rg-spellstick`. That Postgres server is publicly reachable with password sign-in turned off, rather than on a private network; moving to a private server later is a database dump and restore.
-- **Hosting:** Azure Container Apps with minimum and maximum replicas both set to 1. *(Until live matches exist, minimum 0 to save cost; the first visit after a quiet spell takes a few seconds.)* The default minimum is 0 ([Azure scaling docs](https://learn.microsoft.com/azure/container-apps/scale-app)), and scaling to zero would drop live WebSocket connections. One replica keeps live connections in one process and easily handles a few hundred readers.
+- **Hosting:** Azure Container Apps with minimum and maximum replicas both set to 1. *(Until live matches exist, minimum 0 to save cost; the first visit after a quiet spell takes a few seconds.)* The default minimum is 0 ([Azure scaling docs](https://learn.microsoft.com/azure/container-apps/scale-app)), and scaling to zero would drop live connections. *(Added 2026-10-10: an open live-update connection counts as an active request, so the app stays on while anyone has the game open, and scales to zero only when nobody does. Pages reconnect by themselves when it wakes.)* One replica keeps live connections in one process and easily handles a few hundred readers.
 - **Cost:** an always-on container plus a managed Postgres server is an ongoing monthly Azure bill (roughly tens of dollars at small scale). Accepted by Paul 2026-10-10.
 - **Time banks and deadlines:** stored in the database as due times, never only in memory. A Container Apps scheduled job runs every minute to expire time banks, close rounds, and reconcile coin transactions, so a restart or deploy never loses a deadline.
 - **Database:** Azure Database for PostgreSQL (Flexible Server) with automated backups.
 - **Secrets:** Azure Key Vault for the Discord client secret, bot token, and HexBot API key.
-- **Live updates:** plain WebSockets in the game container. If you ever need more than one replica, move push messages to Azure Web PubSub instead of adding sticky sessions. Colyseus stays optional and is worth revisiting only for pod drafts.
+- **Live updates:** ~~plain WebSockets~~ Server-Sent Events in the game container (`GET /api/live`, `server/live.ts`). *Changed 2026-10-10: moves already go to the server as ordinary requests, so only server-to-browser messages are needed; Server-Sent Events do that over plain HTTP with no new dependency, and browsers reconnect by themselves.* Messages say only which match changed; the page then fetches its own filtered view, so live updates can't leak hidden cards. If you ever need more than one replica, move push messages to Azure Web PubSub instead of adding sticky sessions. Colyseus stays optional and is worth revisiting only for pod drafts.
 - **HexBot:** if it also runs on Azure, put it in the same Container Apps environment so the game calls it over internal-only ingress, with no public coin endpoint.
 
 ## Game engine on the server
@@ -352,6 +352,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Online step 4, live updates. The other player's moves, new challenges, and resignations appear at once through Server-Sent Events instead of WebSockets (see Architecture). Pages still check now and then as a safety net: every minute while live updates work, or every few seconds if they can't connect.
 - 2026-10-10: Online step 3, playing online in the browser. "Play online" on the start screen (signed in, with a name) opens a lobby: your matches, challenges to accept or decline, and a challenge form. Matches use the normal game screen through the server, and `?match=<id>` opens one directly (for Discord links later). Until live updates exist, the screen checks for the other player's move every 3 seconds, then every 20 seconds after two minutes, and not while the tab is hidden. Hints are off in online matches (they come from the computer player); "Place them for me" stays. Play-by-play uses the opponent's chosen name.
 - 2026-10-10: Online step 2, matches on the server. Challenge another signed-in player by name, accept or decline, play with the server as referee, resign. API listed at the top of `server/api/matches.ts`. Until drafts exist, the challenger picks the field size and a placeholder team, and the other player gets the other team. Limit of 20 open matches per player. No browser screens yet (next step).
 - 2026-10-10: Shared sign-in for all Darkspace games. Discord app renamed "Darkspace Games"; Discord settings moved to Key Vault (`Integrations--Discord--*`); player, moderator, and admin roles come from Discord roles. Accounts stay per game (no central accounts service yet).

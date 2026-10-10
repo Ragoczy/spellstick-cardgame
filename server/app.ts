@@ -12,6 +12,7 @@ import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import type { DiscordApi } from './auth/discord';
 import { authRoutes } from './auth/routes';
+import { LiveHub } from './live';
 import type { Config } from './config';
 
 export interface AppDeps {
@@ -50,7 +51,10 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   app.get('/healthz', async () => ({ ok: true }));
   authRoutes(app, deps);
   meRoutes(app, deps);
-  matchRoutes(app, deps);
+  const live = new LiveHub();
+  matchRoutes(app, deps, live);
+  // Live connections never end by themselves, so end them first when the server is shutting down.
+  app.addHook('preClose', async () => live.closeAll());
 
   // The built browser game (npm run build:online). Not there during local development, when
   // Vite serves the page instead.

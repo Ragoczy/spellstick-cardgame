@@ -9,19 +9,29 @@
 //   POST /api/matches/:id/decline        turn down a challenge, or withdraw your own
 //   POST /api/matches/:id/resign         give up a match in progress
 //   POST /api/matches/:id/moves          make a move: { action, seen } (seen = the match's moveCount)
+//   GET  /api/live                       live updates: an event each time one of your matches changes
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AppDeps } from '../app';
 import { currentUser } from '../auth/current-user';
 import {
   acceptChallenge, createChallenge, declineChallenge, findPlayers, getMatch, listMatches, makeMove, MatchError, resign,
+  type MatchDetail, type MatchSummary,
 } from '../matches';
+import type { LiveHub } from '../live';
 import type { User } from '../users';
 
 type IdParams = { Params: { id: string } };
 
-export function matchRoutes(app: FastifyInstance, deps: AppDeps): void {
+export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub): void {
   const { db } = deps;
+
+  /** Tells both players' open pages that the match changed, then passes the answer on. */
+  function changed<T extends MatchSummary | MatchDetail>(user: User, result: T): T {
+    const match: MatchSummary = 'match' in result ? result.match : (result as MatchSummary);
+    live.matchChanged([user.id, match.opponent.id], { matchId: match.id, status: match.status, moveCount: match.moveCount });
+    return result;
+  }
 
   /** Runs a handler for a signed-in player, turning MatchErrors into plain-language answers. */
   async function signedIn<T>(req: FastifyRequest, reply: FastifyReply, handler: (user: User) => Promise<T>) {
@@ -44,7 +54,7 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps): void {
     signedIn(req, reply, async (user) => {
       const body = req.body ?? {};
       const match = await createChallenge(db, user, { opponentId: body.opponentId, lanes: body.lanes, team: body.team });
-      return reply.code(201).send(match);
+      return reply.code(201).send(changed(user, match));
     }));
 
   app.get<IdParams & { Querystring: { since?: string } }>('/api/matches/:id', (req, reply) =>
@@ -54,14 +64,20 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps): void {
     }));
 
   app.post<IdParams>('/api/matches/:id/accept', (req, reply) =>
-    signedIn(req, reply, (user) => acceptChallenge(db, user, Number(req.params.id))));
+    signedIn(req, reply, async (user) => changed(user, await acceptChallenge(db, user, Number(req.params.id)))));
 
   app.post<IdParams>('/api/matches/:id/decline', (req, reply) =>
-    signedIn(req, reply, (user) => declineChallenge(db, user, Number(req.params.id))));
+    signedIn(req, reply, async (user) => changed(user, await declineChallenge(db, user, Number(req.params.id)))));
 
   app.post<IdParams>('/api/matches/:id/resign', (req, reply) =>
-    signedIn(req, reply, (user) => resign(db, user, Number(req.params.id))));
+    signedIn(req, reply, async (user) => changed(user, await resign(db, user, Number(req.params.id)))));
 
   app.post<IdParams & { Body: { action?: unknown; seen?: unknown } | undefined }>('/api/matches/:id/moves', (req, reply) =>
-    signedIn(req, reply, (user) => makeMove(db, user, Number(req.params.id), req.body?.action, req.body?.seen)));
+    signedIn(req, reply, async (user) => changed(user, await makeMove(db, user, Number(req.params.id), req.body?.action, req.body?.seen))));
+
+  app.get('/api/live', async (req, reply) => {
+    const user = await currentUser(db, req);
+    if (!user) return reply.code(401).send({ error: 'Not signed in.' });
+    live.open(user.id, reply);
+  });
 }

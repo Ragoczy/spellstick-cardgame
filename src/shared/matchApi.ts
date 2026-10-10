@@ -44,3 +44,13 @@ export interface PlayerListing {
   id: number;
   name: string;
 }
+
+/**
+ * A live update (GET /api/live, event "match"): one of your matches changed. It carries no game
+ * information; fetch the match to see what happened.
+ */
+export interface MatchChange {
+  matchId: number;
+  status: MatchStatus;
+  moveCount: number;
+}

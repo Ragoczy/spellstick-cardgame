@@ -1,16 +1,20 @@
 // An online match for the game screen: the same GameController as a game against the computer,
-// backed by the game server. While it's the other player's decision, it checks for their move
-// every few seconds (more slowly after a couple of minutes, and not while the tab is hidden).
+// backed by the game server. The other player's moves arrive through live updates (live.ts).
+// As a safety net it also checks now and then while waiting on them: every minute when live
+// updates are working, or every few seconds when they aren't (never while the tab is hidden).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Action } from '../engine';
 import type { MatchDetail } from '../shared/matchApi';
+import { liveConnected, listenLive } from './live';
 import { matchApi } from './online';
 import { OnlineMatchClient, OnlineSeat } from './onlineMatch';
 import { opponentWords } from './text';
 import { usePlayByPlay, type GameController } from './useGame';
 
-/** How often to check for the other player's move: soon after they got the decision, then less often. */
+/** Safety check while live updates are working. */
+const LIVE_CHECK_MS = 60_000;
+/** Without live updates: check soon after they got the decision, then less often. */
 const QUICK_CHECK_MS = 3_000;
 const SLOW_CHECK_MS = 20_000;
 const QUICK_FOR_MS = 2 * 60_000;
@@ -45,13 +49,22 @@ export function useOnlineGame(initial: MatchDetail): GameController {
     show(events, new OnlineSeat(initial), false);
   }, [initial, show, setLog]);
 
-  // While it's the other player's decision, check for their move.
+  // Live updates: fetch the latest when this match changes, and after any reconnect.
+  useEffect(() => listenLive({
+    onMatchChange: (change) => {
+      const now = client.detail.match;
+      if (change.matchId === now.id && (change.moveCount !== now.moveCount || change.status !== now.status)) client.refresh();
+    },
+    onConnect: () => client.refresh(),
+  }), [client]);
+
+  // While it's the other player's decision, check now and then too.
   useEffect(() => {
     if (seat.waitingFor !== 'opponent') return;
     let timer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       const waited = Date.now() - Date.parse(detail.match.waitingSince);
-      timer = setTimeout(check, waited < QUICK_FOR_MS ? QUICK_CHECK_MS : SLOW_CHECK_MS);
+      timer = setTimeout(check, liveConnected() ? LIVE_CHECK_MS : waited < QUICK_FOR_MS ? QUICK_CHECK_MS : SLOW_CHECK_MS);
     };
     const check = () => {
       if (!document.hidden) client.refresh();

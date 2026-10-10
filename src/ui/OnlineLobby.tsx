@@ -5,10 +5,11 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { prototypeCards } from '../data/prototype';
 import type { MatchDetail, MatchSummary, PlayerListing } from '../shared/matchApi';
 import { GameScreen } from './GameScreen';
+import { liveConnected, listenLive } from './live';
 import { acceptChallenge, declineChallenge, findPlayers, listMatches, matchApi, sendChallenge } from './online';
 import { useOnlineGame } from './useOnlineGame';
 
-/** How often the match list checks for changes while it's open. */
+/** How often the match list checks for changes while it's open, when live updates aren't working. */
 const LIST_CHECK_MS = 15_000;
 
 const lanesText = (lanes: number) => (lanes === 3 ? 'three lanes' : 'two lanes');
@@ -28,10 +29,15 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
 
   useEffect(() => {
     void reload();
+    // Any change to one of your matches (or a reconnect) refreshes the list.
+    const stop = listenLive({ onMatchChange: () => void reload(), onConnect: () => void reload() });
     const timer = setInterval(() => {
-      if (!document.hidden) void reload();
+      if (!document.hidden && !liveConnected()) void reload();
     }, LIST_CHECK_MS);
-    return () => clearInterval(timer);
+    return () => {
+      stop();
+      clearInterval(timer);
+    };
   }, [reload]);
 
   /** Runs a button's request, then refreshes the list. */

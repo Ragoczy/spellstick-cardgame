@@ -17,9 +17,12 @@ export type SlotView =
    * Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried.
    * castsLeft: spells this player can still cast before they need a rest (left out when there is no limit).
    */
-  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number }
-  /** images: the player has mirror images around them (public). castsLeft is public too. */
-  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number };
+  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number; cameOn?: boolean }
+  /**
+   * images: the player has mirror images around them (public). castsLeft is public too.
+   * cameOn: substituted on at this turn's Draw step, so can't act yet (public: the substitution was).
+   */
+  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number; cameOn?: boolean };
 
 export interface PlayerView {
   me: Side;
@@ -75,12 +78,16 @@ function castsLeftOf(s: GameState, slot: Slot): { castsLeft?: number } {
   return s.config.castsPerResonant > 0 ? { castsLeft: castsLeftIn(s, slot) } : {};
 }
 
+function cameOnOf(slot: Slot): { cameOn?: boolean } {
+  return slot.cameOn ? { cameOn: true } : {};
+}
+
 function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
   if (!slot) return { state: 'empty' };
   if (slot.revealed) {
-    return { state: 'revealed', card: cardView(s, slot.uid), ...(slot.images ? { images: true } : {}), ...castsLeftOf(s, slot) };
+    return { state: 'revealed', card: cardView(s, slot.uid), ...(slot.images ? { images: true } : {}), ...castsLeftOf(s, slot), ...cameOnOf(slot) };
   }
-  if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried, ...castsLeftOf(s, slot) };
+  if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried, ...castsLeftOf(s, slot), ...cameOnOf(slot) };
   // Injury cards are face up, so an injury shows even on a player you can't see.
   const injury = injuryOf(s, slot.uid);
   return injury ? { state: 'unknown', injury } : { state: 'unknown' };

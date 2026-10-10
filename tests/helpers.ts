@@ -76,6 +76,8 @@ export interface ScenarioOptions {
   turn?: number;
   /** Actions the active player has left this turn. Default 1: their last action. */
   actionsLeft?: number;
+  /** Start at the active player's Draw step (to draw or substitute) instead of their action. */
+  step?: 'draw' | 'action';
   /** Rolls each player has left to call for dice. Default 0. */
   dice?: number;
   A?: SideSpec;
@@ -165,7 +167,7 @@ export function scenario(options: ScenarioOptions = {}): GameState {
     // No rolls unless the test asks for them (via options.dice or an explicit config.diceBudget),
     // so contests don't stop to ask about dice.
     diceLeft: diceFor(options),
-    pending: { kind: 'action', side: active },
+    pending: { kind: options.step ?? 'action', side: active },
     result: null,
   };
 }

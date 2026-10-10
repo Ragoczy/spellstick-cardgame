@@ -44,10 +44,13 @@ export function turnPhase(view: PlayerView, opp: OpponentWords = opponentWords()
 }
 
 const STEPS: { id: StepId; title: string; text: (view: PlayerView) => string }[] = [
-  { id: 'draw', title: 'Draw', text: (v) => `Take a player or a spell. With ${v.config.handLimit} or more cards, the top card is discarded instead.` },
-  { id: 'act', title: 'Act', text: (v) => v.config.actionsPerTurn === 1
-    ? 'One action: pass, shoot, tackle, cast, substitute, or regroup.'
-    : `${v.config.actionsPerTurn} actions: pass, shoot, tackle, cast, substitute, or regroup.` },
+  { id: 'draw', title: 'Draw', text: (v) => v.config.substituteStep === 'draw'
+    ? `Take a player or a spell, or substitute a player instead. With ${v.config.handLimit} or more cards, drawing discards the top card.`
+    : `Take a player or a spell. With ${v.config.handLimit} or more cards, the top card is discarded instead.` },
+  { id: 'act', title: 'Act', text: (v) => {
+    const choices = v.config.substituteStep === 'draw' ? 'pass, shoot, tackle, cast, or regroup' : 'pass, shoot, tackle, cast, substitute, or regroup';
+    return v.config.actionsPerTurn === 1 ? `One action: ${choices}.` : `${v.config.actionsPerTurn} actions: ${choices}.`;
+  } },
   { id: 'discard', title: 'Discard', text: (v) => `Down to ${v.config.handLimit} cards, if you have more.` },
 ];
 

@@ -45,11 +45,11 @@ describe.skipIf(!haveDb)('time banks', () => {
    * Makes a match short and the same every run, for tests that play a whole game: first to one
    * goal, with a fixed seed instead of a random one. Every move replays the game so far on the
    * server, so a long game takes seconds, and with a random seed some games ran past the test's
-   * time limit. Seed 9 gives a game of about 50 moves.
+   * time limit. Seed 25 gives a game of about 35 moves (rechosen when substitution moved to the Draw step).
    */
   const shortGame = (id: number) =>
     db.query(
-      `update matches set setup = jsonb_set(jsonb_set(setup::jsonb, '{config,goalsToWin}', '1'), '{seed}', '9')::json where id = $1`,
+      `update matches set setup = jsonb_set(jsonb_set(setup::jsonb, '{config,goalsToWin}', '1'), '{seed}', '25')::json where id = $1`,
       [id],
     );
   /** Pretends ms milliseconds have passed in this match. */

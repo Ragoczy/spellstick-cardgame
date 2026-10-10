@@ -62,6 +62,8 @@ export interface CardProps {
   castsLeft?: number;
   /** On the field: how many Resonant dots to show as used up. */
   usedDots?: number;
+  /** On the field: substituted on this turn, so can't act yet. */
+  cameOn?: boolean;
   hasBall?: boolean;
   selected?: boolean;
   /** Can't be played right now (shown faded). */
@@ -73,7 +75,7 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
   const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
@@ -84,7 +86,12 @@ export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDot
         {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}
       </div>
-      {def.kind !== 'spell' && def.role ? <div className="card-role">{roleLabel(def.role)}</div> : null}
+      {def.kind !== 'spell' && (def.role || cameOn) ? (
+        <div className="card-role">
+          {def.role ? roleLabel(def.role) : null}
+          {cameOn ? <span className="just-on" title="Came on this turn: can't pass, shoot, tackle, or cast until the next turn">{def.role ? ' · ' : ''}just on</span> : null}
+        </div>
+      ) : null}
       <Stats def={def} />
       <Resonants def={def} usedDots={usedDots} castsLeft={castsLeft} />
       {injury ? <div className="injury" title={`${injury.name}: ${injuryEffect(injury, def)}`}>✚ {injury.name} {injuryEffect(injury, def)}</div> : null}

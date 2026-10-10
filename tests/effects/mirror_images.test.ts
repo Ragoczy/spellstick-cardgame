@@ -91,7 +91,7 @@ describe.each(LANE_COUNTS)('mirror_images (%i lanes)', (lanes) => {
   it('ends when the player leaves the field', () => {
     const s = glamouredHolder();
     s.activeSide = 'B';
-    s.pending = { kind: 'action', side: 'B' };
+    s.pending = { kind: 'draw', side: 'B' };
     s.teams.B.hand.push('B99');
     s.cards['B99'] = player('B sub');
     const { state } = play(s, { type: 'substitute', side: 'B', pos: mid(LAST), card: 'B99' });

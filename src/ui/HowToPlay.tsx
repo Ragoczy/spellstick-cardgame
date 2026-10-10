@@ -29,7 +29,8 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
 
       <h3>Your turn</h3>
       <ol>
-        <li>Draw a card: choose a <b>player</b> or a <b>spell</b> (your deck is two piles). If your hand is already full (7 cards), you don't draw: the top card of the pile you choose goes to your discard pile instead.</li>
+        <li>Draw a card: choose a <b>player</b> or a <b>spell</b> (your deck is two piles). If your hand is already full (7 cards), you don't draw: the top card of the pile you choose goes to your discard pile instead.
+          <br />Or, instead of drawing, <b>substitute</b>: bring a player on from your hand, face down. The player you take off goes back to your hand to rest. The new player can't pass, shoot, tackle, or cast until your next turn.</li>
         <li>Take <b>one action</b>.</li>
         <li>If you have more than 7 cards, discard down to 7.</li>
       </ol>
@@ -40,7 +41,6 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
         <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 2 shots in 5 go in, more with a good shooter or a spell.</li>
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
-        <li><b>Substitute</b> a player from your hand, face down. The player you take off goes back to your hand to rest.</li>
         <li><b>Regroup:</b> discard 1 card and draw a new one of the same kind (or do nothing).</li>
       </ul>
 

@@ -1,6 +1,6 @@
 // Turn flow, goals, the end of the game, and the penalty shootout.
 
-import { cardsLeft, discardTopOfPile, drawCards, handIsFull } from './board';
+import { canSubstitute, cardsLeft, discardTopOfPile, drawCards, handIsFull } from './board';
 import type { GameEvent } from './events';
 import { otherSide, type Side } from './field';
 import type { EndReason, GameState } from './state';
@@ -54,10 +54,13 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   if (s.ball?.side === side) s.ballProtected = false;
   ev.push({ type: 'turnStarted', side, turn: s.turn });
 
-  // Draw step. The decks are the game clock. With cards in both piles, the player chooses.
+  // Draw step. The decks are the game clock. The player chooses a pile when both have cards, and
+  // may substitute instead of drawing (unless both piles are empty: then the draw step is skipped).
   s.actionsLeft = s.config.actionsPerTurn;
   const team = s.teams[side];
-  if (team.players.length > 0 && team.spells.length > 0) {
+  const bothPiles = team.players.length > 0 && team.spells.length > 0;
+  const mayChooseSub = s.config.substituteStep === 'draw' && cardsLeft(team) > 0 && canSubstitute(s, side);
+  if (bothPiles || mayChooseSub) {
     s.pending = { kind: 'draw', side };
     return;
   }
@@ -77,6 +80,9 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
 
 function endTurn(s: GameState, ev: GameEvent[]): void {
   const finished = s.activeSide;
+  // Players who came on this turn can act again from now on.
+  const team = s.teams[finished];
+  for (const slot of [team.goalie, ...Object.values(team.lineup).flat()]) if (slot) delete slot.cameOn;
 
   if (s.endgame.finalTurnFor === finished) {
     // Full time: the last turn after a deck ran out is over.

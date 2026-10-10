@@ -41,6 +41,12 @@ export interface GameConfig {
   deckFieldPlayers: number;
   /** Actions per turn. A goal ends the turn. */
   actionsPerTurn: number;
+  /**
+   * When you may substitute. 'draw' (the rule since v0.11): instead of drawing, and the player who
+   * comes on can't act that turn. 'action' (the old rule): as your action. Kept only so online
+   * matches started before v0.11 replay the way they were played.
+   */
+  substituteStep: 'draw' | 'action';
   /** Penalty shots per team in a shootout before it goes to one shot each. */
   shootoutRounds: number;
   /** Added to the shooter's Shot in a penalty. */
@@ -92,6 +98,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   deckGoalies: 2,
   deckFieldPlayers: 22,
   actionsPerTurn: 1,
+  substituteStep: 'draw',
   shootoutRounds: 3,
   penaltyBonus: 3,
   passTiesGoTo: 'attacker',

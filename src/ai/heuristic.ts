@@ -68,6 +68,13 @@ const REVEAL_COST = 0.015;
 
 /** Worth of substituting out a player who has no spells left, so they recharge in hand. */
 const RECHARGE_WORTH = 0.02;
+/**
+ * Draw step: how a substitution's gain compares with drawing a card. Filling an empty spot (gain
+ * 0.15) beats drawing almost anything; a small upgrade loses to drawing a needed card.
+ */
+const SUB_VS_DRAW = 4;
+/** A substitution must gain at least this much to beat drawing (or throwing away) a card. */
+const SUB_THRESHOLD = 0.02;
 
 // ---- Helpers for reading the view ----
 
@@ -199,7 +206,12 @@ class Thinker {
       case 'pass': return this.passValue(action.to, []);
       case 'shoot': return this.shotValue(this.view.ball!.pos, [], 0);
       case 'tackle': return this.tackleValue([]);
-      case 'substitute': return this.currentValue() + this.unit() * this.substituteGain(action.pos, this.handCard(action.card));
+      case 'substitute': {
+        const gain = this.substituteGain(action.pos, this.handCard(action.card));
+        // At the Draw step a substitution is weighed against drawing a card (scoreDraw's scale);
+        // under the old rule it was an action, weighed against the other actions.
+        return this.view.pending.kind === 'draw' ? (gain - SUB_THRESHOLD) * SUB_VS_DRAW : this.currentValue() + this.unit() * gain;
+      }
       case 'regroup': return this.currentValue() + this.unit() * action.discard.reduce((sum, uid) => sum + 0.05 - this.cardValue(this.handCard(uid)), 0);
       case 'cast': return this.castValue(action);
       case 'forcedSub': return this.scoreForcedSub(this.handCard(action.card));
@@ -665,8 +677,10 @@ class Thinker {
       ? (players === 0 ? 0.6 : players === 1 ? 0.3 : 0.1) + (this.hasInjuredPlayer() ? 0.1 : 0)
       : spells === 0 ? 0.6 : spells <= 2 ? 0.4 : 0.15;
     // With a full hand nothing is drawn: the top card of the chosen pile is thrown away instead.
+    // That costs little (the hand is full anyway), so it scores just below zero: throw away the
+    // pile you want less.
     const handFull = hand.length >= this.config.handLimit;
-    return (handFull ? -want : want) + this.random() * 0.05;
+    return handFull ? -0.1 * want + this.random() * 0.005 : want + this.random() * 0.05;
   }
 
   private hasInjuredPlayer(): boolean {

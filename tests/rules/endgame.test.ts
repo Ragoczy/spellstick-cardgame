@@ -16,8 +16,12 @@ const regroup = (side: Side): Action => ({ type: 'regroup', side, discard: [] })
 function idle(state: GameState, max = 20) {
   let s = state;
   const events: GameEvent[] = [];
-  for (let i = 0; i < max && s.pending.kind === 'action'; i++) {
-    const result = applyAction(s, regroup(s.pending.side));
+  for (let i = 0; i < max && (s.pending.kind === 'action' || s.pending.kind === 'draw'); i++) {
+    const side = s.pending.side;
+    // At a Draw step (asked when the player could also substitute), draw from whichever pile has cards.
+    const result = s.pending.kind === 'draw'
+      ? applyAction(s, { type: 'draw', side, pile: s.teams[side].players.length > 0 ? 'players' : 'spells' })
+      : applyAction(s, regroup(side));
     s = result.state;
     events.push(...result.events);
   }

@@ -25,6 +25,8 @@ export interface Slot {
    * Starts again when they leave the field, so it follows the card if swapped.
    */
   casts?: number;
+  /** Substituted on at the Draw step this turn: can't pass, shoot, tackle, or cast until the turn ends. */
+  cameOn?: boolean;
 }
 
 /** The two face-down draw piles each team has. */
@@ -91,7 +93,7 @@ export type Pending =
   | { kind: 'chooseGoalie'; side: Side }
   | { kind: 'placeLineup'; side: Side }
   | { kind: 'faceoffLane'; side: Side }
-  /** Draw step: choose which pile to draw from (only asked when both piles have cards). */
+  /** Draw step: draw from a pile, or substitute instead (asked when there is a choice to make). */
   | { kind: 'draw'; side: Side }
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }

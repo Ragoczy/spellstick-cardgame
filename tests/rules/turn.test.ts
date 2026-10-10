@@ -1,8 +1,9 @@
-// RULES.md "Turn sequence" and "Actions any time" (cast, substitute, regroup).
+// RULES.md "Turn sequence" (draw or substitute) and "Actions any time" (cast, regroup).
 import { describe, expect, it } from 'vitest';
 import type { Action } from '../../src/engine/actions';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { legalActions } from '../../src/engine/legal';
+import { viewFor } from '../../src/engine/view';
 import {
   LANE_COUNTS, GOAL_POS, actionSpell, boost, eventsOfType, fwd, goalie, mid, play, player, scenario, uid,
 } from '../helpers';
@@ -61,7 +62,8 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
   });
 
   it('with a full hand and only one pile left, its top card goes to the discard pile without asking', () => {
-    const hand = Array.from({ length: 7 }, (_, i) => player(`B hand ${i}`));
+    // A hand of spells, so substituting isn't an option either.
+    const hand = Array.from({ length: 7 }, (_, i) => actionSpell(`B hand ${i}`, { effect: 'recall', params: { count: 1 } }));
     const s = scenario({ lanes, B: { hand, deck: [player('B top player')] } });
     const { state, events } = play(s, pass);
     expect(eventsOfType(events, 'discarded')[0]).toMatchObject({ fromPile: 'players' });
@@ -136,9 +138,10 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
       lanes,
       ball: { side: 'A', pos: mid(LAST) },
       A: { lineup: { midfield: { [LAST]: player('old') } }, revealed: [mid(LAST)], hand: [player('new')] },
+      step: 'draw',
     });
     const { state, events } = play(s, { type: 'substitute', side: 'A', pos: mid(LAST), card: uid(s, 'A', 'new') });
-    expect(state.teams.A.lineup.midfield[LAST]).toEqual({ uid: uid(s, 'A', 'new'), revealed: false, scried: false });
+    expect(state.teams.A.lineup.midfield[LAST]).toEqual({ uid: uid(s, 'A', 'new'), revealed: false, scried: false, cameOn: true });
     expect(state.teams.A.hand).toEqual([uid(s, 'A', 'old')]);
     expect(state.teams.A.discard).toEqual([]);
     expect(eventsOfType(events, 'substituted')[0]?.removed?.def.name).toBe('old');
@@ -146,7 +149,7 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
   });
 
   it('substitute: goalie for goalie, field player for field player', () => {
-    const s = scenario({ lanes, A: { hand: [player('field'), goalie('keeper')] } });
+    const s = scenario({ lanes, A: { hand: [player('field'), goalie('keeper')] }, step: 'draw' });
     expect(() => applyAction(s, { type: 'substitute', side: 'A', pos: GOAL_POS, card: uid(s, 'A', 'field') })).toThrow(IllegalActionError);
     expect(() => applyAction(s, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'keeper') })).toThrow(IllegalActionError);
     const { state } = play(s, { type: 'substitute', side: 'A', pos: GOAL_POS, card: uid(s, 'A', 'keeper') });
@@ -173,3 +176,98 @@ describe.each(LANE_COUNTS)('turn sequence (%i lanes)', (lanes) => {
     expect(() => applyAction(s, { type: 'tackle', side: 'B' })).toThrow("It isn't your decision right now.");
   });
 });
+
+// RULES.md "Turn sequence": substitute at the Draw step, instead of drawing (v0.11).
+describe.each(LANE_COUNTS)('substituting at the Draw step (%i lanes)', (lanes) => {
+  const LAST = lanes - 1;
+  const recall = () => actionSpell('recall', { effect: 'recall', params: { count: 1 } });
+
+  /** It's A's Draw step with a player in hand, holding the ball in midfield lane 0. */
+  function drawStep(extra: Parameters<typeof scenario>[0] = {}) {
+    return scenario({ lanes, step: 'draw', A: { hand: [player('new', { speed: 5, defense: 5 }), recall(), boost('boost')] }, ...extra });
+  }
+  const subIn = (s: ReturnType<typeof scenario>, pos = mid(0)) =>
+    play(s, { type: 'substitute', side: 'A', pos, card: uid(s, 'A', 'new') });
+
+  it('is a choice at the Draw step, even when only one pile has cards', () => {
+    const s = scenario({ lanes, A: { hand: [regroupOnly()] }, B: { hand: [player('B bench')], deck: [player('B only player')] } });
+    const { state, events } = play(s, pass);
+    expect(state.pending).toEqual({ kind: 'draw', side: 'B' });
+    expect(eventsOfType(events, 'drew')).toEqual([]);
+    const legal = legalActions(state, 'B');
+    expect(legal).toContainEqual({ type: 'draw', side: 'B', pile: 'players' });
+    expect(legal).not.toContainEqual({ type: 'draw', side: 'B', pile: 'spells' });
+    expect(legal.some((a) => a.type === 'substitute')).toBe(true);
+  });
+
+  it('replaces the draw: no card is drawn, and the action is still to come', () => {
+    const s = drawStep();
+    const piles = { players: s.teams.A.players.length, spells: s.teams.A.spells.length };
+    const { state, events } = subIn(s);
+    expect(eventsOfType(events, 'drew')).toEqual([]);
+    expect({ players: state.teams.A.players.length, spells: state.teams.A.spells.length }).toEqual(piles);
+    expect(state.pending).toEqual({ kind: 'action', side: 'A' });
+    expect(state.actionsLeft).toBe(1);
+  });
+
+  it("isn't an action any more", () => {
+    const s = scenario({ lanes, A: { hand: [player('new')] } });
+    expect(() => applyAction(s, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'new') })).toThrow(/instead of drawing/);
+    expect(legalActions(s, 'A').some((a) => a.type === 'substitute')).toBe(false);
+  });
+
+  it("the player who came on can't pass or shoot this turn (holding the ball)", () => {
+    const { state } = subIn(drawStep({ ball: { side: 'A', pos: fwd(0) } }), fwd(0));
+    expect(state.ball).toEqual({ side: 'A', pos: fwd(0) });
+    expect(() => applyAction(state, { type: 'shoot', side: 'A' })).toThrow(/just came on/);
+    expect(() => applyAction(state, { type: 'pass', side: 'A', to: mid(0) })).toThrow(/just came on/);
+    expect(legalActions(state, 'A').some((a) => a.type === 'pass' || a.type === 'shoot')).toBe(false);
+  });
+
+  it("the player who came on can't tackle or cast this turn", () => {
+    const { state } = subIn(drawStep({ ball: { side: 'B', pos: mid(0) } }), mid(0));
+    expect(() => applyAction(state, { type: 'tackle', side: 'A' })).toThrow(/just came on/);
+    expect(() => applyAction(state, { type: 'cast', side: 'A', card: uid(state, 'A', 'recall'), caster: mid(0), target: { kind: 'none' } })).toThrow(/just came on/);
+    // Another player can still cast.
+    expect(legalActions(state, 'A')).toContainEqual({ type: 'cast', side: 'A', card: uid(state, 'A', 'recall'), caster: GOAL_POS, target: { kind: 'none' } });
+  });
+
+  it("can still receive a pass, but isn't asked for a reaction spell this turn", () => {
+    const { state } = subIn(drawStep(), fwd(LAST));
+    const after = play(state, { type: 'pass', side: 'A', to: fwd(LAST) }).state;
+    expect(after.pending.kind).not.toBe('reaction');
+    // Without the substitution, the receiver could react.
+    const control = play(scenario({ lanes, A: { hand: [boost('boost')] } }), { type: 'pass', side: 'A', to: fwd(LAST) }).state;
+    expect(control.pending).toMatchObject({ kind: 'reaction', side: 'A' });
+  });
+
+  it('acts normally from the end of the turn', () => {
+    const { state } = subIn(drawStep());
+    expect(state.teams.A.lineup.midfield[0]!.cameOn).toBe(true);
+    const next = play(state, pass).state;
+    expect(next.teams.A.lineup.midfield[0]!.cameOn).toBeUndefined();
+  });
+
+  it('shows the player who came on in the view', () => {
+    const { state } = subIn(drawStep());
+    expect(viewFor(state, 'A').mine.lineup.midfield[0]).toMatchObject({ state: 'faceDown', cameOn: true });
+  });
+
+  it("isn't offered when both piles are empty (the Draw step is skipped)", () => {
+    const s = scenario({ lanes, A: { hand: [regroupOnly()] }, B: { hand: [player('B bench')], deck: [] } });
+    const { state } = play(s, pass);
+    expect(state.pending).toEqual({ kind: 'action', side: 'B' });
+    expect(legalActions(state, 'B').some((a) => a.type === 'substitute')).toBe(false);
+  });
+
+  it('old rule (online matches from before v0.11): substitute as your action', () => {
+    const s = scenario({ lanes, config: { substituteStep: 'action' }, A: { hand: [player('new')] } });
+    const { state } = play(s, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'new') });
+    expect(state.teams.A.lineup.midfield[0]).toEqual({ uid: uid(s, 'A', 'new'), revealed: false, scried: false });
+    expect(state.activeSide).toBe('B');
+  });
+});
+
+function regroupOnly() {
+  return actionSpell('spare', { effect: 'recall', params: { count: 1 } });
+}

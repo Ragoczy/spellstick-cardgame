@@ -162,10 +162,13 @@ scored on takes the next turn, whoever won the faceoff.
 
 ## Turn sequence
 
-1. **Draw** one card from the pile of your choice: Players or Spells. If one pile is empty, draw
-   from the other. If both are empty, see "End of the game".
-   **Full hand:** if you already hold 7 cards ⚙ or more, don't draw. Instead, put the top card of
-   the pile of your choice face up on your discard pile (so the game clock still runs).
+1. **Draw or substitute.**
+   - **Draw** one card from the pile of your choice: Players or Spells. If one pile is empty, draw
+     from the other. If both are empty, see "End of the game".
+     **Full hand:** if you already hold 7 cards ⚙ or more, don't draw. Instead, put the top card of
+     the pile of your choice face up on your discard pile (so the game clock still runs).
+   - Or, instead of drawing, **substitute** one player (see "Substitute" below). No card is
+     drawn or discarded. (If both piles are empty, the Draw step is skipped: no substitute either.)
 2. **Act.** Take one action ⚙. If you score, the faceoff happens straight away, then go to your
    discard step.
 3. **Discard** down to 7 cards ⚙ if you have more.
@@ -208,11 +211,17 @@ If the holder has mirror images, roll for them first (see `mirror_images`).
 limit"), and resolve it. You can only cast a
 spell when it could do something (see each effect).
 
-**Substitute.** Replace one of your field players or your goalie with a matching card from your
-hand (field player for field player, goalie for goalie), **face down**. The replaced player goes
-back to your hand, injury and all, and recharges their spells (see "Casting limit"). If they were
-face down, your opponent doesn't see who it was. If the replaced player held the ball, the
-substitute holds it. You can also fill an empty spot this way.
+## Substitute
+
+At your Draw step, instead of drawing: replace one of your field players or your goalie with a
+matching card from your hand (field player for field player, goalie for goalie), **face down**.
+The replaced player goes back to your hand, injury and all, and recharges their spells (see
+"Casting limit"). If they were face down, your opponent doesn't see who it was. If the replaced
+player held the ball, the substitute holds it. You can also fill an empty spot this way.
+
+The player who comes on **can't act this turn**: they can't pass, shoot, tackle, or cast a spell
+(action or reaction) until your turn ends. They can still receive a pass and defend, since those
+happen to them. Forced substitutions after an injury (see "Injuries") aren't limited this way.
 
 **Regroup.** Discard up to 1 card ⚙, then draw a card from the same pile (a player for a
 player, a spell for a spell; from the other pile if that one is empty). Discarding none is
@@ -376,6 +385,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.11 — Substitute moves from the actions to the Draw step: each turn you draw or substitute, then take your action. The player who comes on can't pass, shoot, tackle, or cast until the turn ends (Paul). Claude's readings: receiving a pass and defending aren't acting; no card is drawn or discarded when you substitute (your opponent's drawing still runs the clock, so nobody can stall the game alone); no substitute when both piles are empty; forced substitutions are unchanged. Online matches started before this keep the old rule.
 
 - v0.11 — Named players: the placeholder players are replaced by 100 named players in a shared pool. Each game deals each team 2 goalies and 22 field players from the pool at random; spells stay with their team. Paul asked for persistent named players; dealing from a pool is Claude's simplest way to use all 100 in every game, and matches the online draft plan.
 - v0.11 — Player types (Runner, Striker, Playmaker, All-rounder, Anchor, Stopper, Goalie) are printed on player cards. Each named player has its type's base stats plus 1 to 4 extra points, mostly in the type's main stat (about 40 cards at +1, 30 at +2, 20 at +3, 10 at +4). Goalies start at Save 2, and Anchors and Stoppers at Defense 3, so scoring stays in the 1–2 goals a game target (simulation: 1.24).

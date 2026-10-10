@@ -103,6 +103,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       for (const a of legal) if (a.type === 'shootoutPick') map.set(posKey(me, a.pos), 'target');
       return map;
     }
+    // Substituting happens at the Draw step (or, in older online matches, as an action).
+    if (selection.kind === 'substitute') {
+      for (const a of subs) if (a.card === selection.card) map.set(posKey(me, a.pos), 'target');
+      return map;
+    }
     if (pending.kind !== 'action') return map;
     switch (selection.kind) {
       case 'none':
@@ -132,9 +137,6 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           }
         }
         break;
-      case 'substitute':
-        for (const a of subs) if (a.card === selection.card) map.set(posKey(me, a.pos), 'target');
-        break;
       default:
         break;
     }
@@ -156,6 +158,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     if (pending.kind === 'shootoutPick') {
       const a = legal.find((x) => x.type === 'shootoutPick' && side === me && samePos(x.pos, pos));
       if (a) act(a);
+      return;
+    }
+    if (selection.kind === 'substitute') {
+      const sub = subs.find((a) => a.card === selection.card && side === me && samePos(a.pos, pos));
+      if (sub) act(sub);
       return;
     }
     if (pending.kind !== 'action') return;
@@ -191,11 +198,6 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       }
       return act(hit[0]!);
     }
-    if (selection.kind === 'substitute') {
-      const sub = subs.find((a) => a.card === selection.card && side === me && samePos(a.pos, pos));
-      if (sub) act(sub);
-      return;
-    }
     // Nothing selected: tapping your ball holder starts a pass.
     if (side === me && myBall && samePos(myBall, pos) && passes.length) setSelection({ kind: 'holder' });
   };
@@ -219,6 +221,13 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       const discard = legal.find((a) => a.type === 'discard' && a.card === uid);
       if (discard) act(discard);
       return;
+    }
+    if (pending.kind === 'draw') {
+      // Substitute instead of drawing: tap the player in hand, then the spot.
+      if (subs.some((a) => a.card === uid)) {
+        return setSelection(selection.kind === 'substitute' && selection.card === uid ? NONE : { kind: 'substitute', card: uid });
+      }
+      return setSelection(NONE);
     }
     if (pending.kind !== 'action') return;
     if (selection.kind === 'cast' && handTargets.has(uid)) {
@@ -320,9 +329,15 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
             ) : (
               <><strong>Your turn: draw a card.</strong> Choose a pile.</>
             )}
+            {subs.length ? (
+              selection.kind === 'substitute'
+                ? <> <strong>Now tap the player (or empty spot) to replace.</strong> The new player comes in face down and can't act this turn.</>
+                : <> Or substitute instead of drawing: tap a player in your hand, then the spot. They come in face down and can't pass, shoot, tackle, or cast this turn.</>
+            ) : null}
             <div className="buttons">
-              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>{view.mine.hand.length >= view.config.handLimit ? 'Players pile' : 'Draw a player'} ({view.mine.playersLeft} left)</button>
-              <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>{view.mine.hand.length >= view.config.handLimit ? 'Spells pile' : 'Draw a spell'} ({view.mine.spellsLeft} left)</button>
+              <button type="button" disabled={view.mine.playersLeft === 0} onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>{view.mine.hand.length >= view.config.handLimit ? 'Players pile' : 'Draw a player'} ({view.mine.playersLeft} left)</button>
+              <button type="button" disabled={view.mine.spellsLeft === 0} onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>{view.mine.hand.length >= view.config.handLimit ? 'Spells pile' : 'Draw a spell'} ({view.mine.spellsLeft} left)</button>
+              {selection.kind === 'substitute' ? <button type="button" onClick={() => setSelection(NONE)}>Cancel</button> : null}
               {hintsAllowed ? <button type="button" className="quiet" onClick={hint}>Hint</button> : null}
             </div>
             {hintText ? <div className="hint">{hintText}</div> : null}

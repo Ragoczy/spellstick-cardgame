@@ -72,23 +72,25 @@ describe.each(LANE_COUNTS)('Casting limit (%i lanes)', (lanes) => {
   });
 
   it('recharges a player who is substituted out: they go to hand, and come back with their spells', () => {
-    const s = scenario({ lanes, A: { hand: [player('Bench'), recall()], lineup: { midfield: { 0: player('Tired') } } } });
+    const s = scenario({ lanes, A: { hand: [player('Bench'), recall()], lineup: { midfield: { 0: player('Tired') } } }, step: 'draw' });
     alreadyCast(s, 1);
     let { state, events } = play(s, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'Bench') });
     expect(state.teams.A.hand).toContain(uid(s, 'A', 'Tired'));
     expect(state.teams.A.discard).not.toContain(uid(s, 'A', 'Tired'));
     expect(eventsOfType(events, 'substituted')[0]?.removed?.def.name).toBe('Tired');
 
-    // Later, back on the field, they can cast again.
-    state = { ...structuredClone(state), activeSide: 'A', pending: { kind: 'action', side: 'A' }, actionsLeft: 1 };
+    // Later, back on the field, they can cast again (from the turn after they came on).
+    state = { ...structuredClone(state), activeSide: 'A', pending: { kind: 'draw', side: 'A' }, actionsLeft: 1 };
     state = play(state, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'Tired') }).state;
-    expect(state.teams.A.lineup.midfield[0]).toEqual({ uid: uid(s, 'A', 'Tired'), revealed: false, scried: false });
-    state = { ...structuredClone(state), activeSide: 'A', pending: { kind: 'action', side: 'A' }, actionsLeft: 1 };
+    expect(state.teams.A.lineup.midfield[0]).toEqual({ uid: uid(s, 'A', 'Tired'), revealed: false, scried: false, cameOn: true });
+    state = structuredClone(state);
+    delete state.teams.A.lineup.midfield[0]!.cameOn;
+    state = { ...state, activeSide: 'A', pending: { kind: 'action', side: 'A' }, actionsLeft: 1 };
     expect(legalActions(state, 'A')).toContainEqual({ type: 'cast', side: 'A', card: uid(s, 'A', 'Recall'), caster: mid(0), target: { kind: 'none' } });
   });
 
   it("doesn't tell the opponent who a face-down substituted player was", () => {
-    const s = scenario({ lanes, A: { hand: [player('Bench')], lineup: { midfield: { 0: player('Secret') } } } });
+    const s = scenario({ lanes, A: { hand: [player('Bench')], lineup: { midfield: { 0: player('Secret') } } }, step: 'draw' });
     const { events } = play(s, { type: 'substitute', side: 'A', pos: mid(0), card: uid(s, 'A', 'Bench') });
     const theirs = eventsOfType(eventsFor(events, 'B'), 'substituted')[0]!;
     expect(theirs.removed).toBeNull();

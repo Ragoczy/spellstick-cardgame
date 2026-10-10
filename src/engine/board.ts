@@ -132,6 +132,16 @@ export function handIsFull(s: GameState, side: Side): boolean {
   return s.teams[side].hand.length >= s.config.handLimit;
 }
 
+/** Whether the side holds a player who could substitute: any field player, or a goalie. */
+export function canSubstitute(s: GameState, side: Side): boolean {
+  return s.teams[side].hand.some((uid) => defOf(s, uid).kind !== 'spell');
+}
+
+/** The player at a spot came on at this turn's Draw step, so can't act yet (RULES.md "Turn sequence"). */
+export function justCameOn(s: GameState, side: Side, pos: Pos): boolean {
+  return !!slotAt(s, side, pos)?.cameOn;
+}
+
 /**
  * The Draw step with a full hand: instead of drawing, the top card of `pile` goes face up on
  * the discard pile, so the game clock still runs (RULES.md "Turn sequence").

@@ -279,7 +279,8 @@ function substitute(s: GameState, action: Extract<Action, { type: 'substitute' }
   takeFromHand(s, side, card);
   // The substitute comes in face down. If the old player held the ball, the substitute does.
   // (The spot may be empty after a player was carried off.)
-  setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false });
+  // At the Draw step, the player coming on can't act until the turn ends.
+  setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false, ...(s.config.substituteStep === 'draw' ? { cameOn: true } : {}) });
   if (old) {
     // The old player goes to hand (injury and all), where they recharge their spells. Only a
     // player who was face up is public.

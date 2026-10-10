@@ -89,7 +89,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
   });
 
   it('stay with a player brought back on later, until mended', () => {
-    const s = scenario({ lanes, A: { hand: [player('Back on', { speed: 4 })] } });
+    const s = scenario({ lanes, A: { hand: [player('Back on', { speed: 4 })] }, step: 'draw' });
     injure(s, uid(s, 'A', 'Back on'));
     let { state } = play(s, { type: 'substitute', side: 'A', pos: fwd(LAST), card: uid(s, 'A', 'Back on') });
     expect(state.injuries[uid(s, 'A', 'Back on')]).toBeDefined();
@@ -133,7 +133,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     // B can fill the spot with a Substitute later.
     const filling = structuredClone(state);
     filling.activeSide = 'B';
-    filling.pending = { kind: 'action', side: 'B' };
+    filling.pending = { kind: 'draw', side: 'B' };
     filling.actionsLeft = 1;
     filling.cards['Bxx'] = player('B newcomer');
     filling.teams.B.hand.push('Bxx');
@@ -166,7 +166,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
   });
 
   it('stay with a player substituted out to hand', () => {
-    const onField = scenario({ lanes, A: { hand: [player('Sub')], lineup: { forward: { 0: player('Hurt') } } } });
+    const onField = scenario({ lanes, A: { hand: [player('Sub')], lineup: { forward: { 0: player('Hurt') } } }, step: 'draw' });
     injure(onField, uid(onField, 'A', 'Hurt'));
     const replaced = play(onField, { type: 'substitute', side: 'A', pos: fwd(0), card: uid(onField, 'A', 'Sub') }).state;
     expect(replaced.teams.A.hand).toContain(uid(onField, 'A', 'Hurt'));

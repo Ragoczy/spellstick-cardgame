@@ -100,7 +100,8 @@ function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: G
   // A tired player is announced whatever the hand holds: their spells left are public anyway.
   const left = castsLeft(s, me.side, me.pos);
   if (slotAt(s, me.side, me.pos) && left === 0) ev.push({ type: 'outOfSpells', side: me.side, pos: me.pos });
-  if (hasReactionSpell(s, me.side) && left > 0) {
+  // A player who came on this turn can't cast yet.
+  if (hasReactionSpell(s, me.side) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }

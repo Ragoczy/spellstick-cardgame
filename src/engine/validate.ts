@@ -2,7 +2,7 @@
 // if it's fine. legalActions() uses this too, so there is one source of truth for legality.
 
 import type { Action } from './actions';
-import { castsLeft, defOf, isActionSpell, isReactionSpell, slotAt } from './board';
+import { castsLeft, defOf, isActionSpell, isReactionSpell, justCameOn, slotAt } from './board';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 
@@ -25,6 +25,7 @@ function holds(s: GameState, side: Side): boolean {
 
 function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to pass.';
+  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
   if (!validField(s, to)) return 'That is not a spot on the field.';
   const targets = passTargets(s.ball!.pos, s.config.lanes, longPass);
   if (!targets.some((t) => samePos(t, to))) return "You can't pass there.";
@@ -34,6 +35,7 @@ function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): str
 
 function canShoot(s: GameState, side: Side, from: 'forward' | 'midfield'): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to shoot.';
+  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
   if (s.ball!.pos.area !== from) return from === 'forward' ? 'Only a forward holding the ball can shoot.' : 'A long shot needs a midfielder holding the ball.';
   return null;
 }
@@ -43,6 +45,7 @@ function canTackle(s: GameState, side: Side): string | null {
   if (s.ball.pos.area === 'goal') return "Goalies can't be tackled.";
   if (s.ballProtected) return "That player just caught a pass and can't be tackled until their next turn.";
   if (!slotAt(s, side, opposite(s.ball.pos))) return 'You have nobody in that spot to tackle with.';
+  if (justCameOn(s, side, opposite(s.ball.pos))) return JUST_CAME_ON;
   return null;
 }
 
@@ -54,6 +57,7 @@ function faceoffLaneOk(s: GameState, lane: number): boolean {
 }
 
 const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
+const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
 
 /** Whether a card (on the field or in hand) is one of your injured players. */
 function isInjured(s: GameState, uid: string | undefined): boolean {
@@ -100,6 +104,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (action.card === null) return null;
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
       if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
+      if (justCameOn(s, side, p.contest[p.role].pos)) return JUST_CAME_ON;
       return null;
     }
 
@@ -117,6 +122,21 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (!inHand(s, side, action.card)) return 'Choose a player from your hand.';
       const kind = defOf(s, action.card).kind;
       if (p.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') return 'Replace a goalie with a goalie, or a field player with a field player.';
+      return null;
+    }
+
+    case 'substitute': {
+      // Since v0.11 you substitute at the Draw step, instead of drawing. (Old online matches: as an action.)
+      if (s.config.substituteStep === 'draw') {
+        if (p.kind !== 'draw') return 'You can only substitute at the start of your turn, instead of drawing.';
+      } else if (p.kind !== 'action') return "It isn't time to take an action.";
+      // The spot may hold a player to replace, or be empty after a player was carried off.
+      if (!validPos(s, action.pos)) return 'Choose one of your players to replace.';
+      if (!inHand(s, side, action.card)) return 'Choose a card from your hand.';
+      const kind = defOf(s, action.card).kind;
+      if (action.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') {
+        return 'Replace a goalie with a goalie, or a field player with a field player.';
+      }
       return null;
     }
 
@@ -149,16 +169,6 @@ export function validateAction(s: GameState, action: Action): string | null {
     case 'tackle':
       return canTackle(s, side);
 
-    case 'substitute': {
-      // The spot may hold a player to replace, or be empty after a player was carried off.
-      if (!validPos(s, action.pos)) return 'Choose one of your players to replace.';
-      if (!inHand(s, side, action.card)) return 'Choose a card from your hand.';
-      const kind = defOf(s, action.card).kind;
-      if (action.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') {
-        return 'Replace a goalie with a goalie, or a field player with a field player.';
-      }
-      return null;
-    }
 
     case 'regroup': {
       if (action.discard.length > s.config.regroupMax) return `You can discard up to ${s.config.regroupMax} cards.`;
@@ -173,6 +183,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (!isActionSpell(spell)) return isReactionSpell(spell) ? 'Reaction spells can only be played during a contest.' : 'That card is not a spell.';
       if (!validPos(s, action.caster) || !slotAt(s, side, action.caster)) return 'Choose one of your players to cast the spell.';
       if (castsLeft(s, side, action.caster) <= 0) return NEEDS_REST;
+      if (justCameOn(s, side, action.caster)) return JUST_CAME_ON;
       const target = action.target;
 
       switch (spell.ability.effect) {

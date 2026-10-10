@@ -7,7 +7,7 @@
 import type { Action, SpellTarget } from './actions';
 import { defOf, isActionSpell, isReactionSpell, playerPositions, slotAt } from './board';
 import { allFieldPositions, isFieldPos, otherSide, passTargets, type Side } from './field';
-import type { GameState } from './state';
+import type { GameState, Uid } from './state';
 import { validateAction } from './validate';
 
 /** Every way to pick 0 to `max` items from a list. */
@@ -101,6 +101,7 @@ export function legalActions(s: GameState, side: Side): Action[] {
 
     case 'draw':
       candidates.push({ type: 'draw', side, pile: 'players' }, { type: 'draw', side, pile: 'spells' });
+      if (s.config.substituteStep === 'draw') candidates.push(...substitutions(s, side, hand));
       break;
 
     case 'forcedSub':
@@ -124,14 +125,9 @@ export function legalActions(s: GameState, side: Side): Action[] {
           for (const caster of playerPositions(s)) {
             for (const target of targets) candidates.push({ type: 'cast', side, card, caster, target });
           }
-        } else if (def.kind === 'field' || def.kind === 'goalie') {
-          for (const pos of playerPositions(s)) {
-            if (def.kind === 'goalie' ? !isFieldPos(pos) : isFieldPos(pos)) {
-              candidates.push({ type: 'substitute', side, pos, card });
-            }
-          }
         }
       }
+      if (s.config.substituteStep === 'action') candidates.push(...substitutions(s, side, hand));
 
       for (const discard of subsets(hand, s.config.regroupMax)) candidates.push({ type: 'regroup', side, discard });
       break;
@@ -139,4 +135,17 @@ export function legalActions(s: GameState, side: Side): Action[] {
   }
 
   return candidates.filter((action) => validateAction(s, action) === null);
+}
+
+/** Every substitution: each player in hand into each spot of the same kind (filled or empty). */
+function substitutions(s: GameState, side: Side, hand: Uid[]): Action[] {
+  const result: Action[] = [];
+  for (const card of hand) {
+    const kind = defOf(s, card).kind;
+    if (kind === 'spell') continue;
+    for (const pos of playerPositions(s)) {
+      if (kind === 'goalie' ? !isFieldPos(pos) : isFieldPos(pos)) result.push({ type: 'substitute', side, pos, card });
+    }
+  }
+  return result;
 }

@@ -76,9 +76,19 @@ const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub 
 
 // ---- Rebuilding a game ----
 
+/**
+ * A saved setup with the rules it was created under. Each match saves its full rules settings, so
+ * a setting added later is missing from older matches; this fills in the value those matches were
+ * played with. (substituteStep, v0.11: older matches substitute as an action.)
+ */
+export function savedSetup(setup: GameSetup): GameSetup {
+  if (!setup.config || 'substituteStep' in setup.config) return setup;
+  return { ...setup, config: { ...setup.config, substituteStep: 'action' } };
+}
+
 /** Replays the moves. events[0] is the start of the game; events[n] came from move n. */
 export function rebuild(setup: GameSetup, moves: Action[]): { state: GameState; events: GameEvent[][] } {
-  let { state, events } = createGame(setup);
+  let { state, events } = createGame(savedSetup(setup));
   const all = [events];
   for (const move of moves) {
     ({ state, events } = applyAction(state, move));
@@ -411,7 +421,7 @@ export async function acceptChallenge(db: pg.Pool, user: User, matchId: number):
     if (row.status !== 'challenged') throw new MatchError(409, 'This challenge is no longer open.');
     if (side !== 'B') throw new MatchError(409, 'Only the player you challenged can accept.');
     // Banks start now: nobody has been waiting on a game yet.
-    const { state } = createGame(row.setup);
+    const { state } = createGame(savedSetup(row.setup));
     await saveProgress(client, { ...row, status: 'active', waiting_on: null }, { state }, []);
     await client.query('update matches set started_at = now() where id = $1', [matchId]);
   });

@@ -43,7 +43,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     : 0;
   return (
     <Card def={def} injury={slot.card.injury} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried}
-      images={slot.state === 'revealed' && slot.images} castsLeft={slot.castsLeft} usedDots={usedDots} {...common} />
+      images={slot.state === 'revealed' && slot.images} castsLeft={slot.castsLeft} usedDots={usedDots} cameOn={slot.cameOn} {...common} />
   );
 }
 

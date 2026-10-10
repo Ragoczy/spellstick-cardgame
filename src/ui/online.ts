@@ -110,3 +110,15 @@ export const sendChallenge = (opponentId: number, lanes: number, team: string, p
   call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace, players: draft ? 'draft' : 'dealt' });
 export const acceptChallenge = (id: number) => call<MatchDetail>('POST', `/api/matches/${id}/accept`);
 export const declineChallenge = (id: number) => call<MatchSummary>('POST', `/api/matches/${id}/decline`);
+
+// ---- Notification settings ----
+
+export interface NotificationSettings {
+  /** False when the game can't send Discord messages yet. */
+  available: boolean;
+  kinds: { kind: string; label: string; description: string; enabled: boolean }[];
+}
+
+export const fetchNotificationSettings = () => call<NotificationSettings>('GET', '/api/me/notifications');
+export const saveNotificationSetting = (kind: string, enabled: boolean) =>
+  call<NotificationSettings>('POST', '/api/me/notifications', { kind, enabled });

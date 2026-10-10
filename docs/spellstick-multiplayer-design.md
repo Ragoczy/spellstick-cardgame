@@ -219,6 +219,7 @@ Tournaments are Swiss rounds followed by a single-elimination top cut, run entir
 - Tournament channel: pairings, standings after each round, and the bracket.
 - Players can mute DMs and rely on a web inbox instead.
 - *(Changed 2026-10-10, Discord policy: DMs and pings are **opt-in**. Each kind (for example your turn, time bank warnings, tournament pairings, trade offers) gets its own toggle in a Notifications section of the player's settings, with a one-line description, and every toggle starts **off** for everyone, existing players included. The server checks the setting before each send; a missing setting means don't send. Messages are about the game only (matches, trades, tournaments): no store links, books, merch, Patreon, or announcements. Every DM ends with "Turn off these alerts in Spellstick → Settings → Notifications." Tournament channel posts aren't DMs and need no opt-in, but are game-only too. Nothing is sent yet, so there are no toggles yet; `tests/discord-messages.test.ts` fails as soon as code that sends Discord messages appears, as a reminder.)*
+- *Built 2026-10-10 (`server/notify.ts`, the only file allowed to send; the tripwire test now checks that): three opt-in kinds in Settings → Notifications, all off by default. **Challenges**: someone challenged you. **Your move**: a match is waiting on you and you don't have the game open, at most once every 30 minutes per match. **Time running low**: once a match, when 6 hours are left in an async bank. Messages link to the match and never ping anyone. A log of what was sent (no message text) stops repeats; unlinking deletes it with the settings. Nothing is sent until a bot token is set up (infra/README.md, "Discord notifications (bot)"). Tournament posts come with tournaments.*
 
 ## Special award cards
 
@@ -358,6 +359,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Online step 7, Discord notifications: challenge, your move, and time running low, each opt-in and off by default. Waiting on Paul to create the bot and store its token.
 - 2026-10-10: Online step 6, head-to-head draft (rules v0.12). Challenges and practice games can start with a draft: 30 face-up field players, 10 picks each in snake order, goalies and the rest dealt at random. Goalies were taken out of the draft for balance (see Match formats).
 - 2026-10-10: Discord policy features. "Unlink my Discord account" in the player's settings: Discord checks it's them, the game revokes its Discord token, deletes their data and sessions, ends their matches in progress as resigned, and keeps finished matches for opponents with the player shown as "Deleted player". An audit table records only the time. "Report a problem" (footer, help screen, settings) opens a filled-in email to admin@darkspace.press. Notifications must be opt-in and off by default (see Notifications). The Discord Activity no longer asks for the unused `identify` scope.
 - 2026-10-10: GitHub Pages retired. Paul asked for the old address to stop serving the game, so it now shows a "moved" page (`pages-redirect/`) that forwards every old link to the Azure address.

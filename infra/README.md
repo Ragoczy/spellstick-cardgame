@@ -85,6 +85,24 @@ re-run step 2, or edit `DISCORD_ALLOWED_ROLE_IDS` on the container app in the Az
 (Containers → Environment variables) for a quick change. `main.bicep` holds the minimum number
 of running copies.
 
+## Discord notifications (bot)
+
+The game can send players Discord DMs about their own matches (a challenge, their move, time
+running low). Each kind is off until the player turns it on in Settings → Notifications, and
+nothing is sent at all until the server has a bot token. To switch it on:
+
+1. Discord Developer Portal → **Darkspace Games** → Bot: create the bot (or use the existing one),
+   copy its token. It needs no privileged intents.
+2. Invite the bot to the Darkspace Discord server (OAuth2 → URL Generator, scope `bot`, no
+   permissions). A bot can only DM people who share a server with it.
+3. Store the token in Key Vault, for example as `Spellstick--DiscordBotToken`, and give
+   `id-spellstick` Key Vault Secrets User on that one secret (as for the shared settings).
+4. Add it to the container app as a Key Vault secret reference and set the environment variable
+   `DISCORD_BOT_TOKEN` from it, then restart. Never paste the token in chat or commit it.
+
+Without the token, players can still set their preferences; the settings page says messages
+aren't available yet.
+
 ## First-time setup
 
 Run these in Git Bash from the repo root, signed in with `az login` as the subscription owner.

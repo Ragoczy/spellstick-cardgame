@@ -1,15 +1,18 @@
-// The signed-in player's settings (online build only): help, and at the bottom, unlinking their
+// The signed-in player's settings (online build only): notifications, help, and at the bottom, unlinking their
 // Discord account. Unlinking asks twice: a dialog that lists what is deleted, and then the
 // player types UNLINK before the button works.
 
 import { useRef, useState, type FormEvent } from 'react';
 import { startUnlink, UNLINK_WORD, type Me } from './online';
+import { NotificationSettings } from './NotificationSettings';
 import { ReportProblem } from './ReportProblem';
 
 export function AccountSettings({ me }: { me: Me }) {
   return (
     <section className="settings" aria-labelledby="settings-title">
       <h3 id="settings-title">Settings</h3>
+      <h4>Notifications</h4>
+      <NotificationSettings />
       <h4>Help</h4>
       <ReportProblem reporter={me} />
       <h4>Your account</h4>

@@ -68,6 +68,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     sessionDays: 7,
     // Tests run the clock checks themselves.
     clockCheckMs: 0,
+    discordBotToken: null,
     ...overrides,
   };
 }

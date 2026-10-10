@@ -17,8 +17,10 @@ export async function unlinkAccount(db: pg.Pool, userId: number): Promise<ClockN
     // Matches in progress count as resigned; open challenges are turned down.
     const notices = await leaveAllMatches(client, userId);
 
-    // Signs them out everywhere.
+    // Signs them out everywhere, and forgets their notification settings and history.
     await client.query('delete from sessions where user_id = $1', [userId]);
+    await client.query('delete from notification_settings where user_id = $1', [userId]);
+    await client.query('delete from notifications_sent where user_id = $1', [userId]);
 
     const { rows } = await client.query<{ n: number }>(
       `select count(*)::int as n from matches where player_a = $1 or player_b = $1`,

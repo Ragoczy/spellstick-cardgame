@@ -328,3 +328,7 @@ button.danger {
 .draft-pool .card { width: 140px; }
 .draft-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 8px; }
 .draft-teams .card { width: 120px; min-height: 0; }
+
+/* Notification settings */
+.notification-settings .toggle { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.9rem; }
+.notification-settings .toggle input { margin-top: 3px; }

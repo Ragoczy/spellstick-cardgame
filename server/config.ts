@@ -50,6 +50,8 @@ export interface Config {
   sessionDays: number;
   /** How often to look for time banks that have run out, in milliseconds (0: never, for tests). */
   clockCheckMs: number;
+  /** The Discord bot that sends notifications (DMs). Without it, nothing is sent. */
+  discordBotToken: string | null;
 }
 
 function required(env: NodeJS.ProcessEnv, name: string): string {
@@ -109,5 +111,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     adminDiscordIds: list(env.ADMIN_DISCORD_IDS),
     sessionDays: Number(env.SESSION_DAYS ?? 7),
     clockCheckMs: Number(env.CLOCK_CHECK_MS ?? 30_000),
+    discordBotToken: env.DISCORD_BOT_TOKEN?.trim() || null,
   };
 }

@@ -11,15 +11,19 @@ import type pg from 'pg';
 import { ACTIVITY_TOKEN_PATH, activityOrigin, discordActivityRoutes } from './api/discord-activity';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
+import { notificationRoutes } from './api/notifications';
 import type { DiscordApi } from './auth/discord';
 import { authRoutes } from './auth/routes';
 import { LiveHub } from './live';
 import type { Config } from './config';
+import { discordBot, Notifier, type DiscordBot } from './notify';
 
 export interface AppDeps {
   config: Config;
   db: pg.Pool;
   discord: DiscordApi;
+  /** Sends Discord notifications. Tests pass a fake; otherwise it comes from the bot token, if set. */
+  bot?: DiscordBot | null;
 }
 
 export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logger'] = false): Promise<FastifyInstance> {
@@ -64,7 +68,10 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   authRoutes(app, deps, live);
   meRoutes(app, deps);
   if (activity) discordActivityRoutes(app, deps);
-  matchRoutes(app, deps, live);
+  const bot = deps.bot !== undefined ? deps.bot : deps.config.discordBotToken ? discordBot(deps.config.discordBotToken) : null;
+  const notifier = new Notifier(deps.db, bot, live, deps.config.publicUrl, (err) => app.log.error(err, 'notification failed'));
+  notificationRoutes(app, deps, notifier);
+  matchRoutes(app, deps, live, notifier);
   // Live connections never end by themselves, so end them first when the server is shutting down.
   app.addHook('preClose', async () => live.closeAll());
 

@@ -60,6 +60,11 @@ export class LiveHub {
     }
   }
 
+  /** True if the player has the game open somewhere (so they don't need a Discord alert). */
+  isConnected(userId: number): boolean {
+    return (this.byUser.get(userId)?.length ?? 0) > 0;
+  }
+
   /** How many pages are connected (for tests and logs). */
   get connectionCount(): number {
     let n = 0;

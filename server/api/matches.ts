@@ -19,23 +19,29 @@ import {
   type MatchDetail, type MatchSummary,
 } from '../matches';
 import type { LiveHub } from '../live';
+import type { Notifier } from '../notify';
 import type { User } from '../users';
 
 type IdParams = { Params: { id: string } };
 
-export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub): void {
+export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, notifier: Notifier): void {
   const { db } = deps;
 
   /** Tells both players' open pages that the match changed, then passes the answer on. */
   function changed<T extends MatchSummary | MatchDetail>(user: User, result: T): T {
     const match: MatchSummary = 'match' in result ? result.match : (result as MatchSummary);
     live.matchChanged([user.id, match.opponent.id], { matchId: match.id, status: match.status, moveCount: match.moveCount });
+    // A Discord alert for whoever the match now waits on, if they asked for one.
+    notifier.later(match.status === 'challenged' ? notifier.challengeReceived(match.id) : notifier.matchWaiting(match.id, user.id));
     return result;
   }
 
   /** Deals with any time banks that have run out, and tells the players. */
   async function settleClocks(): Promise<void> {
-    for (const notice of await settleOverdue(db)) live.matchChanged(notice.playerIds, notice.change);
+    for (const notice of await settleOverdue(db)) {
+      live.matchChanged(notice.playerIds, notice.change);
+      notifier.later(notifier.matchWaiting(notice.change.matchId));
+    }
   }
 
   // Check the clocks every so often. (Requests check too, so a deadline is kept even when the
@@ -43,6 +49,7 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub):
   if (deps.config.clockCheckMs > 0) {
     const timer = setInterval(() => {
       settleClocks().catch((err) => app.log.error(err, 'clock check failed'));
+      notifier.later(notifier.checkTimeBanks());
     }, deps.config.clockCheckMs);
     app.addHook('onClose', async () => clearInterval(timer));
   }

@@ -30,14 +30,28 @@ describe.skipIf(!haveDb)('time banks', () => {
     await api('bob', 'POST', `/api/matches/${id}/accept`);
     return id;
   };
-  /** Makes the next move for whoever's decision it is, the way the computer would. */
-  const playOne = async (who: string, id: number) => {
-    const d = await getMatch(who, id);
+  /**
+   * Makes the next move for whoever's decision it is, the way the computer would. Pass the
+   * player's latest view (a move's answer includes it) to skip fetching it again.
+   */
+  const playOne = async (who: string, id: number, latest?: MatchDetail) => {
+    const d = latest ?? (await getMatch(who, id));
     const action = heuristicAgent(d.match.moveCount + 1, d.game!.view.config).chooseAction(d.game!.view, d.game!.legal);
     const res = await api(who, 'POST', `/api/matches/${id}/moves`, { action, seen: d.match.moveCount });
     expect(res.statusCode).toBe(200);
     return res.json<MatchDetail>();
   };
+  /**
+   * Makes a match short and the same every run, for tests that play a whole game: first to one
+   * goal, with a fixed seed instead of a random one. Every move replays the game so far on the
+   * server, so a long game takes seconds, and with a random seed some games ran past the test's
+   * time limit. Seed 9 gives a game of about 50 moves.
+   */
+  const shortGame = (id: number) =>
+    db.query(
+      `update matches set setup = jsonb_set(jsonb_set(setup::jsonb, '{config,goalsToWin}', '1'), '{seed}', '9')::json where id = $1`,
+      [id],
+    );
   /** Pretends ms milliseconds have passed in this match. */
   const passTime = (id: number, ms: number) =>
     db.query(
@@ -102,6 +116,7 @@ describe.skipIf(!haveDb)('time banks', () => {
 
   it('after a player has moved, running out hands their decisions to the computer', async () => {
     const id = await newMatch();
+    await shortGame(id);
     await playOne('alice', id); // Alice's goalie
     await playOne('bob', id); // Bob's goalie
     // Alice is placing her lineup, and her time runs out.
@@ -129,7 +144,7 @@ describe.skipIf(!haveDb)('time banks', () => {
     let latest = bob;
     for (let guard = 0; guard < 1000 && latest.match.status === 'active'; guard++) {
       expect(latest.match.yourMove).toBe(true);
-      latest = await playOne('bob', id);
+      latest = await playOne('bob', id, latest);
     }
     expect(latest.match.status).toBe('finished');
     expect(latest.match.result!.reason).toBe('played');
@@ -147,6 +162,7 @@ describe.skipIf(!haveDb)('time banks', () => {
 
   it('if both players run out, the computer finishes the game', async () => {
     const id = await newMatch();
+    await shortGame(id);
     await playOne('alice', id);
     await playOne('bob', id);
     await passTime(id, 36 * HOUR + 1000);

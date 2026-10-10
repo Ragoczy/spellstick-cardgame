@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { prototypeCards } from '../data/prototype';
 import { TeamColors } from './Card';
 import { GameScreen } from './GameScreen';
+import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
 import type { SessionOptions } from './session';
 
-type Screen = { kind: 'start' } | { kind: 'rules' } | { kind: 'game'; options: SessionOptions; id: number };
+type Screen = { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number };
 
 const teamColors = Object.fromEntries(prototypeCards.teams.map((t) => [t.id, t.color]));
 
@@ -52,9 +53,11 @@ export function App() {
               <button type="button" onClick={() => setScreen({ kind: 'rules' })}>How to play</button>
             </div>
             <p className="small">Prototype: card names, teams, and art are placeholders.</p>
+            <button type="button" className="quiet" onClick={() => setScreen({ kind: 'future' })}>Future features</button>
           </div>
         ) : null}
         {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} /> : null}
+        {screen.kind === 'future' ? <FutureFeatures onBack={() => setScreen({ kind: 'start' })} /> : null}
         {screen.kind === 'game' ? (
           <GameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />
         ) : null}

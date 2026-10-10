@@ -44,3 +44,13 @@ None of these block M1 or M2.
   Get quotes for both before deciding.
 - Mat: folded paper or cardstock, or a cloth/neoprene upgrade as a premium add-on?
 - Where the browser game lives: a subfolder on darkspace.press, its own domain, or an embed?
+
+## Online game (added 2026-10-10)
+
+Decided and open items are tracked in `docs/spellstick-multiplayer-design.md` under
+"Open questions". Still open:
+
+- Rarity (future feature): are rarer cards stronger, or only different?
+- How a drawn Swiss match scores, and the second tiebreaker.
+- Who wins an unfinished match at the round deadline.
+- Prizes for the first tournament.

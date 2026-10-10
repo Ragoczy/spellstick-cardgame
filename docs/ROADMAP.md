@@ -94,3 +94,12 @@ was fun. Feed the notes back as changes to RULES.md.
 
 - Online multiplayer between two computers.
 - Accounts, saved games, leaderboards.
+
+*(Changed 2026-10-10: both are now in scope as the online game. See below.)*
+
+## Online game (added 2026-10-10)
+
+Six phases, each with a gate, in `docs/spellstick-multiplayer-design.md` under "Roadmap":
+online play and head-to-head draft, collections and teams, tournaments and awards, store,
+trading, and later extras (rarity, pod draft, Patreon). The server lives in this repo and
+reuses `src/engine/`.

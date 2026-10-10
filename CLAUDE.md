@@ -10,9 +10,12 @@ when a decision affects game feel, canon, or cost.
 
 The same rules engine powers:
 - a browser game (prototype now, free fan game later), and
-- a printed physical card game (fan collectible, fun a few times — not a deep competitive game).
+- a printed physical card game (fan collectible, fun a few times — not a deep competitive game), and
+- an online game (added 2026-10-10): Discord sign-in, server-refereed matches, owned cards,
+  tournaments, a coin store, and trading. Design and phases: `docs/spellstick-multiplayer-design.md`.
 
-Read `docs/GAME_DESIGN.md` and `docs/RULES.md` before changing gameplay code.
+Read `docs/GAME_DESIGN.md` and `docs/RULES.md` before changing gameplay code. Read
+`docs/spellstick-multiplayer-design.md` before working on the server or online features.
 
 ## Tech stack
 
@@ -21,6 +24,10 @@ Read `docs/GAME_DESIGN.md` and `docs/RULES.md` before changing gameplay code.
 - `tsx` for running headless simulation scripts in Node.
 - No backend, no accounts, no database. The build output is a static site that can be uploaded
   to a subfolder of an existing WordPress site or embedded with an iframe.
+  *(Changed 2026-10-10: still true for the browser game build. The online game adds a Node.js
+  and TypeScript game server in this repo (for example `server/`), Postgres, Discord OAuth, and
+  hosting on Azure Container Apps. The server imports `src/engine/` directly and is deployed
+  separately from the static site.)*
 
 Do not add dependencies beyond these without saying why.
 
@@ -31,6 +38,7 @@ Do not add dependencies beyond these without saying why.
    a list of events. Randomness comes only from a seeded RNG passed in, so any game can be replayed
    from its seed and action list.
 2. **Cards are data.** Card definitions live in `data/*.json` and follow `data/cards.schema.json`.
+   This stays the master copy for the online game too: the server's database is loaded from it.
    Card abilities use the small effect vocabulary defined in `docs/RULES.md`. Do not hard-code
    individual cards in engine logic. If a new card needs a new effect, add the effect to the
    vocabulary, the schema, and RULES.md together.

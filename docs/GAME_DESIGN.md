@@ -14,6 +14,9 @@ wins, and a tie goes to a penalty shootout. Reaching three goals wins straight a
 Warlock readers. Most are not hobby gamers. Many will play it a handful of times, mostly
 because it's a piece of the world they like. A smaller group will play the browser version more.
 
+*Changed 2026-10-10: the scope now also includes an online game for that smaller group, with
+collections, tournaments, and trading. See "Online game" under Products.*
+
 ## What success looks like
 
 - Someone who has never played a card game can learn it in about five minutes.
@@ -26,8 +29,13 @@ because it's a piece of the world they like. A smaller group will play the brows
 ## What it is not
 
 - Not a competitive, deeply balanced game. "Fun a few times" is the bar.
+  *(Changed 2026-10-10: still the bar for the table game. The online game adds tournaments, so
+  balance matters more there.)*
 - Not a collectible card game with booster packs or deck building.
+  *(Changed 2026-10-10: the online game adds owned cards, packs, saved teams, and trading. The
+  physical game is still two fixed decks.)*
 - No online multiplayer in the first version.
+  *(Changed 2026-10-10: online play is now planned. See `docs/spellstick-multiplayer-design.md`.)*
 
 ## Products
 
@@ -48,6 +56,12 @@ full 3/3/3/1 lineup. A natural Kickstarter add-on or stretch goal.
 
 Likely sold as an add-on or stretch goal to a Warlock Kickstarter, or to the same backers later.
 
+**Online game (added 2026-10-10).** Readers sign in with Discord and play each other, live or
+async over days, with the server as referee using the same rules engine. Players own cards
+(starter deck, store purchases with Discord coins, award cards), save teams, trade, and play in
+Swiss tournaments with draft and constructed formats. Full design and phases:
+`docs/spellstick-multiplayer-design.md`.
+
 ## Canon and content constraints
 
 - **The sport's rules follow the books.** How scoring, possession, and spells work must not
@@ -67,3 +81,6 @@ Likely sold as an add-on or stretch goal to a Warlock Kickstarter, or to the sam
   playtesters struggle, cut affinity to a simple match bonus before cutting anything else.
 - **Playtesting can't be fully automated.** Simulations catch broken numbers. Only people can
   tell whether it's fun. Plan for a few real sessions with Discord volunteers.
+- **Online scope (added 2026-10-10).** Collections, a store, and trading make this a small
+  collectible card game platform with hosting costs and moderation load. The online phases are
+  built so the project can stop after tournaments (phase 3) with a complete game.

@@ -4,7 +4,7 @@
 // avatar, Discord account and server-join dates, manager name, role), their sign-in sessions,
 // and their part in matches. Matches are shared with the other player, so those are kept for
 // the other player's history; the leaving player becomes an empty placeholder row that shows
-// as "Former player". A player with no matches is deleted outright.
+// as "Deleted player". A player with no matches is deleted outright.
 //
 // The Discord side (revoking the token) happens in auth/routes.ts, before this runs.
 

@@ -65,8 +65,8 @@ interface MatchRow {
   overdue: boolean;
 }
 
-/** A player who unlinked their Discord account (migration 004) shows up as "Former player". */
-const nameOf = (u: string) => `coalesce(${u}.display_name, case when ${u}.unlinked_at is not null then 'Former player' end)`;
+/** A player who unlinked their Discord account (migration 004) shows up as "Deleted player". */
+const nameOf = (u: string) => `coalesce(${u}.display_name, case when ${u}.unlinked_at is not null then 'Deleted player' end)`;
 const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ${nameOf('ua')} as a_name, ${nameOf('ub')} as b_name, m.setup,
   m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at,
   m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,

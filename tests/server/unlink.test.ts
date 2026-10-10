@@ -1,5 +1,5 @@
 // "Unlink my Discord account": revoking Discord's token, deleting the player's data, and keeping
-// other players' match history with the leaving player shown as "Former player".
+// other players' match history with the leaving player shown as "Deleted player".
 
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type pg from 'pg';
@@ -184,10 +184,10 @@ describe.skipIf(!haveDb)('unlinking a Discord account', () => {
     expect(rows[0].event).toBe('account unlinked');
   });
 
-  it("keeps the other player's history, with the leaver shown as Former player", async () => {
+  it("keeps the other player's history, with the leaver shown as Deleted player", async () => {
     const list = (await api('bob', 'GET', '/api/matches')).json<MatchSummary[]>();
     const byId = new Map(list.map((m) => [m.id, m]));
-    for (const id of Object.values(matches)) expect(byId.get(id)?.opponent.name).toBe('Former player');
+    for (const id of Object.values(matches)) expect(byId.get(id)?.opponent.name).toBe('Deleted player');
 
     // The finished match is unchanged, and can still be replayed.
     expect(byId.get(matches.finished)).toMatchObject({ status: 'finished', result: { outcome: 'lost', reason: 'resigned' } });

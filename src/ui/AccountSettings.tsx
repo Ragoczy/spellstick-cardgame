@@ -64,7 +64,7 @@ function UnlinkAccount({ me }: { me: Me }) {
             <li>the Discord user ID, username, and avatar the game keeps</li>
           </ul>
           <p className="small">
-            Matches you finished stay in your opponents' history, with your name replaced by "Former player".
+            Matches you finished stay in your opponents' history, with your name replaced by "Deleted player".
           </p>
           <p>This can't be undone. You can play again later by reconnecting, but you'll start fresh.</p>
           <label className="field">

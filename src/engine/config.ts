@@ -39,6 +39,15 @@ export interface GameConfig {
   deckGoalies: number;
   /** Field players per deck. Decks dealt from the shared player pool get this many. */
   deckFieldPlayers: number;
+  /** Draft (RULES.md "Draft"): players each team picks from a face-up pool before the game. 0 = no draft, players are dealt. */
+  draftPicks: number;
+  /**
+   * Draft pool: this many goalies and field players, face up (both teams' picks plus spares).
+   * Goalies are left out by default: Save varies so much that whoever picked first got the best
+   * goalie and won 58% of games in the simulator; dealing goalies at random keeps it at 50%.
+   */
+  draftPoolGoalies: number;
+  draftPoolField: number;
   /** Actions per turn. A goal ends the turn. */
   actionsPerTurn: number;
   /**
@@ -97,6 +106,9 @@ export const DEFAULT_CONFIG: GameConfig = {
   deckSize: 40,
   deckGoalies: 2,
   deckFieldPlayers: 22,
+  draftPicks: 0,
+  draftPoolGoalies: 0,
+  draftPoolField: 30,
   actionsPerTurn: 1,
   substituteStep: 'draw',
   shootoutRounds: 3,
@@ -119,6 +131,9 @@ export const DEFAULT_CONFIG: GameConfig = {
   contestDie: 0,
   diceMode: 'both',
 };
+
+/** Picks each team makes in a draft game (set config.draftPicks to this to play one). */
+export const DRAFT_PICKS = 10;
 
 export function makeConfig(overrides: Partial<GameConfig> = {}): GameConfig {
   return { ...DEFAULT_CONFIG, ...overrides };

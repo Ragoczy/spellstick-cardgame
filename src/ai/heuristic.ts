@@ -195,6 +195,7 @@ class Thinker {
 
   score(action: Action): number {
     switch (action.type) {
+      case 'draftPick': return this.scoreDraftPick(action.card);
       case 'chooseGoalie': return this.scoreGoalie(action.card);
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
@@ -228,6 +229,18 @@ class Thinker {
   }
 
   // ---- Setup ----
+
+  /**
+   * Draft: take the strongest player, with goalies valued by Save. A team only ever has one
+   * goalie in goal, so a second goalie is worth much less than the first.
+   */
+  private scoreDraftPick(uid: string): number {
+    const draft = this.view.draft!;
+    const card = draft.pool.find((c) => c.uid === uid)!.def as PlayerCardDef;
+    if (card.kind !== 'goalie') return bestFit(card);
+    const goaliesSoFar = draft.picks[this.me].filter((c) => c.def.kind === 'goalie').length;
+    return goaliesSoFar === 0 ? card.save * 1.2 : card.save * 0.4;
+  }
 
   private scoreGoalie(uid: string): number {
     const def = this.handCard(uid);

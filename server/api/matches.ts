@@ -3,7 +3,7 @@
 //
 //   GET  /api/players?name=Riv           players to challenge (names starting with the text)
 //   GET  /api/matches                    your matches
-//   POST /api/matches                    challenge someone: { opponentId, lanes, team, pace }
+//   POST /api/matches                    challenge someone: { opponentId, lanes, team, pace, players: 'draft' | 'dealt' }
 //   GET  /api/matches/:id?since=n        one match: your view, your legal moves, and events after move n
 //   POST /api/matches/:id/accept         accept a challenge
 //   POST /api/matches/:id/decline        turn down a challenge, or withdraw your own
@@ -65,10 +65,10 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub):
 
   app.get('/api/matches', (req, reply) => signedIn(req, reply, (user) => listMatches(db, user)));
 
-  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown; pace?: unknown } | undefined }>('/api/matches', (req, reply) =>
+  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown; pace?: unknown; players?: unknown } | undefined }>('/api/matches', (req, reply) =>
     signedIn(req, reply, async (user) => {
       const body = req.body ?? {};
-      const match = await createChallenge(db, user, { opponentId: body.opponentId, lanes: body.lanes, team: body.team, pace: body.pace });
+      const match = await createChallenge(db, user, { opponentId: body.opponentId, lanes: body.lanes, team: body.team, pace: body.pace, players: body.players });
       return reply.code(201).send(changed(user, match));
     }));
 

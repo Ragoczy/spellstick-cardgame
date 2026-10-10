@@ -42,6 +42,7 @@ export function App() {
   /** Online build: the signed-in player (null when signed out or still checking). */
   const [me, setMe] = useState<Me | null>(null);
   const [lanes, setLanes] = useState(2);
+  const [draft, setDraft] = useState(false);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
 
   // Inside Discord: game screens set their own presence; everything else is "In the menu".
@@ -50,7 +51,7 @@ export function App() {
     if (!inGame) setDiscordPresence(MENU_PRESENCE);
   }, [inGame]);
 
-  const start = () => setScreen({ kind: 'game', id: Date.now(), options: { seed: newSeed(), cardSet: prototypeCards, lanes, team } });
+  const start = () => setScreen({ kind: 'game', id: Date.now(), options: { seed: newSeed(), cardSet: prototypeCards, lanes, team, draft } });
 
   return (
     <TeamColors.Provider value={teamColors}>
@@ -73,6 +74,13 @@ export function App() {
                 <select value={lanes} onChange={(e) => setLanes(Number(e.target.value))}>
                   <option value={2}>Two lanes (base game)</option>
                   <option value={3}>Three lanes (center-lane add-on)</option>
+                </select>
+              </label>
+              <label>
+                Players
+                <select value={draft ? 'draft' : 'dealt'} onChange={(e) => setDraft(e.target.value === 'draft')}>
+                  <option value="dealt">Dealt at random</option>
+                  <option value="draft">Draft (pick 10 each)</option>
                 </select>
               </label>
             </div>

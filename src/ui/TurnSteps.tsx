@@ -18,7 +18,7 @@ export function turnPhase(view: PlayerView, opp: OpponentWords = opponentWords()
   const p = view.pending;
   if (p.kind === 'gameOver') return { kind: 'over' };
   if (view.shootout) return { kind: 'shootout' };
-  if (view.turn === 0 || p.kind === 'chooseGoalie' || p.kind === 'placeLineup') return { kind: 'opening' };
+  if (view.turn === 0 || p.kind === 'draftPick' || p.kind === 'chooseGoalie' || p.kind === 'placeLineup') return { kind: 'opening' };
 
   const mine = view.activeSide === view.me;
   const decider = p.side === view.me ? 'you' : opp.name;

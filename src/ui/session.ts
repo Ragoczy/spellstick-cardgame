@@ -7,7 +7,7 @@
 import type { Agent } from '../ai/agent';
 import { heuristicAgent } from '../ai/heuristic';
 import {
-  applyAction, createGame, eventsFor, legalActions, makeConfig, otherSide, viewFor,
+  applyAction, createGame, DRAFT_PICKS, eventsFor, legalActions, makeConfig, otherSide, viewFor,
   type Action, type CardSet, type GameEvent, type GameSetup, type GameState, type PlayerView, type Side,
 } from '../engine';
 import type { Seat } from './seat';
@@ -18,6 +18,8 @@ export interface SessionOptions {
   lanes: number;
   /** Which team in the card set the person plays. The person always sits on side A. */
   team: string;
+  /** Start with a draft (RULES.md "Draft") instead of dealing the players at random. */
+  draft?: boolean;
 }
 
 export class GameSession implements Seat {
@@ -32,7 +34,7 @@ export class GameSession implements Seat {
   readonly openingEvents: GameEvent[];
 
   constructor(options: SessionOptions) {
-    const config = makeConfig({ lanes: options.lanes });
+    const config = makeConfig({ lanes: options.lanes, draftPicks: options.draft ? DRAFT_PICKS : 0 });
     const otherTeam = options.cardSet.teams.find((t) => t.id !== options.team)?.id ?? options.team;
     this.setup = { seed: options.seed, cardSet: options.cardSet, config, teams: { A: options.team, B: otherTeam } };
     const created = createGame(this.setup);

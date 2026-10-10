@@ -8,6 +8,7 @@ import { Card, CardBack, type CardProps } from './Card';
 import { Clocks } from './Clocks';
 import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, injuryEffect, laneName, posName } from './labels';
+import { DraftScreen } from './DraftScreen';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
 import { TurnSteps } from './TurnSteps';
@@ -254,6 +255,15 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
 
   // ---- Setup screens ----
 
+  // The draft: both players see the pool, whoever's pick it is.
+  if (pending.kind === 'draftPick') {
+    return (
+      <DraftScreen
+        view={view} legal={legal} myDecision={myDecision} opp={opp} sending={!!online?.sending} onPick={act}
+        onPickForMe={hintsAllowed ? () => { const h = seat.hint(); if (h) act(h); } : undefined}
+      />
+    );
+  }
   if (pending.kind === 'chooseGoalie' && myDecision) {
     return (
       <div className="screen setup">

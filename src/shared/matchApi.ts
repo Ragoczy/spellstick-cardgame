@@ -28,6 +28,8 @@ export interface MatchSummary {
   waitingSince: string;
   /** Null for matches from before time banks. */
   pace: Pace | null;
+  /** True if the match starts with a head-to-head draft (otherwise players are dealt at random). */
+  draft: boolean;
   /**
    * Time left in each player's bank, in milliseconds, at the moment this was sent. running: whose
    * bank is going down now. Null for untimed matches.

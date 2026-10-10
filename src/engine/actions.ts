@@ -22,6 +22,8 @@ export type SpellTarget =
   | { kind: 'mendHand'; card: Uid };
 
 export type Action =
+  // Draft: pick a player from the face-up pool
+  | { type: 'draftPick'; side: Side; card: Uid }
   // Setup
   | { type: 'chooseGoalie'; side: Side; card: Uid }
   | { type: 'place'; side: Side; card: Uid; pos: FieldPos }

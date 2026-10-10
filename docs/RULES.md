@@ -147,6 +147,22 @@ per Resonant** ⚙: a player with 2 Resonants can cast 2 spells, then no more.
 4. Choose the first player at random.
 5. Start with a **faceoff** (below). The second player chooses the lane.
 
+## Draft (optional)
+
+Instead of step 0 of Setup, the teams can draft their players. Online matches offer it, and it's
+an option against the computer.
+
+1. Deal 30 field players ⚙ from the shuffled player pool, face up. Goalies are not drafted ⚙.
+2. The second player (the team that will choose the opening faceoff lane) picks first. Then the
+   teams take two picks each in turn (snake order: B, A, A, B, B, A… when B picks first) until each
+   has 10 ⚙.
+3. Put the 10 unpicked players back with the rest of the pool and shuffle it. Deal each team
+   2 goalies and enough field players for 22, face down. Nobody sees who the other team got.
+4. Each team's players join its 16 spells, and Setup goes on from step 1.
+
+Everyone knows who each team drafted, since the pool was face up. A team can't draft more goalies
+or field players than a deck holds (this only matters if goalies are put in the draft pool ⚙).
+
 ## Faceoff
 
 Used at the start and after every goal that doesn't end the game. The team that didn't take the
@@ -386,6 +402,7 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 
 ## Change log
 
+- v0.12 — Draft (optional): 30 face-up field players, 10 picks each in snake order, the second player first; goalies and the remaining field players are dealt at random. The online design said the pool includes at least 2 goalies; in the simulator, the first picker took the best goalie and won 58% of games, and leaving goalies out of the draft brought it back to 50% (Claude). Spells stay with each team, as in v0.11.
 - v0.11 — Substitute moves from the actions to the Draw step: each turn you draw or substitute, then take your action. The player who comes on can't pass, shoot, tackle, or cast until the turn ends (Paul). Claude's readings: receiving a pass and defending aren't acting; no card is drawn or discarded when you substitute (your opponent's drawing still runs the clock, so nobody can stall the game alone); no substitute when both piles are empty; forced substitutions are unchanged. Online matches started before this keep the old rule.
 
 - v0.11 — Named players: the placeholder players are replaced by 100 named players in a shared pool. Each game deals each team 2 goalies and 22 field players from the pool at random; spells stay with their team. Paul asked for persistent named players; dealing from a pool is Claude's simplest way to use all 100 in every game, and matches the online draft plan.

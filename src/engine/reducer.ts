@@ -13,6 +13,7 @@ import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './fi
 import { continueGame } from './flow';
 import { completeForcedSub, mend } from './injuries';
 import { randomInt, shuffle } from './rng';
+import { finishDraft } from './setup';
 import type { ContestSide, GameState, Modifier, Pile } from './state';
 import { validateAction } from './validate';
 
@@ -28,6 +29,7 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
   if (state.pending.kind === 'action') s.actionsLeft -= 1;
 
   switch (action.type) {
+    case 'draftPick': draftPick(s, side, action.card, ev); break;
     case 'chooseGoalie': chooseGoalie(s, side, action.card, ev); break;
     case 'place': place(s, side, action.card, action.pos, ev); break;
     case 'faceoffLane': faceoff(s, side, action.lane, ev); break;
@@ -56,6 +58,21 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
 }
 
 // ---- Setup ----
+
+/** Draft (RULES.md "Draft"): take a player from the face-up pool. After the last pick, the decks are dealt. */
+function draftPick(s: GameState, side: Side, card: string, ev: GameEvent[]): void {
+  const d = s.draft!;
+  d.pool = d.pool.filter((uid) => uid !== card);
+  d.picks[side].push(card);
+  ev.push({ type: 'drafted', side, card: cardView(s, card) });
+  const made = d.picks.A.length + d.picks.B.length;
+  if (made < d.order.length) {
+    s.pending = { kind: 'draftPick', side: d.order[made]! };
+    return;
+  }
+  finishDraft(s);
+  ev.push({ type: 'draftFinished' });
+}
 
 function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): void {
   const team = s.teams[side];

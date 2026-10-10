@@ -321,3 +321,10 @@ button.danger {
 .clock b { font-variant-numeric: tabular-nums; color: var(--ink); }
 .clock.running b { color: var(--accent); }
 .clock.low b { color: var(--bad); }
+
+/* Draft */
+.draft-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.draft-status.mine strong { color: var(--accent); }
+.draft-pool .card { width: 140px; }
+.draft-teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 8px; }
+.draft-teams .card { width: 120px; min-height: 0; }

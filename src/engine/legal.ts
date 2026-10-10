@@ -71,6 +71,10 @@ export function legalActions(s: GameState, side: Side): Action[] {
   const candidates: Action[] = [];
 
   switch (p.kind) {
+    case 'draftPick':
+      for (const card of s.draft?.pool ?? []) candidates.push({ type: 'draftPick', side, card });
+      break;
+
     case 'chooseGoalie':
       for (const card of hand) candidates.push({ type: 'chooseGoalie', side, card });
       break;

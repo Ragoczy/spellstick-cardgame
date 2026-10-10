@@ -52,6 +52,16 @@ export interface PlayerView {
   /** Actions the active player has left this turn. */
   actionsLeft: number;
   result: GameResult | null;
+  /**
+   * The draft, in games that start with one (all public: the pool is face up). Who each team gets
+   * at random afterwards is not shown.
+   */
+  draft: {
+    pool: CardView[];
+    picks: Record<Side, CardView[]>;
+    picksEach: number;
+    done: boolean;
+  } | null;
   mine: {
     hand: CardView[];
     /** Cards left in both draw piles, and in each. */
@@ -125,6 +135,14 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     pending: s.pending,
     actionsLeft: s.actionsLeft,
     result: s.result,
+    draft: s.draft
+      ? {
+          pool: s.draft.pool.map((uid) => cardView(s, uid)),
+          picks: { A: s.draft.picks.A.map((uid) => cardView(s, uid)), B: s.draft.picks.B.map((uid) => cardView(s, uid)) },
+          picksEach: s.config.draftPicks,
+          done: s.draft.done,
+        }
+      : null,
     mine: {
       hand: my.hand.map((uid) => cardView(s, uid)),
       deckCount: my.players.length + my.spells.length,

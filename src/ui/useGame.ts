@@ -129,7 +129,8 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
     const opening = session.openingEvents
       .map((e) => describeForPlayer(e, session.human, session.view.lanes, true, opp))
       .filter((line): line is Line => line !== null);
-    setLog([{ text: 'Choose your goalie to begin.', tone: 'turn' }, ...opening]);
+    const first = session.view.pending.kind === 'draftPick' ? 'Draft your players to begin.' : 'Choose your goalie to begin.';
+    setLog([{ text: first, tone: 'turn' }, ...opening]);
   }, [session, opp, setLog]);
 
   const act = useCallback((action: Action) => {
@@ -145,7 +146,7 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
   useEffect(() => {
     if (session.waitingFor !== 'opponent' || announcement) return;
     // Setup choices are quick; moves during play get a short pause so you can follow them.
-    const quick = ['chooseGoalie', 'placeLineup'].includes(session.view.pending.kind);
+    const quick = ['draftPick', 'chooseGoalie', 'placeLineup'].includes(session.view.pending.kind);
     const timer = setTimeout(() => show(session.computerStep(), session), quick ? 120 : COMPUTER_DELAY_MS);
     return () => clearTimeout(timer);
   }, [session, feed.version, announcement, show]);

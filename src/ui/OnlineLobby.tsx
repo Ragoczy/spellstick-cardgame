@@ -15,6 +15,7 @@ const LIST_CHECK_MS = 15_000;
 
 const lanesText = (lanes: number) => (lanes === 3 ? 'three lanes' : 'two lanes');
 const paceText = (pace: Pace | null) => (pace === 'live' ? ', live' : '');
+const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '');
 /** " (35 h 12 m left)" for your own bank, when the match is timed. */
 const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
@@ -90,7 +91,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
           <li key={m.id} className="match-row yours">
             {m.status === 'challenged' ? (
               <>
-                <span><strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}{paceText(m.pace)}, you play {teamName(m.team)}).</span>
+                <span><strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}{paceText(m.pace)}{draftText(m)}, you play {teamName(m.team)}).</span>
                 <span className="buttons">
                   <button type="button" className="primary" onClick={() => accept(m.id)}>Accept</button>
                   <button type="button" onClick={() => run(() => declineChallenge(m.id))}>Decline</button>
@@ -112,7 +113,7 @@ export function OnlineLobby({ onOpen, onBack }: { onOpen: (id: number) => void; 
           <li key={m.id} className="match-row">
             {m.status === 'challenged' ? (
               <>
-                <span>Waiting for <strong>{m.opponent.name}</strong> to accept ({lanesText(m.lanes)}{paceText(m.pace)}).</span>
+                <span>Waiting for <strong>{m.opponent.name}</strong> to accept ({lanesText(m.lanes)}{paceText(m.pace)}{draftText(m)}).</span>
                 <span className="buttons"><button type="button" onClick={() => run(() => declineChallenge(m.id))}>Withdraw</button></span>
               </>
             ) : (
@@ -161,6 +162,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
   const [picked, setPicked] = useState<PlayerListing | null>(null);
   const [lanes, setLanes] = useState(2);
   const [pace, setPace] = useState<Pace>('async');
+  const [draft, setDraft] = useState(true);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
@@ -180,7 +182,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
     setSending(true);
     onProblem(null);
     try {
-      await sendChallenge(picked.id, lanes, team, pace);
+      await sendChallenge(picked.id, lanes, team, pace, draft);
       setSent(`Challenge sent to ${picked.name}.`);
       setPicked(null);
       setSearch('');
@@ -231,6 +233,13 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
           <select value={pace} onChange={(e) => setPace(e.target.value as Pace)}>
             <option value="async">At your own pace (36 hours each)</option>
             <option value="live">Live (25 minutes each)</option>
+          </select>
+        </label>
+        <label>
+          Players
+          <select value={draft ? 'draft' : 'dealt'} onChange={(e) => setDraft(e.target.value === 'draft')}>
+            <option value="draft">Draft (pick 10 each)</option>
+            <option value="dealt">Dealt at random</option>
           </select>
         </label>
       </div>

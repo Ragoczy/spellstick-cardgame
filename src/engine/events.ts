@@ -43,6 +43,10 @@ export type InjurySource = 'hit' | 'dirty_play';
 
 export type GameEvent =
   | { type: 'gameStarted'; firstSide: Side }
+  /** Draft: a pick from the face-up pool (public). */
+  | { type: 'drafted'; side: Side; card: CardView }
+  /** Draft over: each team's other players have been dealt at random (who they are stays hidden). */
+  | { type: 'draftFinished' }
   | { type: 'goalieChosen'; side: Side; secret?: { card: CardView } }
   | { type: 'drew'; side: Side; count: number; reason: DrawReason; pile: Pile; secret?: { cards: CardView[] } }
   | { type: 'placed'; side: Side; pos: FieldPos; secret?: { card: CardView } }

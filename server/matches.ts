@@ -15,7 +15,7 @@ import type pg from 'pg';
 import { heuristicAgent } from '../src/ai/heuristic';
 import { prototypeCards } from '../src/data/prototype';
 import {
-  applyAction, createGame, eventsFor, legalActions, makeConfig, otherSide, viewFor,
+  applyAction, createGame, DRAFT_PICKS, eventsFor, legalActions, makeConfig, otherSide, viewFor,
   type Action, type GameEvent, type GameSetup, type GameState, type Side,
 } from '../src/engine';
 import type { MatchChange, MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing } from '../src/shared/matchApi';
@@ -184,6 +184,7 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     moveCount: row.move_count,
     waitingSince: row.waiting_since.toISOString(),
     pace: row.pace,
+    draft: (row.setup.config?.draftPicks ?? 0) > 0,
     clock: banks ? { you: banks[side], them: banks[them], running: waiting === null ? null : waiting === side ? 'you' : 'them' } : null,
     autopilot: { you: autopilot[side], them: autopilot[them] },
     result,
@@ -370,7 +371,7 @@ async function saveProgress(
  * other player gets the other team. (Drafts replace team picks in a later step.)
  */
 export async function createChallenge(
-  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown },
+  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown; players?: unknown },
 ): Promise<MatchSummary> {
   needsName(user);
   const opponentId = Number(input.opponentId);
@@ -378,6 +379,9 @@ export async function createChallenge(
   if (!LANE_CHOICES.includes(input.lanes as number)) throw new MatchError(400, 'Choose two or three lanes.');
   const pace = (input.pace ?? 'async') as Pace;
   if (!(pace in TIME_BANKS)) throw new MatchError(400, 'Choose live or at your own pace.');
+  // Head-to-head draft, or players dealt at random (when not given, as before drafts existed).
+  const players = input.players ?? 'dealt';
+  if (players !== 'draft' && players !== 'dealt') throw new MatchError(400, 'Choose a draft or players dealt at random.');
   const cardSet = prototypeCards;
   const team = cardSet.teams.find((t) => t.id === input.team);
   if (!team) throw new MatchError(400, 'Choose one of the teams.');
@@ -400,15 +404,15 @@ export async function createChallenge(
     seed: randomInt(1, 1_000_000_000),
     cardSet,
     teams: { A: team.id, B: otherTeam.id },
-    config: makeConfig({ lanes: input.lanes as number }),
+    config: makeConfig({ lanes: input.lanes as number, draftPicks: players === 'draft' ? DRAFT_PICKS : 0 }),
   };
   createGame(setup); // throws now, not later, if the setup is broken
 
   const bank = TIME_BANKS[pace];
   const inserted = await db.query<{ id: string }>(
-    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms)
-     values ($1, $2, $3, $2, $4, $5, $5) returning id`,
-    [user.id, opponentId, JSON.stringify(setup), pace, bank],
+    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms, format)
+     values ($1, $2, $3, $2, $4, $5, $5, $6) returning id`,
+    [user.id, opponentId, JSON.stringify(setup), pace, bank, players === 'draft' ? 'draft' : 'prototype'],
   );
   const { row, side } = await loadRow(db, Number(inserted.rows[0]!.id), user);
   return toSummary(row, side, user.id);

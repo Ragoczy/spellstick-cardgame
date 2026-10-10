@@ -72,6 +72,16 @@ export function validateAction(s: GameState, action: Action): string | null {
   const team = s.teams[side];
 
   switch (action.type) {
+    case 'draftPick': {
+      if (p.kind !== 'draftPick' || !s.draft) return "It isn't time to draft.";
+      if (!s.draft.pool.includes(action.card)) return 'Pick a player from the pool.';
+      const kind = defOf(s, action.card).kind;
+      const mine = s.draft.picks[side].filter((uid) => defOf(s, uid).kind === kind).length;
+      if (kind === 'goalie' && mine >= s.config.deckGoalies) return `You already have ${s.config.deckGoalies} goalies, the most a team can have.`;
+      if (kind === 'field' && mine >= s.config.deckFieldPlayers) return 'You already have all the field players a team can have.';
+      return null;
+    }
+
     case 'chooseGoalie': {
       if (p.kind !== 'chooseGoalie') return "It isn't time to choose a goalie.";
       if (!inHand(s, side, action.card) || defOf(s, action.card).kind !== 'goalie') return 'Choose one of your goalies.';

@@ -33,6 +33,10 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
   switch (e.type) {
     case 'gameStarted':
       return `${names[e.firstSide]} will take the first turn.`;
+    case 'drafted':
+      return `${names[e.side]} drafts ${e.card.def.name}.`;
+    case 'draftFinished':
+      return 'The draft is over. Each team gets the rest of its players at random.';
     case 'goalieChosen':
       return `${names[e.side]} puts a goalie in goal, face down.`;
     case 'drew':

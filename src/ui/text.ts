@@ -52,6 +52,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
   const info = (text: string): Line => ({ text, tone: 'info' });
 
   switch (e.type) {
+    case 'drafted':
+      return isMe(e.side) ? info(`You draft ${e.card.def.name}.`) : info(`${opp.Name} drafts ${e.card.def.name}.`);
+    case 'draftFinished':
+      return { text: 'The draft is over. Each team gets the rest of its players at random.', tone: 'turn' };
     case 'gameStarted':
       return info(`${who(e.firstSide)} will take the first turn. The other team chooses the lane for the opening faceoff.`);
     case 'goalieChosen':

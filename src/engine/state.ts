@@ -1,7 +1,7 @@
 // The full game state. This is the "real" table, including hidden cards. Players (human or
 // computer) must never read it directly; they read viewFor(state, side) instead.
 
-import type { Area, CardDef, Element, StatName, StatUse } from './cards';
+import type { Area, CardDef, Element, PlayerCardDef, StatName, StatUse } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import type { Pos, Side } from './field';
 
@@ -90,6 +90,8 @@ export interface Contest {
 
 /** The decision the engine is waiting for, and who must make it. */
 export type Pending =
+  /** Draft (config.draftPicks): pick a player from the face-up pool. */
+  | { kind: 'draftPick'; side: Side }
   | { kind: 'chooseGoalie'; side: Side }
   | { kind: 'placeLineup'; side: Side }
   | { kind: 'faceoffLane'; side: Side }
@@ -124,6 +126,27 @@ export interface GameResult {
   /** null for a draw. */
   winner: Side | null;
   reason: EndReason;
+}
+
+/**
+ * The draft (RULES.md "Draft"): players take turns picking from a face-up pool of players, then
+ * each team's other players are dealt at random. Kept after the draft so both sides can look
+ * back at who picked whom.
+ */
+export interface DraftState {
+  /** Pool cards still available (uids "P01"...; their definitions are in GameState.cards). Public. */
+  pool: Uid[];
+  /** Who picked which pool card, in pick order. Public. */
+  picks: Record<Side, Uid[]>;
+  /** Whose pick each one is, in order (snake order). Public. */
+  order: Side[];
+  /** Hidden: players outside the draft pool, used with the leftovers to fill the decks. */
+  rest: PlayerCardDef[];
+  /** Hidden until dealt: each side's own cards from the card set (its spells). */
+  teamCards: Record<Side, CardDef[]>;
+  /** Each side's team in the card set (dealt players take its color). */
+  teamIds: Record<Side, string>;
+  done: boolean;
 }
 
 export interface GameState {
@@ -166,4 +189,6 @@ export interface GameState {
   forcedSub: { side: Side; pos: Pos; injured: Uid | null } | null;
   pending: Pending;
   result: GameResult | null;
+  /** The draft, in games that start with one (config.draftPicks > 0). */
+  draft?: DraftState;
 }

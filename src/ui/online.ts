@@ -106,7 +106,7 @@ export const matchApi: MatchApi = {
 
 export const listMatches = () => call<MatchSummary[]>('GET', '/api/matches');
 export const findPlayers = (name: string) => call<PlayerListing[]>('GET', `/api/players?name=${encodeURIComponent(name)}`);
-export const sendChallenge = (opponentId: number, lanes: number, team: string, pace: Pace) =>
-  call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace });
+export const sendChallenge = (opponentId: number, lanes: number, team: string, pace: Pace, draft: boolean) =>
+  call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace, players: draft ? 'draft' : 'dealt' });
 export const acceptChallenge = (id: number) => call<MatchDetail>('POST', `/api/matches/${id}/accept`);
 export const declineChallenge = (id: number) => call<MatchSummary>('POST', `/api/matches/${id}/decline`);

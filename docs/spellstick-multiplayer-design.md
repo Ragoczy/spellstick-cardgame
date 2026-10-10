@@ -187,6 +187,8 @@ Constructed rewards collecting; draft rewards skill on a level field.
 4. The server fills each deck to 40 cards (2 goalies, 22 field players, 16 spells) with cards dealt at random from the released card list, using the match seed. The random fill is hidden from the opponent; the 10 drafted cards are known to both, since the pool was face up.
 5. Players then place their lineups face down and the match begins.
 
+*Built 2026-10-10 (rules v0.12, RULES.md "Draft"), with two changes: the pool is 30 field players only, and goalies are dealt at random with the fill. In the simulator, drafting goalies let the first picker take the best goalie and win 58% of games; without goalies it's 50%. Spells aren't drafted either: since rules v0.11 each team keeps its own 16 spells. The second player (who chooses the opening faceoff lane) picks first. The draft is part of the rules engine, so time banks, the computer taking over, replays, and hidden information work for picks with no extra server code. Challenges choose "Draft" (the lobby's default) or "Dealt at random".*
+
 Drafted and dealt cards exist only for that match; they are not added to collections. A tournament can optionally award the winner one drafted card as a real instance.
 
 **Pod draft (future).** Four to eight players each open a pack, take one card, and pass the rest; play is then round-robin within the pod. Because one slow player stalls everyone, pod drafts run live only, with short time banks and auto-pick for anyone who disconnects. To keep this cheap later, build the v1 draft engine around seats and packs from the start: head-to-head draft is just a two-seat draft with one shared pack.
@@ -356,6 +358,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Online step 6, head-to-head draft (rules v0.12). Challenges and practice games can start with a draft: 30 face-up field players, 10 picks each in snake order, goalies and the rest dealt at random. Goalies were taken out of the draft for balance (see Match formats).
 - 2026-10-10: Discord policy features. "Unlink my Discord account" in the player's settings: Discord checks it's them, the game revokes its Discord token, deletes their data and sessions, ends their matches in progress as resigned, and keeps finished matches for opponents with the player shown as "Deleted player". An audit table records only the time. "Report a problem" (footer, help screen, settings) opens a filled-in email to admin@darkspace.press. Notifications must be opt-in and off by default (see Notifications). The Discord Activity no longer asks for the unused `identify` scope.
 - 2026-10-10: GitHub Pages retired. Paul asked for the old address to stop serving the game, so it now shows a "moved" page (`pages-redirect/`) that forwards every old link to the Azure address.
 - 2026-10-10: Online step 5, time banks. Challenges pick a pace: at your own pace (36 hours each) or live (25 minutes each). A bank runs only while the match waits on that player; both show on screen and count down. When a bank runs out, the computer plays that player's remaining decisions, or the match is a forfeit if they never moved. Overdue banks are found by the game server itself (see Architecture), not a separate scheduled job.

@@ -11,6 +11,7 @@
     "build:server": "esbuild server/main.ts --bundle --platform=node --format=esm --target=node24 --packages=external --outfile=dist-server/main.js",
     "server:dev": "tsx watch server/main.ts",
     "db:up": "docker compose up -d postgres",
+    "env:pull": "bash scripts/pull-server-env.sh",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p server",
     "test": "vitest run",

@@ -2,7 +2,7 @@
 // - a "spellstick" database on the Postgres server,
 // - registry access (the app pulls images; GitHub Actions pushes them),
 // - "join" on the Container Apps environment for GitHub Actions, so it can update ca-spellstick,
-// - read access to one Key Vault secret (the Discord client secret), and nothing else in the vault.
+// - read access to the shared Darkspace Games Discord settings in Key Vault, and nothing else there.
 //
 // The app's Postgres login is created separately with SQL (see infra/README.md), because Azure
 // can only add Entra logins from inside the database.
@@ -11,7 +11,8 @@ param postgresServerName string
 param databaseName string
 param registryName string
 param keyVaultName string
-param discordSecretName string
+@description('Key Vault secrets the app may read (the shared Discord settings).')
+param sharedSecretNames string[]
 param appPrincipalId string
 param deployPrincipalId string
 
@@ -90,18 +91,18 @@ resource vault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
-resource discordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' existing = {
+resource sharedSecrets 'Microsoft.KeyVault/vaults/secrets@2023-07-01' existing = [for name in sharedSecretNames: {
   parent: vault
-  name: discordSecretName
-}
+  name: name
+}]
 
-// Scoped to the one secret, so Spellstick can't read aiuthor's API keys.
-resource appSecretRead 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: discordSecret
-  name: guid(discordSecret.id, appPrincipalId, roles.keyVaultSecretsUser)
+// One grant per shared setting, so Spellstick can't read aiuthor's API keys or anything else.
+resource appSecretRead 'Microsoft.Authorization/roleAssignments@2022-04-01' = [for (name, i) in sharedSecretNames: {
+  scope: sharedSecrets[i]
+  name: guid(sharedSecrets[i].id, appPrincipalId, roles.keyVaultSecretsUser)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.keyVaultSecretsUser)
     principalId: appPrincipalId
     principalType: 'ServicePrincipal'
   }
-}
+}]

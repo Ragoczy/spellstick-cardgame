@@ -19,15 +19,26 @@ export interface Config {
   /** Folder with the numbered .sql migration files. */
   migrationsDir: string;
   database: DatabaseConfig;
+  /**
+   * Discord settings. Everything except allowedRoleIds is shared by all Darkspace games and
+   * comes from Key Vault (Integrations--Discord--*); see infra/README.md.
+   */
   discord: {
     clientId: string;
     clientSecret: string;
-    /** Your Discord server. Players must be members to sign in. */
+    /** Our Discord server. Players must be members to sign in. */
     guildId: string;
-    /** Players need at least one of these roles. Empty means any member may sign in. */
+    /** Discord roles that make someone a player, moderator, or admin in every game. */
+    playerRoleIds: string[];
+    moderatorRoleIds: string[];
+    adminRoleIds: string[];
+    /**
+     * This game only: roles allowed to sign in instead of the player roles (for example a beta
+     * role). Empty means the player roles. Moderators and admins can always sign in.
+     */
     allowedRoleIds: string[];
   };
-  /** Discord user IDs that are always allowed in and get the admin role. */
+  /** Discord user IDs that are always allowed in as admins, even without a role (so the owner can't be locked out). */
   adminDiscordIds: string[];
   sessionDays: number;
 }
@@ -64,6 +75,9 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
       clientId: required(env, 'DISCORD_CLIENT_ID'),
       clientSecret: required(env, 'DISCORD_CLIENT_SECRET'),
       guildId: required(env, 'DISCORD_GUILD_ID'),
+      playerRoleIds: list(env.DISCORD_PLAYER_ROLE_IDS),
+      moderatorRoleIds: list(env.DISCORD_MODERATOR_ROLE_IDS),
+      adminRoleIds: list(env.DISCORD_ADMIN_ROLE_IDS),
       allowedRoleIds: list(env.DISCORD_ALLOWED_ROLE_IDS),
     },
     adminDiscordIds: list(env.ADMIN_DISCORD_IDS),

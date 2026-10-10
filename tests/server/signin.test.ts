@@ -5,7 +5,7 @@ import type pg from 'pg';
 import { buildApp } from '../../server/app';
 import { migrate } from '../../server/migrate';
 import {
-  ADMIN_ID, BETA_ROLE, databaseAvailable, fakeDiscord, person, signIn, testConfig, testDatabase,
+  ADMIN_ID, ADMINS_ROLE, MODS_ROLE, PLAYERS_ROLE, databaseAvailable, fakeDiscord, person, signIn, testConfig, testDatabase,
 } from './helpers';
 
 const haveDb = await databaseAvailable();
@@ -15,11 +15,16 @@ describe.skipIf(!haveDb)('sign-in with Discord', () => {
   let drop: () => Promise<void>;
   let app: Awaited<ReturnType<typeof buildApp>>;
   const discord = fakeDiscord({
-    alice: person('111', 'alice', [BETA_ROLE]),
-    bob: person('222', 'bob', [BETA_ROLE]),
+    alice: person('111', 'alice', [PLAYERS_ROLE]),
+    bob: person('222', 'bob', [PLAYERS_ROLE]),
     norole: person('333', 'norole', ['some-other-role']),
     outsider: person('444', 'outsider', null),
     owner: person(ADMIN_ID, 'paul', []),
+    mod: person('555', 'mod', [MODS_ROLE]),
+    boss: person('666', 'boss', [ADMINS_ROLE]),
+    // The same person before and after a moderator role is added in Discord.
+    carolPlayer: person('777', 'carol', [PLAYERS_ROLE]),
+    carolMod: person('777', 'carol', [PLAYERS_ROLE, MODS_ROLE]),
   });
 
   beforeAll(async () => {
@@ -85,6 +90,17 @@ describe.skipIf(!haveDb)('sign-in with Discord', () => {
   it('lets the admin in without the role, as an admin', async () => {
     const { cookie } = await signIn(app, 'owner');
     expect((await me(cookie)).json()).toMatchObject({ role: 'admin' });
+  });
+
+  it('takes moderator and admin roles from Discord', async () => {
+    expect((await me((await signIn(app, 'mod')).cookie)).json()).toMatchObject({ role: 'moderator' });
+    expect((await me((await signIn(app, 'boss')).cookie)).json()).toMatchObject({ role: 'admin' });
+  });
+
+  it('updates the role when Discord roles change, at the next sign-in', async () => {
+    expect((await me((await signIn(app, 'carolPlayer')).cookie)).json()).toMatchObject({ role: 'player' });
+    expect((await me((await signIn(app, 'carolMod')).cookie)).json()).toMatchObject({ role: 'moderator' });
+    expect((await me((await signIn(app, 'carolPlayer')).cookie)).json()).toMatchObject({ role: 'player' });
   });
 
   it('refuses a callback whose state does not match (a forged sign-in)', async () => {

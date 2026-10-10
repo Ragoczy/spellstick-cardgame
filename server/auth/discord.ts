@@ -77,19 +77,40 @@ export function discordCreatedAt(discordId: string): Date {
   return new Date(Number(BigInt(discordId) >> 22n) + 1420070400000);
 }
 
-export type AccessResult = 'allowed' | 'not-member' | 'no-role';
+export type Role = 'player' | 'moderator' | 'admin';
+
+export type AccessResult = { allowed: true; role: Role } | { allowed: false; reason: 'not-member' | 'no-role' };
+
+export interface AccessRules {
+  /** Roles that may sign in as players. Empty means any server member. */
+  allowedRoleIds: string[];
+  moderatorRoleIds: string[];
+  adminRoleIds: string[];
+  /** Always admins, even without a role or outside the server. */
+  adminDiscordIds: string[];
+}
+
+/** This game's sign-in rules: its own allowed roles if it has any, otherwise the shared player roles. */
+export function accessRules(discord: { playerRoleIds: string[]; moderatorRoleIds: string[]; adminRoleIds: string[]; allowedRoleIds: string[] }, adminDiscordIds: string[]): AccessRules {
+  return {
+    allowedRoleIds: discord.allowedRoleIds.length > 0 ? discord.allowedRoleIds : discord.playerRoleIds,
+    moderatorRoleIds: discord.moderatorRoleIds,
+    adminRoleIds: discord.adminRoleIds,
+    adminDiscordIds,
+  };
+}
 
 /**
- * Who may sign in: admins always; everyone else must be in the server and, if any roles are
- * set, hold at least one of them.
+ * Who may sign in, and as what. Roles come from our Discord server, checked at each sign-in:
+ * an Admins role makes you an admin, a Mods role a moderator, and an allowed role a player.
+ * Anyone else in the server is turned away.
  */
-export function checkAccess(
-  discordId: string,
-  member: DiscordMember | null,
-  rules: { allowedRoleIds: string[]; adminDiscordIds: string[] },
-): AccessResult {
-  if (rules.adminDiscordIds.includes(discordId)) return 'allowed';
-  if (!member) return 'not-member';
-  if (rules.allowedRoleIds.length === 0) return 'allowed';
-  return member.roles.some((r) => rules.allowedRoleIds.includes(r)) ? 'allowed' : 'no-role';
+export function checkAccess(discordId: string, member: DiscordMember | null, rules: AccessRules): AccessResult {
+  if (rules.adminDiscordIds.includes(discordId)) return { allowed: true, role: 'admin' };
+  if (!member) return { allowed: false, reason: 'not-member' };
+  const has = (ids: string[]) => member.roles.some((r) => ids.includes(r));
+  if (has(rules.adminRoleIds)) return { allowed: true, role: 'admin' };
+  if (has(rules.moderatorRoleIds)) return { allowed: true, role: 'moderator' };
+  if (rules.allowedRoleIds.length === 0 || has(rules.allowedRoleIds)) return { allowed: true, role: 'player' };
+  return { allowed: false, reason: 'no-role' };
 }

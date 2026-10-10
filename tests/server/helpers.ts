@@ -46,7 +46,9 @@ export async function testDatabase(): Promise<{ db: pg.Pool; drop: () => Promise
 }
 
 export const GUILD_ID = '1000';
-export const BETA_ROLE = '2000';
+export const PLAYERS_ROLE = '2000';
+export const MODS_ROLE = '2001';
+export const ADMINS_ROLE = '2002';
 export const ADMIN_ID = '771010532458233888';
 
 export function testConfig(overrides: Partial<Config> = {}): Config {
@@ -56,7 +58,10 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     staticDir: 'no-such-folder',
     migrationsDir: 'server/migrations',
     database: { url: TEST_DATABASE_URL },
-    discord: { clientId: 'client-id', clientSecret: 'client-secret', guildId: GUILD_ID, allowedRoleIds: [BETA_ROLE] },
+    discord: {
+      clientId: 'client-id', clientSecret: 'client-secret', guildId: GUILD_ID,
+      playerRoleIds: [PLAYERS_ROLE], moderatorRoleIds: [MODS_ROLE], adminRoleIds: [ADMINS_ROLE], allowedRoleIds: [],
+    },
     adminDiscordIds: [ADMIN_ID],
     sessionDays: 7,
     ...overrides,

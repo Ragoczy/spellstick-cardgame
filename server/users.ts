@@ -2,9 +2,9 @@
 
 import { createHash, randomBytes } from 'node:crypto';
 import type pg from 'pg';
-import { discordCreatedAt, type DiscordMember, type DiscordUser } from './auth/discord';
+import { discordCreatedAt, type DiscordMember, type DiscordUser, type Role } from './auth/discord';
 
-export type Role = 'player' | 'moderator' | 'admin';
+export type { Role };
 
 export interface User {
   id: number;
@@ -38,22 +38,22 @@ function toUser(row: UserRow): User {
 const USER_COLUMNS = 'u.id, u.discord_id, u.discord_username, u.discord_avatar, u.display_name, u.role';
 
 /**
- * Creates the player on first sign-in, or refreshes their Discord details. People on the admin
- * list get the admin role; someone taken off the list goes back to player. Moderators are set
- * by hand and left alone.
+ * Creates the player on first sign-in, or refreshes their Discord details. Their role comes
+ * from their Discord roles at each sign-in, so changing roles in Discord takes effect the next
+ * time they sign in.
  */
-export async function upsertUser(db: pg.Pool, discord: DiscordUser, member: DiscordMember | null, isAdmin: boolean): Promise<User> {
+export async function upsertUser(db: pg.Pool, discord: DiscordUser, member: DiscordMember | null, role: Role): Promise<User> {
   const { rows } = await db.query<UserRow>(
     `insert into users as u (discord_id, discord_username, discord_avatar, discord_created_at, joined_server_at, role)
-     values ($1, $2, $3, $4, $5, case when $6 then 'admin' else 'player' end)
+     values ($1, $2, $3, $4, $5, $6)
      on conflict (discord_id) do update set
        discord_username = excluded.discord_username,
        discord_avatar = excluded.discord_avatar,
        joined_server_at = excluded.joined_server_at,
        last_sign_in_at = now(),
-       role = case when $6 then 'admin' when u.role = 'admin' then 'player' else u.role end
+       role = excluded.role
      returning ${USER_COLUMNS}`,
-    [discord.id, discord.username, discord.avatar, discordCreatedAt(discord.id), member?.joinedAt ?? null, isAdmin],
+    [discord.id, discord.username, discord.avatar, discordCreatedAt(discord.id), member?.joinedAt ?? null, role],
   );
   return toUser(rows[0]!);
 }

@@ -3,7 +3,8 @@
 // Spellstick reuses the aiuthor app's shared resources in rg-aiuthor (Container Apps
 // environment, Postgres server, container registry, Key Vault, logs) and adds only its own
 // pieces in rg-spellstick. Nothing belonging to aiuthor is changed: Spellstick gets its own
-// database, and access to its own registry images and its one Key Vault secret.
+// database, its own registry images, and read access to the shared Darkspace Games Discord
+// settings in Key Vault (and no other secrets).
 //
 // Deploy (see infra/README.md):
 //   az deployment sub create -l eastus2 -f infra/main.bicep -p infra/main.bicepparam -p image=<image>
@@ -21,8 +22,6 @@ param containerAppsEnvironmentName string = 'cae-aiuthor'
 param postgresServerName string = 'psql-ha7siia4h4zia'
 param registryName string = 'acrha7siia4h4zia'
 param keyVaultName string = 'kv-ha7siia4h4zia'
-@description('Key Vault secret holding the Discord client secret.')
-param discordSecretName string = 'SpellstickCardgame'
 
 // ---- Spellstick settings ----
 param resourceGroupName string = 'rg-spellstick'
@@ -31,15 +30,23 @@ param databaseName string = 'spellstick'
 @description('GitHub repo as GitHub names it in sign-in tokens: owner@ownerId/repo@repoId. The IDs stop a renamed or re-created repo from inheriting access.')
 param githubRepo string = 'Ragoczy@2834782/spellstick-cardgame@1407928591'
 
-param discordClientId string
-param discordGuildId string
-@description('Comma-separated Discord role IDs allowed to sign in. Empty = any server member.')
-param discordAllowedRoleIds string
-@description('Comma-separated Discord user IDs that always get in, as admins.')
-param adminDiscordIds string
+@description('This game only: comma-separated Discord role IDs allowed to sign in instead of the shared Players role (for example a beta role). Empty = the shared Players role.')
+param discordAllowedRoleIds string = ''
 
 @description('0 = stop when idle (cheap, slow first visit). Set to 1 once live matches need an always-on server.')
 param minReplicas int = 0
+
+// Settings shared by every Darkspace game, kept in Key Vault (see infra/README.md, "Shared
+// settings"). Each becomes an environment variable on the app.
+var sharedSettings = [
+  { env: 'DISCORD_CLIENT_ID', secret: 'Integrations--Discord--ClientId' }
+  { env: 'DISCORD_CLIENT_SECRET', secret: 'Integrations--Discord--ClientSecret' }
+  { env: 'DISCORD_GUILD_ID', secret: 'Integrations--Discord--GuildId' }
+  { env: 'DISCORD_PLAYER_ROLE_IDS', secret: 'Integrations--Discord--PlayerRoleIds' }
+  { env: 'DISCORD_MODERATOR_ROLE_IDS', secret: 'Integrations--Discord--ModeratorRoleIds' }
+  { env: 'DISCORD_ADMIN_ROLE_IDS', secret: 'Integrations--Discord--AdminRoleIds' }
+  { env: 'ADMIN_DISCORD_IDS', secret: 'Integrations--Discord--AdminUserIds' }
+]
 
 var tags = { app: 'spellstick' }
 
@@ -63,7 +70,7 @@ module shared 'modules/shared.bicep' = {
     databaseName: databaseName
     registryName: registryName
     keyVaultName: keyVaultName
-    discordSecretName: discordSecretName
+    sharedSecretNames: map(sharedSettings, s => s.secret)
     containerAppsEnvironmentName: containerAppsEnvironmentName
     appPrincipalId: identities.outputs.appPrincipalId
     deployPrincipalId: identities.outputs.deployPrincipalId
@@ -85,13 +92,11 @@ module app 'modules/app.bicep' = {
     appClientId: identities.outputs.appClientId
     appIdentityName: identities.outputs.appIdentityName
     deployPrincipalId: identities.outputs.deployPrincipalId
-    discordSecretUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}/secrets/${discordSecretName}'
+    keyVaultUrl: 'https://${keyVaultName}${environment().suffixes.keyvaultDns}'
+    sharedSettings: sharedSettings
     postgresHost: '${postgresServerName}.postgres.database.azure.com'
     databaseName: databaseName
-    discordClientId: discordClientId
-    discordGuildId: discordGuildId
     discordAllowedRoleIds: discordAllowedRoleIds
-    adminDiscordIds: adminDiscordIds
     minReplicas: minReplicas
   }
 }

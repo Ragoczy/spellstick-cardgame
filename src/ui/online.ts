@@ -43,5 +43,5 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
   cancelled: 'Sign-in was cancelled. You can still play against the computer.',
   failed: "Sign-in didn't work. Please try again in a moment.",
   'not-member': 'Online play is for members of our Discord server. Join the server, then sign in again.',
-  'no-role': "Online play is in a closed beta, and your Discord account doesn't have the beta role yet. Ask a moderator if you think it should.",
+  'no-role': "Your Discord account doesn't have a role that's allowed to play online yet. Ask a moderator on our Discord server if you think it should.",
 };

@@ -11,7 +11,7 @@ The online game runs as one container app, `ca-spellstick`, in the Darkspace.Pre
 | `id-spellstick-deploy` | rg-spellstick | GitHub Actions' identity (main branch only): pushes images, updates `ca-spellstick`. |
 | `spellstick` database | `psql-ha7siia4h4zia` (rg-aiuthor) | Players and sessions. |
 | `spellstick` images | `acrha7siia4h4zia` (rg-aiuthor) | Container images, tagged by git commit. |
-| `SpellstickCardgame` secret | `kv-ha7siia4h4zia` (rg-aiuthor) | Discord client secret. The app can read only this secret. |
+| `Integrations--Discord--*` secrets | `kv-ha7siia4h4zia` (rg-aiuthor) | Discord settings shared by all Darkspace games (see below). The app can read only these. |
 | Logs | `log-aiuthor` via `cae-aiuthor` | Server logs. |
 
 Live address (for now): https://ca-spellstick.proudbush-0a90b692.eastus2.azurecontainerapps.io
@@ -39,11 +39,48 @@ $75 in a month, or is forecast to go over. It never stops anything. To change th
 az deployment sub create -l eastus2 -n budget -f infra/budget.bicep -p contactEmail=pjackson@darkspace.press amount=100
 ```
 
-## Changing settings
+## Shared settings (all Darkspace games)
 
-Who may sign in, admins, and the minimum number of running copies are in `main.bicepparam`
-and `main.bicep`. Change them there and re-run step 2, or change the environment variable on
-the container app in the Azure portal (Containers → Environment variables) for a quick edit.
+Every Darkspace game signs in through one Discord application, "Darkspace Games", and checks
+the same Discord server and roles. Those settings live once, in Key Vault `kv-ha7siia4h4zia`.
+The names follow the .NET convention (`--` means `:`), so aiuthor could read them as
+`Integrations:Discord:*` too.
+
+| Key Vault secret | Environment variable | Value |
+| --- | --- | --- |
+| `Integrations--Discord--ClientId` | `DISCORD_CLIENT_ID` | Darkspace Games application ID |
+| `Integrations--Discord--ClientSecret` | `DISCORD_CLIENT_SECRET` | Its client secret |
+| `Integrations--Discord--GuildId` | `DISCORD_GUILD_ID` | Our Discord server |
+| `Integrations--Discord--PlayerRoleIds` | `DISCORD_PLAYER_ROLE_IDS` | Players role: may sign in |
+| `Integrations--Discord--ModeratorRoleIds` | `DISCORD_MODERATOR_ROLE_IDS` | Mods role: moderator in every game |
+| `Integrations--Discord--AdminRoleIds` | `DISCORD_ADMIN_ROLE_IDS` | Admins role: admin in every game |
+| `Integrations--Discord--AdminUserIds` | `ADMIN_DISCORD_IDS` | Emergency admins who always get in (Paul) |
+
+Role lists can hold several IDs, separated by commas. A player's role is set from their Discord
+roles each time they sign in, so a change in Discord takes effect at their next sign-in
+(sessions last 7 days).
+
+**To change one:** update the secret, then restart each game so it reads the new value.
+
+```bash
+az keyvault secret set --vault-name kv-ha7siia4h4zia --name Integrations--Discord--PlayerRoleIds --value "<role id>,<another role id>"
+az containerapp revision restart -g rg-spellstick -n ca-spellstick --revision $(az containerapp show -g rg-spellstick -n ca-spellstick --query properties.latestRevisionName -o tsv)
+```
+
+**A new game** reads the same secrets: list them in its own Bicep like `sharedSettings` in
+`main.bicep`, grant its identity Key Vault Secrets User on each one, and add its return address
+(`https://<game>/auth/discord/callback`) to the Darkspace Games app in the Discord Developer
+Portal (up to 10 per app). Players' accounts stay separate per game, keyed by Discord ID.
+
+**Locally,** `npm run env:pull` writes `server/.env` with these values.
+
+## Spellstick-only settings
+
+`main.bicepparam` holds what is Spellstick's own: `discordAllowedRoleIds` (empty = the shared
+Players role; set a role ID to limit Spellstick to, say, a beta role). Change it there and
+re-run step 2, or edit `DISCORD_ALLOWED_ROLE_IDS` on the container app in the Azure portal
+(Containers → Environment variables) for a quick change. `main.bicep` holds the minimum number
+of running copies.
 
 ## First-time setup
 

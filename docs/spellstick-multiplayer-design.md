@@ -122,7 +122,8 @@ A player account is a Discord account, signed in with Discord OAuth. There are n
 - **Sign-in:** Discord OAuth with the `identify` and `guilds.members.read` scopes. The player must be in your server and hold one of the allowed roles (a setting on the container app; empty means any member). Admins on the admin list always get in. Discord's token is used during sign-in and then discarded; sessions last 7 days, so a removed role takes effect within a week. *(Added 2026-10-10.)*
 - **Display name:** the player picks a team or manager name; the Discord handle is shown only to moderators.
 - **Alt accounts:** coins, starter packs, and trades make second accounts profitable. Require server membership for at least 14 days and a minimum Discord account age before a player can trade or receive starter cards. Moderators can link suspected alts and freeze trading on them.
-- **Roles:** Player, Moderator (freeze trades, void matches, grant cards), Admin (you: prices, tournaments, card releases).
+- **Roles:** Player, Moderator (freeze trades, void matches, grant cards), Admin (you: prices, tournaments, card releases). *(Changed 2026-10-10: roles come from the Discord server's Players, Mods, and Admins roles, read at each sign-in, so they're managed in Discord and shared by every Darkspace game.)*
+- **Shared sign-in (added 2026-10-10):** all Darkspace games use one Discord application, "Darkspace Games", and one set of Discord settings in Key Vault (`Integrations--Discord--*`). Each game keeps its own player accounts, keyed by Discord ID, so a shared accounts service can be added later without a redesign.
 - **Patreon (later):** optional Patreon OAuth to gate patron-only tournaments or a monthly patron pack.
 
 ## Cards, collection, and persistent teams
@@ -351,5 +352,6 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Shared sign-in for all Darkspace games. Discord app renamed "Darkspace Games"; Discord settings moved to Key Vault (`Integrations--Discord--*`); player, moderator, and admin roles come from Discord roles. Accounts stay per game (no central accounts service yet).
 - 2026-10-10: First online step. Game server skeleton in `server/` (Fastify, plain SQL), Discord sign-in gated by server role, manager names, privacy page. Reuses the aiuthor Azure resources instead of new ones. Domain will be play.darkspace.press; the Azure default address is used for now. GitHub Pages stays as the free offline version.
 - 2026-10-10: Paul's review. Scope expansion confirmed. Time banks replace move and pick timers. Draft cut to 10 picks each with a random deck fill. Rarity and Capped Constructed deferred to a future phase. Card definitions stay in `data/*.json`. Server goes in this repo. Hosting cost accepted. Corrected the card and team model to match `RULES.md` (40-card decks, any field position, Resonants) and the engine section to reflect that `src/engine/` is already pure and replayable. Swiss draws, tiebreakers, and deadline results left TBD.

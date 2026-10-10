@@ -11,7 +11,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import type { AppDeps } from '../app';
 import { createSession, deleteSession, upsertUser } from '../users';
-import { authorizeUrl, checkAccess } from './discord';
+import { accessRules, authorizeUrl, checkAccess } from './discord';
 
 export const SESSION_COOKIE = 'spellstick_session';
 const STATE_COOKIE = 'spellstick_oauth_state';
@@ -28,6 +28,7 @@ export function authRoutes(app: FastifyInstance, deps: AppDeps): void {
   const { config, db, discord } = deps;
   const redirectUri = `${config.publicUrl}/auth/discord/callback`;
   const secure = config.publicUrl.startsWith('https://');
+  const rules = accessRules(config.discord, config.adminDiscordIds);
 
   app.get('/auth/discord/login', async (_req, reply) => {
     // A random value we check on the way back, so nobody can trick a browser into signing in
@@ -50,13 +51,12 @@ export function authRoutes(app: FastifyInstance, deps: AppDeps): void {
       const token = await discord.exchangeCode(code, redirectUri);
       const user = await discord.getUser(token);
       const member = await discord.getMember(token, config.discord.guildId);
-      const access = checkAccess(user.id, member, { allowedRoleIds: config.discord.allowedRoleIds, adminDiscordIds: config.adminDiscordIds });
-      if (access !== 'allowed') {
-        req.log.info({ discordId: user.id, access }, 'sign-in refused');
-        return back(access);
+      const access = checkAccess(user.id, member, rules);
+      if (!access.allowed) {
+        req.log.info({ discordId: user.id, reason: access.reason }, 'sign-in refused');
+        return back(access.reason);
       }
-      const isAdmin = config.adminDiscordIds.includes(user.id);
-      const player = await upsertUser(db, user, member, isAdmin);
+      const player = await upsertUser(db, user, member, access.role);
       const sessionId = await createSession(db, player.id, config.sessionDays);
       reply.setCookie(SESSION_COOKIE, sessionId, {
         path: '/', httpOnly: true, secure, sameSite: 'lax', maxAge: config.sessionDays * 24 * 60 * 60,

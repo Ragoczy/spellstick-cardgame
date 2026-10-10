@@ -1,0 +1,16 @@
+# Local Postgres for the game server and its tests: npm run db:up
+# Uses port 5433 so it doesn't clash with any other Postgres on this machine.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: spellstick
+      POSTGRES_PASSWORD: spellstick
+      POSTGRES_DB: spellstick
+    ports:
+      - "5433:5432"
+    volumes:
+      - spellstick-pg:/var/lib/postgresql/data
+
+volumes:
+  spellstick-pg:

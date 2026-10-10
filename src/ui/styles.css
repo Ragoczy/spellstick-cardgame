@@ -44,6 +44,28 @@ button { font: inherit; color: inherit; }
 
 .rules p, .rules li { line-height: 1.5; }
 
+/* ---- Sign-in panel (online build only) ---- */
+.account { margin: 14px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.account p { margin: 0; }
+.account-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.account-problem { color: var(--bad); font-size: 0.9rem; margin-bottom: 8px !important; }
+.discord-button {
+  display: inline-block; padding: 8px 14px; border-radius: 999px; background: #5865f2; color: white;
+  font-weight: 600; text-decoration: none;
+}
+.discord-button:hover { background: #4752c4; }
+.avatar { border-radius: 50%; }
+.pick-name label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+.pick-name input {
+  font: inherit; flex: 1 1 200px; min-width: 0; padding: 8px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink);
+}
+.pick-name button {
+  border: 1px solid var(--accent); background: var(--accent); color: white; font-weight: 600;
+  border-radius: 999px; padding: 8px 14px; cursor: pointer;
+}
+.pick-name button:disabled { opacity: 0.5; cursor: default; }
+
 /* ---- Game layout: turn steps to the left of the game ---- */
 .app.app-game { max-width: 1000px; }
 .game-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }

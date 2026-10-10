@@ -6,6 +6,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5173", "--strictPort"],
       "port": 5173
+    },
+    {
+      "name": "spellstick-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "server:dev"],
+      "port": 8080
+    },
+    {
+      "name": "spellstick-online",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:online"],
+      "port": 5180
     }
   ]
 }

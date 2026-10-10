@@ -38,6 +38,18 @@ One ruleset drives two products:
 | `npm run dev` | Start the browser game at http://localhost:5173. Add `?seed=123` to replay a particular game, or `?autoplay=1` to watch the computer play both sides. |
 | `npm run build` | Build the static site into `dist/` (upload that folder to any web host or a WordPress subfolder). |
 
+### Online game (local)
+
+The online game adds a server (`server/`) with Discord sign-in and a Postgres database. The
+plain build above doesn't use it. Design: `docs/spellstick-multiplayer-design.md`.
+
+| Command | What it does |
+|---|---|
+| `npm run db:up` | Start a local Postgres in Docker (port 5433). Also needed for the server tests. |
+| `npm run server:dev` | Start the game server on port 8080. Settings come from `server/.env` (copy `server/.env.example`; the Discord secret is in Key Vault as `SpellstickCardgame`). |
+| `npm run dev:online` | Start the online build at http://localhost:5180, with sign-in. Needs the server running. |
+| `npm run build:online` / `npm run build:server` | Build what the container runs. `docker build .` does both. |
+
 ## Before you start
 
 Do these first. They are the parts Claude Code can't do for you.

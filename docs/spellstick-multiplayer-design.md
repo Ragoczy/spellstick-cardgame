@@ -63,7 +63,8 @@ The browser shows each player only their filtered view and sends moves; the matc
 
 - **Server:** Node.js and TypeScript in one container, so the rules engine runs unchanged on server and browser.
 - **Repo layout:** same repo. The server goes in its own folder (for example `server/`) and imports `src/engine/` directly. The browser build stays a static site; the server is deployed separately. Pushing to `main` still redeploys the GitHub Pages site, so server work should not break the browser build.
-- **Hosting:** Azure Container Apps with minimum and maximum replicas both set to 1. The default minimum is 0 ([Azure scaling docs](https://learn.microsoft.com/azure/container-apps/scale-app)), and scaling to zero would drop live WebSocket connections. One replica keeps live connections in one process and easily handles a few hundred readers.
+- **Shared Azure resources (added 2026-10-10):** Spellstick reuses the existing aiuthor Container Apps environment, Postgres server (its own `spellstick` database and login), container registry, Key Vault (access to its own secret only), and log workspace in `rg-aiuthor`. Its own app and identities live in `rg-spellstick`. That Postgres server is publicly reachable with password sign-in turned off, rather than on a private network; moving to a private server later is a database dump and restore.
+- **Hosting:** Azure Container Apps with minimum and maximum replicas both set to 1. *(Until live matches exist, minimum 0 to save cost; the first visit after a quiet spell takes a few seconds.)* The default minimum is 0 ([Azure scaling docs](https://learn.microsoft.com/azure/container-apps/scale-app)), and scaling to zero would drop live WebSocket connections. One replica keeps live connections in one process and easily handles a few hundred readers.
 - **Cost:** an always-on container plus a managed Postgres server is an ongoing monthly Azure bill (roughly tens of dollars at small scale). Accepted by Paul 2026-10-10.
 - **Time banks and deadlines:** stored in the database as due times, never only in memory. A Container Apps scheduled job runs every minute to expire time banks, close rounds, and reconcile coin transactions, so a restart or deploy never loses a deadline.
 - **Database:** Azure Database for PostgreSQL (Flexible Server) with automated backups.
@@ -118,7 +119,7 @@ A game averages about 45 turns, and the opponent also makes decisions mid-turn (
 
 A player account is a Discord account, signed in with Discord OAuth. There are no passwords to store, the coin balance already belongs to that Discord user, and a ban in the community can apply to the game.
 
-- **Sign-in:** Discord OAuth with the `identify` scope; add `guilds.members.read` to confirm the player is in your server.
+- **Sign-in:** Discord OAuth with the `identify` and `guilds.members.read` scopes. The player must be in your server and hold one of the allowed roles (a setting on the container app; empty means any member). Admins on the admin list always get in. Discord's token is used during sign-in and then discarded; sessions last 7 days, so a removed role takes effect within a week. *(Added 2026-10-10.)*
 - **Display name:** the player picks a team or manager name; the Discord handle is shown only to moderators.
 - **Alt accounts:** coins, starter packs, and trades make second accounts profitable. Require server membership for at least 14 days and a minimum Discord account age before a player can trade or receive starter cards. Moderators can link suspected alts and freeze trading on them.
 - **Roles:** Player, Moderator (freeze trades, void matches, grant cards), Admin (you: prices, tournaments, card releases).
@@ -350,4 +351,5 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: First online step. Game server skeleton in `server/` (Fastify, plain SQL), Discord sign-in gated by server role, manager names, privacy page. Reuses the aiuthor Azure resources instead of new ones. Domain will be play.darkspace.press; the Azure default address is used for now. GitHub Pages stays as the free offline version.
 - 2026-10-10: Paul's review. Scope expansion confirmed. Time banks replace move and pick timers. Draft cut to 10 picks each with a random deck fill. Rarity and Capped Constructed deferred to a future phase. Card definitions stay in `data/*.json`. Server goes in this repo. Hosting cost accepted. Corrected the card and team model to match `RULES.md` (40-card decks, any field position, Resonants) and the engine section to reflect that `src/engine/` is already pure and replayable. Swiss draws, tiebreakers, and deadline results left TBD.

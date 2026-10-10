@@ -1,2 +1,8 @@
 node_modules/
 dist/
+dist-server/
+
+# Local secrets
+.env
+*.env
+!*.env.example

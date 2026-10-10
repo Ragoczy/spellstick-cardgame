@@ -16,6 +16,23 @@ concurrency:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    # A throwaway Postgres for the game server's tests.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: spellstick
+          POSTGRES_PASSWORD: spellstick
+          POSTGRES_DB: spellstick
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U spellstick"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://spellstick:spellstick@localhost:5432/spellstick
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { prototypeCards } from '../data/prototype';
+import { Account } from './Account';
+import { ONLINE } from './online';
 import { TeamColors } from './Card';
 import { GameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
@@ -33,6 +35,7 @@ export function App() {
           <div className="screen start">
             <h1>Spellstick</h1>
             <p className="tagline">Magical lacrosse from the Warlock series. Hide your best players, pass to find the gaps, and let the spells fly.</p>
+            {ONLINE ? <Account /> : null}
             <div className="options">
               <label>
                 Your team
@@ -54,6 +57,7 @@ export function App() {
             </div>
             <p className="small">Prototype: card names, teams, and art are placeholders.</p>
             <button type="button" className="quiet" onClick={() => setScreen({ kind: 'future' })}>Future features</button>
+            {ONLINE ? <a className="quiet" href="privacy.html">Privacy</a> : null}
           </div>
         ) : null}
         {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} /> : null}

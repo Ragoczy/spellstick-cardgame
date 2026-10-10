@@ -20,7 +20,8 @@ const END_REASON: Record<EndReason, string> = {
   turn_cap: 'the game hit its turn limit',
 };
 
-export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line | null {
+/** holdingReaction: whether the person has a reaction spell in hand (to skip lines that don't matter to them). */
+export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holdingReaction = true): Line | null {
   const them = otherSide(me);
   const isMe = (side: Side) => side === me;
   const who = (side: Side) => (isMe(side) ? 'You' : 'The computer');
@@ -121,6 +122,13 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number): Line |
       return null;
     case 'goal':
       return { text: `GOAL! ${who(e.side)} ${verb(e.side, 'score', 'scores')}. You ${e.score[me]}, the computer ${e.score[them]}.`, tone: 'goal' };
+    case 'outOfSpells':
+      if (isMe(e.side)) {
+        return holdingReaction
+          ? info(`Your ${posName(e.pos, lanes)} has no spells left, so you can't play a reaction spell in this contest. Substitute them to recharge.`)
+          : null;
+      }
+      return info(`Their ${posName(e.pos, lanes)} has no spells left, so the computer can't play a reaction spell in this contest.`);
     case 'substituted': {
       const name = e.removed?.def.name ?? e.secret?.removed.def.name ?? 'The face-down player';
       return info(`${who(e.side)} ${verb(e.side, 'substitute', 'substitutes')} ${at(e.side, e.pos)}. ${name} goes to ${isMe(e.side) ? 'your' : 'their'} hand to rest.`);

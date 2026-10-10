@@ -53,8 +53,10 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
     const lines: Line[] = [];
     const announcements: Announcement[] = [];
     const revealed = new Set<string>();
+    // A tired player can't react: only worth saying if you had a reaction spell to play.
+    const holdingReaction = session.view.mine.hand.some((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction');
     for (const e of events) {
-      const line = describeForPlayer(e, session.human, lanes);
+      const line = describeForPlayer(e, session.human, lanes, holdingReaction);
       if (line) lines.push(line);
       if (e.type === 'revealed') revealed.add(posKey(e.side, e.pos));
       if (e.type === 'contestResolved' && line) {

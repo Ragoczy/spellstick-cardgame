@@ -46,6 +46,15 @@ export function HowToPlay({ onBack }: { onBack: () => void }) {
         <b> reaction spell</b>, and the defender may answer with one. Highest value wins.
       </p>
 
+      <h3>Playing spells</h3>
+      <p>Every spell card says when it's played. Spells you can play right now glow; the others are faded.</p>
+      <ul>
+        <li><b>Action spells</b> (<i>Play on your turn</i>) are your action for the turn. Tap the spell, then the player who casts it (green = affinity match, stronger; red = opposed, weaker), then the target if it has one.</li>
+        <li><b>Reaction spells</b> (<i>Play during a contest</i>) can't be played on your own. When a contest starts, you'll be asked whether to play one. Your player in that contest casts it.</li>
+        <li>Casting turns the caster face up, and uses up one of their Resonants until they're substituted out to rest.</li>
+        <li>Tap a faded spell to see why it can't be played yet.</li>
+      </ul>
+
       <h3>Dice</h3>
       <p>
         You have <b>5 rolls</b> a game. Losing a contest that matters? Spend one to call for dice: you <i>both</i> roll a

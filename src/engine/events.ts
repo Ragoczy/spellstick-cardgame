@@ -69,6 +69,8 @@ export type GameEvent =
   | { type: 'ballMoved'; side: Side; pos: Pos }
   | { type: 'goal'; side: Side; score: Record<Side, number> }
   /** The replaced player goes to hand. `removed` is null if they were face down (only their owner knows who). */
+  /** A player in a contest has used up their casting limit, so their side can't play a reaction spell (public). */
+  | { type: 'outOfSpells'; side: Side; pos: Pos }
   | { type: 'substituted'; side: Side; pos: Pos; removed: CardView | null; secret?: { removed: CardView } }
   | { type: 'swapped'; side: Side; a: FieldPos; b: FieldPos }
   | { type: 'scried'; side: Side; target: Pos; secret?: { card: CardView } }

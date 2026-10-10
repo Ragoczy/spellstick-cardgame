@@ -67,6 +67,8 @@ describe.each(LANE_COUNTS)('Casting limit (%i lanes)', (lanes) => {
     const { state, events } = play(again, passTo);
     expect(eventsOfType(events, 'contestResolved')).toHaveLength(1);
     expect(state.teams.A.hand).toHaveLength(2);
+    // Both players are told why (a tired player's spells left are public anyway).
+    expect(eventsOfType(eventsFor(events, 'B'), 'outOfSpells')).toEqual([{ type: 'outOfSpells', side: 'A', pos: fwd(LAST) }]);
   });
 
   it('recharges a player who is substituted out: they go to hand, and come back with their spells', () => {

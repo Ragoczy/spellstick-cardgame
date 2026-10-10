@@ -65,6 +65,8 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} has the ball (${posLabel(e.pos)}).`;
     case 'goal':
       return `GOAL for ${names[e.side]}! Score: ${names.A} ${e.score.A}, ${names.B} ${e.score.B}.`;
+    case 'outOfSpells':
+      return `${names[e.side]}'s player at ${posLabel(e.pos)} has no spells left, so ${names[e.side]} can't play a reaction spell.`;
     case 'substituted':
       return `${names[e.side]} substitutes at ${posLabel(e.pos)}. ${e.removed?.def.name ?? e.secret?.removed.def.name ?? 'The face-down player'} goes to hand to rest.`;
     case 'swapped':

@@ -118,6 +118,14 @@ button { font: inherit; color: inherit; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 6px; color: var(--muted); }
 .stats b { color: var(--ink); }
 .spell-line { display: flex; gap: 6px; align-items: center; }
+.spell-when { margin-top: 2px; font-size: 0.66rem; font-weight: 700; }
+.spell-when.action { color: var(--accent); }
+.spell-when.reaction { color: var(--select); }
+.card.dim { opacity: 0.5; }
+.hand-label { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-top: 10px; font-size: 0.8rem; color: var(--muted); }
+.hand-label strong { color: var(--ink); font-size: 0.9rem; }
+.hand-label .action { color: var(--accent); font-weight: 600; }
+.hand-label .reaction { color: var(--select); font-weight: 600; }
 .chip { color: white; border-radius: 999px; padding: 0 6px; font-size: 0.68rem; }
 .resonants { display: flex; align-items: center; gap: 3px; margin-top: 2px; }
 .resonants .rest { margin-left: 2px; font-size: 0.6rem; line-height: 1; color: var(--bad); font-weight: 700; text-transform: uppercase; }
@@ -161,6 +169,7 @@ button { font: inherit; color: inherit; }
 /* ---- Prompts ---- */
 .prompt { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.4; }
 .prompt.waiting { color: var(--muted); }
+.prompt.notice { border-color: var(--select); background: #eef5fc; cursor: pointer; }
 .hint { margin-top: 6px; color: var(--muted); font-style: italic; }
 
 /* ---- Inspector ---- */

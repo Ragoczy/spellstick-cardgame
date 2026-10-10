@@ -9,6 +9,7 @@ import { capitalize, injuryEffect, laneName, posName } from './labels';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
 import { TurnSteps } from './TurnSteps';
+import { whyNotNow } from './spellHelp';
 import { posKey, useGame, type Announcement } from './useGame';
 import type { SessionOptions } from './session';
 
@@ -33,12 +34,15 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   const [inspected, setInspected] = useState<{ def: CardDef; injury?: InjuryDef } | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [hintText, setHintText] = useState<string | null>(null);
+  /** Why the card just tapped can't be played right now. */
+  const [notice, setNotice] = useState<string | null>(null);
   const pending = view.pending;
   const myDecision = session.waitingFor === 'human';
 
   const act = (action: Action) => {
     setSelection(NONE);
     setHintText(null);
+    setNotice(null);
     game.act(action);
   };
 
@@ -180,7 +184,9 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
 
   const onHandCard = (uid: string, def: CardDef, injury?: InjuryDef) => {
     setInspected({ def, injury });
+    setNotice(null);
     if (!myDecision) return;
+    if (def.kind === 'spell' && spellDecision && !canPlayNow(uid) && !handTargets.has(uid)) setNotice(whyNotNow(view, def));
     if (pending.kind === 'forcedSub') {
       const sub = legal.find((a) => a.type === 'forcedSub' && a.card === uid);
       if (sub) act(sub);
@@ -209,6 +215,15 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     if (subs.some((a) => a.card === uid)) return setSelection({ kind: 'substitute', card: uid });
     setSelection(NONE);
   };
+
+  /** A spell that can be played in the current decision (cast as your action, or as a reaction). */
+  function canPlayNow(uid: string): boolean {
+    if (pending.kind === 'action') return castsFor(uid).length > 0;
+    if (pending.kind === 'reaction') return legal.some((a) => a.type === 'react' && a.card === uid);
+    return false;
+  }
+  const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction');
+  const castable = view.mine.hand.filter((c) => c.def.kind === 'spell' && pending.kind === 'action' && canPlayNow(c.uid));
 
   // ---- Setup screens ----
 
@@ -329,8 +344,11 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
 
   function actionPrompt() {
     const left = view.actionsLeft;
-    let help = 'Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.';
-    if (!myBall) help = view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)." : 'The computer has the ball. You can tackle, or play a card.';
+    const spellHelp = castable.length
+      ? ` To cast a spell, tap a glowing spell in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be cast now`}).`
+      : '';
+    let help = `Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.${spellHelp}`;
+    if (!myBall) help = (view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)." : 'The computer has the ball. You can tackle, or play a card.') + spellHelp;
     if (selection.kind === 'holder') help = 'Tap a glowing teammate to pass to them. Tap anywhere else to cancel.';
     if (selection.kind === 'cast') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
@@ -394,7 +412,13 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
         <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
         {prompt()}
+        {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
 
+        <div className="hand-label">
+          <strong>Your hand</strong>
+          <span><span className="action">Action spells</span>: on your turn, as your action</span>
+          <span><span className="reaction">Reaction spells</span>: when a contest starts</span>
+        </div>
         <div className="hand">
           {view.mine.hand.map((c) => (
             <Card
@@ -403,7 +427,8 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
               injury={c.injury}
               showText
               selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-              highlight={myDecision && (handTargets.has(c.uid) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+              highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+              dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
               onClick={() => onHandCard(c.uid, c.def, c.injury)}
             />
           ))}
@@ -460,9 +485,17 @@ function ReactionPrompt({ view, onPlay }: { view: PlayerView; onPlay: (uid: stri
   if (!preview) return null;
   const winning = preview.mine > preview.theirs || (preview.mine === preview.theirs && preview.iWinTies);
   const status = `Right now it's ${preview.mine}–${preview.theirs}: you'd ${winning ? 'win' : 'lose'}${preview.mine === preview.theirs ? ' (tie)' : ''}.`;
+  // The reaction is cast by your player in this contest (and uses up one of their spells).
+  const pending = view.pending;
+  const casterPos = pending.kind === 'reaction' ? pending.contest[pending.role].pos : null;
+  const casterSlot = casterPos ? (casterPos.area === 'goal' ? view.mine.goalie : view.mine.lineup[casterPos.area][casterPos.lane]) : null;
+  const castsLeft = casterSlot && casterSlot.state !== 'empty' && casterSlot.state !== 'unknown' ? casterSlot.castsLeft : undefined;
+  const casterNote = casterPos
+    ? ` Your ${posName(casterPos, view.lanes)} casts it${castsLeft !== undefined ? ` (${castsLeft} ${castsLeft === 1 ? 'spell' : 'spells'} left)` : ''}.`
+    : '';
   return (
     <div className="prompt">
-      <strong>Contest!</strong> {status} Play a reaction spell?{preview.theyCanAnswer ? ' (The computer can answer with its own spell.)' : ''}
+      <strong>Contest! Play a reaction spell?</strong> {status}{casterNote}{preview.theyCanAnswer ? ' The computer can answer with its own spell.' : ''} Tap a button below or a glowing spell in your hand.
       <div className="buttons">
         {preview.options.map((o) => {
           const wins = o.mine > o.theirs || (o.mine === o.theirs && preview.iWinTies);

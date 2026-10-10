@@ -3,6 +3,7 @@
 import { createContext, useContext } from 'react';
 import type { CardDef, InjuryDef } from '../engine';
 import { capitalize, cardText, elementColor, injuryEffect } from './labels';
+import { spellWhen } from './spellHelp';
 
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
@@ -36,10 +37,13 @@ function Stats({ def }: { def: CardDef }) {
     );
   }
   return (
-    <div className="stats spell-line">
-      <span className="chip" style={{ background: elementColor(def.element) }}>{def.element ? capitalize(def.element) : 'Neutral'}</span>
-      <span>{def.spellType === 'reaction' ? 'Reaction' : 'Action'}</span>
-    </div>
+    <>
+      <div className="stats spell-line">
+        <span className="chip" style={{ background: elementColor(def.element) }}>{def.element ? capitalize(def.element) : 'Neutral'}</span>
+        <span>{def.spellType === 'reaction' ? 'Reaction' : 'Action'}</span>
+      </div>
+      <div className={`spell-when ${def.spellType}`}>{spellWhen(def)}</div>
+    </>
   );
 }
 
@@ -59,6 +63,8 @@ export interface CardProps {
   usedDots?: number;
   hasBall?: boolean;
   selected?: boolean;
+  /** Can't be played right now (shown faded). */
+  dim?: boolean;
   /** Highlight: something you can do with this card or spot. */
   highlight?: 'target' | 'match' | 'opposed' | null;
   flip?: boolean;
@@ -66,9 +72,9 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, hasBall, selected, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
-  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
+  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
     .join(' ');
   return (

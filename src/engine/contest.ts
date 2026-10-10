@@ -97,7 +97,10 @@ export function callDice(s: GameState, roll: boolean, ev: GameEvent[]): void {
 function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
   const me = contest[role];
   // The player in the contest casts it, so they need a spell left (RULES.md "Casting limit").
-  if (hasReactionSpell(s, me.side) && castsLeft(s, me.side, me.pos) > 0) {
+  // A tired player is announced whatever the hand holds: their spells left are public anyway.
+  const left = castsLeft(s, me.side, me.pos);
+  if (slotAt(s, me.side, me.pos) && left === 0) ev.push({ type: 'outOfSpells', side: me.side, pos: me.pos });
+  if (hasReactionSpell(s, me.side) && left > 0) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }

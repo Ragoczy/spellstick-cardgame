@@ -16,6 +16,29 @@ The online game runs as one container app, `ca-spellstick`, in the Darkspace.Pre
 
 Live address (for now): https://ca-spellstick.proudbush-0a90b692.eastus2.azurecontainerapps.io
 
+## Deploys
+
+Every push to `main` deploys automatically (`.github/workflows/deploy.yml`): tests run, then
+GitHub Pages and Azure deploy side by side. The Azure job builds the image, tags it with the
+commit, switches `ca-spellstick` to it, and waits until the new version is healthy. It signs in
+as `id-spellstick-deploy` using the repository variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+and `AZURE_SUBSCRIPTION_ID` (IDs, not secrets).
+
+To roll back, point the app at an earlier image:
+
+```bash
+az containerapp update -g rg-spellstick -n ca-spellstick --image acrha7siia4h4zia.azurecr.io/spellstick:<earlier commit sha>
+```
+
+## Cost alert
+
+`budget.bicep` emails Paul when the whole subscription (Spellstick and aiuthor) passes 80% of
+$75 in a month, or is forecast to go over. It never stops anything. To change the amount:
+
+```bash
+az deployment sub create -l eastus2 -n budget -f infra/budget.bicep -p contactEmail=pjackson@darkspace.press amount=100
+```
+
 ## Changing settings
 
 Who may sign in, admins, and the minimum number of running copies are in `main.bicepparam`
@@ -38,7 +61,8 @@ docker push acrha7siia4h4zia.azurecr.io/spellstick:$tag
 ### 2. Create or update the Azure resources
 
 Preview first (`what-if`), then apply. Pass the image that's currently deployed, or the app
-will be switched to whatever image you name.
+will be switched to whatever image you name. After the first setup, get it with:
+`tag=$(az containerapp show -g rg-spellstick -n ca-spellstick --query "properties.template.containers[0].image" -o tsv | cut -d: -f2)`
 
 ```bash
 az deployment sub what-if -l eastus2 -n spellstick -f infra/main.bicep -p infra/main.bicepparam -p image=acrha7siia4h4zia.azurecr.io/spellstick:$tag

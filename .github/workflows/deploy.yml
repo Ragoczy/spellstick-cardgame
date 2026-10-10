@@ -64,3 +64,45 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # The online game on Azure (see infra/README.md). Signs in as id-spellstick-deploy, which
+  # trusts this repo's main branch, so no Azure password is stored in GitHub.
+  deploy-azure:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [test-and-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE: acrha7siia4h4zia.azurecr.io/spellstick:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Build and push the image
+        run: |
+          az acr login -n acrha7siia4h4zia
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+      - name: Switch the app to the new image
+        run: |
+          rev=$(az containerapp update -g rg-spellstick -n ca-spellstick --image "$IMAGE" --query properties.latestRevisionName -o tsv)
+          echo "New revision: $rev"
+          echo "REVISION=$rev" >> "$GITHUB_ENV"
+      - name: Check the new version is healthy
+        run: |
+          url=https://ca-spellstick.proudbush-0a90b692.eastus2.azurecontainerapps.io
+          for i in $(seq 1 30); do
+            # A request wakes the app if it has stopped for being idle.
+            curl -s -o /dev/null --max-time 20 "$url/healthz" || true
+            state=$(az containerapp revision show -g rg-spellstick -n ca-spellstick --revision "$REVISION" --query properties.healthState -o tsv)
+            if [ "$state" = "Healthy" ]; then echo "Live at $url ($REVISION)"; exit 0; fi
+            echo "Waiting ($state)..."
+            sleep 10
+          done
+          echo "The new version didn't become healthy. Logs: az containerapp logs show -g rg-spellstick -n ca-spellstick" >&2
+          exit 1

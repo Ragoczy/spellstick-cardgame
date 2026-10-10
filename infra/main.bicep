@@ -63,6 +63,7 @@ module shared 'modules/shared.bicep' = {
     registryName: registryName
     keyVaultName: keyVaultName
     discordSecretName: discordSecretName
+    containerAppsEnvironmentName: containerAppsEnvironmentName
     appPrincipalId: identities.outputs.appPrincipalId
     deployPrincipalId: identities.outputs.deployPrincipalId
   }

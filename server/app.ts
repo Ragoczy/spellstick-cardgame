@@ -8,6 +8,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import type pg from 'pg';
+import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import type { DiscordApi } from './auth/discord';
 import { authRoutes } from './auth/routes';
@@ -49,6 +50,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   app.get('/healthz', async () => ({ ok: true }));
   authRoutes(app, deps);
   meRoutes(app, deps);
+  matchRoutes(app, deps);
 
   // The built browser game (npm run build:online). Not there during local development, when
   // Vite serves the page instead.

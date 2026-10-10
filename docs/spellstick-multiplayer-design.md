@@ -86,9 +86,9 @@ The engine already has the shape the server needs. It is pure TypeScript with no
 
 **Remaining work for the server:**
 
-- Package the engine so the server imports it without pulling in browser code.
-- Turn the engine's `pending` decisions (whose move it is, reaction spells, dice calls) into server prompts, so the right player is asked and their time bank runs.
-- Store the setup and action list per match; rebuild state on load with `replay`.
+- ~~Package the engine so the server imports it without pulling in browser code.~~ Done: the server's type check and bundle include only `src/engine/` and `src/data/`.
+- Turn the engine's `pending` decisions (whose move it is, reaction spells, dice calls) into server prompts, so the right player is asked and their time bank runs. *Partly done: each match records who it's waiting on and since when (`waiting_on`, `waiting_since`); time banks come later.*
+- ~~Store the setup and action list per match; rebuild state on load with `replay`.~~ Done (2026-10-10), in `server/matches.ts`. A full game rebuilds in about 40 ms, so the server rebuilds on every request and keeps no cache. A move is accepted only if it exactly matches one of the engine's `legalActions` for that player. The setup is saved in full, rules settings included, so changing a default never changes a match already under way.
 
 **Hidden information.** The server never sends the full state to a client. A face-down card is sent as a placeholder with only its position until a matchup reveals it. This is the rule that stops dev-tools cheating.
 
@@ -352,6 +352,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-10: Online step 2, matches on the server. Challenge another signed-in player by name, accept or decline, play with the server as referee, resign. API listed at the top of `server/api/matches.ts`. Until drafts exist, the challenger picks the field size and a placeholder team, and the other player gets the other team. Limit of 20 open matches per player. No browser screens yet (next step).
 - 2026-10-10: Shared sign-in for all Darkspace games. Discord app renamed "Darkspace Games"; Discord settings moved to Key Vault (`Integrations--Discord--*`); player, moderator, and admin roles come from Discord roles. Accounts stay per game (no central accounts service yet).
 - 2026-10-10: First online step. Game server skeleton in `server/` (Fastify, plain SQL), Discord sign-in gated by server role, manager names, privacy page. Reuses the aiuthor Azure resources instead of new ones. Domain will be play.darkspace.press; the Azure default address is used for now. GitHub Pages stays as the free offline version.
 - 2026-10-10: Paul's review. Scope expansion confirmed. Time banks replace move and pick timers. Draft cut to 10 picks each with a random deck fill. Rarity and Capped Constructed deferred to a future phase. Card definitions stay in `data/*.json`. Server goes in this repo. Hosting cost accepted. Corrected the card and team model to match `RULES.md` (40-card decks, any field position, Resonants) and the engine section to reflect that `src/engine/` is already pure and replayable. Swiss draws, tiebreakers, and deadline results left TBD.

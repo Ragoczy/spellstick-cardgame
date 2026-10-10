@@ -3,10 +3,10 @@
 //   GET  /api/me       who you are (401 if not signed in)
 //   POST /api/me/name  pick your manager name: { "name": "..." }
 
-import type { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import type { AppDeps } from '../app';
-import { SESSION_COOKIE } from '../auth/routes';
-import { checkDisplayName, normalizeDisplayName, setDisplayName, userForSession, type User } from '../users';
+import { currentUser } from '../auth/current-user';
+import { checkDisplayName, normalizeDisplayName, setDisplayName, type User } from '../users';
 
 /** What the browser gets back. The Discord handle is the player's own, so it's fine to show them. */
 export interface MeResponse {
@@ -28,19 +28,14 @@ function toResponse(user: User): MeResponse {
 export function meRoutes(app: FastifyInstance, deps: AppDeps): void {
   const { db } = deps;
 
-  async function currentUser(req: FastifyRequest): Promise<User | null> {
-    const sessionId = req.cookies[SESSION_COOKIE];
-    return sessionId ? userForSession(db, sessionId) : null;
-  }
-
   app.get('/api/me', async (req, reply) => {
-    const user = await currentUser(req);
+    const user = await currentUser(db, req);
     if (!user) return reply.code(401).send({ error: 'Not signed in.' });
     return toResponse(user);
   });
 
   app.post<{ Body: { name?: unknown } }>('/api/me/name', async (req, reply) => {
-    const user = await currentUser(req);
+    const user = await currentUser(db, req);
     if (!user) return reply.code(401).send({ error: 'Not signed in.' });
     const raw = req.body?.name;
     if (typeof raw !== 'string') return reply.code(400).send({ error: 'Please enter a name.' });

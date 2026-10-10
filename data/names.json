@@ -1,0 +1,32 @@
+{
+  "description": "Name pools for player cards. Given names: women's names of European origin. Surnames: period-sounding Gilded Age and colonial American names, chosen to avoid famous real families. Compound surnames join two of the surnames. The server loads these into the given_names and surnames tables.",
+  "givenNames": [
+    "Adelaide", "Adeline", "Agatha", "Agnes", "Alice", "Amelia", "Anastasia", "Annabel", "Antoinette", "Arabella",
+    "Astrid", "Augusta", "Beatrice", "Bernadette", "Blanche", "Bridget", "Camille", "Caroline", "Cecilia", "Celeste",
+    "Charlotte", "Clara", "Clementine", "Constance", "Cordelia", "Daphne", "Dorothea", "Edith", "Eleanor", "Eliza",
+    "Eloise", "Elsa", "Emmeline", "Esme", "Estelle", "Eugenia", "Evangeline", "Felicity", "Florence", "Frances",
+    "Freya", "Genevieve", "Georgiana", "Geraldine", "Gertrude", "Greta", "Gwendolyn", "Harriet", "Helena", "Henrietta",
+    "Hilda", "Imogen", "Ingrid", "Irene", "Isabella", "Isadora", "Ivy", "Josephine", "Juliet", "Katarina",
+    "Lavinia", "Leonora", "Lillian", "Louisa", "Lucinda", "Lydia", "Mabel", "Madeleine", "Margaret", "Marguerite",
+    "Marianne", "Marjorie", "Matilda", "Maude", "Millicent", "Minerva", "Nadia", "Odette", "Olga", "Ophelia",
+    "Ottilie", "Penelope", "Philippa", "Priscilla", "Rosalind", "Rosamund", "Rowena", "Sabine", "Seraphina", "Sibyl",
+    "Sigrid", "Sophia", "Sylvia", "Tatiana", "Theodora", "Ursula", "Valentina", "Victoria", "Viola", "Wilhelmina"
+  ],
+  "surnames": [
+    "Carrington", "Blair", "Ashford", "Pemberton", "Whitcombe", "Thornton", "Prescott", "Langley", "Merriweather", "Hollis",
+    "Sterling", "Bancroft", "Talbot", "Wentworth", "Hadley", "Ellery", "Holloway", "Danforth", "Coventry", "Ainsworth",
+    "Fenwick", "Harrow", "Lockwood", "Marlowe", "Radcliffe", "Sinclair", "Thayer", "Galloway", "Everly", "Stanhope"
+  ],
+  "compoundSurnames": [
+    ["Carrington", "Blair"],
+    ["Ashford", "Pemberton"],
+    ["Whitcombe", "Thornton"],
+    ["Prescott", "Langley"],
+    ["Hollis", "Sterling"],
+    ["Bancroft", "Talbot"],
+    ["Wentworth", "Hadley"],
+    ["Lockwood", "Marlowe"],
+    ["Radcliffe", "Sinclair"],
+    ["Stanhope", "Ainsworth"]
+  ]
+}

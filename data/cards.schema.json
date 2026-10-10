@@ -33,9 +33,17 @@
         "required": ["id", "team", "kind", "name"],
         "properties": {
           "id": { "type": "string", "description": "Also the art filename stem in assets/cards/." },
-          "team": { "type": "string" },
+          "team": { "type": "string", "description": "A team id, or \"pool\" for player cards in the shared pool. Each game deals both sides their goalies and field players at random from the pool." },
           "kind": { "enum": ["field", "goalie", "spell"] },
           "name": { "type": "string" },
+          "role": {
+            "description": "Player cards: the card's type, which says what it is good at. Any field player can still play any position.",
+            "enum": ["runner", "striker", "playmaker", "allrounder", "anchor", "stopper", "goalie"]
+          },
+          "bonusPoints": {
+            "description": "Named players: extra skill points added to the type's base stats when the card was made.",
+            "type": "integer", "minimum": 0, "maximum": 4
+          },
           "resonants": {
             "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity (e.g. fire).",
             "type": "array", "minItems": 1, "maxItems": 3,

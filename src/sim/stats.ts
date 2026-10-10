@@ -12,6 +12,8 @@ export interface CardStats {
   name: string;
   team: string;
   kind: CardDef['kind'];
+  /** Player cards: the card's type (runner, striker, ...), if it has one. */
+  role?: string;
   /** Spells: times cast. Players: times in a contest. */
   played: number;
   /** Times played where the result depended on a contest. */
@@ -84,7 +86,8 @@ export class SimStats {
   constructor(allCards: CardDef[]) {
     for (const def of allCards) {
       if (def.promo) continue;
-      this.cards.set(def.id, { id: def.id, name: def.name, team: def.team, kind: def.kind, played: 0, inContest: 0, contestWins: 0 });
+      const role = def.kind === 'spell' ? undefined : def.role;
+      this.cards.set(def.id, { id: def.id, name: def.name, team: def.team, kind: def.kind, role, played: 0, inContest: 0, contestWins: 0 });
     }
   }
 

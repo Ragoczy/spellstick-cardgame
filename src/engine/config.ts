@@ -35,6 +35,10 @@ export interface GameConfig {
   maxTurns: number;
   /** Expected cards per team deck (used to check card data). */
   deckSize: number;
+  /** Goalies per deck. Decks dealt from the shared player pool get this many. */
+  deckGoalies: number;
+  /** Field players per deck. Decks dealt from the shared player pool get this many. */
+  deckFieldPlayers: number;
   /** Actions per turn. A goal ends the turn. */
   actionsPerTurn: number;
   /** Penalty shots per team in a shootout before it goes to one shot each. */
@@ -85,6 +89,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   affinityOpposedPenalty: 1,
   maxTurns: 300,
   deckSize: 40,
+  deckGoalies: 2,
+  deckFieldPlayers: 22,
   actionsPerTurn: 1,
   shootoutRounds: 3,
   penaltyBonus: 3,

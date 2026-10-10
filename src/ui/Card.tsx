@@ -4,6 +4,7 @@ import { createContext, useContext } from 'react';
 import type { CardDef, InjuryDef } from '../engine';
 import { capitalize, cardText, elementColor, injuryEffect } from './labels';
 import { spellWhen } from './spellHelp';
+import { roleLabel } from '../data/playerTypes';
 
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
@@ -83,6 +84,7 @@ export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDot
         {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}
       </div>
+      {def.kind !== 'spell' && def.role ? <div className="card-role">{roleLabel(def.role)}</div> : null}
       <Stats def={def} />
       <Resonants def={def} usedDots={usedDots} castsLeft={castsLeft} />
       {injury ? <div className="injury" title={`${injury.name}: ${injuryEffect(injury, def)}`}>✚ {injury.name} {injuryEffect(injury, def)}</div> : null}

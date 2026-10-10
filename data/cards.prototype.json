@@ -1,5 +1,5 @@
 {
-  "version": "0.10-prototype",
+  "version": "0.11-prototype",
   "elements": [
     "fire",
     "water",
@@ -32,10 +32,48 @@
   ],
   "cards": [
     {
-      "id": "a-p-01",
-      "team": "A",
+      "id": "pl-001",
+      "team": "pool",
       "kind": "field",
-      "name": "A Runner 01",
+      "role": "runner",
+      "name": "Josephine Carrington",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 5,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-002",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Anastasia Stanhope-Ainsworth",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 6,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 6
+    },
+    {
+      "id": "pl-003",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Charlotte Stanhope-Ainsworth",
+      "bonusPoints": 3,
       "resonants": [
         {
           "name": "Anger",
@@ -46,26 +84,296 @@
           "affinity": "water"
         }
       ],
+      "speed": 6,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-004",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Theodora Radcliffe",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 6,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-005",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Sibyl Prescott-Langley",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 6,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-006",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Margaret Ashford",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-007",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Edith Radcliffe-Sinclair",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 6,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-008",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Arabella Ashford-Pemberton",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-009",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Eloise Harrow",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-010",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Ivy Danforth",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
       "speed": 4,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "defense",
-          "amount": 2,
-          "when": "intercept"
-        }
-      },
-      "text": "+2 Defense when intercepting."
+      "faceoff": 5
     },
     {
-      "id": "a-p-02",
-      "team": "A",
+      "id": "pl-011",
+      "team": "pool",
       "kind": "field",
-      "name": "A Runner 02",
+      "role": "runner",
+      "name": "Marguerite Thornton",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-012",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Olga Hollis",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-013",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Priscilla Sterling",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-014",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Louisa Everly",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-015",
+      "team": "pool",
+      "kind": "field",
+      "role": "runner",
+      "name": "Clara Coventry",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 2,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-016",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Harriet Wentworth-Hadley",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 6,
+      "defense": 2,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-017",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Sigrid Everly",
+      "bonusPoints": 4,
       "resonants": [
         {
           "name": "Love",
@@ -77,20 +385,899 @@
         }
       ],
       "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3
     },
     {
-      "id": "a-p-03",
-      "team": "A",
+      "id": "pl-018",
+      "team": "pool",
       "kind": "field",
-      "name": "A Runner 03",
+      "role": "striker",
+      "name": "Hilda Hollis",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 6,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-019",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Amelia Bancroft-Talbot",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-020",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Beatrice Merriweather",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 4,
+      "shot": 6,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-021",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Agatha Hollis-Sterling",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-022",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Irene Thayer",
+      "bonusPoints": 2,
       "resonants": [
         {
           "name": "Love",
           "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 6,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-023",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Geraldine Wentworth-Hadley",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 6,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-024",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Juliet Thayer",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-025",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Minerva Danforth",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-026",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Eliza Talbot",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-027",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Bridget Galloway",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-028",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Maude Merriweather",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 5,
+      "defense": 2,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-029",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Gertrude Galloway",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-030",
+      "team": "pool",
+      "kind": "field",
+      "role": "striker",
+      "name": "Rosalind Hadley",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 2,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-031",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Viola Radcliffe",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 5,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-032",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Celeste Sterling",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-033",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Ottilie Langley",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 6
+    },
+    {
+      "id": "pl-034",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Cordelia Ellery",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-035",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Tatiana Sterling",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 6
+    },
+    {
+      "id": "pl-036",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Dorothea Langley",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-037",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Lillian Holloway",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-038",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Rowena Bancroft",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-039",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Marianne Coventry",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-040",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Bernadette Ellery",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-041",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Genevieve Fenwick",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-042",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Imogen Prescott",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-043",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Marjorie Bancroft-Talbot",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 5
+    },
+    {
+      "id": "pl-044",
+      "team": "pool",
+      "kind": "field",
+      "role": "playmaker",
+      "name": "Florence Langley",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-045",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Valentina Hadley",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 5,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-046",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Matilda Thornton",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 5,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-047",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Evangeline Fenwick",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-048",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Nadia Harrow",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 4,
+      "defense": 5,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-049",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Adelaide Lockwood",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-050",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Georgiana Whitcombe",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-051",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Gwendolyn Thornton",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-052",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Blanche Bancroft",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 4,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-053",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Odette Prescott",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-054",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Eleanor Sinclair",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-055",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Mabel Holloway",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-056",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Esme Hollis-Sterling",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-057",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Alice Prescott",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 4,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-058",
+      "team": "pool",
+      "kind": "field",
+      "role": "allrounder",
+      "name": "Isabella Carrington",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-059",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Augusta Blair",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
         },
         {
           "name": "Joy",
@@ -98,50 +1285,39 @@
         }
       ],
       "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 4
     },
     {
-      "id": "a-p-04",
-      "team": "A",
+      "id": "pl-060",
+      "team": "pool",
       "kind": "field",
-      "name": "A Runner 04",
+      "role": "anchor",
+      "name": "Eugenia Carrington-Blair",
+      "bonusPoints": 3,
       "resonants": [
         {
           "name": "Pain",
           "affinity": "earth"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
         }
       ],
-      "speed": 4,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "defense",
-          "amount": 2,
-          "when": "intercept"
-        }
-      },
-      "text": "+2 Defense when intercepting."
+      "speed": 5,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3
     },
     {
-      "id": "a-p-05",
-      "team": "A",
+      "id": "pl-061",
+      "team": "pool",
       "kind": "field",
-      "name": "A Striker 05",
+      "role": "anchor",
+      "name": "Camille Whitcombe",
+      "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "name": "Love",
+          "affinity": "water"
         },
         {
           "name": "Anger",
@@ -149,37 +1325,17 @@
         }
       ],
       "speed": 3,
-      "shot": 5,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 3
     },
     {
-      "id": "a-p-06",
-      "team": "A",
+      "id": "pl-062",
+      "team": "pool",
       "kind": "field",
-      "name": "A Striker 06",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        }
-      ],
-      "speed": 3,
-      "shot": 5,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-07",
-      "team": "A",
-      "kind": "field",
-      "name": "A Striker 07",
+      "role": "anchor",
+      "name": "Estelle Talbot",
+      "bonusPoints": 3,
       "resonants": [
         {
           "name": "Anger",
@@ -188,23 +1344,82 @@
         {
           "name": "Joy",
           "affinity": "air"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
         }
       ],
       "speed": 3,
-      "shot": 5,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 3
     },
     {
-      "id": "a-p-08",
-      "team": "A",
+      "id": "pl-063",
+      "team": "pool",
       "kind": "field",
-      "name": "A Striker 08",
+      "role": "anchor",
+      "name": "Lavinia Talbot",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-064",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Clementine Wentworth",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 4,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-065",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Elsa Prescott-Langley",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 3,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-066",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Freya Carrington",
+      "bonusPoints": 2,
       "resonants": [
         {
           "name": "Anger",
@@ -216,97 +1431,57 @@
         }
       ],
       "speed": 3,
-      "shot": 4,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "defense",
-          "amount": 2,
-          "when": "intercept"
-        }
-      },
-      "text": "+2 Defense when intercepting."
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 4
     },
     {
-      "id": "a-p-09",
-      "team": "A",
+      "id": "pl-067",
+      "team": "pool",
       "kind": "field",
-      "name": "A Playmaker 09",
+      "role": "anchor",
+      "name": "Frances Holloway",
+      "bonusPoints": 1,
       "resonants": [
         {
           "name": "Anger",
           "affinity": "fire"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "shot",
-          "amount": 1,
-          "row": "forward"
-        }
-      },
-      "text": "+1 Shot while playing forward."
-    },
-    {
-      "id": "a-p-10",
-      "team": "A",
-      "kind": "field",
-      "name": "A Playmaker 10",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 4,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-11",
-      "team": "A",
-      "kind": "field",
-      "name": "A Playmaker 11",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
         },
         {
           "name": "Joy",
           "affinity": "air"
         }
       ],
-      "speed": 4,
+      "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5,
-      "placeholder": true
+      "faceoff": 3
     },
     {
-      "id": "a-p-12",
-      "team": "A",
+      "id": "pl-068",
+      "team": "pool",
       "kind": "field",
-      "name": "A Playmaker 12",
+      "role": "anchor",
+      "name": "Seraphina Ashford",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-069",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Sabine Ellery",
+      "bonusPoints": 1,
       "resonants": [
         {
           "name": "Anger",
@@ -318,97 +1493,248 @@
         }
       ],
       "speed": 4,
+      "shot": 2,
+      "defense": 3,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-070",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Lucinda Stanhope",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-071",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Madeleine Sinclair",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 3,
+      "faceoff": 4
+    },
+    {
+      "id": "pl-072",
+      "team": "pool",
+      "kind": "field",
+      "role": "anchor",
+      "name": "Helena Bancroft",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-073",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Ophelia Merriweather",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-074",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Caroline Hollis",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 3
+    },
+    {
+      "id": "pl-075",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Millicent Ainsworth",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 6,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-076",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Henrietta Lockwood-Marlowe",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-077",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Wilhelmina Ashford",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 5,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-078",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Penelope Whitcombe-Thornton",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 4,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-079",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Rosamund Danforth",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "speed": 3,
       "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true
+      "defense": 4,
+      "faceoff": 2
     },
     {
-      "id": "a-p-13",
-      "team": "A",
+      "id": "pl-080",
+      "team": "pool",
       "kind": "field",
-      "name": "A Allround 13",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-14",
-      "team": "A",
-      "kind": "field",
-      "name": "A Allround 14",
+      "role": "stopper",
+      "name": "Victoria Pemberton",
+      "bonusPoints": 2,
       "resonants": [
         {
           "name": "Anger",
           "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-15",
-      "team": "A",
-      "kind": "field",
-      "name": "A Allround 15",
-      "resonants": [
+        },
         {
           "name": "Love",
           "affinity": "water"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
         }
       ],
-      "speed": 3,
-      "shot": 4,
+      "speed": 5,
+      "shot": 2,
       "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
+      "faceoff": 2
     },
     {
-      "id": "a-p-16",
-      "team": "A",
+      "id": "pl-081",
+      "team": "pool",
       "kind": "field",
-      "name": "A Allround 16",
+      "role": "stopper",
+      "name": "Emmeline Whitcombe-Thornton",
+      "bonusPoints": 2,
       "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
         {
           "name": "Anger",
           "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-17",
-      "team": "A",
-      "kind": "field",
-      "name": "A Anchor 17",
-      "resonants": [
+        },
         {
           "name": "Love",
           "affinity": "water"
@@ -417,14 +1743,37 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 3,
-      "placeholder": true
+      "faceoff": 2
     },
     {
-      "id": "a-p-18",
-      "team": "A",
+      "id": "pl-082",
+      "team": "pool",
       "kind": "field",
-      "name": "A Anchor 18",
+      "role": "stopper",
+      "name": "Cecilia Lockwood",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-083",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Sophia Coventry",
+      "bonusPoints": 1,
       "resonants": [
         {
           "name": "Pain",
@@ -438,120 +1787,15 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3,
-      "placeholder": true,
-      "ability": {
-        "effect": "draw_on_win",
-        "params": {
-          "count": 1
-        }
-      },
-      "text": "When this player wins a contest, draw 1 card."
+      "faceoff": 2
     },
     {
-      "id": "a-p-19",
-      "team": "A",
+      "id": "pl-084",
+      "team": "pool",
       "kind": "field",
-      "name": "A Anchor 19",
-      "resonants": [
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-20",
-      "team": "A",
-      "kind": "field",
-      "name": "A Stopper 20",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "a-p-21",
-      "team": "A",
-      "kind": "field",
-      "name": "A Stopper 21",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 4,
-      "faceoff": 2,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "faceoff",
-          "amount": 2,
-          "when": "faceoff"
-        }
-      },
-      "text": "+2 Faceoff."
-    },
-    {
-      "id": "a-p-22",
-      "team": "A",
-      "kind": "field",
-      "name": "A Stopper 22",
-      "resonants": [
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "a-g-01",
-      "team": "A",
-      "kind": "goalie",
-      "name": "A Goalie 01",
-      "resonants": [
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "save": 4,
-      "placeholder": true
-    },
-    {
-      "id": "a-g-02",
-      "team": "A",
-      "kind": "goalie",
-      "name": "A Goalie 02",
+      "role": "stopper",
+      "name": "Agnes Pemberton",
+      "bonusPoints": 1,
       "resonants": [
         {
           "name": "Love",
@@ -562,8 +1806,320 @@
           "affinity": "earth"
         }
       ],
-      "save": 4,
-      "placeholder": true
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-085",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Greta Blair",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-086",
+      "team": "pool",
+      "kind": "field",
+      "role": "stopper",
+      "name": "Isadora Ainsworth",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "speed": 3,
+      "shot": 2,
+      "defense": 4,
+      "faceoff": 2
+    },
+    {
+      "id": "pl-087",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Antoinette Whitcombe",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 6
+    },
+    {
+      "id": "pl-088",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Leonora Ainsworth",
+      "bonusPoints": 4,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 6
+    },
+    {
+      "id": "pl-089",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Astrid Blair",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 5
+    },
+    {
+      "id": "pl-090",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Sylvia Ashford-Pemberton",
+      "bonusPoints": 3,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 5
+    },
+    {
+      "id": "pl-091",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Adeline Marlowe",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "save": 4
+    },
+    {
+      "id": "pl-092",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Daphne Wentworth",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "save": 4
+    },
+    {
+      "id": "pl-093",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Ingrid Marlowe",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 4
+    },
+    {
+      "id": "pl-094",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Constance Wentworth",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 4
+    },
+    {
+      "id": "pl-095",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Ursula Radcliffe-Sinclair",
+      "bonusPoints": 2,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 4
+    },
+    {
+      "id": "pl-096",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Philippa Hadley",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        }
+      ],
+      "save": 3
+    },
+    {
+      "id": "pl-097",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Annabel Pemberton",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "save": 3
+    },
+    {
+      "id": "pl-098",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Felicity Lockwood-Marlowe",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Anger",
+          "affinity": "fire"
+        },
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 3
+    },
+    {
+      "id": "pl-099",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Lydia Carrington-Blair",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Love",
+          "affinity": "water"
+        },
+        {
+          "name": "Joy",
+          "affinity": "air"
+        }
+      ],
+      "save": 3
+    },
+    {
+      "id": "pl-100",
+      "team": "pool",
+      "kind": "goalie",
+      "role": "goalie",
+      "name": "Katarina Stanhope",
+      "bonusPoints": 1,
+      "resonants": [
+        {
+          "name": "Joy",
+          "affinity": "air"
+        },
+        {
+          "name": "Pain",
+          "affinity": "earth"
+        }
+      ],
+      "save": 3
     },
     {
       "id": "a-s-01",
@@ -761,7 +2317,7 @@
       "id": "a-s-14",
       "team": "A",
       "kind": "spell",
-      "name": "Flamb\u00e9",
+      "name": "Flambé",
       "spellType": "action",
       "element": "fire",
       "ability": {
@@ -777,7 +2333,7 @@
       "id": "a-s-15",
       "team": "A",
       "kind": "spell",
-      "name": "Flamb\u00e9",
+      "name": "Flambé",
       "spellType": "action",
       "element": "fire",
       "ability": {
@@ -803,542 +2359,6 @@
         }
       },
       "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "b-p-01",
-      "team": "B",
-      "kind": "field",
-      "name": "B Runner 01",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        }
-      ],
-      "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-02",
-      "team": "B",
-      "kind": "field",
-      "name": "B Runner 02",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-03",
-      "team": "B",
-      "kind": "field",
-      "name": "B Runner 03",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-04",
-      "team": "B",
-      "kind": "field",
-      "name": "B Runner 04",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 5,
-      "shot": 3,
-      "defense": 2,
-      "faceoff": 4,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-05",
-      "team": "B",
-      "kind": "field",
-      "name": "B Striker 05",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "faceoff",
-          "amount": 2,
-          "when": "faceoff"
-        }
-      },
-      "text": "+2 Faceoff."
-    },
-    {
-      "id": "b-p-06",
-      "team": "B",
-      "kind": "field",
-      "name": "B Striker 06",
-      "resonants": [
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 5,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-07",
-      "team": "B",
-      "kind": "field",
-      "name": "B Striker 07",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "defense",
-          "amount": 2,
-          "when": "intercept"
-        }
-      },
-      "text": "+2 Defense when intercepting."
-    },
-    {
-      "id": "b-p-08",
-      "team": "B",
-      "kind": "field",
-      "name": "B Striker 08",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 5,
-      "defense": 2,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-09",
-      "team": "B",
-      "kind": "field",
-      "name": "B Playmaker 09",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "defense",
-          "amount": 2,
-          "when": "intercept"
-        }
-      },
-      "text": "+2 Defense when intercepting."
-    },
-    {
-      "id": "b-p-10",
-      "team": "B",
-      "kind": "field",
-      "name": "B Playmaker 10",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 4,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-11",
-      "team": "B",
-      "kind": "field",
-      "name": "B Playmaker 11",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "faceoff",
-          "amount": 2,
-          "when": "faceoff"
-        }
-      },
-      "text": "+2 Faceoff."
-    },
-    {
-      "id": "b-p-12",
-      "team": "B",
-      "kind": "field",
-      "name": "B Playmaker 12",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        }
-      ],
-      "speed": 4,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 5,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-13",
-      "team": "B",
-      "kind": "field",
-      "name": "B Allround 13",
-      "resonants": [
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-14",
-      "team": "B",
-      "kind": "field",
-      "name": "B Allround 14",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 3,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "shot",
-          "amount": 1,
-          "row": "forward"
-        }
-      },
-      "text": "+1 Shot while playing forward."
-    },
-    {
-      "id": "b-p-15",
-      "team": "B",
-      "kind": "field",
-      "name": "B Allround 15",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-16",
-      "team": "B",
-      "kind": "field",
-      "name": "B Allround 16",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 4,
-      "defense": 3,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-17",
-      "team": "B",
-      "kind": "field",
-      "name": "B Anchor 17",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-18",
-      "team": "B",
-      "kind": "field",
-      "name": "B Anchor 18",
-      "resonants": [
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-19",
-      "team": "B",
-      "kind": "field",
-      "name": "B Anchor 19",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 3,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-20",
-      "team": "B",
-      "kind": "field",
-      "name": "B Stopper 20",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "b-p-21",
-      "team": "B",
-      "kind": "field",
-      "name": "B Stopper 21",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 4,
-      "faceoff": 2,
-      "placeholder": true,
-      "ability": {
-        "effect": "bonus",
-        "params": {
-          "stat": "shot",
-          "amount": 1,
-          "row": "forward"
-        }
-      },
-      "text": "+1 Shot while playing forward."
-    },
-    {
-      "id": "b-p-22",
-      "team": "B",
-      "kind": "field",
-      "name": "B Stopper 22",
-      "resonants": [
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Anger",
-          "affinity": "fire"
-        }
-      ],
-      "speed": 3,
-      "shot": 2,
-      "defense": 5,
-      "faceoff": 2,
-      "placeholder": true
-    },
-    {
-      "id": "b-g-01",
-      "team": "B",
-      "kind": "goalie",
-      "name": "B Goalie 01",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        }
-      ],
-      "save": 4,
-      "placeholder": true
-    },
-    {
-      "id": "b-g-02",
-      "team": "B",
-      "kind": "goalie",
-      "name": "B Goalie 02",
-      "resonants": [
-        {
-          "name": "Pain",
-          "affinity": "earth"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        }
-      ],
-      "save": 4,
       "placeholder": true
     },
     {

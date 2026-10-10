@@ -48,6 +48,16 @@ export const NUMERIC_EFFECTS: ReadonlySet<string> = new Set(['boost', 'long_shot
 
 // ---- Card definitions ----
 
+/**
+ * Player cards whose team is "pool" belong to no team. At setup each side is dealt its goalies
+ * and field players at random from this shared pool (RULES.md "Setup").
+ */
+export const POOL_TEAM = 'pool';
+
+/** A player card's type. It only says what the card is good at: any field player can play any position. */
+export type PlayerRole = 'runner' | 'striker' | 'playmaker' | 'allrounder' | 'anchor' | 'stopper' | 'goalie';
+export const PLAYER_ROLES: PlayerRole[] = ['runner', 'striker', 'playmaker', 'allrounder', 'anchor', 'stopper', 'goalie'];
+
 interface CardBase {
   id: string;
   team: string;
@@ -60,21 +70,25 @@ interface CardBase {
   placeholder?: boolean;
 }
 
-export interface FieldCardDef extends CardBase {
-  kind: 'field';
+interface PlayerBase extends CardBase {
   resonants: Resonant[];
+  role?: PlayerRole;
+  /** Extra skill points the card was made with, on top of its type's base stats (named players only). */
+  bonusPoints?: number;
+  ability?: PlayerAbility;
+}
+
+export interface FieldCardDef extends PlayerBase {
+  kind: 'field';
   speed: number;
   shot: number;
   defense: number;
   faceoff: number;
-  ability?: PlayerAbility;
 }
 
-export interface GoalieCardDef extends CardBase {
+export interface GoalieCardDef extends PlayerBase {
   kind: 'goalie';
-  resonants: Resonant[];
   save: number;
-  ability?: PlayerAbility;
 }
 
 export interface ReactionSpellDef extends CardBase {
@@ -195,6 +209,7 @@ export function loadCardSet(json: unknown): CardSet {
     }
   }
   if (!Array.isArray(json.teams)) fail('card set', '"teams" must be a list');
+  if (json.teams.some((t) => isObject(t) && t.id === POOL_TEAM)) fail('card set', `"${POOL_TEAM}" is reserved for the shared player pool`);
   if (!Array.isArray(json.cards)) fail('card set', '"cards" must be a list');
 
   const seen = new Set<string>();
@@ -204,6 +219,9 @@ export function loadCardSet(json: unknown): CardSet {
     if (seen.has(card.id)) fail(where, 'duplicate id');
     seen.add(card.id);
     if (typeof card.team !== 'string' || typeof card.name !== 'string') fail(where, 'needs "team" and "name"');
+    if (card.team === POOL_TEAM && card.kind !== 'field' && card.kind !== 'goalie') fail(where, 'only player cards can be in the pool');
+    if (card.role !== undefined && !PLAYER_ROLES.includes(card.role as PlayerRole)) fail(where, `unknown role "${String(card.role)}"`);
+    if ((card.role === 'goalie') !== (card.kind === 'goalie') && card.role !== undefined) fail(where, 'only goalies have the goalie role');
     if (card.ability !== undefined && !isObject(card.ability)) fail(where, '"ability" must be an object');
     const ability = card.ability as Record<string, unknown> | undefined;
 
@@ -252,4 +270,9 @@ export function buildDeck(cardSet: CardSet, teamId: string, config: GameConfig):
     for (let i = 0; i < (card.copies ?? 1); i++) deck.push(card);
   }
   return deck;
+}
+
+/** The shared player pool: player cards with team "pool", with the same copy, promo, and add-on rules as buildDeck. */
+export function playerPool(cardSet: CardSet, config: GameConfig): PlayerCardDef[] {
+  return buildDeck(cardSet, POOL_TEAM, config).filter((card): card is PlayerCardDef => card.kind !== 'spell');
 }

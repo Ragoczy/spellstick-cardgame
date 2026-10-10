@@ -422,6 +422,21 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     );
   }
 
+  const handCard = (c: PlayerView['mine']['hand'][number]) => (
+    <Card
+      key={c.uid}
+      def={c.def}
+      injury={c.injury}
+      showText
+      selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
+      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+      dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
+      onClick={() => onHandCard(c.uid, c.def, c.injury)}
+    />
+  );
+  const myPlayers = view.mine.hand.filter((c) => c.def.kind !== 'spell');
+  const mySpells = view.mine.hand.filter((c) => c.def.kind === 'spell');
+
   const selectedKey = selection.kind === 'holder' && myBall ? posKey(me, myBall)
     : selection.kind === 'cast' && selection.caster ? posKey(me, selection.caster) : null;
 
@@ -445,37 +460,43 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           {Array.from({ length: view.opponent.handCount }, (_, i) => <CardBack key={i} team={teams[them]} />)}
         </div>
 
-        <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
+        <div className="table">
+          <section className="hand-col players-col" aria-label="Your players">
+            <div className="hand-label">
+              <strong>Your players</strong>
+              <span>{myPlayers.length}</span>
+            </div>
+            <div className="hand">
+              {myPlayers.map(handCard)}
+              {myPlayers.length === 0 ? <span className="empty-hand">No players in hand.</span> : null}
+            </div>
+          </section>
 
-        {online?.problem ? <div className="prompt notice">{online.problem}</div> : null}
-        {online?.match.status === 'active' && online.match.autopilot.you ? (
-          <div className="prompt notice">Your time ran out, so the computer is making your decisions for the rest of the match.</div>
-        ) : null}
-        {online?.match.status === 'active' && online.match.autopilot.them ? (
-          <div className="prompt notice">{opp.Name} ran out of time, so the computer is making their decisions for the rest of the match.</div>
-        ) : null}
-        {prompt()}
-        {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
+          <div className="table-center">
+            <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
-        <div className="hand-label">
-          <strong>Your hand</strong>
-          <span><span className="action">Action spells</span>: on your turn, as your action</span>
-          <span><span className="reaction">Reaction spells</span>: when a contest starts</span>
-        </div>
-        <div className="hand">
-          {view.mine.hand.map((c) => (
-            <Card
-              key={c.uid}
-              def={c.def}
-              injury={c.injury}
-              showText
-              selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-              highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
-              dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
-              onClick={() => onHandCard(c.uid, c.def, c.injury)}
-            />
-          ))}
-          {view.mine.hand.length === 0 ? <span className="empty-hand">Your hand is empty.</span> : null}
+            {online?.problem ? <div className="prompt notice">{online.problem}</div> : null}
+            {online?.match.status === 'active' && online.match.autopilot.you ? (
+              <div className="prompt notice">Your time ran out, so the computer is making your decisions for the rest of the match.</div>
+            ) : null}
+            {online?.match.status === 'active' && online.match.autopilot.them ? (
+              <div className="prompt notice">{opp.Name} ran out of time, so the computer is making their decisions for the rest of the match.</div>
+            ) : null}
+            {prompt()}
+            {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
+          </div>
+
+          <section className="hand-col spells-col" aria-label="Your spells">
+            <div className="hand-label">
+              <strong>Your spells</strong>
+              <span><span className="action">Action</span>: on your turn, as your action</span>
+              <span><span className="reaction">Reaction</span>: when a contest starts</span>
+            </div>
+            <div className="hand">
+              {mySpells.map(handCard)}
+              {mySpells.length === 0 ? <span className="empty-hand">No spells in hand.</span> : null}
+            </div>
+          </section>
         </div>
 
         {inspected ? (

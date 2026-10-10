@@ -288,7 +288,7 @@ export function buildReport(input: ReportInput): string {
   out.push('');
   const rare = cards.filter((c) => c.played / s.games < 0.1).sort((a, b) => a.played - b.played);
   if (rare.length) {
-    out.push(table(['Card', 'Team', 'Played per game'], rare.map((c) => [`${c.name} (${c.id})`, c.team, perGame(c)])));
+    out.push(table(['Card', 'Team or type', 'Played per game'], rare.map((c) => [`${c.name} (${c.id})`, c.role ?? c.team, perGame(c)])));
   } else {
     out.push('None.');
   }
@@ -302,8 +302,9 @@ export function buildReport(input: ReportInput): string {
 
   out.push('<details><summary>Players (contests per game and win rate)</summary>');
   out.push('');
-  out.push(table(['Player', 'Team', 'Contests per game', 'Won'],
-    players.sort((a, b) => b.played - a.played).map((c) => [`${c.name} (${c.id})`, c.team, perGame(c), winRate(c)])));
+  // Players from the shared pool play for either team, so show their type instead.
+  out.push(table(['Player', 'Team or type', 'Contests per game', 'Won'],
+    players.sort((a, b) => b.played - a.played).map((c) => [`${c.name} (${c.id})`, c.role ?? c.team, perGame(c), winRate(c)])));
   out.push('');
   out.push('</details>');
   out.push('');

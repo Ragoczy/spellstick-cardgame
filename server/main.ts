@@ -6,6 +6,7 @@
 import { existsSync } from 'node:fs';
 import { buildApp } from './app';
 import { discordApi } from './auth/discord';
+import { loadPlayerCards } from './cardData';
 import { readConfig } from './config';
 import { createPool } from './db';
 import { migrate } from './migrate';
@@ -18,6 +19,8 @@ const app = await buildApp({ config, db, discord: discordApi(config.discord, con
 
 const applied = await migrate(db, config.migrationsDir);
 if (applied.length) app.log.info({ applied }, 'database updated');
+const playerCards = await loadPlayerCards(db);
+app.log.info({ playerCards }, 'player cards loaded from the card data');
 
 await app.listen({ port: config.port, host: '0.0.0.0' });
 

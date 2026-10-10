@@ -137,6 +137,8 @@ Every card a player owns is a unique **instance** of a shared **definition**, wi
 
 **Where definitions live.** `data/*.json` in this repo is the master copy, versioned in git and used by the browser game, the simulation, and print renders. On deploy, the server loads it into the `card_definitions` table with a version number. To change a card, edit the JSON, run the sim, and deploy. Owned instances point at a definition, so a balance change updates every copy.
 
+*Changed 2026-10-10: the first table is in. Named player cards load into `player_cards`, with their names in `given_names` and `surnames` (from `data/names.json`), every time the server starts (`server/cardData.ts`, migration `005_player_cards.sql`). Spells will follow when collections need them.*
+
 **Card instance** (one per copy owned): definition, owner, serial number within that definition, how it was obtained (starter, store, award, trade), edition flags (foil, signed, numbered), and a full ownership history.
 
 **Rarity (future feature).** *Changed 2026-10-10: deferred.* Cards have no rarity yet, and whether rarer cards are stronger or only different is undecided. Until rarity exists, all regular cards are one tier: packs draw evenly from the released card list, and singles have one price. The planned tiers, kept for later:

@@ -1,4 +1,4 @@
-# Spellstick — rules v0.10
+# Spellstick — rules v0.11
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -25,7 +25,9 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 
 ## Components
 
-- Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells. Each deck is kept as
+- Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells. Each team has its own
+  16 spells. Its goalies and field players are dealt at random from a shared **player pool** of
+  named players (100 in the prototype) at the start of each game. Each deck is kept as
   two face-down **draw piles**: **Players** (field players, plus the spare goalie once the game
   starts) and **Spells**.
 - A field mat (see "The field").
@@ -68,6 +70,10 @@ slot, not the card: if the player in that slot changes (substitute, swap), the n
 - Optionally one ability (see "Effect vocabulary").
 
 Any field player can play any field position. Where you put them is the strategy.
+
+Each player card also has a **type** that says what it is good at: Runner (Speed), Striker
+(Shot), Playmaker (Faceoff), All-rounder (even), Anchor and Stopper (Defense), or Goalie. The
+type is just a label: it changes nothing in play.
 
 **Goalie cards** have **Save** and 1 to 3 Resonants. They can only play in goal.
 
@@ -129,6 +135,8 @@ per Resonant** ⚙: a player with 2 Resonants can cast 2 spells, then no more.
 
 ## Setup
 
+0. Shuffle the player pool and deal each team 2 goalies ⚙ and 22 field players ⚙. They join
+   the team's 16 spells to make its deck, and play in the team's color for this game.
 1. Each player chooses one of their 2 goalies, places it **face down** in goal, and shuffles the
    other into their Players pile. Shuffle both piles.
 2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 2 ⚙
@@ -368,6 +376,9 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.11 — Named players: the placeholder players are replaced by 100 named players in a shared pool. Each game deals each team 2 goalies and 22 field players from the pool at random; spells stay with their team. Paul asked for persistent named players; dealing from a pool is Claude's simplest way to use all 100 in every game, and matches the online draft plan.
+- v0.11 — Player types (Runner, Striker, Playmaker, All-rounder, Anchor, Stopper, Goalie) are printed on player cards. Each named player has its type's base stats plus 1 to 4 extra points, mostly in the type's main stat (about 40 cards at +1, 30 at +2, 20 at +3, 10 at +4). Goalies start at Save 2, and Anchors and Stoppers at Defense 3, so scoring stays in the 1–2 goals a game target (simulation: 1.24).
 
 - v0.10 — Casting limit: a player on the field can cast one spell per Resonant (action and reaction spells both count), then has to be substituted out to recharge. Paul's idea; counting reactions and failed spells is Claude's simplest reading.
 - v0.10 — Substitute sends the replaced player back to your hand (it used to discard them), so tired players can rest and return. A face-down player stays secret. Injuries stay attached, as with forced substitutions.

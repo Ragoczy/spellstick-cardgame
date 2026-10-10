@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { legalActions } from '../../src/engine/legal';
 import { applyAction, IllegalActionError } from '../../src/engine/reducer';
 import { createGame } from '../../src/engine/setup';
+import { randomInt, seedToState, shuffle } from '../../src/engine/rng';
 import { viewFor } from '../../src/engine/view';
 import type { CardSet } from '../../src/engine/cards';
 import type { GameState } from '../../src/engine/state';
@@ -108,5 +109,50 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     // Turn 1 starts with the draw step: both piles have cards, so the player chooses.
     expect(s.pending).toEqual({ kind: 'draw', side: s.firstSide });
     expect(s.ball?.pos).toEqual({ area: 'midfield', lane: lanes - 1 });
+  });
+});
+
+describe('dealing players from the shared pool', () => {
+  const playerIds = (state: GameState, side: 'A' | 'B') =>
+    Object.entries(state.cards).filter(([uid, def]) => uid.startsWith(side) && def.kind !== 'spell').map(([, def]) => def.id);
+
+  it('deals each side different players, the same way for the same seed', () => {
+    const a = createGame({ seed: 7, cardSet: prototypeCards }).state;
+    const again = createGame({ seed: 7, cardSet: prototypeCards }).state;
+    const other = createGame({ seed: 8, cardSet: prototypeCards }).state;
+    expect(playerIds(again, 'A')).toEqual(playerIds(a, 'A'));
+    expect(playerIds(other, 'A')).not.toEqual(playerIds(a, 'A'));
+    const both = [...playerIds(a, 'A'), ...playerIds(a, 'B')];
+    expect(new Set(both).size).toBe(both.length);
+  });
+
+  it("dealt players play for their side's team", () => {
+    const { state } = createGame({ seed: 1, cardSet: prototypeCards, teams: { A: 'B', B: 'A' } });
+    for (const [uid, def] of Object.entries(state.cards)) expect(def.team).toBe(uid.startsWith('A') ? 'B' : 'A');
+  });
+
+  it('uses no randomness when the card set has no pool, so older saved games replay the same', () => {
+    // An old-style card set: every player belongs to a team.
+    const pool = prototypeCards.cards.filter((c) => c.kind !== 'spell' && c.team === 'pool');
+    const goalies = pool.filter((c) => c.kind === 'goalie');
+    const field = pool.filter((c) => c.kind === 'field');
+    const assign = (side: string, i: number) => [...goalies.slice(i * 2, i * 2 + 2), ...field.slice(i * 22, i * 22 + 22)].map((c) => ({ ...c, team: side }));
+    const oldStyle: CardSet = { ...prototypeCards, cards: [...prototypeCards.cards.filter((c) => c.kind === 'spell'), ...assign('A', 0), ...assign('B', 1)] };
+    const withPool = createGame({ seed: 5, cardSet: prototypeCards }).state;
+    const without = createGame({ seed: 5, cardSet: oldStyle }).state;
+    expect(without.firstSide).toBe(withPool.firstSide);
+    expect(without.injuryDeck).toEqual(withPool.injuryDeck);
+    // The RNG has moved only for the coin toss and the injury deck shuffle.
+    let rng = seedToState(5);
+    [, rng] = randomInt(rng, 2);
+    [, rng] = shuffle(without.injuryDeck, rng);
+    expect(without.rng).toBe(rng);
+    expect(withPool.rng).not.toBe(rng);
+    expect(playerIds(without, 'A')).toEqual(assign('A', 0).map((c) => c.id));
+  });
+
+  it('refuses to start if the pool is too small for two decks', () => {
+    const small: CardSet = { ...prototypeCards, cards: prototypeCards.cards.filter((c) => !(c.kind === 'goalie' && c.team === 'pool')).concat(prototypeCards.cards.filter((c) => c.kind === 'goalie').slice(0, 3)) };
+    expect(() => createGame({ seed: 1, cardSet: small })).toThrow(/goalies/);
   });
 });

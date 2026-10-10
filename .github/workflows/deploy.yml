@@ -45,11 +45,19 @@ jobs:
       - name: Headless sim (smoke)
         run: npm run sim -- --games 50 --seed 1 --out ${{ runner.temp }}/sim-smoke.md
       - run: npm run build
+      # GitHub Pages no longer hosts the game. It serves only a "this has moved" page, as both
+      # index.html and 404.html, so every old link is sent on to the Azure address.
+      - name: Prepare the moved page for GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p "$RUNNER_TEMP/pages"
+          cp pages-redirect/index.html "$RUNNER_TEMP/pages/index.html"
+          cp pages-redirect/index.html "$RUNNER_TEMP/pages/404.html"
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: ${{ runner.temp }}/pages
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

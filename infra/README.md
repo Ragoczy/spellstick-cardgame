@@ -19,8 +19,9 @@ Live address (for now): https://ca-spellstick.proudbush-0a90b692.eastus2.azureco
 ## Deploys
 
 Every push to `main` deploys automatically (`.github/workflows/deploy.yml`): tests run, then
-GitHub Pages and Azure deploy side by side. The Azure job builds the image, tags it with the
-commit, switches `ca-spellstick` to it, and waits until the new version is healthy. It signs in
+Azure deploys. GitHub Pages now gets only a "moved" page (`pages-redirect/index.html`) that
+forwards the old ragoczy.github.io address to the live one; update its link if the address
+changes. The Azure job builds the image, tags it with the commit, switches `ca-spellstick` to it, and waits until the new version is healthy. It signs in
 as `id-spellstick-deploy` using the repository variables `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
 and `AZURE_SUBSCRIPTION_ID` (IDs, not secrets).
 

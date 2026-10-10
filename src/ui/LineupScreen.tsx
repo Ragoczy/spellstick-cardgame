@@ -55,7 +55,7 @@ export function LineupScreen({ view, legal, onPlace, onAuto }: {
     <div className="screen setup lineup">
       <h2>Set out your lineup</h2>
       <p>
-        Tap a player, then tap a spot. Your players go face down, so the computer can't see who is where.
+        Tap a player, then tap a spot. Your players go face down, so your opponent can't see who is where.
         Tap a placed player to take them back.
       </p>
       <div className="lineup-grid" style={{ ['--lanes' as string]: view.lanes }}>

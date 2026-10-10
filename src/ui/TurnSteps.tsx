@@ -2,6 +2,7 @@
 // what's done, and what's left. It only reads the view's `pending` decision; it decides nothing.
 
 import type { PlayerView } from '../engine';
+import { opponentWords, type OpponentWords } from './text';
 
 export type StepId = 'draw' | 'act' | 'discard';
 
@@ -13,14 +14,14 @@ export type TurnPhase =
   | { kind: 'over' };
 
 /** Works out where the game is in the turn order, from what it's waiting for. */
-export function turnPhase(view: PlayerView): TurnPhase {
+export function turnPhase(view: PlayerView, opp: OpponentWords = opponentWords()): TurnPhase {
   const p = view.pending;
   if (p.kind === 'gameOver') return { kind: 'over' };
   if (view.shootout) return { kind: 'shootout' };
   if (view.turn === 0 || p.kind === 'chooseGoalie' || p.kind === 'placeLineup') return { kind: 'opening' };
 
   const mine = view.activeSide === view.me;
-  const decider = p.side === view.me ? 'you' : 'the computer';
+  const decider = p.side === view.me ? 'you' : opp.name;
   switch (p.kind) {
     case 'draw':
       return { kind: 'turn', mine, step: 'draw', detail: null };
@@ -50,8 +51,8 @@ const STEPS: { id: StepId; title: string; text: (view: PlayerView) => string }[]
   { id: 'discard', title: 'Discard', text: (v) => `Down to ${v.config.handLimit} cards, if you have more.` },
 ];
 
-export function TurnSteps({ view }: { view: PlayerView }) {
-  const phase = turnPhase(view);
+export function TurnSteps({ view, opp = opponentWords() }: { view: PlayerView; opp?: OpponentWords }) {
+  const phase = turnPhase(view, opp);
   const order = STEPS.map((s) => s.id);
   const currentIndex = phase.kind === 'turn' ? order.indexOf(phase.step) : -1;
   const lastTurn = view.endgame.finalTurnFor !== null && view.endgame.finalTurnFor === view.activeSide;
@@ -59,11 +60,11 @@ export function TurnSteps({ view }: { view: PlayerView }) {
   let heading: string;
   let next: string | null = null;
   if (phase.kind === 'turn') {
-    heading = phase.mine ? `Your turn (turn ${view.turn})` : `Computer's turn (turn ${view.turn})`;
-    next = lastTurn ? 'Then full time.' : `Then ${phase.mine ? "the computer's" : 'your'} turn.`;
+    heading = phase.mine ? `Your turn (turn ${view.turn})` : `${opp.Owner} turn (turn ${view.turn})`;
+    next = lastTurn ? 'Then full time.' : `Then ${phase.mine ? opp.owner : 'your'} turn.`;
   } else if (phase.kind === 'opening') {
     heading = 'Opening faceoff';
-    next = `Then ${view.firstSide === view.me ? 'you take' : 'the computer takes'} turn 1.`;
+    next = `Then ${view.firstSide === view.me ? 'you take' : `${opp.name} takes`} turn 1.`;
   } else if (phase.kind === 'shootout') {
     heading = 'Penalty shootout';
   } else {
@@ -76,7 +77,7 @@ export function TurnSteps({ view }: { view: PlayerView }) {
       {lastTurn ? <div className="turn-note">Last turn of the game</div> : null}
 
       {phase.kind === 'shootout' && view.shootout ? (
-        <ShootoutProgress view={view} />
+        <ShootoutProgress view={view} opp={opp} />
       ) : (
         <ol className="steps">
           {STEPS.map((step, i) => {
@@ -101,7 +102,7 @@ export function TurnSteps({ view }: { view: PlayerView }) {
   );
 }
 
-function ShootoutProgress({ view }: { view: PlayerView }) {
+function ShootoutProgress({ view, opp }: { view: PlayerView; opp: OpponentWords }) {
   const s = view.shootout!;
   const them = view.me === 'A' ? 'B' : 'A';
   const rounds = view.config.shootoutRounds;
@@ -110,7 +111,7 @@ function ShootoutProgress({ view }: { view: PlayerView }) {
     <div className="steps shootout">
       <p className="step-text">Teams take turns: {rounds} penalties each, then one each until one scores and the other misses.</p>
       <p>{line(view.me, 'You')}</p>
-      <p>{line(them, 'Computer')}</p>
+      <p>{line(them, opp.Name)}</p>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   applyAction, createGame, eventsFor, legalActions, makeConfig, otherSide, viewFor,
   type Action, type CardSet, type GameEvent, type GameSetup, type GameState, type PlayerView, type Side,
 } from '../engine';
+import type { Seat } from './seat';
 
 export interface SessionOptions {
   seed: number;
@@ -19,7 +20,7 @@ export interface SessionOptions {
   team: string;
 }
 
-export class GameSession {
+export class GameSession implements Seat {
   readonly human: Side = 'A';
   readonly computer: Side = 'B';
   readonly setup: GameSetup;
@@ -45,11 +46,15 @@ export class GameSession {
     return viewFor(this.state, this.human);
   }
 
+  get teams(): Record<Side, string> {
+    return this.setup.teams!;
+  }
+
   /** Whose decision the game is waiting for. */
-  get waitingFor(): 'human' | 'computer' | 'over' {
+  get waitingFor(): 'human' | 'opponent' | 'over' {
     const pending = this.state.pending;
     if (pending.kind === 'gameOver') return 'over';
-    return pending.side === this.human ? 'human' : 'computer';
+    return pending.side === this.human ? 'human' : 'opponent';
   }
 
   /** The person's legal actions (empty when it isn't their decision). */
@@ -72,7 +77,7 @@ export class GameSession {
 
   /** The computer takes one action. Returns the events the person is allowed to see. */
   computerStep(): GameEvent[] {
-    if (this.waitingFor !== 'computer') return [];
+    if (this.waitingFor !== 'opponent') return [];
     const action = this.ai.chooseAction(viewFor(this.state, this.computer), legalActions(this.state, this.computer));
     return this.apply(action);
   }

@@ -14,7 +14,7 @@ const REACTION_HELP =
 
 /** What each action spell needs before it can be cast. */
 const NEEDS: Record<string, string> = {
-  steal: 'It is a tackle, so the computer needs to have the ball, with one of your players facing their ball carrier.',
+  steal: 'It is a tackle, so the other team needs to have the ball, with one of your players facing their ball carrier.',
   long_shot: 'One of your midfielders needs to have the ball.',
   long_pass: 'Your team needs to have the ball.',
   decoy_pass: 'Your team needs to have the ball.',

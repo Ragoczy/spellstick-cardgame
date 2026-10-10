@@ -20,13 +20,33 @@ const END_REASON: Record<EndReason, string> = {
   turn_cap: 'the game hit its turn limit',
 };
 
-/** holdingReaction: whether the person has a reaction spell in hand (to skip lines that don't matter to them). */
-export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holdingReaction = true): Line | null {
+/**
+ * How to name the other team: "the computer" against the computer, or the other player's
+ * chosen name online. name/Name for "the computer"/"The computer", owner/Owner for "the computer's".
+ */
+export interface OpponentWords {
+  name: string;
+  Name: string;
+  owner: string;
+  Owner: string;
+}
+
+export function opponentWords(name = 'the computer'): OpponentWords {
+  return { name, Name: capitalize(name), owner: `${name}'s`, Owner: `${capitalize(name)}'s` };
+}
+
+const COMPUTER = opponentWords();
+
+/**
+ * holdingReaction: whether the person has a reaction spell in hand (to skip lines that don't matter to them).
+ * opp: how to name the other team (the computer, unless playing online).
+ */
+export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holdingReaction = true, opp: OpponentWords = COMPUTER): Line | null {
   const them = otherSide(me);
   const isMe = (side: Side) => side === me;
-  const who = (side: Side) => (isMe(side) ? 'You' : 'The computer');
+  const who = (side: Side) => (isMe(side) ? 'You' : opp.Name);
   const whose = (side: Side) => (isMe(side) ? 'your' : 'their');
-  /** Verb that agrees with "You" / "The computer": verb(side, 'pass', 'passes'). */
+  /** Verb that agrees with "You" / the other team: verb(side, 'pass', 'passes'). */
   const verb = (side: Side, mine: string, theirs: string) => (isMe(side) ? mine : theirs);
   const at = (side: Side, pos: Parameters<typeof posName>[0]) => `${whose(side)} ${posName(pos, lanes)}`;
   const info = (text: string): Line => ({ text, tone: 'info' });
@@ -38,9 +58,9 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return isMe(e.side) && e.secret ? info(`You put ${e.secret.card.def.name} in goal, face down.`) : null;
     case 'drew': {
       if (e.reason === 'turn') {
-        return isMe(e.side) ? null : info(`The computer draws a ${e.pile === 'players' ? 'player' : 'spell'}.`);
+        return isMe(e.side) ? null : info(`${opp.Name} draws a ${e.pile === 'players' ? 'player' : 'spell'}.`);
       }
-      if (!isMe(e.side)) return e.reason === 'setup' ? null : info(`The computer draws ${e.count} card${e.count === 1 ? '' : 's'}.`);
+      if (!isMe(e.side)) return e.reason === 'setup' ? null : info(`${opp.Name} draws ${e.count} card${e.count === 1 ? '' : 's'}.`);
       const names = e.secret?.cards.map((c) => c.def.name).join(', ');
       return info(`You draw ${e.count} card${e.count === 1 ? '' : 's'}${names ? `: ${names}` : ''}.`);
     }
@@ -49,18 +69,18 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
     case 'faceoffStarted':
       return info(`Faceoff in the ${laneName(e.lane, lanes)} lane.`);
     case 'turnStarted':
-      return { text: isMe(e.side) ? `Your turn (turn ${e.turn}).` : `The computer's turn (turn ${e.turn}).`, tone: 'turn' };
+      return { text: isMe(e.side) ? `Your turn (turn ${e.turn}).` : `${opp.Owner} turn (turn ${e.turn}).`, tone: 'turn' };
     case 'deckOut':
       return info(
-        `${isMe(e.side) ? 'Your' : "The computer's"} deck is empty. ` +
-        `${isMe(e.finalTurnFor) ? 'You take' : 'The computer takes'} the last turn, then it's full time.`,
+        `${isMe(e.side) ? 'Your' : opp.Owner} deck is empty. ` +
+        `${isMe(e.finalTurnFor) ? 'You take' : `${opp.Name} takes`} the last turn, then it's full time.`,
       );
     case 'revealed':
       return info(`${capitalize(at(e.side, e.pos))} is revealed: ${e.card.def.name}.`);
     case 'contestStarted': {
       const a = e.attacker;
       const rolls = a.roll || e.defender.roll
-        ? ` Rolls: ${isMe(a.side) ? 'you' : 'the computer'} ${a.roll ?? '–'}, ${isMe(e.defender.side) ? 'you' : 'the computer'} ${e.defender.roll ?? '–'}.`
+        ? ` Rolls: ${isMe(a.side) ? 'you' : opp.name} ${a.roll ?? '–'}, ${isMe(e.defender.side) ? 'you' : opp.name} ${e.defender.roll ?? '–'}.`
         : '';
       switch (e.kind) {
         case 'pass': return info(`${who(a.side)} ${verb(a.side, 'pass', 'passes')} to ${at(a.side, a.pos)}.${rolls}`);
@@ -115,20 +135,20 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
           outcome = attackerWon ? 'It lands!' : `${who(defender)} ${verb(defender, 'shrug', 'shrugs')} it off.`;
           break;
       }
-      const tieNote = tie ? ` Ties go to ${isMe(e.winner) ? 'you' : 'the computer'}.` : '';
+      const tieNote = tie ? ` Ties go to ${isMe(e.winner) ? 'you' : opp.name}.` : '';
       return { text: `${sentence}${tieNote} ${outcome}`, tone: iWon ? 'good' : 'bad' };
     }
     case 'ballMoved':
       return null;
     case 'goal':
-      return { text: `GOAL! ${who(e.side)} ${verb(e.side, 'score', 'scores')}. You ${e.score[me]}, the computer ${e.score[them]}.`, tone: 'goal' };
+      return { text: `GOAL! ${who(e.side)} ${verb(e.side, 'score', 'scores')}. You ${e.score[me]}, ${opp.name} ${e.score[them]}.`, tone: 'goal' };
     case 'outOfSpells':
       if (isMe(e.side)) {
         return holdingReaction
           ? info(`Your ${posName(e.pos, lanes)} has no spells left, so you can't play a reaction spell in this contest. Substitute them to recharge.`)
           : null;
       }
-      return info(`Their ${posName(e.pos, lanes)} has no spells left, so the computer can't play a reaction spell in this contest.`);
+      return info(`Their ${posName(e.pos, lanes)} has no spells left, so ${opp.name} can't play a reaction spell in this contest.`);
     case 'substituted': {
       const name = e.removed?.def.name ?? e.secret?.removed.def.name ?? 'The face-down player';
       return info(`${who(e.side)} ${verb(e.side, 'substitute', 'substitutes')} ${at(e.side, e.pos)}. ${name} goes to ${isMe(e.side) ? 'your' : 'their'} hand to rest.`);
@@ -139,10 +159,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       if (isMe(e.side)) {
         return info(`You look at ${at(them, e.target)}: ${e.secret?.card.def.name ?? 'a card'}. It stays face down.`);
       }
-      return info(`The computer looks at ${at(me, e.target)}.`);
+      return info(`${opp.Name} looks at ${at(me, e.target)}.`);
     case 'decoyPass': {
       const fooled = otherSide(e.side);
-      return { text: `${who(e.side)} ${verb(e.side, 'pass', 'passes')} to ${at(e.side, e.to)}, but ${isMe(fooled) ? 'you think' : 'the computer thinks'} ` +
+      return { text: `${who(e.side)} ${verb(e.side, 'pass', 'passes')} to ${at(e.side, e.to)}, but ${isMe(fooled) ? 'you think' : `${opp.name} thinks`} ` +
         `it went to the ${laneName(e.decoy.lane, lanes)} lane. Nobody can intercept it.`, tone: isMe(e.side) ? 'good' : 'bad' };
     }
     case 'imagesCast':
@@ -155,7 +175,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
     case 'discarded':
       if (e.fromPile) {
         const pile = e.fromPile === 'players' ? 'Players' : 'Spells';
-        return info(`${isMe(e.side) ? 'Your hand is full, so the top card of your' : "The computer's hand is full, so the top card of its"} ${pile} pile goes to the discard pile: ${e.cards.map((c) => c.def.name).join(', ')}.`);
+        return info(`${isMe(e.side) ? 'Your hand is full, so the top card of your' : `${opp.Owner} hand is full, so the top card of their`} ${pile} pile goes to the discard pile: ${e.cards.map((c) => c.def.name).join(', ')}.`);
       }
       return info(`${who(e.side)} ${verb(e.side, 'discard', 'discards')} ${e.cards.map((c) => c.def.name).join(', ')}.`);
     case 'injured': {
@@ -183,15 +203,15 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       const myRoll = isMe(e.attacker) ? e.attackerRoll : e.defenderRoll;
       const theirRoll = isMe(e.attacker) ? e.defenderRoll : e.attackerRoll;
       return { text: `🎲 ${who(e.caller)} ${verb(e.caller, 'call', 'calls')} for dice (${left} roll${left === 1 ? '' : 's'} left). ` +
-        `You roll ${myRoll ?? '–'}, the computer rolls ${theirRoll ?? '–'}.`, tone: 'turn' };
+        `You roll ${myRoll ?? '–'}, ${opp.name} rolls ${theirRoll ?? '–'}.`, tone: 'turn' };
     }
     case 'shootoutStarted':
       return { text: `Full time, and it's a tie: penalty shootout! ${who(e.first)} ${verb(e.first, 'shoot', 'shoots')} first.`, tone: 'goal' };
     case 'penalty':
-      return info(`Shootout: you ${e.goals[me]}, the computer ${e.goals[them]}.`);
+      return info(`Shootout: you ${e.goals[me]}, ${opp.name} ${e.goals[them]}.`);
     case 'gameOver': {
       const { winner, reason } = e.result;
-      const headline = winner === null ? "It's a draw" : isMe(winner) ? 'You win' : 'The computer wins';
+      const headline = winner === null ? "It's a draw" : isMe(winner) ? 'You win' : `${opp.Name} wins`;
       return { text: `${headline} (${END_REASON[reason]}).`, tone: 'goal' };
     }
   }

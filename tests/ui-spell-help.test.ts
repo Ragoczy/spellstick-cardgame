@@ -18,9 +18,9 @@ describe('spell help', () => {
     expect(whyNotNow(viewFor(s, 'A'), boost('Boost'))).toMatch(/reaction spell.*When one starts/);
   });
 
-  it("explains what an action spell needs (Steal needs the computer to have the ball)", () => {
+  it("explains what an action spell needs (Steal needs the other team to have the ball)", () => {
     const s = scenario({ ball: { side: 'A', pos: fwd(0) } });
-    expect(whyNotNow(viewFor(s, 'A'), steal)).toMatch(/computer needs to have the ball/);
+    expect(whyNotNow(viewFor(s, 'A'), steal)).toMatch(/other team needs to have the ball/);
   });
 
   it('explains when nobody has a spell left', () => {

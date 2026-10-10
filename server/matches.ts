@@ -11,56 +11,23 @@ import type pg from 'pg';
 import { prototypeCards } from '../src/data/prototype';
 import {
   applyAction, createGame, eventsFor, legalActions, makeConfig, otherSide, viewFor,
-  type Action, type GameEvent, type GameSetup, type GameState, type PlayerView, type Side,
+  type Action, type GameEvent, type GameSetup, type GameState, type Side,
 } from '../src/engine';
+import type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, PlayerListing } from '../src/shared/matchApi';
 import type { User } from './users';
+
+export type { MatchDetail, MatchStatus, MatchSummary, MoveEvents, PlayerListing };
 
 /** Most matches a player can have going at once (challenges included), so nobody gets flooded. */
 export const MAX_OPEN_MATCHES = 20;
 /** Field sizes a challenge can use: the base game and the center-lane add-on. */
 export const LANE_CHOICES = [2, 3];
 
-export type MatchStatus = 'challenged' | 'active' | 'finished' | 'declined';
-
 /** A problem to report to the player, with the HTTP status to send. */
 export class MatchError extends Error {
   constructor(readonly status: number, message: string, readonly code?: 'stale') {
     super(message);
   }
-}
-
-/** One match as a player sees it in their list. */
-export interface MatchSummary {
-  id: number;
-  status: MatchStatus;
-  /** Your side in the game. The challenger is always side A. */
-  side: Side;
-  opponent: { id: number; name: string };
-  /** True if you sent the challenge. */
-  youChallenged: boolean;
-  lanes: number;
-  /** Your team in the card set, and theirs. */
-  team: string;
-  opponentTeam: string;
-  /** True when the match is waiting on you: accepting a challenge, or your next decision. */
-  yourMove: boolean;
-  /** Moves made so far. Send it back with your next move. */
-  moveCount: number;
-  waitingSince: string;
-  result: { outcome: 'won' | 'lost' | 'draw'; reason: 'played' | 'resigned' } | null;
-  createdAt: string;
-}
-
-/** Events from one move (seq 0 is the start of the game), as one player may see them. */
-export interface MoveEvents {
-  seq: number;
-  events: GameEvent[];
-}
-
-/** One match in full, for the player looking at it. game is null until the challenge is accepted. */
-export interface MatchDetail {
-  match: MatchSummary;
-  game: { view: PlayerView; legal: Action[]; events: MoveEvents[] } | null;
 }
 
 interface MatchRow {
@@ -215,7 +182,7 @@ export async function listMatches(db: pg.Pool, user: User): Promise<MatchSummary
 }
 
 /** Other players to challenge: names starting with the search text, or recently seen players. */
-export async function findPlayers(db: pg.Pool, user: User, search: string): Promise<{ id: number; name: string }[]> {
+export async function findPlayers(db: pg.Pool, user: User, search: string): Promise<PlayerListing[]> {
   const text = search.trim();
   const { rows } = await db.query<{ id: string; display_name: string }>(
     text

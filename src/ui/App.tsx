@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { prototypeCards } from '../data/prototype';
 import { Account } from './Account';
-import { ONLINE } from './online';
+import { ONLINE, type Me } from './online';
+import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
 import { TeamColors } from './Card';
-import { GameScreen } from './GameScreen';
+import { LocalGameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
 import type { SessionOptions } from './session';
 
-type Screen = { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number };
+type Screen =
+  | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
+  // Online build only: your matches, and one match.
+  | { kind: 'lobby' } | { kind: 'match'; id: number };
 
 const teamColors = Object.fromEntries(prototypeCards.teams.map((t) => [t.id, t.color]));
 
@@ -21,8 +25,16 @@ function newSeed(): number {
   return Number.isFinite(fromUrl) && fromUrl > 0 ? fromUrl : Math.floor(Math.random() * 1_000_000);
 }
 
+/** Online build: ?match=123 opens that match (links from Discord, later). */
+function firstScreen(): Screen {
+  const id = Number(new URLSearchParams(window.location.search).get('match'));
+  return ONLINE && Number.isInteger(id) && id > 0 ? { kind: 'match', id } : { kind: 'start' };
+}
+
 export function App() {
-  const [screen, setScreen] = useState<Screen>({ kind: 'start' });
+  const [screen, setScreen] = useState<Screen>(firstScreen);
+  /** Online build: the signed-in player (null when signed out or still checking). */
+  const [me, setMe] = useState<Me | null>(null);
   const [lanes, setLanes] = useState(2);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
 
@@ -30,12 +42,12 @@ export function App() {
 
   return (
     <TeamColors.Provider value={teamColors}>
-      <main className={screen.kind === 'game' ? 'app app-game' : 'app'}>
+      <main className={screen.kind === 'game' || screen.kind === 'match' ? 'app app-game' : 'app'}>
         {screen.kind === 'start' ? (
           <div className="screen start">
             <h1>Spellstick</h1>
             <p className="tagline">Magical lacrosse from the Warlock series. Hide your best players, pass to find the gaps, and let the spells fly.</p>
-            {ONLINE ? <Account /> : null}
+            {ONLINE ? <Account onChange={setMe} /> : null}
             <div className="options">
               <label>
                 Your team
@@ -53,6 +65,7 @@ export function App() {
             </div>
             <div className="buttons">
               <button type="button" className="primary" onClick={start}>Play against the computer</button>
+              {ONLINE && me?.displayName ? <button type="button" className="primary" onClick={() => setScreen({ kind: 'lobby' })}>Play online</button> : null}
               <button type="button" onClick={() => setScreen({ kind: 'rules' })}>How to play</button>
             </div>
             <p className="small">Prototype: card names, teams, and art are placeholders.</p>
@@ -62,10 +75,25 @@ export function App() {
         ) : null}
         {screen.kind === 'rules' ? <HowToPlay onBack={() => setScreen({ kind: 'start' })} /> : null}
         {screen.kind === 'future' ? <FutureFeatures onBack={() => setScreen({ kind: 'start' })} /> : null}
+        {screen.kind === 'lobby' ? (
+          <OnlineLobby onOpen={(id) => setScreen({ kind: 'match', id })} onBack={() => setScreen({ kind: 'start' })} />
+        ) : null}
+        {screen.kind === 'match' ? (
+          <OnlineMatchScreen key={screen.id} matchId={screen.id} onBack={() => { clearMatchLink(); setScreen({ kind: 'lobby' }); }} />
+        ) : null}
         {screen.kind === 'game' ? (
-          <GameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />
+          <LocalGameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />
         ) : null}
       </main>
     </TeamColors.Provider>
   );
+}
+
+/** Takes ?match= out of the address bar, so reloading the page doesn't jump back into the match. */
+function clearMatchLink(): void {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('match')) return;
+  params.delete('match');
+  const query = params.toString();
+  window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : ''));
 }

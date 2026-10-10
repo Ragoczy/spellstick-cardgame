@@ -66,6 +66,27 @@ button { font: inherit; color: inherit; }
 }
 .pick-name button:disabled { opacity: 0.5; cursor: default; }
 
+/* Online lobby */
+.challenge { display: flex; flex-direction: column; gap: 8px; }
+.challenge .options { margin: 4px 0 0; }
+.text-input {
+  font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); max-width: 320px;
+}
+.player-results { display: flex; flex-wrap: wrap; gap: 6px; }
+.player-results button {
+  font: inherit; font-size: 0.9rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); cursor: pointer;
+}
+.match-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.match-row {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+}
+.match-row .buttons { margin-top: 0; }
+.match-row.yours { border-color: var(--accent); }
+.match-row.done { color: var(--muted); }
+
 /* ---- Game layout: turn steps to the left of the game ---- */
 .app.app-game { max-width: 1000px; }
 .game-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }

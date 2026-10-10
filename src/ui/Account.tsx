@@ -17,9 +17,14 @@ function takeSignInProblem(): string | null {
   return SIGN_IN_PROBLEMS[reason] ?? SIGN_IN_PROBLEMS.failed!;
 }
 
-export function Account() {
+/** onChange: told who is signed in (null when nobody), so the start screen can offer online play. */
+export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [problem] = useState(takeSignInProblem);
+
+  useEffect(() => {
+    onChange?.(state.kind === 'signedIn' ? state.me : null);
+  }, [state, onChange]);
 
   useEffect(() => {
     fetchMe()

@@ -1,5 +1,5 @@
 // The game screen. It shows the person's view and turns taps into legal actions. It never
-// decides what is legal itself: everything clickable comes from the session's legal actions.
+// decides what is legal itself: everything clickable comes from the seat's legal actions.
 
 import { useMemo, useState } from 'react';
 import { isFieldPos, opposite, samePos, type Action, type CardDef, type FieldPos, type InjuryDef, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
@@ -10,8 +10,9 @@ import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
 import { TurnSteps } from './TurnSteps';
 import { whyNotNow } from './spellHelp';
-import { posKey, useGame, type Announcement } from './useGame';
+import { posKey, useGame, type Announcement, type GameController } from './useGame';
 import type { SessionOptions } from './session';
+import type { OpponentWords } from './text';
 
 type Selection =
   | { kind: 'none' }
@@ -22,14 +23,22 @@ type Selection =
 
 const NONE: Selection = { kind: 'none' };
 
-export function GameScreen({ options, onQuit, autoplay = false }: { options: SessionOptions; onQuit: () => void; autoplay?: boolean }) {
+/** A game against the computer. */
+export function LocalGameScreen({ options, onQuit, autoplay = false }: { options: SessionOptions; onQuit: () => void; autoplay?: boolean }) {
   const game = useGame(options, autoplay);
-  const { session } = game;
-  const view = session.view;
-  const legal = session.legal;
-  const me = session.human;
-  const them = session.computer;
-  const teams = session.setup.teams!;
+  return <GameScreen game={game} onQuit={onQuit} />;
+}
+
+/** The table, for a game against the computer or an online match. onQuit: leave the screen. */
+export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () => void }) {
+  const { seat, opp, online } = game;
+  const view = seat.view;
+  const legal = seat.legal;
+  const me = seat.human;
+  const them = seat.opponent;
+  const teams = seat.teams;
+  // Hints come from the computer player, so they're for practice games only.
+  const hintsAllowed = !online;
   const [selection, setSelection] = useState<Selection>(NONE);
   const [inspected, setInspected] = useState<{ def: CardDef; injury?: InjuryDef } | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -37,7 +46,8 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   /** Why the card just tapped can't be played right now. */
   const [notice, setNotice] = useState<string | null>(null);
   const pending = view.pending;
-  const myDecision = session.waitingFor === 'human';
+  // While a move is on its way to the server, nothing else can be chosen.
+  const myDecision = seat.waitingFor === 'human' && !online?.sending;
 
   const act = (action: Action) => {
     setSelection(NONE);
@@ -241,24 +251,37 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
     );
   }
   if (pending.kind === 'placeLineup' && myDecision) {
-    return <LineupScreen view={view} legal={legal} onPlace={(actions) => actions.forEach((a) => game.act(a))} onAuto={() => {
-      while (session.view.pending.kind === 'placeLineup' && session.waitingFor === 'human') game.act(session.hint()!);
-    }} />;
+    return <LineupScreen view={view} legal={legal} onPlace={(actions) => actions.forEach((a) => game.act(a))} onAuto={game.autoPlace} />;
   }
 
   // ---- Prompts ----
 
+  const leaveLabel = online ? 'Back to your matches' : 'New game';
+
   const prompt = (): React.ReactNode => {
-    if (pending.kind === 'gameOver') {
-      const r = view.result!;
-      const headline = r.winner === null ? "It's a draw." : r.winner === me ? 'You win!' : 'The computer wins.';
+    if (online?.match.result?.reason === 'resigned') {
+      const headline = online.match.result.outcome === 'won' ? `${opp.Name} resigned. You win!` : 'You resigned.';
       return (
         <div className="prompt">
-          <strong>{headline}</strong> Final score: you {view.score[me]}, the computer {view.score[them]}
-          {view.shootout ? ` (shootout ${view.shootout.goals[me]}–${view.shootout.goals[them]})` : ''}.
-          <div className="buttons"><button type="button" className="primary" onClick={onQuit}>New game</button></div>
+          <strong>{headline}</strong>
+          <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
         </div>
       );
+    }
+    if (pending.kind === 'gameOver') {
+      const r = view.result!;
+      const headline = r.winner === null ? "It's a draw." : r.winner === me ? 'You win!' : `${opp.Name} wins.`;
+      return (
+        <div className="prompt">
+          <strong>{headline}</strong> Final score: you {view.score[me]}, {opp.name} {view.score[them]}
+          {view.shootout ? ` (shootout ${view.shootout.goals[me]}–${view.shootout.goals[them]})` : ''}.
+          <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
+        </div>
+      );
+    }
+    if (online?.sending) return <div className="prompt waiting">Sending your move…</div>;
+    if (online && !myDecision) {
+      return <div className="prompt waiting">Waiting for {opp.name}. You can leave this page: the match is saved, and their move will be here when you come back.</div>;
     }
     if (!myDecision) return <div className="prompt waiting">The computer is thinking…</div>;
 
@@ -275,7 +298,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
           </div>
         );
       case 'reaction':
-        return <ReactionPrompt view={view} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
+        return <ReactionPrompt view={view} opp={opp} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
       case 'callDice':
         return <DicePrompt view={view} onChoose={(roll) => act({ type: 'callDice', side: me, roll })} />;
       case 'draw':
@@ -289,7 +312,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
             <div className="buttons">
               <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'players' })}>{view.mine.hand.length >= view.config.handLimit ? 'Players pile' : 'Draw a player'} ({view.mine.playersLeft} left)</button>
               <button type="button" onClick={() => act({ type: 'draw', side: me, pile: 'spells' })}>{view.mine.hand.length >= view.config.handLimit ? 'Spells pile' : 'Draw a spell'} ({view.mine.spellsLeft} left)</button>
-              <button type="button" className="quiet" onClick={hint}>Hint</button>
+              {hintsAllowed ? <button type="button" className="quiet" onClick={hint}>Hint</button> : null}
             </div>
             {hintText ? <div className="hint">{hintText}</div> : null}
           </div>
@@ -313,7 +336,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
   };
 
   const hint = () => {
-    const h = session.hint();
+    const h = seat.hint();
     if (!h) return;
     const text = h.type === 'pass' ? `pass to your ${posName(h.to, view.lanes)}`
       : h.type === 'cast' ? `cast ${view.mine.hand.find((c) => c.uid === h.card)?.def.name}`
@@ -348,18 +371,18 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
       ? ` To cast a spell, tap a glowing spell in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be cast now`}).`
       : '';
     let help = `Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.${spellHelp}`;
-    if (!myBall) help = (view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)." : 'The computer has the ball. You can tackle, or play a card.') + spellHelp;
+    if (!myBall) help = (view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)." : `${opp.Name} has the ball. You can tackle, or play a card.`) + spellHelp;
     if (selection.kind === 'holder') help = 'Tap a glowing teammate to pass to them. Tap anywhere else to cancel.';
     if (selection.kind === 'cast') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const effect = def?.kind === 'spell' ? def.ability.effect : '';
       const targetHelp = effect === 'hit' ? 'Now tap the opposing player in that spot to hit them.'
         : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
-        : effect === 'decoy_pass' ? "Now tap the teammate to pass to. The computer will think it went to another lane, so it can't be intercepted."
+        : effect === 'decoy_pass' ? `Now tap the teammate to pass to. ${opp.Name} will think it went to another lane, so it can't be intercepted.`
         : 'Now choose the target.';
       help = !selection.caster
         ? `Choose who casts ${def?.name}. Green = affinity match (stronger), red = opposed (weaker).`
-        : selection.first ? (effect === 'decoy_pass' ? 'Now tap the spot where the computer will think the ball went.' : 'Now tap the second player to swap.') : targetHelp;
+        : selection.first ? (effect === 'decoy_pass' ? `Now tap the spot where ${opp.name} will think the ball went.` : 'Now tap the second player to swap.') : targetHelp;
     }
     if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
     if (selection.kind === 'regroup') {
@@ -381,7 +404,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
             <button type="button" onClick={() => setSelection({ kind: 'regroup', picked: [] })}>Regroup / skip</button>
           )}
           {selection.kind !== 'none' ? <button type="button" onClick={() => setSelection(NONE)}>Cancel</button> : null}
-          <button type="button" className="quiet" onClick={hint}>Hint</button>
+          {hintsAllowed ? <button type="button" className="quiet" onClick={hint}>Hint</button> : null}
         </div>
         {hintText ? <div className="hint">{hintText}</div> : null}
       </div>
@@ -393,24 +416,26 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
 
   return (
     <div className="game-layout">
-      <TurnSteps view={view} />
+      <TurnSteps view={view} opp={opp} />
       <div className="screen game">
         <header className="scorebar">
-          <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> Computer</span>
+          <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> {opp.Name}</span>
           <span className="meta">
             Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
             {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
           </span>
-          <button type="button" className="quiet" onClick={onQuit}>Quit</button>
+          {online?.match.status === 'active' ? <button type="button" className="quiet" onClick={online.resign}>Resign</button> : null}
+          <button type="button" className="quiet" onClick={onQuit}>{online ? 'Matches' : 'Quit'}</button>
         </header>
 
         <div className="opponent-hand">
-          <span>Computer's hand</span>
+          <span>{opp.Owner} hand</span>
           {Array.from({ length: view.opponent.handCount }, (_, i) => <CardBack key={i} team={teams[them]} />)}
         </div>
 
         <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
+        {online?.problem ? <div className="prompt notice">{online.problem}</div> : null}
         {prompt()}
         {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
 
@@ -456,7 +481,7 @@ export function GameScreen({ options, onQuit, autoplay = false }: { options: Ses
           </div>
         </div>
 
-        {game.announcement ? <AnnouncementView a={game.announcement} onClose={game.dismissAnnouncement} /> : null}
+        {game.announcement ? <AnnouncementView a={game.announcement} opp={opp} onClose={game.dismissAnnouncement} /> : null}
       </div>
     </div>
   );
@@ -471,7 +496,7 @@ function DicePrompt({ view, onChoose }: { view: PlayerView; onChoose: (roll: boo
     <div className="prompt">
       <strong>Call for dice?</strong> Right now it's {preview.mine}–{preview.theirs}: you'd {winning ? 'win' : 'lose'}
       {preview.mine === preview.theirs ? ' (tie)' : ''}. If you call, you both roll a die and add it: you'd win about {chance}% of the
-      time. It costs one of your rolls ({preview.rollsLeft} left this game); the computer's roll is free.
+      time. It costs one of your rolls ({preview.rollsLeft} left this game); their roll is free.
       <div className="buttons">
         <button type="button" className={!winning && chance >= 40 ? 'primary' : ''} onClick={() => onChoose(true)}>🎲 Call for dice ({chance}%)</button>
         <button type="button" onClick={() => onChoose(false)}>No dice</button>
@@ -480,7 +505,7 @@ function DicePrompt({ view, onChoose }: { view: PlayerView; onChoose: (roll: boo
   );
 }
 
-function ReactionPrompt({ view, onPlay }: { view: PlayerView; onPlay: (uid: string | null) => void }) {
+function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: OpponentWords; onPlay: (uid: string | null) => void }) {
   const preview = reactionPreview(view);
   if (!preview) return null;
   const winning = preview.mine > preview.theirs || (preview.mine === preview.theirs && preview.iWinTies);
@@ -495,7 +520,7 @@ function ReactionPrompt({ view, onPlay }: { view: PlayerView; onPlay: (uid: stri
     : '';
   return (
     <div className="prompt">
-      <strong>Contest! Play a reaction spell?</strong> {status}{casterNote}{preview.theyCanAnswer ? ' The computer can answer with its own spell.' : ''} Tap a button below or a glowing spell in your hand.
+      <strong>Contest! Play a reaction spell?</strong> {status}{casterNote}{preview.theyCanAnswer ? ` ${opp.Name} can answer with their own spell.` : ''} Tap a button below or a glowing spell in your hand.
       <div className="buttons">
         {preview.options.map((o) => {
           const wins = o.mine > o.theirs || (o.mine === o.theirs && preview.iWinTies);
@@ -512,14 +537,14 @@ function duelCard(card: import('../engine').CardView | null) {
   return card ? <Card def={card.def} injury={card.injury} /> : <div className="card empty">Empty spot</div>;
 }
 
-function AnnouncementView({ a, onClose }: { a: Announcement; onClose: () => void }) {
+function AnnouncementView({ a, opp, onClose }: { a: Announcement; opp: OpponentWords; onClose: () => void }) {
   return (
     <div className={`announcement tone-${a.tone}`} role="dialog">
       <div className="announcement-card" onClick={onClose}>
         <h3>{a.title}</h3>
         {a.contest ? (
           <div className="duel">
-            <div>{duelCard(a.contest.theirs.card)}<span className="value">{a.contest.theirs.total}</span><span className="who">Computer</span></div>
+            <div>{duelCard(a.contest.theirs.card)}<span className="value">{a.contest.theirs.total}</span><span className="who">{opp.Name}</span></div>
             <div className="vs">vs</div>
             <div>{duelCard(a.contest.mine.card)}<span className="value">{a.contest.mine.total}</span><span className="who">You</span></div>
           </div>

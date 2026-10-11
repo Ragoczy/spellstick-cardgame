@@ -381,6 +381,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-11: Sign-in inside Discord is now automatic at launch, following Discord's own Activity flow: one permission request right after the game loads, covering the profile details, who you are, and your server roles. The earlier "Sign in with Discord" button inside Discord made a second request, which Discord turned down. Players with an allowed role are signed in at every launch (roles checked again each time); others get a plain message and can play the computer.
 - 2026-10-11: Discord roles are checked again every 15 minutes while a player stays signed in, not only at sign-in (see Identity and accounts). Taking a role away in Discord signs the player out within 15 minutes. Starts working when the bot token is set up.
 - 2026-10-11: Online play inside Discord. Players who launch the game as a Discord Activity can sign in with Discord's own prompt and play online matches there. The server runs the same membership and role checks as browser sign-in, and sets a partitioned `SameSite=None` session cookie that works in Discord's frame. Unlinking is still done from the browser. Details in `docs/discord-activity.md`.
 - 2026-10-10: Ranked play, moved forward from phase 6 at Paul's request. Elo ratings for ranked draft challenges, tiers after 5 ranked matches, a leaderboard, and admin tools to recalculate or start over. See Ranked play.

@@ -1,15 +1,17 @@
 // Running inside Discord, as a Discord Activity (see docs/discord-activity.md).
 //
 // Discord opens the game with ?frame_id=... in the address. Only then do we load Discord's SDK
-// (from discordActivity.ts, as a separate download), show what the player is doing on their
-// Discord profile, and offer sign-in through Discord. Everywhere else this file does nothing,
-// and the SDK is never downloaded.
+// (from discordActivity.ts, as a separate download), sign the player in to online play through
+// Discord, and show what they are doing on their Discord profile. Everywhere else this file
+// does nothing, and the SDK is never downloaded.
 //
 // Nothing here may break the game: if Discord doesn't answer or turns us down, we write one
 // warning to the console and carry on.
 
 import type { PlayerView, Side } from '../engine';
-import type { DiscordActivity } from './discordActivity';
+
+/** Inside Discord: whether the player was signed in to online play at launch, and if not, why. */
+export type DiscordSignIn = { signedIn: true } | { signedIn: false; reason: string };
 
 /** What Discord shows under "Playing Spellstick". startedAt (milliseconds) adds an "elapsed" timer. */
 export interface Presence {
@@ -58,24 +60,24 @@ export function setDiscordPresence(presence: Presence): void {
   sendPresence?.(presence);
 }
 
-/** The connection to Discord, once startDiscord has begun it. */
-let activity: Promise<DiscordActivity> | null = null;
+/** Inside Discord, the sign-in result once Discord has answered. Null outside Discord. */
+let signIn: Promise<DiscordSignIn> | null = null;
 
 /** Connects to Discord when Discord launched the page. Call once at startup. */
 export function startDiscord(): void {
   if (!IN_DISCORD) return;
-  activity = import('./discordActivity').then((module) => module.connect());
-  activity
-    .then((a) => a.startPresence())
-    .then((send) => {
-      sendPresence = send;
-      if (latest) send(latest);
+  const connection = import('./discordActivity').then((activity) => activity.connect());
+  connection
+    .then(({ setPresence }) => {
+      sendPresence = setPresence;
+      if (latest) setPresence(latest);
     })
     .catch(warnOnce);
+  // Discord's own error is in the console warning above; the page explains it in plain words.
+  signIn = connection.then((c) => c.signIn, (): DiscordSignIn => ({ signedIn: false, reason: 'discord' }));
 }
 
-/** Inside Discord: a one-time sign-in code from Discord (Discord asks the player first). Throws if there's none. */
-export async function discordSignInCode(): Promise<string> {
-  if (!activity) throw new Error('Not running inside Discord.');
-  return (await activity).signInCode();
+/** Inside Discord: waits for sign-in at launch to finish. Outside Discord: null. */
+export function discordSignIn(): Promise<DiscordSignIn> | null {
+  return signIn;
 }

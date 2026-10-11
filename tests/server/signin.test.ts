@@ -174,9 +174,10 @@ describe.skipIf(!haveDb)('sign-in with Discord', () => {
     const signInHere = (code: string) =>
       app.inject({ method: 'POST', url: '/api/discord/signin', headers: { origin: DISCORD_ORIGIN }, payload: { code } });
 
-    it('signs in a member with the role, with a cookie that works inside Discord’s frame', async () => {
+    it('signs in a member with the role at launch, with a cookie that works inside Discord’s frame', async () => {
       const res = await signInHere('alice');
       expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ access_token: 'activity-token-for-alice', signedIn: true });
       expect(res.headers['cache-control']).toBe('no-store');
       const setCookie = String(res.headers['set-cookie']);
       expect(setCookie).toMatch(/^spellstick_session=/);
@@ -196,14 +197,37 @@ describe.skipIf(!haveDb)('sign-in with Discord', () => {
       expect(rows[0].n).toBe(1);
     });
 
-    it('turns away people without the role or not in the server, and says why', async () => {
+    it('turns away people without the role or not in the server, and says why, with no session', async () => {
       const noRole = await signInHere('norole');
-      expect(noRole.statusCode).toBe(403);
-      expect(noRole.json()).toMatchObject({ reason: 'no-role' });
+      expect(noRole.statusCode).toBe(200);
+      expect(noRole.json()).toEqual({ access_token: 'activity-token-for-norole', signedIn: false, reason: 'no-role' });
       expect(noRole.cookies).toHaveLength(0);
       const outsider = await signInHere('outsider');
-      expect(outsider.statusCode).toBe(403);
-      expect(outsider.json()).toMatchObject({ reason: 'not-member' });
+      expect(outsider.json()).toMatchObject({ signedIn: false, reason: 'not-member' });
+      expect(outsider.cookies).toHaveLength(0);
+    });
+
+    const launchWith = (code: string, cookie: string) =>
+      app.inject({
+        method: 'POST', url: '/api/discord/signin', headers: { origin: DISCORD_ORIGIN },
+        cookies: { spellstick_session: cookie }, payload: { code },
+      });
+
+    it('replaces the session from the last launch, so sessions don’t pile up', async () => {
+      const first = (await signInHere('alice')).cookies.find((c) => c.name === 'spellstick_session')!.value;
+      const second = await launchWith('alice', first);
+      const next = second.cookies.find((c) => c.name === 'spellstick_session')!.value;
+      expect(next).not.toBe(first);
+      expect((await me(first)).statusCode).toBe(401);
+      expect((await me(next)).statusCode).toBe(200);
+    });
+
+    it('ends the session from the last launch when the player may no longer play', async () => {
+      const before = (await signInHere('alice')).cookies.find((c) => c.name === 'spellstick_session')!.value;
+      // The fake Discord ties roles to codes, so "norole" stands in for Alice after her role was taken away.
+      const res = await launchWith('norole', before);
+      expect(res.json()).toMatchObject({ signedIn: false, reason: 'no-role' });
+      expect((await me(before)).statusCode).toBe(401);
     });
 
     it('takes the role from Discord, as browser sign-in does', async () => {

@@ -16,52 +16,68 @@ the page.
    address it does nothing. With one, it loads `src/ui/discordActivity.ts` as a separate file.
    That file holds the Discord SDK (`@discord/embedded-app-sdk`, about 46 kB gzipped), so normal
    players never download it.
-3. `discordActivity.ts`:
+3. `discordActivity.ts`, following the flow in Discord's own Activity guide:
    - reads the client ID from the address (`<client id>.discordsays.com`), so there is no
      client-side setting
    - `new DiscordSDK(clientId)`, then `await sdk.ready()`
-   - `sdk.commands.authorize(...)` with only the `rpc.activities.write` scope (what `setActivity`
-     needs; `identify` was dropped 2026-10-10 because nothing used it). The first
-     time, Discord asks the player to allow it.
-   - POSTs the one-time code to `/api/discord/token`. The address is relative, so inside
-     Discord it goes to `https://<client id>.discordsays.com/api/discord/token`, and the root
+   - right after that, **once**, `sdk.commands.authorize(...)` with every scope the game needs:
+     `identify` and `guilds.members.read` (who you are, and your membership and roles in our
+     server: the same as browser sign-in) and `rpc.activities.write` (the profile details).
+     The first time, Discord asks the player to allow them.
+   - POSTs the one-time code to `/api/discord/signin`. The address is relative, so inside
+     Discord it goes to `https://<client id>.discordsays.com/api/discord/signin`, and the root
      mapping sends it to our server.
-   - `sdk.commands.authenticate({ access_token })`
+   - `sdk.commands.authenticate({ access_token })` with the token the server sends back
    - `sdk.commands.setActivity(...)` whenever the screen, turn, or score changes. Repeats are
      skipped, and changes are sent at most once every 5 seconds (Discord rate-limits presence).
    - Sends clicks on links to other websites to `sdk.commands.openExternalLink`, which asks
      the player and then opens the link in their browser. This also covers links inside
      shadow-root widgets.
-4. The server's `POST /api/discord/token` (`server/api/discord-activity.ts`) trades the code at
-   `https://discord.com/api/v10/oauth2/token` using the Activity app's client ID and secret. It
-   returns only `{ access_token }`, stores nothing, and sets no cookies.
+4. The server's `POST /api/discord/signin` (`server/api/discord-activity.ts`) trades the code at
+   `https://discord.com/api/v10/oauth2/token` using the Activity app's client ID and secret,
+   then signs the player in (below). It returns the access token for the profile details, and
+   whether the player is signed in. It doesn't store the token.
+
+*(Changed 2026-10-11: there used to be two permission requests, one at launch for the profile
+details and a second for sign-in when the player pressed a button. Discord turned the second
+one down, because the SDK expects `authorize` once, right after `ready`. Now there's one
+request at launch, and no button.)*
 
 ### Signing in inside Discord
 
 Browser sign-in sends the whole page to Discord's sign-in page and back, then keeps the player
 signed in with an ordinary cookie. Inside Discord the game is a frame that can't leave, and the
-browser treats an ordinary cookie in that frame as a third-party cookie. So inside Discord:
+browser treats an ordinary cookie in that frame as a third-party cookie. So inside Discord the
+player is signed in automatically at launch, as their Discord account:
 
-1. The start screen shows a "Sign in with Discord" button (not a link). Nothing happens until
-   the player presses it.
-2. The page calls `sdk.commands.authorize(...)` with `identify` and `guilds.members.read` (the
-   same permissions as browser sign-in), plus `rpc.activities.write` so the presence permission
-   stays on the list. The first time, Discord asks the player to allow them.
-3. The page POSTs the one-time code to `/api/discord/signin`.
-4. The server trades the code with the Activity app's secret, then runs the same checks as
-   browser sign-in (`admit` in `server/auth/routes.ts`): membership in our Discord server and an
-   allowed role. It's the same account as in the browser, keyed by Discord ID.
-5. If the player may play, the server sets the session cookie with `SameSite=None; Secure;
+1. With the code from launch, the server runs the same checks as browser sign-in (`admit` in
+   `server/auth/routes.ts`): membership in our Discord server and an allowed role. It's the same
+   account as in the browser, keyed by Discord ID.
+2. If the player may play, the server sets the session cookie with `SameSite=None; Secure;
    Partitioned; HttpOnly`, as Discord's networking guide asks. The cookie belongs to
    `<client id>.discordsays.com` and is kept only for the game inside Discord, so it doesn't
-   mix with the browser's cookie. If not, it answers 403 with `not-member` or `no-role`, and
-   the page shows the same message as browser sign-in. The Discord token is thrown away.
+   mix with the browser's cookie. The session from the last launch, if any, is replaced, so
+   roles are checked again at every launch and sessions don't pile up.
+3. If not, the answer says why (`not-member` or `no-role`) and any earlier session from this
+   page ends. The token still comes back, so the profile details and play against the computer
+   work. If Discord or the database has trouble, the reason is `failed` and an earlier session
+   is kept.
+4. The start screen shows "Signing in through Discord…" while this happens, then either who
+   you're signed in as or a plain message saying why online play is off and what to do.
+   There's no sign-in button and no Sign out inside Discord: you are your Discord account
+   there. If the player says no to Discord's prompt, or Discord doesn't connect, the message
+   says so, and Discord's own error is in the console warning.
 
 Everything else (matches, live updates, settings) then works as in the browser, because the
-page's requests carry the cookie. Sign-out clears the cookie with the same settings.
+page's requests carry the cookie.
 
 **Unlinking** still needs Discord's own sign-in page, which can't open inside the frame. Inside
 Discord, Settings tells the player to unlink from the browser instead.
+
+**Proxy authentication** (Discord's optional signed `X-Discord-Proxy-Payload` headers) isn't
+used. It proves a request came through Discord's proxy, but Discord's docs don't list a user ID
+in the payload, and it says nothing about roles, so it can't replace the sign-in above. It
+could be added later as an extra check.
 
 If any step fails, the console shows one warning ("Spellstick: Discord features are off.") and
 the game carries on. No errors escape.
@@ -74,7 +90,7 @@ the game carries on. No errors escape.
   That last one is a single address, not a wildcard. No other site may frame the game.
 - The server refuses posts from other websites. It also accepts posts from the Activity's own
   `https://<client id>.discordsays.com`, which serves only this game. *(Changed 2026-10-11: this
-  used to be only for `/api/discord/token`. Online play inside Discord needs all of the game's
+  used to be only for the old `/api/discord/token`. Online play inside Discord needs all of the game's
   posts. The address is a single one, not a wildcard, so other Activities are still refused.
   Because the session cookie inside Discord is `SameSite=None`, this check is what keeps other
   websites from posting with it.)*
@@ -132,7 +148,7 @@ Never commit a secret. `server/.env` is git-ignored.
 
 | Prefix | Target | Needed | What for |
 |---|---|---|---|
-| `/` | `ca-spellstick.proudbush-0a90b692.eastus2.azurecontainerapps.io` | **Yes** | The game, its files, and `/api/discord/token` |
+| `/` | `ca-spellstick.proudbush-0a90b692.eastus2.azurecontainerapps.io` | **Yes** | The game, its files, and `/api/discord/signin` |
 
 That's the only one. The game makes no requests to other origins at runtime: no external
 scripts, fonts, images, WebSockets, or APIs. Its live updates (`/api/live`) and API calls are

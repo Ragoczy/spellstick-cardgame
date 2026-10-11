@@ -1,6 +1,6 @@
-// The game inside Discord (a Discord Activity): the token endpoint, the frame and origin rules,
-// and its settings. None of this touches the database, so it runs without Postgres. Signing in
-// from inside Discord, which does, is in signin.test.ts.
+// The game inside Discord (a Discord Activity): the launch endpoint's handling of codes, the
+// frame and origin rules, and its settings. These don't need the database, so they run without
+// Postgres. Signing a member in, which does, is in signin.test.ts.
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import pg from 'pg';
@@ -10,10 +10,13 @@ import { ACTIVITY_CLIENT_ID, fakeDiscord, person, PLAYERS_ROLE, testConfig } fro
 
 const DISCORD_ORIGIN = `https://${ACTIVITY_CLIENT_ID}.discordsays.com`;
 
-describe('Discord Activity token endpoint', () => {
-  // A pool that is never used: these routes don't touch the database.
+describe('Discord Activity launch endpoint', () => {
+  // A database that isn't there: anything that needs it fails, as in an outage.
   const db = new pg.Pool({ connectionString: 'postgres://unused@localhost:1/unused' });
-  const discord = fakeDiscord({ alice: person('111', 'alice', [PLAYERS_ROLE]) });
+  const discord = fakeDiscord({
+    alice: person('111', 'alice', [PLAYERS_ROLE]),
+    outsider: person('444', 'outsider', null),
+  });
   let app: Awaited<ReturnType<typeof buildApp>>;
 
   beforeAll(async () => {
@@ -26,13 +29,21 @@ describe('Discord Activity token endpoint', () => {
   });
 
   const post = (body: unknown, origin = DISCORD_ORIGIN) =>
-    app.inject({ method: 'POST', url: '/api/discord/token', headers: { origin }, payload: body as object });
+    app.inject({ method: 'POST', url: '/api/discord/signin', headers: { origin }, payload: body as object });
 
-  it('trades a code for an access token and returns only the token', async () => {
+  it('returns the token for profile details, and why online play is off, to someone who may not play', async () => {
+    const res = await post({ code: 'outsider' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ access_token: 'activity-token-for-outsider', signedIn: false, reason: 'not-member' });
+    expect(res.headers['cache-control']).toBe('no-store');
+    expect(res.cookies).toHaveLength(0);
+  });
+
+  it('still returns the token when sign-in itself has trouble', async () => {
+    // Alice may play, but the database is down.
     const res = await post({ code: 'alice' });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ access_token: 'activity-token-for-alice' });
-    expect(res.headers['cache-control']).toBe('no-store');
+    expect(res.json()).toEqual({ access_token: 'activity-token-for-alice', signedIn: false, reason: 'failed' });
     expect(res.cookies).toHaveLength(0);
   });
 
@@ -51,12 +62,12 @@ describe('Discord Activity token endpoint', () => {
   });
 
   it('accepts posts from the game itself too', async () => {
-    expect((await post({ code: 'alice' }, 'https://spellstick.test')).statusCode).toBe(200);
+    expect((await post({ code: 'outsider' }, 'https://spellstick.test')).statusCode).toBe(200);
   });
 
   it("accepts posts from this Activity's Discord address, and refuses other websites", async () => {
-    expect((await post({ code: 'alice' }, 'https://evil.test')).statusCode).toBe(403);
-    expect((await post({ code: 'alice' }, 'https://999.discordsays.com')).statusCode).toBe(403);
+    expect((await post({ code: 'outsider' }, 'https://evil.test')).statusCode).toBe(403);
+    expect((await post({ code: 'outsider' }, 'https://999.discordsays.com')).statusCode).toBe(403);
     const fromOtherSite = await app.inject({ method: 'POST', url: '/auth/logout', headers: { origin: 'https://evil.test' } });
     expect(fromOtherSite.statusCode).toBe(403);
     const fromDiscord = await app.inject({ method: 'POST', url: '/auth/logout', headers: { origin: DISCORD_ORIGIN } });
@@ -74,17 +85,6 @@ describe('Discord Activity token endpoint', () => {
     const browser = String((await app.inject({ method: 'POST', url: '/auth/logout' })).headers['set-cookie']);
     expect(browser).toMatch(/SameSite=Lax/);
     expect(browser).not.toMatch(/Partitioned/);
-  });
-
-  it('refuses a sign-in code that is missing or that Discord turns down, without signing anyone in', async () => {
-    const signin = (body: unknown) =>
-      app.inject({ method: 'POST', url: '/api/discord/signin', headers: { origin: DISCORD_ORIGIN }, payload: body as object });
-    expect((await signin({})).statusCode).toBe(400);
-    expect((await signin({ code: 'x'.repeat(201) })).statusCode).toBe(400);
-    const refused = await signin({ code: 'not-a-real-code' });
-    expect(refused.statusCode).toBe(502);
-    expect(refused.json()).toMatchObject({ reason: 'failed' });
-    expect(refused.cookies).toHaveLength(0);
   });
 
   it('lets only this site and Discord show the game in a frame', async () => {
@@ -138,9 +138,7 @@ describe('Discord Activity off', () => {
     await db.end();
   });
 
-  it('serves the game as before: no token or sign-in endpoint, and only this site may frame it', async () => {
-    const token = await app.inject({ method: 'POST', url: '/api/discord/token', payload: { code: 'x' } });
-    expect(token.statusCode).toBe(404);
+  it('serves the game as before: no Discord sign-in, and only this site may frame it', async () => {
     const signin = await app.inject({ method: 'POST', url: '/api/discord/signin', payload: { code: 'x' } });
     expect(signin.statusCode).toBe(404);
     const health = await app.inject({ method: 'GET', url: '/healthz' });

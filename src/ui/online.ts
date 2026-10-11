@@ -2,7 +2,6 @@
 // static build never calls these.
 
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
-import { discordSignInCode } from './discord';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
@@ -53,32 +52,20 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
 };
 
 /**
- * Signs in from inside Discord, where the browser's trip to Discord's sign-in page can't
- * happen: Discord asks the player, and the server checks the same things as browser sign-in
- * and sets the session cookie. Throws with a message to show.
+ * Inside Discord, sign-in happens by itself at launch (see discord.ts). When it doesn't work
+ * out, the reason from the server ('not-member', 'no-role', 'failed') or 'discord' (Discord
+ * didn't connect, or the player said no to Discord's prompt) becomes one of these.
  */
-export async function signInInDiscord(): Promise<void> {
-  let code: string;
-  try {
-    code = await discordSignInCode();
-  } catch {
-    // The player said no in Discord's prompt, or Discord didn't answer.
-    throw new Error(SIGN_IN_PROBLEMS.cancelled);
-  }
-  let res: Response;
-  try {
-    res = await fetch('/api/discord/signin', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
-  } catch {
-    throw new Error(SIGN_IN_PROBLEMS.failed);
-  }
-  if (res.ok) return;
-  const { reason } = (await res.json().catch(() => ({}))) as { reason?: string };
-  throw new Error(SIGN_IN_PROBLEMS[reason ?? 'failed'] ?? SIGN_IN_PROBLEMS.failed);
+export const DISCORD_SIGN_IN_PROBLEMS: Record<string, string> = {
+  discord: "Discord didn't sign you in to the game, so online play is off. You can still play against the computer. To try again, close the game and open it again.",
+  failed: "Sign-in didn't work. You can still play against the computer. To try again, close the game and open it again.",
+  'not-member': 'Online play is for members of our Discord server. Join the server, then open the game again.',
+  'no-role': SIGN_IN_PROBLEMS['no-role']!,
+};
+
+/** The message for a Discord sign-in that didn't work out. */
+export function discordSignInProblem(reason: string): string {
+  return DISCORD_SIGN_IN_PROBLEMS[reason] ?? DISCORD_SIGN_IN_PROBLEMS.failed!;
 }
 
 // ---- Unlinking your Discord account ----

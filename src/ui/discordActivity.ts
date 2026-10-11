@@ -1,16 +1,15 @@
 // The Discord side of the game, loaded only when Discord launched the page (see discord.ts).
 // Kept in its own file so the Discord SDK is a separate download that normal players never get.
 //
-// Steps: wait for Discord, ask the player's permission (Discord shows its own prompt the first
-// time), trade the one-time code for a token on our server, then use the token to set the
-// "Playing Spellstick" details on the player's profile.
-//
-// Signing in to online play is separate, and only when the player asks: Discord asks again,
-// for permission to see who they are and their roles in our server, and the server checks
-// those just as browser sign-in does (see signInCode below).
+// Steps, as in Discord's own guide: wait for Discord, then ask the player's permission once
+// (Discord shows its own prompt the first time) for everything the game needs: showing
+// "Playing Spellstick" on their profile, who they are, and their membership and roles in our
+// server. The one-time code goes to our server, which trades it for a token and signs the
+// player in to online play if their roles allow it. The token then lets us set the profile
+// details.
 
 import { DiscordSDK, patchUrlMappings } from '@discord/embedded-app-sdk';
-import { warnOnce, type Presence } from './discord';
+import { warnOnce, type DiscordSignIn, type Presence } from './discord';
 
 /**
  * Other websites the page talks to, each reached through a URL mapping set up in the Discord
@@ -30,19 +29,16 @@ function clientIdFromAddress(): string {
   return match[1]!;
 }
 
-/** The game's connection to the Discord app it's running in. */
-export interface DiscordActivity {
-  /** Asks for permission to show presence, and returns a function that shows one on the player's profile. */
-  startPresence(): Promise<(presence: Presence) => void>;
-  /**
-   * Asks Discord for a one-time sign-in code: Discord asks the player the first time. The page
-   * sends the code to /api/discord/signin. Throws if the player says no.
-   */
-  signInCode(): Promise<string>;
+/** What connecting to Discord gives the rest of the game. */
+export interface DiscordConnection {
+  /** Whether the player is signed in to online play, and if not, why. */
+  signIn: DiscordSignIn;
+  /** Shows a presence on the player's profile. */
+  setPresence: (presence: Presence) => void;
 }
 
-/** Connects to Discord. */
-export async function connect(): Promise<DiscordActivity> {
+/** Connects to Discord and signs in. Throws (with Discord's own error) if it can't. */
+export async function connect(): Promise<DiscordConnection> {
   const clientId = clientIdFromAddress();
   if (URL_MAPPINGS.length) patchUrlMappings(URL_MAPPINGS);
 
@@ -50,46 +46,38 @@ export async function connect(): Promise<DiscordActivity> {
   await sdk.ready();
   openOutsideLinksInBrowser(sdk);
 
-  return {
-    startPresence: () => startPresence(sdk, clientId),
-    async signInCode() {
-      const { code } = await sdk.commands.authorize({
-        client_id: clientId,
-        response_type: 'code',
-        state: '',
-        prompt: 'none',
-        // Who you are and your membership and roles in our server, the same as browser sign-in.
-        // rpc.activities.write is already allowed; asking again keeps it on the list.
-        scope: ['identify', 'guilds.members.read', 'rpc.activities.write'],
-      });
-      return code;
-    },
-  };
-}
-
-async function startPresence(sdk: DiscordSDK, clientId: string): Promise<(presence: Presence) => void> {
+  // Right after ready, once, as Discord asks.
   const { code } = await sdk.commands.authorize({
     client_id: clientId,
     response_type: 'code',
     state: '',
     prompt: 'none',
-    // Only what setActivity needs. authorize and authenticate need no scopes of their own.
-    scope: ['rpc.activities.write'],
+    // identify and guilds.members.read: who you are and your roles in our server, the same as
+    // browser sign-in. rpc.activities.write: the "Playing Spellstick" details.
+    scope: ['identify', 'guilds.members.read', 'rpc.activities.write'],
   });
 
   // A relative address: inside Discord it goes through Discord's proxy to our server.
-  const res = await fetch('/api/discord/token', {
+  const res = await fetch('/api/discord/signin', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
   });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
-  const { access_token } = (await res.json()) as { access_token: string };
+  if (!res.ok) throw new Error(`Sign-in with Discord's code failed: ${res.status}`);
+  const answer = (await res.json()) as { access_token: string; signedIn: boolean; reason?: string };
+  const signIn: DiscordSignIn = answer.signedIn ? { signedIn: true } : { signedIn: false, reason: answer.reason ?? 'failed' };
 
-  const auth = await sdk.commands.authenticate({ access_token });
-  if (!auth) throw new Error('Discord turned down the token.');
-
-  return presenceSender(sdk);
+  // Profile details are a nice extra: if Discord turns the token down, sign-in still counts.
+  let setPresence: (presence: Presence) => void = () => {};
+  try {
+    const auth = await sdk.commands.authenticate({ access_token: answer.access_token });
+    if (!auth) throw new Error('Discord turned down the token.');
+    setPresence = presenceSender(sdk);
+  } catch (err) {
+    console.warn('Spellstick: Discord profile details are off.', err);
+  }
+  return { signIn, setPresence };
 }
 
 /** Sends presence changes to Discord, skipping repeats and spacing them out. */

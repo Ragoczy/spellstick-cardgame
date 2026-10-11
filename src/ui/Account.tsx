@@ -1,13 +1,13 @@
 // The sign-in panel on the start screen (online build only): a "Sign in with Discord" button,
 // or who you're signed in as. New players pick a manager name here. Settings opens below it.
-// In the browser, sign-in goes to Discord's page and back. Inside Discord, Discord asks the
-// player in its own prompt and the page stays put.
+// In the browser, sign-in goes to Discord's page and back. Inside Discord, the player is signed
+// in by Discord itself when the game launches (see discord.ts), so there's no button.
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { AccountSettings } from './AccountSettings';
-import { IN_DISCORD } from './discord';
+import { discordSignIn, IN_DISCORD } from './discord';
 import {
-  fetchMe, saveDisplayName, signInInDiscord, signOut, SIGN_IN_PROBLEMS, SIGN_IN_URL, UNLINK_PROBLEMS, UNLINKED_MESSAGE, type Me,
+  discordSignInProblem, fetchMe, saveDisplayName, signOut, SIGN_IN_PROBLEMS, SIGN_IN_URL, UNLINK_PROBLEMS, UNLINKED_MESSAGE, type Me,
 } from './online';
 
 type State = { kind: 'loading' } | { kind: 'signedOut' } | { kind: 'signedIn'; me: Me } | { kind: 'offline' };
@@ -37,34 +37,25 @@ export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [notice, setNotice] = useState(takeNotice);
   const [showSettings, setShowSettings] = useState(false);
-  /** Inside Discord: waiting for Discord's prompt and the server. */
-  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     onChange?.(state.kind === 'signedIn' ? state.me : null);
   }, [state, onChange]);
 
   useEffect(() => {
-    fetchMe()
-      .then((me) => setState(me ? { kind: 'signedIn', me } : { kind: 'signedOut' }))
-      .catch(() => setState({ kind: 'offline' }));
-  }, []);
-
-  const signInHere = async () => {
-    setSigningIn(true);
-    setNotice(null);
-    try {
-      await signInInDiscord();
+    const check = async () => {
+      // Inside Discord, wait for the sign-in Discord does at launch.
+      const viaDiscord = await discordSignIn();
       const me = await fetchMe();
-      // Signed in, but the cookie didn't come back: Discord's frame kept it from the game.
       setState(me ? { kind: 'signedIn', me } : { kind: 'signedOut' });
-      if (!me) setNotice({ text: SIGN_IN_PROBLEMS.failed!, problem: true });
-    } catch (err) {
-      setNotice({ text: (err as Error).message, problem: true });
-    } finally {
-      setSigningIn(false);
-    }
-  };
+      if (viaDiscord && !me) {
+        // Signed in, but the session didn't stick: the frame kept the cookie from the game.
+        if (viaDiscord.signedIn) console.warn('Spellstick: signed in through Discord, but the session cookie was not kept.');
+        setNotice({ text: discordSignInProblem(viaDiscord.signedIn ? 'failed' : viaDiscord.reason), problem: true });
+      }
+    };
+    check().catch(() => setState({ kind: 'offline' }));
+  }, []);
 
   const doSignOut = async () => {
     await signOut();
@@ -74,17 +65,12 @@ export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
   return (
     <section className="account" aria-live="polite">
       {notice ? <p className={notice.problem ? 'account-problem' : 'account-notice'}>{notice.text}</p> : null}
-      {state.kind === 'loading' ? <p className="small">Checking sign-in…</p> : null}
+      {state.kind === 'loading' ? <p className="small">{IN_DISCORD ? 'Signing in through Discord…' : 'Checking sign-in…'}</p> : null}
       {state.kind === 'offline' ? <p className="small">Online play isn't available right now. You can still play against the computer.</p> : null}
-      {state.kind === 'signedOut' ? (
+      {/* Inside Discord there's nothing to press: the notice above says why online play is off. */}
+      {state.kind === 'signedOut' && !IN_DISCORD ? (
         <div className="account-row">
-          {IN_DISCORD ? (
-            <button type="button" className="discord-button" disabled={signingIn} onClick={signInHere}>
-              {signingIn ? 'Signing in…' : 'Sign in with Discord'}
-            </button>
-          ) : (
-            <a className="discord-button" href={SIGN_IN_URL}>Sign in with Discord</a>
-          )}
+          <a className="discord-button" href={SIGN_IN_URL}>Sign in with Discord</a>
           <span className="small">Sign in to play other readers online.</span>
         </div>
       ) : null}
@@ -95,7 +81,8 @@ export function Account({ onChange }: { onChange?: (me: Me | null) => void }) {
         <div className="account-row">
           {state.me.avatarUrl ? <img className="avatar" src={state.me.avatarUrl} alt="" width={28} height={28} /> : null}
           <span>Signed in as <strong>{state.me.displayName}</strong></span>
-          <button type="button" className="quiet" onClick={doSignOut}>Sign out</button>
+          {/* Inside Discord, you're signed in as your Discord account each time the game opens. */}
+          {IN_DISCORD ? null : <button type="button" className="quiet" onClick={doSignOut}>Sign out</button>}
         </div>
       ) : null}
       {state.kind === 'signedIn' ? (

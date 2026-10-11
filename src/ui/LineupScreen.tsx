@@ -67,7 +67,7 @@ export function LineupScreen({ view, legal, onPlace, onAuto }: {
                 const pos: FieldPos = { area, lane };
                 const uid = placed[key(pos)];
                 return uid ? (
-                  <Card key={lane} def={cardFor(uid)} onClick={() => tapSpot(pos)} />
+                  <Card key={lane} def={cardFor(uid)} position={area} onClick={() => tapSpot(pos)} />
                 ) : (
                   <button type="button" key={lane} className={`card empty-spot ${picked ? 'hl-target' : ''}`} onClick={() => tapSpot(pos)}>
                     {capitalize(laneName(lane, view.lanes))} {roleName(area)}

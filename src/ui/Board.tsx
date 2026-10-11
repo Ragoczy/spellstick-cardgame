@@ -42,7 +42,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     ? def.resonants.length - Math.ceil(slot.castsLeft / perResonant)
     : 0;
   return (
-    <Card def={def} injury={slot.card.injury} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried}
+    <Card def={def} injury={slot.card.injury} position={pos.area} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried}
       images={slot.state === 'revealed' && slot.images} castsLeft={slot.castsLeft} usedDots={usedDots} cameOn={slot.cameOn} {...common} />
   );
 }

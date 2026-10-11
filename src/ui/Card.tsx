@@ -1,13 +1,30 @@
 // Placeholder card frames (CLAUDE.md "Art and print"): name, stats, ability text, team color.
 
 import { createContext, useContext } from 'react';
-import type { CardDef, InjuryDef } from '../engine';
+import type { CardDef, InjuryDef, PlayerRole } from '../engine';
 import { capitalize, cardText, elementColor, injuryEffect } from './labels';
 import { spellWhen } from './spellHelp';
 import { roleLabel } from '../data/playerTypes';
+import { PlayerFigure, type FigurePosition } from './PlayerFigure';
 
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
+
+/**
+ * Where a player is drawn when they aren't on the field (in hand, in the draft): the row their
+ * type suits best. Any field player can still play any position.
+ */
+const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
+  striker: 'forward', runner: 'midfield', playmaker: 'midfield', allrounder: 'midfield',
+  anchor: 'defense', stopper: 'defense', goalie: 'goal',
+};
+
+/** The player's figure: the position they stand in, colored by their first Resonant's Affinity. */
+function Figure({ def, position, injured }: { def: CardDef; position?: FigurePosition; injured: boolean }) {
+  if (def.kind === 'spell') return null;
+  const pos = def.kind === 'goalie' ? 'goal' : position ?? (def.role ? TYPE_POSITION[def.role] : 'midfield');
+  return <PlayerFigure position={pos} element={def.resonants[0]?.affinity ?? null} injured={injured} />;
+}
 
 /** Resonant dots. On the field, a dot goes hollow for each Resonant's worth of spells cast. */
 function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: number; castsLeft?: number }) {
@@ -52,6 +69,8 @@ export interface CardProps {
   def: CardDef;
   /** An injury card attached to this player (injury cards are face up). */
   injury?: InjuryDef;
+  /** On the field: the position the player stands in, for their figure. Elsewhere it comes from the card's type. */
+  position?: FigurePosition;
   /** Your own card that the opponent can't see. */
   faceDown?: boolean;
   /** The opponent has scried this face-down card (or you scried theirs). */
@@ -75,7 +94,7 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
   const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
@@ -86,6 +105,7 @@ export function Card({ def, injury, faceDown, scried, images, castsLeft, usedDot
         {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}
       </div>
+      <Figure def={def} position={position} injured={Boolean(injury)} />
       {def.kind !== 'spell' && (def.role || cameOn) ? (
         <div className="card-role">
           {def.role ? roleLabel(def.role) : null}

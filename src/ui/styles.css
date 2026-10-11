@@ -14,6 +14,13 @@
   --match: #3fbf6b;
   --opposed: #e0533d;
   --select: #2f7fd1;
+  /* Element colors: the one place they are set. Every element in data/cards.prototype.json
+     needs a --el-* color here and an .el-* class below (tests/ui-figures.test.ts checks). */
+  --el-fire: #d9572b;
+  --el-water: #2f7fd1;
+  --el-earth: #7a8b2e;
+  --el-air: #8fa6b8;
+  --el-none: #888;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -191,7 +198,7 @@ button.danger {
 .card-name { font-weight: 600; overflow-wrap: anywhere; padding-right: 12px; }
 .card-role { color: var(--muted); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .card .star { color: var(--accent); margin-right: 2px; }
-.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 0 6px; color: var(--muted); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 5px; color: var(--muted); white-space: nowrap; }
 .stats b { color: var(--ink); }
 .spell-line { display: flex; gap: 6px; align-items: center; }
 .spell-when { margin-top: 2px; font-size: 0.66rem; font-weight: 700; }
@@ -307,6 +314,31 @@ button.danger {
 .tap { font-size: 0.75rem; color: var(--muted); }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
+/* ---- Element colors and player figures (PlayerFigure.tsx) ---- */
+.el-fire { color: var(--el-fire); }
+.el-water { color: var(--el-water); }
+.el-earth { color: var(--el-earth); }
+.el-air { color: var(--el-air); }
+.el-none { color: var(--el-none); }
+.figure { display: block; }
+/* Injured: greyed out and faded until mended. */
+.figure.injured { color: var(--el-none); opacity: 0.4; }
+/* The figure sits just under the name, on the right; the lines below make room for it. */
+.card .figure { float: right; width: 32px; height: 32px; margin: 1px -2px 0 3px; pointer-events: none; }
+.card.face-down .figure { opacity: 0.75; }
+.card.face-down .figure.injured { opacity: 0.3; }
+
+/* Dev preview: ?figures */
+.figure-preview { max-width: 900px; }
+.figure-grid { border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.figure-grid th { font-size: 0.8rem; font-weight: 600; padding: 4px 8px; text-align: left; }
+.figure-grid td { padding: 6px; }
+.figure-grid td .figure { width: 72px; height: 72px; }
+.figure-grid.dark { background: var(--field); color: white; }
+.figure-sizes { display: flex; align-items: flex-end; gap: 14px; margin: 6px 0; }
+.figure-sizes span { display: inline-block; background: var(--panel); outline: 1px dashed var(--line); }
+.figure-sizes .figure { width: 100%; height: 100%; }
+
 /* ---- Setup screens ---- */
 .choice-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .choice-row .card { width: 150px; font-size: 0.85rem; min-height: 80px; }
@@ -319,6 +351,8 @@ button.danger {
   .card { font-size: 0.64rem; min-height: 52px; padding: 2px 4px; }
   .stats { grid-template-columns: 1fr 1fr; gap: 0 3px; }
   .hand .card { flex-basis: 108px; }
+  .card .figure { width: 24px; height: 24px; margin-left: 2px; }
+  .card-role { letter-spacing: 0; }
 }
 
 /* Time banks (online matches) */

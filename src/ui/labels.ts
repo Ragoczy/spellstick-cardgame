@@ -29,13 +29,12 @@ export const STAT_SHORT: Record<StatName, string> = {
   speed: 'Spd', shot: 'Sht', defense: 'Def', faceoff: 'Fo', save: 'Save',
 };
 
-/** Colors for placeholder elements. Unknown elements get grey. */
-const ELEMENT_COLOR: Record<string, string> = {
-  fire: '#d9572b', water: '#2f7fd1', earth: '#7a8b2e', air: '#8fa6b8',
-};
-
+/**
+ * An element's color, for inline styles. The colors themselves are set once, in styles.css
+ * (--el-fire and so on). Unknown elements and neutral spells get grey.
+ */
 export function elementColor(element: string | null): string {
-  return element ? ELEMENT_COLOR[element] ?? '#888' : '#888';
+  return element ? `var(--el-${element}, var(--el-none))` : 'var(--el-none)';
 }
 
 /** "−1 Speed", "−2 Save", or "−1 to all stats". A goalie loses the biggest penalty from Save. */

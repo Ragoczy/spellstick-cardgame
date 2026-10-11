@@ -2,6 +2,7 @@
 
 import type { Area, CardDef, InjuryDef, StatName } from '../engine';
 import type { Pos } from '../engine';
+import type { MatchSummary } from '../shared/matchApi';
 
 export function laneName(lane: number, lanes: number): string {
   if (lanes === 2) return lane === 0 ? 'left' : 'right';
@@ -70,6 +71,20 @@ export function clockText(ms: number): string {
 export function ratingChangeText(change: number): string {
   if (change === 0) return 'Rating unchanged.';
   return `Rating ${change > 0 ? '+' : '−'}${Math.abs(change)}.`;
+}
+
+/**
+ * The headline for an online match that ended by resignation or forfeit, followed by the rating
+ * change for ranked matches. Null for a match that was played to the end (or isn't over).
+ */
+export function endedEarlyText(result: MatchSummary['result'], oppName: string): { headline: string; rating: string } | null {
+  if (!result || result.reason === 'played') return null;
+  const won = result.outcome === 'won';
+  const headline = result.reason === 'resigned'
+    ? (won ? `${oppName} resigned. You win!` : 'You resigned.')
+    : (won ? `${oppName} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
+  const rating = result.ratingChange === null ? '' : ratingChangeText(result.ratingChange);
+  return { headline, rating };
 }
 
 /** 1 -> "1st", 12 -> "12th", 22 -> "22nd". */

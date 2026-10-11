@@ -7,7 +7,7 @@ import { Board } from './Board';
 import { Card, CardBack, type CardProps } from './Card';
 import { Clocks } from './Clocks';
 import { gamePresence, setDiscordPresence } from './discord';
-import { capitalize, injuryEffect, laneName, posName, ratingChangeText } from './labels';
+import { capitalize, endedEarlyText, injuryEffect, laneName, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
@@ -255,6 +255,21 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
 
   // ---- Setup screens ----
 
+  const leaveLabel = online ? 'Back to your matches' : 'New game';
+  // An online match that ended by resignation or forfeit (null otherwise).
+  const endedEarly = endedEarlyText(online?.match.result ?? null, opp.Name);
+  // Resigning doesn't change the game itself, so a match that ended during setup is still on a
+  // setup step: show the result instead of the draft or lineup screen.
+  if (endedEarly && (pending.kind === 'draftPick' || pending.kind === 'chooseGoalie' || pending.kind === 'placeLineup')) {
+    return (
+      <div className="screen setup">
+        <h2>Match over</h2>
+        <p><strong>{endedEarly.headline}</strong>{endedEarly.rating ? ` ${endedEarly.rating}` : ''}</p>
+        <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
+      </div>
+    );
+  }
+
   // The draft: both players see the pool, whoever's pick it is.
   if (pending.kind === 'draftPick') {
     return (
@@ -283,20 +298,14 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
 
   // ---- Prompts ----
 
-  const leaveLabel = online ? 'Back to your matches' : 'New game';
-
   const prompt = (): React.ReactNode => {
     // Ranked matches: how the result changed your rating.
     const ratingChange = online?.match.result?.ratingChange ?? null;
     const rating = ratingChange === null ? '' : ` ${ratingChangeText(ratingChange)}`;
-    if (online?.match.result && online.match.result.reason !== 'played') {
-      const { outcome, reason } = online.match.result;
-      const headline = reason === 'resigned'
-        ? (outcome === 'won' ? `${opp.Name} resigned. You win!` : 'You resigned.')
-        : (outcome === 'won' ? `${opp.Name} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
+    if (endedEarly) {
       return (
         <div className="prompt">
-          <strong>{headline}</strong>{rating}
+          <strong>{endedEarly.headline}</strong>{rating}
           <div className="buttons"><button type="button" className="primary" onClick={onQuit}>{leaveLabel}</button></div>
         </div>
       );

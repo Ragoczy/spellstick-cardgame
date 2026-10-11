@@ -2,7 +2,8 @@
 
 Players can launch Spellstick inside Discord (in a voice or text channel, from the App
 Launcher). While they play, their Discord profile shows "Playing <app name>" with what they are
-doing: "In the menu", or "Playing the computer · Turn 4 · 1–0".
+doing: "In the menu", or "Playing the computer · Turn 4 · 1–0". They can also sign in and play
+online matches there (added 2026-10-11; see "Signing in inside Discord").
 
 Normal browser play is unchanged. Everything Discord-related starts only when Discord launches
 the page.
@@ -35,6 +36,33 @@ the page.
    `https://discord.com/api/v10/oauth2/token` using the Activity app's client ID and secret. It
    returns only `{ access_token }`, stores nothing, and sets no cookies.
 
+### Signing in inside Discord
+
+Browser sign-in sends the whole page to Discord's sign-in page and back, then keeps the player
+signed in with an ordinary cookie. Inside Discord the game is a frame that can't leave, and the
+browser treats an ordinary cookie in that frame as a third-party cookie. So inside Discord:
+
+1. The start screen shows a "Sign in with Discord" button (not a link). Nothing happens until
+   the player presses it.
+2. The page calls `sdk.commands.authorize(...)` with `identify` and `guilds.members.read` (the
+   same permissions as browser sign-in), plus `rpc.activities.write` so the presence permission
+   stays on the list. The first time, Discord asks the player to allow them.
+3. The page POSTs the one-time code to `/api/discord/signin`.
+4. The server trades the code with the Activity app's secret, then runs the same checks as
+   browser sign-in (`admit` in `server/auth/routes.ts`): membership in our Discord server and an
+   allowed role. It's the same account as in the browser, keyed by Discord ID.
+5. If the player may play, the server sets the session cookie with `SameSite=None; Secure;
+   Partitioned; HttpOnly`, as Discord's networking guide asks. The cookie belongs to
+   `<client id>.discordsays.com` and is kept only for the game inside Discord, so it doesn't
+   mix with the browser's cookie. If not, it answers 403 with `not-member` or `no-role`, and
+   the page shows the same message as browser sign-in. The Discord token is thrown away.
+
+Everything else (matches, live updates, settings) then works as in the browser, because the
+page's requests carry the cookie. Sign-out clears the cookie with the same settings.
+
+**Unlinking** still needs Discord's own sign-in page, which can't open inside the frame. Inside
+Discord, Settings tells the player to unlink from the browser instead.
+
 If any step fails, the console shows one warning ("Spellstick: Discord features are off.") and
 the game carries on. No errors escape.
 
@@ -44,16 +72,22 @@ the game carries on. No errors escape.
   It now lists `'self'`, `https://discord.com`, `https://ptb.discord.com`,
   `https://canary.discord.com`, and the Activity's own `https://<client id>.discordsays.com`.
   That last one is a single address, not a wildcard. No other site may frame the game.
-- The server refuses posts from other websites. It now also accepts posts from
-  `https://<client id>.discordsays.com`, but **only** to `/api/discord/token`.
+- The server refuses posts from other websites. It also accepts posts from the Activity's own
+  `https://<client id>.discordsays.com`, which serves only this game. *(Changed 2026-10-11: this
+  used to be only for `/api/discord/token`. Online play inside Discord needs all of the game's
+  posts. The address is a single one, not a wildcard, so other Activities are still refused.
+  Because the session cookie inside Discord is `SameSite=None`, this check is what keeps other
+  websites from posting with it.)*
 - No `X-Frame-Options` header is sent, so there is nothing to change there.
 
 ### What doesn't work inside Discord (yet)
 
-- **Online matches.** Sign-in uses a cookie and a full-page redirect to Discord, and neither
-  works inside Discord's frame. Inside Discord, the start screen says online matches need the
-  browser, and play against the computer works normally. Making online play work in Discord
-  would mean signing in from the Activity's token instead. That is a separate piece of work.
+- **Unlinking your Discord account.** It needs Discord's own sign-in page. Settings inside
+  Discord says to unlink from the browser.
+- **Live updates might not get through Discord's proxy.** Discord's guide mentions only
+  WebSockets for long-lived connections, and live updates use Server-Sent Events. If they don't
+  get through, the match screens check for changes every few seconds instead. Check this the
+  first time you play an online match inside Discord.
 - **The Privacy link** opens inside the frame. "Back to the game" then reloads without
   `frame_id`, so the presence details stop updating until the player relaunches the Activity.
   The game itself still works.

@@ -3,7 +3,8 @@
 // player types UNLINK before the button works.
 
 import { useRef, useState, type FormEvent } from 'react';
-import { startUnlink, UNLINK_WORD, type Me } from './online';
+import { IN_DISCORD } from './discord';
+import { startUnlink, UNLINK_IN_BROWSER, UNLINK_WORD, type Me } from './online';
 import { NotificationSettings } from './NotificationSettings';
 import { ReportProblem } from './ReportProblem';
 
@@ -16,7 +17,8 @@ export function AccountSettings({ me }: { me: Me }) {
       <h4>Help</h4>
       <ReportProblem reporter={me} />
       <h4>Your account</h4>
-      <UnlinkAccount me={me} />
+      {/* Unlinking needs a trip to Discord's own page, which can't happen inside Discord. */}
+      {IN_DISCORD ? <p className="small">{UNLINK_IN_BROWSER}</p> : <UnlinkAccount me={me} />}
     </section>
   );
 }

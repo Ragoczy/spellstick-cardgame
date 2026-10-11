@@ -103,6 +103,11 @@ nothing is sent at all until the server has a bot token. To switch it on:
 Without the token, players can still set their preferences; the settings page says messages
 aren't available yet.
 
+The same bot also re-checks signed-in players' Discord roles every 15 minutes
+(`ROLE_CHECK_MINUTES`; `server/auth/role-check.ts`), so taking a role away signs that player
+out without waiting for their session to end. It reads one member at a time, which needs no
+privileged intents or permissions. Without the token, roles are checked only at sign-in.
+
 ## First-time setup
 
 Run these in Git Bash from the repo root, signed in with `az login` as the subscription owner.

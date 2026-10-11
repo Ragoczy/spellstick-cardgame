@@ -13,6 +13,8 @@ export interface User {
   discordAvatar: string | null;
   displayName: string | null;
   role: Role;
+  /** When their Discord roles were last checked (see auth/role-check.ts). */
+  rolesCheckedAt: Date;
 }
 
 interface UserRow {
@@ -22,6 +24,7 @@ interface UserRow {
   discord_avatar: string | null;
   display_name: string | null;
   role: Role;
+  roles_checked_at: Date;
 }
 
 function toUser(row: UserRow): User {
@@ -32,15 +35,16 @@ function toUser(row: UserRow): User {
     discordAvatar: row.discord_avatar,
     displayName: row.display_name,
     role: row.role,
+    rolesCheckedAt: row.roles_checked_at,
   };
 }
 
-const USER_COLUMNS = 'u.id, u.discord_id, u.discord_username, u.discord_avatar, u.display_name, u.role';
+const USER_COLUMNS = 'u.id, u.discord_id, u.discord_username, u.discord_avatar, u.display_name, u.role, u.roles_checked_at';
 
 /**
  * Creates the player on first sign-in, or refreshes their Discord details. Their role comes
- * from their Discord roles at each sign-in, so changing roles in Discord takes effect the next
- * time they sign in.
+ * from their Discord roles at each sign-in, and again every so often while they stay signed in
+ * (auth/role-check.ts).
  */
 export async function upsertUser(db: pg.Pool, discord: DiscordUser, member: DiscordMember | null, role: Role): Promise<User> {
   const { rows } = await db.query<UserRow>(
@@ -51,6 +55,7 @@ export async function upsertUser(db: pg.Pool, discord: DiscordUser, member: Disc
        discord_avatar = excluded.discord_avatar,
        joined_server_at = excluded.joined_server_at,
        last_sign_in_at = now(),
+       roles_checked_at = now(),
        role = excluded.role
      returning ${USER_COLUMNS}`,
     [discord.id, discord.username, discord.avatar, discordCreatedAt(discord.id), member?.joinedAt ?? null, role],

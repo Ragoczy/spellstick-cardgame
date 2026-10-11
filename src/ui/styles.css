@@ -59,6 +59,9 @@ button { font: inherit; color: inherit; }
   font-weight: 600; text-decoration: none;
 }
 .discord-button:hover { background: #4752c4; }
+/* Inside Discord the sign-in link is a button. */
+button.discord-button { border: none; font: inherit; font-weight: 600; cursor: pointer; }
+button.discord-button:disabled { opacity: 0.6; cursor: default; }
 .avatar { border-radius: 50%; }
 .pick-name label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
 .pick-name input {

@@ -8,8 +8,13 @@
 // This is the only file that sends Discord messages (tests/discord-messages.test.ts checks).
 //
 // Nothing is sent unless the server has a bot token (DISCORD_BOT_TOKEN).
+//
+// The bot also looks up a player's roles in our Discord server (getMember), so the server can
+// re-check who may play while they stay signed in (auth/role-check.ts). That reads, and sends
+// nothing.
 
 import type pg from 'pg';
+import type { DiscordMember } from './auth/discord';
 import type { LiveHub } from './live';
 
 export const NOTIFICATION_KINDS = [
@@ -28,10 +33,14 @@ const YOUR_TURN_GAP_MS = 30 * 60_000;
 export const TIME_LOW_MS = 6 * 60 * 60_000;
 
 const DISCORD_API = 'https://discord.com/api/v10';
+/** Discord's error code for "that person isn't in this server". */
+const UNKNOWN_MEMBER = 10007;
 
 export interface DiscordBot {
   /** Sends a direct message. Returns false if Discord refused (for example, DMs closed). */
   sendDm(discordUserId: string, content: string): Promise<boolean>;
+  /** A player's membership and roles in a server. Null if they aren't in it. Throws if Discord can't say. */
+  getMember(guildId: string, discordUserId: string): Promise<DiscordMember | null>;
 }
 
 /** The real bot, signed in with the bot token. */
@@ -50,6 +59,20 @@ export function discordBot(token: string): DiscordBot {
         body: JSON.stringify({ content, allowed_mentions: { parse: [] } }),
       });
       return sent.ok;
+    },
+
+    // Reading one member needs no special permission or intent, only that the bot is in the server.
+    async getMember(guildId, discordUserId) {
+      const res = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${discordUserId}`, { headers: { Authorization: `Bot ${token}` } });
+      if (!res.ok) {
+        // Only "Unknown Member" means they left. Any other 404 (for example, the bot isn't in
+        // the server) says nothing about the player, so it mustn't sign anyone out.
+        const error = (await res.json().catch(() => ({}))) as { code?: number };
+        if (res.status === 404 && error.code === UNKNOWN_MEMBER) return null;
+        throw new Error(`Discord member lookup failed: ${res.status} ${error.code ?? ''}`.trim());
+      }
+      const body = (await res.json()) as { roles: string[]; joined_at: string };
+      return { roles: body.roles, joinedAt: body.joined_at };
     },
   };
 }

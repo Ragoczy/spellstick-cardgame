@@ -4,6 +4,10 @@
 // Steps: wait for Discord, ask the player's permission (Discord shows its own prompt the first
 // time), trade the one-time code for a token on our server, then use the token to set the
 // "Playing Spellstick" details on the player's profile.
+//
+// Signing in to online play is separate, and only when the player asks: Discord asks again,
+// for permission to see who they are and their roles in our server, and the server checks
+// those just as browser sign-in does (see signInCode below).
 
 import { DiscordSDK, patchUrlMappings } from '@discord/embedded-app-sdk';
 import { warnOnce, type Presence } from './discord';
@@ -26,8 +30,19 @@ function clientIdFromAddress(): string {
   return match[1]!;
 }
 
-/** Connects to Discord and returns a function that shows a presence on the player's profile. */
-export async function connect(): Promise<(presence: Presence) => void> {
+/** The game's connection to the Discord app it's running in. */
+export interface DiscordActivity {
+  /** Asks for permission to show presence, and returns a function that shows one on the player's profile. */
+  startPresence(): Promise<(presence: Presence) => void>;
+  /**
+   * Asks Discord for a one-time sign-in code: Discord asks the player the first time. The page
+   * sends the code to /api/discord/signin. Throws if the player says no.
+   */
+  signInCode(): Promise<string>;
+}
+
+/** Connects to Discord. */
+export async function connect(): Promise<DiscordActivity> {
   const clientId = clientIdFromAddress();
   if (URL_MAPPINGS.length) patchUrlMappings(URL_MAPPINGS);
 
@@ -35,6 +50,24 @@ export async function connect(): Promise<(presence: Presence) => void> {
   await sdk.ready();
   openOutsideLinksInBrowser(sdk);
 
+  return {
+    startPresence: () => startPresence(sdk, clientId),
+    async signInCode() {
+      const { code } = await sdk.commands.authorize({
+        client_id: clientId,
+        response_type: 'code',
+        state: '',
+        prompt: 'none',
+        // Who you are and your membership and roles in our server, the same as browser sign-in.
+        // rpc.activities.write is already allowed; asking again keeps it on the list.
+        scope: ['identify', 'guilds.members.read', 'rpc.activities.write'],
+      });
+      return code;
+    },
+  };
+}
+
+async function startPresence(sdk: DiscordSDK, clientId: string): Promise<(presence: Presence) => void> {
   const { code } = await sdk.commands.authorize({
     client_id: clientId,
     response_type: 'code',

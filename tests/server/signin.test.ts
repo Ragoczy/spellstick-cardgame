@@ -5,8 +5,11 @@ import type pg from 'pg';
 import { buildApp } from '../../server/app';
 import { migrate } from '../../server/migrate';
 import {
-  ADMIN_ID, ADMINS_ROLE, MODS_ROLE, PLAYERS_ROLE, databaseAvailable, fakeDiscord, person, signIn, testConfig, testDatabase,
+  ACTIVITY_CLIENT_ID, ADMIN_ID, ADMINS_ROLE, MODS_ROLE, PLAYERS_ROLE, databaseAvailable, fakeDiscord, person, signIn, testConfig, testDatabase,
 } from './helpers';
+
+/** The game's address inside Discord. */
+const DISCORD_ORIGIN = `https://${ACTIVITY_CLIENT_ID}.discordsays.com`;
 
 const haveDb = await databaseAvailable();
 
@@ -165,6 +168,62 @@ describe.skipIf(!haveDb)('sign-in with Discord', () => {
       headers: { origin: 'https://evil.example' }, payload: { name: 'Hijacked' },
     });
     expect(res.statusCode).toBe(403);
+  });
+
+  describe('inside Discord', () => {
+    const signInHere = (code: string) =>
+      app.inject({ method: 'POST', url: '/api/discord/signin', headers: { origin: DISCORD_ORIGIN }, payload: { code } });
+
+    it('signs in a member with the role, with a cookie that works inside Discord’s frame', async () => {
+      const res = await signInHere('alice');
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['cache-control']).toBe('no-store');
+      const setCookie = String(res.headers['set-cookie']);
+      expect(setCookie).toMatch(/^spellstick_session=/);
+      expect(setCookie).toMatch(/HttpOnly/);
+      expect(setCookie).toMatch(/Secure/);
+      expect(setCookie).toMatch(/SameSite=None/);
+      expect(setCookie).toMatch(/Partitioned/);
+      expect(setCookie).toMatch(/Max-Age=604800/);
+      const session = res.cookies.find((c) => c.name === 'spellstick_session')!;
+      expect((await me(session.value)).json()).toMatchObject({ discordUsername: 'alice', role: 'player' });
+    });
+
+    it('is the same account as signing in from the browser', async () => {
+      await signIn(app, 'bob');
+      await signInHere('bob');
+      const { rows } = await db.query("select count(*)::int as n from users where discord_id = '222'");
+      expect(rows[0].n).toBe(1);
+    });
+
+    it('turns away people without the role or not in the server, and says why', async () => {
+      const noRole = await signInHere('norole');
+      expect(noRole.statusCode).toBe(403);
+      expect(noRole.json()).toMatchObject({ reason: 'no-role' });
+      expect(noRole.cookies).toHaveLength(0);
+      const outsider = await signInHere('outsider');
+      expect(outsider.statusCode).toBe(403);
+      expect(outsider.json()).toMatchObject({ reason: 'not-member' });
+    });
+
+    it('takes the role from Discord, as browser sign-in does', async () => {
+      const res = await signInHere('mod');
+      const session = res.cookies.find((c) => c.name === 'spellstick_session')!;
+      expect((await me(session.value)).json()).toMatchObject({ role: 'moderator' });
+    });
+
+    it('lets the signed-in player act from Discord’s address, and sign out', async () => {
+      const res = await signInHere('alice');
+      const cookie = res.cookies.find((c) => c.name === 'spellstick_session')!.value;
+      const named = await app.inject({
+        method: 'POST', url: '/api/me/name', cookies: { spellstick_session: cookie },
+        headers: { origin: DISCORD_ORIGIN }, payload: { name: 'Discord Dragons' },
+      });
+      expect(named.statusCode).toBe(200);
+      const out = await app.inject({ method: 'POST', url: '/auth/logout', cookies: { spellstick_session: cookie }, headers: { origin: DISCORD_ORIGIN } });
+      expect(out.statusCode).toBe(200);
+      expect((await me(cookie)).statusCode).toBe(401);
+    });
   });
 
   it('does not let expired sessions in', async () => {

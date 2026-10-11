@@ -15,7 +15,9 @@
 // ?unlink=<reason> if nothing was deleted.
 
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import type { FastifyInstance } from 'fastify';
+import type { CookieSerializeOptions } from '@fastify/cookie';
+import type { FastifyInstance, FastifyBaseLogger } from 'fastify';
+import { activityOrigin } from '../api/discord-activity';
 import type { AppDeps } from '../app';
 import type { LiveHub } from '../live';
 import { unlinkAccount } from '../unlink';
@@ -34,6 +36,38 @@ export const UNLINK_CONFIRMATION = 'UNLINK';
 /** The state value of an unlink starts with this. (Sign-in states are base64url, which has no dots.) */
 const UNLINK_STATE_PREFIX = 'unlink.';
 
+/**
+ * The session cookie's settings. In the browser it's an ordinary first-party cookie. Inside
+ * Discord the game is a frame on discord.com, so the cookie must be SameSite=None and
+ * Partitioned (kept only for this game inside Discord), as Discord's Activity guide says.
+ */
+export function sessionCookieOptions(inDiscord: boolean, secure: boolean): CookieSerializeOptions {
+  return inDiscord
+    ? { path: '/', httpOnly: true, secure: true, sameSite: 'none', partitioned: true }
+    : { path: '/', httpOnly: true, secure, sameSite: 'lax' };
+}
+
+/**
+ * Lets a Discord account in, if it may play: checks membership and roles in our server, saves
+ * the player, and starts a session. Shared by browser sign-in and sign-in inside Discord.
+ */
+export async function admit(
+  deps: AppDeps, accessToken: string, log: FastifyBaseLogger,
+): Promise<{ allowed: true; sessionId: string } | { allowed: false; reason: 'not-member' | 'no-role' }> {
+  const { config, db, discord } = deps;
+  const user = await discord.getUser(accessToken);
+  const member = await discord.getMember(accessToken, config.discord.guildId);
+  const access = checkAccess(user.id, member, accessRules(config.discord, config.adminDiscordIds));
+  if (!access.allowed) {
+    log.info({ discordId: user.id, reason: access.reason }, 'sign-in refused');
+    return access;
+  }
+  const player = await upsertUser(db, user, member, access.role);
+  const sessionId = await createSession(db, player.id, config.sessionDays);
+  log.info({ userId: player.id }, 'signed in');
+  return { allowed: true, sessionId };
+}
+
 function sameString(a: string, b: string): boolean {
   const x = Buffer.from(a);
   const y = Buffer.from(b);
@@ -44,7 +78,8 @@ export function authRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub): 
   const { config, db, discord } = deps;
   const redirectUri = `${config.publicUrl}/auth/discord/callback`;
   const secure = config.publicUrl.startsWith('https://');
-  const rules = accessRules(config.discord, config.adminDiscordIds);
+  // Inside Discord the game's address is Discord's (null when the Activity is off).
+  const discordOrigin = config.discordActivity ? activityOrigin(config.discordActivity.clientId) : null;
 
   app.get('/auth/discord/login', async (_req, reply) => {
     // A random value we check on the way back, so nobody can trick a browser into signing in
@@ -96,19 +131,9 @@ export function authRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub): 
 
     try {
       const token = await discord.exchangeCode(code, redirectUri);
-      const user = await discord.getUser(token);
-      const member = await discord.getMember(token, config.discord.guildId);
-      const access = checkAccess(user.id, member, rules);
-      if (!access.allowed) {
-        req.log.info({ discordId: user.id, reason: access.reason }, 'sign-in refused');
-        return back(access.reason);
-      }
-      const player = await upsertUser(db, user, member, access.role);
-      const sessionId = await createSession(db, player.id, config.sessionDays);
-      reply.setCookie(SESSION_COOKIE, sessionId, {
-        path: '/', httpOnly: true, secure, sameSite: 'lax', maxAge: config.sessionDays * 24 * 60 * 60,
-      });
-      req.log.info({ userId: player.id }, 'signed in');
+      const result = await admit(deps, token, req.log);
+      if (!result.allowed) return back(result.reason);
+      reply.setCookie(SESSION_COOKIE, result.sessionId, { ...sessionCookieOptions(false, secure), maxAge: config.sessionDays * 24 * 60 * 60 });
       return reply.redirect('/');
     } catch (err) {
       req.log.error(err, 'sign-in failed');
@@ -130,7 +155,9 @@ export function authRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub): 
   app.post('/auth/logout', async (req, reply) => {
     const sessionId = req.cookies[SESSION_COOKIE];
     if (sessionId) await deleteSession(db, sessionId);
-    reply.clearCookie(SESSION_COOKIE, { path: '/' });
+    // A cookie is only cleared with the same settings it was set with.
+    const inDiscord = discordOrigin !== null && req.headers.origin === discordOrigin;
+    reply.clearCookie(SESSION_COOKIE, sessionCookieOptions(inDiscord, secure));
     return { ok: true };
   });
 }

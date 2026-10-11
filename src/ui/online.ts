@@ -2,6 +2,7 @@
 // static build never calls these.
 
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
+import { discordSignInCode } from './discord';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
@@ -51,6 +52,35 @@ export const SIGN_IN_PROBLEMS: Record<string, string> = {
   'no-role': "Your Discord account doesn't have a role that's allowed to play online yet. Ask a moderator on our Discord server if you think it should.",
 };
 
+/**
+ * Signs in from inside Discord, where the browser's trip to Discord's sign-in page can't
+ * happen: Discord asks the player, and the server checks the same things as browser sign-in
+ * and sets the session cookie. Throws with a message to show.
+ */
+export async function signInInDiscord(): Promise<void> {
+  let code: string;
+  try {
+    code = await discordSignInCode();
+  } catch {
+    // The player said no in Discord's prompt, or Discord didn't answer.
+    throw new Error(SIGN_IN_PROBLEMS.cancelled);
+  }
+  let res: Response;
+  try {
+    res = await fetch('/api/discord/signin', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+  } catch {
+    throw new Error(SIGN_IN_PROBLEMS.failed);
+  }
+  if (res.ok) return;
+  const { reason } = (await res.json().catch(() => ({}))) as { reason?: string };
+  throw new Error(SIGN_IN_PROBLEMS[reason ?? 'failed'] ?? SIGN_IN_PROBLEMS.failed);
+}
+
 // ---- Unlinking your Discord account ----
 
 /** What the player types to confirm. The server checks it too (UNLINK_CONFIRMATION). */
@@ -64,6 +94,9 @@ export async function startUnlink(): Promise<void> {
   const { url } = await call<{ url: string }>('POST', '/auth/discord/unlink', { confirm: UNLINK_WORD });
   window.location.assign(url);
 }
+
+/** Inside Discord, unlinking can't leave the page for Discord's check, so it's done in the browser. */
+export const UNLINK_IN_BROWSER = 'To unlink your Discord account, open Spellstick in your web browser, sign in, and choose Settings.';
 
 /** Shown after ?unlinked=1. */
 export const UNLINKED_MESSAGE = 'Your Spellstick data has been deleted and the game is disconnected from Discord. Your Discord account was not affected.';

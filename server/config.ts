@@ -50,6 +50,11 @@ export interface Config {
   sessionDays: number;
   /** How often to look for time banks that have run out, in milliseconds (0: never, for tests). */
   clockCheckMs: number;
+  /**
+   * How often a signed-in player's Discord roles are checked again, in minutes (0 = only at
+   * sign-in). Needs the bot token, since the server keeps no Discord tokens of its own.
+   */
+  roleCheckMinutes: number;
   /** The Discord bot that sends notifications (DMs). Without it, nothing is sent. */
   discordBotToken: string | null;
 }
@@ -111,6 +116,7 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env, warn: (message:
     adminDiscordIds: list(env.ADMIN_DISCORD_IDS),
     sessionDays: Number(env.SESSION_DAYS ?? 7),
     clockCheckMs: Number(env.CLOCK_CHECK_MS ?? 30_000),
+    roleCheckMinutes: Number(env.ROLE_CHECK_MINUTES ?? 15),
     discordBotToken: env.DISCORD_BOT_TOKEN?.trim() || null,
   };
 }

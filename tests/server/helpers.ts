@@ -68,6 +68,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     sessionDays: 7,
     // Tests run the clock checks themselves.
     clockCheckMs: 0,
+    roleCheckMinutes: 15,
     discordBotToken: null,
     ...overrides,
   };
@@ -103,10 +104,10 @@ export function fakeDiscord(codes: Record<string, FakePerson>): DiscordApi & { e
       return `token-for-${code}`;
     },
     async getUser(token) {
-      return codes[token.replace('token-for-', '')]!.user;
+      return codes[token.replace(/^(activity-)?token-for-/, '')]!.user;
     },
     async getMember(token) {
-      return codes[token.replace('token-for-', '')]!.member;
+      return codes[token.replace(/^(activity-)?token-for-/, '')]!.member;
     },
     async exchangeActivityCode(code) {
       exchanged.push(code);

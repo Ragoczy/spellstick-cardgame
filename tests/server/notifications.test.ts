@@ -22,6 +22,10 @@ describe.skipIf(!haveDb)('Discord notifications', () => {
       sent.push({ to, text });
       return true;
     },
+    // The role re-check (tests/server/role-check.test.ts) doesn't come up here: sign-ins are fresh.
+    async getMember() {
+      throw new Error('not used');
+    },
   };
   const discord = fakeDiscord({ alice: person('111', 'alice', [PLAYERS_ROLE]), bob: person('222', 'bob', [PLAYERS_ROLE]) });
 

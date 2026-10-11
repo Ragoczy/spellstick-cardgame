@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { prototypeCards } from '../data/prototype';
 import { Account } from './Account';
-import { IN_DISCORD, MENU_PRESENCE, setDiscordPresence } from './discord';
+import { MENU_PRESENCE, setDiscordPresence } from './discord';
 import { ONLINE, type Me } from './online';
 import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
 import { Rankings } from './Rankings';
@@ -65,8 +65,7 @@ export function App() {
           <div className="screen start">
             <h1>Spellstick</h1>
             <p className="tagline">Magical lacrosse from the Warlock series. Hide your best players, pass to find the gaps, and let the spells fly.</p>
-            {ONLINE && !IN_DISCORD ? <Account onChange={setMe} /> : null}
-            {ONLINE && IN_DISCORD ? <p className="small">Online matches aren't available inside Discord yet. Open the game in your browser to play other readers.</p> : null}
+            {ONLINE ? <Account onChange={setMe} /> : null}
             <div className="options">
               <label>
                 Your team

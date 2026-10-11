@@ -8,13 +8,14 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import type pg from 'pg';
-import { ACTIVITY_TOKEN_PATH, activityOrigin, discordActivityRoutes } from './api/discord-activity';
+import { activityOrigin, discordActivityRoutes } from './api/discord-activity';
 import { betaRoutes } from './api/beta';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import { ratingRoutes } from './api/ratings';
 import { notificationRoutes } from './api/notifications';
-import type { DiscordApi } from './auth/discord';
+import { accessRules, type DiscordApi } from './auth/discord';
+import { RoleCheck } from './auth/role-check';
 import { authRoutes } from './auth/routes';
 import { LiveHub } from './live';
 import type { Config } from './config';
@@ -42,16 +43,17 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   await app.register(fastifyCookie);
 
   const publicOrigin = new URL(deps.config.publicUrl).origin;
-  // Inside Discord the game is served from Discord's address, so its posts come from there.
+  // Inside Discord the game is served from Discord's address (the Activity's own
+  // <client id>.discordsays.com, which shows only this game), so its posts come from there.
   // Null when the Discord Activity is off.
   const activity = deps.config.discordActivity;
   const discordOrigin = activity ? activityOrigin(activity.clientId) : null;
   app.addHook('onRequest', async (req, reply) => {
-    // Refuse form posts from other websites. (The SameSite cookie setting already blocks most of this.)
+    // Refuse form posts from other websites. (The SameSite cookie setting already blocks most of
+    // this, but inside Discord the session cookie has to be SameSite=None, so this check matters.)
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       const origin = req.headers.origin;
-      const fromDiscord = discordOrigin !== null && origin === discordOrigin && req.url.split('?')[0] === ACTIVITY_TOKEN_PATH;
-      if (origin && origin !== publicOrigin && !fromDiscord) return reply.code(403).send({ error: 'Wrong origin.' });
+      if (origin && origin !== publicOrigin && origin !== discordOrigin) return reply.code(403).send({ error: 'Wrong origin.' });
     }
   });
   // Only this site and Discord (for the Activity) may show the game inside a frame.
@@ -67,10 +69,16 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
 
   app.get('/healthz', async () => ({ ok: true }));
   const live = new LiveHub();
+  const bot = deps.bot !== undefined ? deps.bot : deps.config.discordBotToken ? discordBot(deps.config.discordBotToken) : null;
+  // Signed-in players' Discord roles are checked again every so often (auth/role-check.ts).
+  // That needs the bot; without it, roles are checked only at sign-in.
+  const { config } = deps;
+  app.decorate('roleCheck', bot && config.roleCheckMinutes > 0
+    ? new RoleCheck(deps.db, bot, config.discord.guildId, accessRules(config.discord, config.adminDiscordIds), config.roleCheckMinutes, (userId) => live.closeUser(userId), app.log)
+    : null);
   authRoutes(app, deps, live);
   meRoutes(app, deps);
   if (activity) discordActivityRoutes(app, deps);
-  const bot = deps.bot !== undefined ? deps.bot : deps.config.discordBotToken ? discordBot(deps.config.discordBotToken) : null;
   const notifier = new Notifier(deps.db, bot, live, deps.config.publicUrl, (err) => app.log.error(err, 'notification failed'));
   notificationRoutes(app, deps, notifier);
   betaRoutes(app, deps);

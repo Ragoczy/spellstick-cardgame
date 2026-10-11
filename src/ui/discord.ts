@@ -1,13 +1,15 @@
 // Running inside Discord, as a Discord Activity (see docs/discord-activity.md).
 //
 // Discord opens the game with ?frame_id=... in the address. Only then do we load Discord's SDK
-// (from discordActivity.ts, as a separate download) and show what the player is doing on their
-// Discord profile. Everywhere else this file does nothing, and the SDK is never downloaded.
+// (from discordActivity.ts, as a separate download), show what the player is doing on their
+// Discord profile, and offer sign-in through Discord. Everywhere else this file does nothing,
+// and the SDK is never downloaded.
 //
 // Nothing here may break the game: if Discord doesn't answer or turns us down, we write one
 // warning to the console and carry on.
 
 import type { PlayerView, Side } from '../engine';
+import type { DiscordActivity } from './discordActivity';
 
 /** What Discord shows under "Playing Spellstick". startedAt (milliseconds) adds an "elapsed" timer. */
 export interface Presence {
@@ -56,14 +58,24 @@ export function setDiscordPresence(presence: Presence): void {
   sendPresence?.(presence);
 }
 
+/** The connection to Discord, once startDiscord has begun it. */
+let activity: Promise<DiscordActivity> | null = null;
+
 /** Connects to Discord when Discord launched the page. Call once at startup. */
 export function startDiscord(): void {
   if (!IN_DISCORD) return;
-  import('./discordActivity')
-    .then((activity) => activity.connect())
+  activity = import('./discordActivity').then((module) => module.connect());
+  activity
+    .then((a) => a.startPresence())
     .then((send) => {
       sendPresence = send;
       if (latest) send(latest);
     })
     .catch(warnOnce);
+}
+
+/** Inside Discord: a one-time sign-in code from Discord (Discord asks the player first). Throws if there's none. */
+export async function discordSignInCode(): Promise<string> {
+  if (!activity) throw new Error('Not running inside Discord.');
+  return (await activity).signInCode();
 }

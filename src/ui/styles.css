@@ -384,3 +384,23 @@ button.danger {
 .rankings-table td:first-child, .rankings-table th:first-child { width: 2.5em; color: var(--muted); }
 .rankings-table tr.you td { font-weight: bold; color: var(--ink); }
 .rankings-table td:last-child { white-space: nowrap; }
+
+/* Stats dashboard */
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin: 12px 0; }
+.stat-tile { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); display: flex; flex-direction: column; gap: 2px; }
+.stat-tile strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.stat-tile span { font-size: 0.8rem; color: var(--muted); }
+.stats-table td:first-child, .stats-table th:first-child { width: auto; color: var(--ink); }
+.stats-table td { font-variant-numeric: tabular-nums; }
+.stats-table td strong, .stats-table td .small { white-space: nowrap; }
+.stats-table td.small { white-space: normal; }
+.stats-details { margin: 4px 0 8px; font-size: 0.9rem; }
+.stats-details summary { cursor: pointer; color: var(--muted); }
+.daily-bars { margin: 10px 0 14px; max-width: 640px; }
+.daily-bars figcaption { margin-bottom: 6px; font-size: 0.95rem; }
+.daily-bars .bars { display: flex; align-items: stretch; gap: 2px; height: 90px; border-bottom: 1px solid var(--line); }
+.daily-bars .bar-slot { flex: 1; display: flex; align-items: flex-end; cursor: default; outline: none; border-radius: 4px 4px 0 0; }
+.daily-bars .bar-slot.hover, .daily-bars .bar-slot:focus-visible { background: rgba(0, 0, 0, 0.05); }
+.daily-bars .bar { width: 100%; min-height: 2px; background: var(--field); border-radius: 4px 4px 0 0; }
+.daily-bars .bar-slot.hover .bar { background: var(--field-dark); }
+.daily-bars .bars-axis { display: flex; justify-content: space-between; margin-top: 4px; }

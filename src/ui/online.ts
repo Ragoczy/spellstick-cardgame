@@ -2,6 +2,7 @@
 // static build never calls these.
 
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
+import type { StatsOverview } from '../shared/statsApi';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
@@ -168,3 +169,8 @@ export interface BetaOverview {
 export const fetchBetaOverview = () => call<BetaOverview>('GET', '/api/admin/beta');
 export const checkAllMatches = () => call<{ checked: number; newProblems: number }>('POST', '/api/admin/beta/check');
 export const resolveProblem = (id: number) => call<BetaOverview>('POST', `/api/admin/problems/${id}/resolve`);
+
+// ---- Stats dashboard (moderators and admins) ----
+
+export type { StatsOverview };
+export const fetchStats = () => call<StatsOverview>('GET', '/api/admin/stats');

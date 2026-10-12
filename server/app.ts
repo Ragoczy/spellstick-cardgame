@@ -13,6 +13,7 @@ import { betaRoutes } from './api/beta';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import { ratingRoutes } from './api/ratings';
+import { statsRoutes } from './api/stats';
 import { notificationRoutes } from './api/notifications';
 import { accessRules, type DiscordApi } from './auth/discord';
 import { RoleCheck } from './auth/role-check';
@@ -84,6 +85,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   betaRoutes(app, deps);
   matchRoutes(app, deps, live, notifier);
   ratingRoutes(app, deps);
+  statsRoutes(app, deps);
   // Live connections never end by themselves, so end them first when the server is shutting down.
   app.addHook('preClose', async () => live.closeAll());
 

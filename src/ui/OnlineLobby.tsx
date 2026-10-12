@@ -20,9 +20,9 @@ const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '') + (m.ranked ? 
 const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
 
-/** onDashboard: moderators and admins only (the beta dashboard). */
-export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard }: {
-  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onDashboard?: () => void;
+/** onDashboard and onStats: moderators and admins only (the beta and stats dashboards). */
+export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }: {
+  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onDashboard?: () => void; onStats?: () => void;
 }) {
   const [matches, setMatches] = useState<MatchSummary[] | null>(null);
   const [ratings, setRatings] = useState<RatingsBoard | null>(null);
@@ -152,6 +152,7 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard }: {
       <div className="buttons">
         <button type="button" onClick={onBack}>Back</button>
         {onDashboard ? <button type="button" onClick={onDashboard}>Beta dashboard</button> : null}
+        {onStats ? <button type="button" onClick={onStats}>Stats</button> : null}
       </div>
     </div>
   );

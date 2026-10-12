@@ -1,6 +1,6 @@
 // Who is making a request, from their session cookie.
 
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import type pg from 'pg';
 import { userForSession, type User } from '../users';
 import type { RoleCheck } from './role-check';
@@ -19,4 +19,21 @@ export async function currentUser(db: pg.Pool, req: FastifyRequest): Promise<Use
   const user = sessionId ? await userForSession(db, sessionId) : null;
   if (!user || !req.server.roleCheck) return user;
   return req.server.roleCheck.recheck(user);
+}
+
+/**
+ * The signed-in moderator or admin (roles come from Discord). Anyone else gets a 401 or 403 sent
+ * for them, and null back.
+ */
+export async function staffUser(db: pg.Pool, req: FastifyRequest, reply: FastifyReply): Promise<User | null> {
+  const user = await currentUser(db, req);
+  if (!user) {
+    reply.code(401).send({ error: 'Not signed in.' });
+    return null;
+  }
+  if (user.role !== 'moderator' && user.role !== 'admin') {
+    reply.code(403).send({ error: 'Only moderators can see this.' });
+    return null;
+  }
+  return user;
 }

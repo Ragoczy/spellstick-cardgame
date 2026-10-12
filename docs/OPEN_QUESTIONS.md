@@ -50,7 +50,8 @@ None of these block M1 or M2.
 Decided and open items are tracked in `docs/spellstick-multiplayer-design.md` under
 "Open questions". Still open:
 
-- Rarity (future feature): are rarer cards stronger, or only different?
-- How a drawn Swiss match scores, and the second tiebreaker.
-- Who wins an unfinished match at the round deadline.
-- Prizes for the first tournament.
+- Time bank sizes: tune after the beta.
+- HexBot connection details: needed at the start of phase 4 (Store).
+
+Tournament scoring, tiebreakers, deadlines, first-tournament prizes, and the rarity direction
+were decided on 2026-10-12 (see the design doc).

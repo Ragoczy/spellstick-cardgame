@@ -140,7 +140,7 @@ Every card a player owns is a unique **instance** of a shared **definition**, wi
 
 **Card instance** (one per copy owned): definition, owner, serial number within that definition, how it was obtained (starter, store, award, trade), edition flags (foil, signed, numbered), and a full ownership history.
 
-**Rarity (future feature).** *Changed 2026-10-10: deferred.* Cards have no rarity yet, and whether rarer cards are stronger or only different is undecided. Until rarity exists, all regular cards are one tier: packs draw evenly from the released card list, and singles have one price. The planned tiers, kept for later:
+**Rarity (future feature).** *Changed 2026-10-10: deferred.* Cards have no rarity yet. *Direction set 2026-10-12: both.* Rarer cards are mostly different (unusual abilities, more Resonants, cards that matter in the books) with a small, fixed stat edge: for example at most +1 total stats for Rare and +2 for Legendary over a Common. Ranked and prize events use draft, and Capped Constructed charges points for rarer cards, so the edge only matters in casual Constructed. Exact numbers are set when rarity is built. Until rarity exists, all regular cards are one tier: packs draw evenly from the released card list, and singles have one price. The planned tiers, kept for later:
 
 | Tier | Source | Tradeable |
 | --- | --- | --- |
@@ -201,14 +201,15 @@ Tournaments are Swiss rounds followed by a single-elimination top cut, run entir
 **Structure**
 
 - Swiss rounds: about log2(entrants), rounded up. 64 players → 6 rounds; 128 → 7.
-- Pairing: players with the same record meet; no rematches; a bye for an odd count counts as a win.
-- Tiebreakers: opponents' match-win percentage, then game-win percentage. (TBD: see Open questions.)
-- Top cut: top 8 (or top 4 under 32 entrants), single elimination, best of three.
+- Pairing: players with the same points meet; no rematches; a bye for an odd count counts as a win.
+- Scoring: win 3 points, draw 1, loss 0. *(Decided 2026-10-12.)*
+- Tiebreakers, in order: opponents' match-win percentage (any opponent under 33% counts as 33%), then goal difference across the event (goals scored minus goals conceded), then a random draw from the tournament seed. *(Decided 2026-10-12. With one game per match, game-win percentage only repeated match-win percentage. A team scores at most 3 goals a match, so running up the score barely helps.)*
+- Top cut: top 8 (or top 4 under 32 entrants), single elimination. Async events play one game per top-cut match; best of three only when the top cut is played live. *(Changed 2026-10-12: best of three async could take 9 days a round.)*
 
-**Deadlines and forfeits.** Async rounds last 3–4 days; the next round pairs automatically when every match is done or the deadline passes.
+**Deadlines and forfeits.** Async rounds last 4 days; the next round pairs automatically when every match is done or the deadline passes. Rounds are longer than both time banks together (36 hours each), so a match always ends before the deadline unless the server was down.
 
 - Time banks keep matches moving: a player who runs out has the computer play for them, so one absent player cannot freeze a match (see Time banks).
-- At the round deadline, an unfinished match goes to the player who took more recent turns; if neither played, both take a loss. (TBD: see Open questions. With async banks that fit inside the round, this should rarely happen.)
+- At the round deadline, an unfinished match is decided by the current score; a tied score is a draw. If neither player made a move, both take a loss. *(Decided 2026-10-12. The earlier "more recent turns" rule could be gamed.)*
 - Two missed rounds drops a player from the event.
 - Top-cut matches can be scheduled live and streamed on Discord as an event.
 
@@ -350,12 +351,12 @@ Draft picks are match events, and the random deck fill comes from the match seed
 - [x] Card definitions: `data/*.json` is the master copy; the database is loaded from it (2026-10-10).
 - [x] Repo: same repo as the browser game (2026-10-10).
 - [x] Deck sizes: same as the table game, 40 cards (2 goalies, 22 field players, 16 spells), from `config.ts` and `RULES.md`.
-- [ ] Rarity: future feature. Undecided whether rarer cards are stronger or only different.
-- [ ] Swiss draws: about 3% of games are drawn (sim, rules v0.10). How a draw scores in standings is TBD.
-- [ ] Second tiebreaker: with one game per Swiss match, game-win % equals match-win %. Replacement TBD.
-- [ ] Round-deadline result for an unfinished match: "more recent turns" can be gamed; current score is an alternative. TBD.
+- [x] Rarity direction: both. Mostly different, with a small fixed stat edge; numbers set when rarity is built (2026-10-12).
+- [x] Swiss draws: win 3, draw 1, loss 0 (2026-10-12).
+- [x] Tiebreakers: opponents' match-win % (33% floor), then goal difference, then a seeded random draw (2026-10-12).
+- [x] Round deadline: 4-day rounds outlast both time banks; if a match is still unfinished, the current score decides it and a tie is a draw (2026-10-12).
 - [ ] Time bank sizes: starting values are 25 minutes live and 36 hours async; tune after the beta.
-- [ ] Prize types for the first tournament (TBD).
+- [x] First tournament prizes: no coins; the award cards only (participation card, top-cut foil, numbered Champion card) (2026-10-12).
 - [ ] HexBot connection details: deferred to the start of phase 4 (Store).
 
 ## Running the beta
@@ -382,6 +383,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-12: Paul approved the tournament rules and the rarity direction. Win 3, draw 1, loss 0; tiebreakers are opponents' match-win % (33% floor), goal difference, then a seeded random draw; 4-day rounds, with the current score deciding any match still unfinished at the deadline; one-game top-cut matches in async events; the first tournament awards cards only, no coins. Rarer cards will be mostly different with a small fixed stat edge.
 - 2026-10-12: Stats dashboard for moderators and admins (see Running the beta, Stats). Same access as the Beta dashboard.
 - 2026-10-11: Sign-in inside Discord is now automatic at launch, following Discord's own Activity flow: one permission request right after the game loads, covering the profile details, who you are, and your server roles. The earlier "Sign in with Discord" button inside Discord made a second request, which Discord turned down. Players with an allowed role are signed in at every launch (roles checked again each time); others get a plain message and can play the computer.
 - 2026-10-11: Discord roles are checked again every 15 minutes while a player stays signed in, not only at sign-in (see Identity and accounts). Taking a role away in Discord signs the player out within 15 minutes. Starts working when the bot token is set up.

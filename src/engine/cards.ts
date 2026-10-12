@@ -272,6 +272,44 @@ export function buildDeck(cardSet: CardSet, teamId: string, config: GameConfig):
   return deck;
 }
 
+/** Spells per deck: whatever the deck size leaves after the goalies and field players. */
+export function deckSpells(config: GameConfig): number {
+  return config.deckSize - config.deckGoalies - config.deckFieldPlayers;
+}
+
+/**
+ * Constructed (RULES.md "Constructed"): what's wrong with a deck a team brings, in plain words.
+ * An empty list means the deck is legal. ids are card ids from the card set, one per card.
+ */
+export function deckProblems(cardSet: CardSet, ids: readonly string[], config: GameConfig): string[] {
+  const byId = new Map(cardSet.cards.map((c) => [c.id, c]));
+  const problems: string[] = [];
+  const cards: CardDef[] = [];
+  for (const id of ids) {
+    const card = byId.get(id);
+    if (card) cards.push(card);
+    else problems.push(`There's no card ${id}.`);
+  }
+  const count = (kind: CardDef['kind']) => cards.filter((c) => c.kind === kind).length;
+  const need = (wanted: number, have: number, what: string) => {
+    if (have !== wanted) problems.push(`A team needs ${wanted} ${what} (this one has ${have}).`);
+  };
+  need(config.deckGoalies, count('goalie'), 'goalies');
+  need(config.deckFieldPlayers, count('field'), 'field players');
+  need(deckSpells(config), count('spell'), 'spells');
+  // Each named player is one person, so a team can't have the same player twice.
+  const seen = new Set<string>();
+  for (const card of cards) {
+    if (card.kind === 'spell') continue;
+    if (seen.has(card.id)) problems.push(`${card.name} is on the team twice.`);
+    seen.add(card.id);
+  }
+  for (const card of cards) {
+    if (card.addon && config.lanes < 3) problems.push(`${card.name} is only for the center-lane add-on.`);
+  }
+  return [...new Set(problems)];
+}
+
 /** The shared player pool: player cards with team "pool", with the same copy, promo, and add-on rules as buildDeck. */
 export function playerPool(cardSet: CardSet, config: GameConfig): PlayerCardDef[] {
   return buildDeck(cardSet, POOL_TEAM, config).filter((card): card is PlayerCardDef => card.kind !== 'spell');

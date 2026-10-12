@@ -1,4 +1,4 @@
-# Spellstick — rules v0.11
+# Spellstick — rules v0.13
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -162,6 +162,18 @@ an option against the computer.
 
 Everyone knows who each team drafted, since the pool was face up. A team can't draft more goalies
 or field players than a deck holds (this only matters if goalies are put in the draft pool ⚙).
+
+## Constructed (optional)
+
+Instead of step 0 of Setup, each team can bring its own deck. Online, this is a saved team built
+from the cards a player owns.
+
+1. A deck is 2 goalies ⚙, 22 field players ⚙, and 16 spells (whatever the 40-card deck ⚙ leaves).
+2. Each named player can be on a team only once. Spells can repeat.
+3. Add-on cards can only be used with the center-lane add-on.
+4. Every card plays in the team's color for this game. Setup goes on from step 1.
+
+Nobody sees the other team's deck. There's no draft in a constructed game.
 
 ## Faceoff
 
@@ -402,6 +414,7 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 
 ## Change log
 
+- v0.13 — Constructed (optional): each team brings its own 40-card deck (2 goalies, 22 field players, 16 spells) instead of being dealt players. Each named player at most once per team; spells can repeat. For online saved teams (online phase 2). Claude's simplest reading of the design's "same deck rules as the table game".
 - v0.12 — Draft (optional): 30 face-up field players, 10 picks each in snake order, the second player first; goalies and the remaining field players are dealt at random. The online design said the pool includes at least 2 goalies; in the simulator, the first picker took the best goalie and won 58% of games, and leaving goalies out of the draft brought it back to 50% (Claude). Spells stay with each team, as in v0.11.
 - v0.11 — Substitute moves from the actions to the Draw step: each turn you draw or substitute, then take your action. The player who comes on can't pass, shoot, tackle, or cast until the turn ends (Paul). Claude's readings: receiving a pass and defending aren't acting; no card is drawn or discarded when you substitute (your opponent's drawing still runs the clock, so nobody can stall the game alone); no substitute when both piles are empty; forced substitutions are unchanged. Online matches started before this keep the old rule.
 

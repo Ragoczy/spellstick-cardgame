@@ -1,6 +1,7 @@
-// Creating a new game (RULES.md "Setup"), including the optional draft (RULES.md "Draft").
+// Creating a new game (RULES.md "Setup"), including the optional draft (RULES.md "Draft") and
+// decks a team brings itself (RULES.md "Constructed").
 
-import { buildDeck, playerPool, type CardDef, type CardSet, type PlayerCardDef } from './cards';
+import { buildDeck, deckProblems, playerPool, type CardDef, type CardSet, type PlayerCardDef } from './cards';
 import { makeConfig, type GameConfig, type InjuryDef } from './config';
 import type { GameEvent } from './events';
 import { AREAS, SIDES, type Side } from './field';
@@ -13,6 +14,12 @@ export interface GameSetup {
   /** Which team in the card set plays each side. Defaults to A: "A", B: "B". */
   teams?: Record<Side, string>;
   config?: Partial<GameConfig>;
+  /**
+   * Constructed (RULES.md "Constructed"): the cards each side brings, by card id, one id per card,
+   * instead of dealing players from the pool. Each card plays for its side's team. Online saved
+   * teams use this.
+   */
+  decks?: Record<Side, string[]>;
 }
 
 export class SetupError extends Error {}
@@ -75,7 +82,11 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   };
   const teamCards = { A: buildDeck(setup.cardSet, teamIds.A, config), B: buildDeck(setup.cardSet, teamIds.B, config) };
 
-  if (config.draftPicks > 0) {
+  if (setup.decks) {
+    if (config.draftPicks > 0) throw new SetupError('A game with its own decks has no draft.');
+    const decks = setup.decks;
+    dealTeams(state, { A: constructedDeck(setup.cardSet, decks.A, config, teamIds.A), B: constructedDeck(setup.cardSet, decks.B, config, teamIds.B) }, teamIds);
+  } else if (config.draftPicks > 0) {
     startDraft(state, setup.cardSet, teamIds, teamCards);
   } else {
     // Players from the shared pool, if the card set has one. Card sets without a pool skip this
@@ -85,6 +96,14 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     dealTeams(state, { A: [...teamCards.A, ...dealt.A], B: [...teamCards.B, ...dealt.B] }, teamIds);
   }
   return { state, events: [{ type: 'gameStarted', firstSide }] };
+}
+
+/** A deck a team brings (Constructed), checked, with every card playing for the team. */
+function constructedDeck(cardSet: CardSet, ids: string[], config: GameConfig, teamId: string): CardDef[] {
+  const problems = deckProblems(cardSet, ids, config);
+  if (problems.length) throw new SetupError(`Team ${teamId}: ${problems.join(' ')}`);
+  const byId = new Map(cardSet.cards.map((c) => [c.id, c]));
+  return ids.map((id) => ({ ...byId.get(id)!, team: teamId }));
 }
 
 /**

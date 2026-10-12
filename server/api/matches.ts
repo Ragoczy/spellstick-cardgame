@@ -3,9 +3,9 @@
 //
 //   GET  /api/players?name=Riv           players to challenge (names starting with the text)
 //   GET  /api/matches                    your matches
-//   POST /api/matches                    challenge someone: { opponentId, lanes, team, pace, players: 'draft' | 'dealt', ranked }
+//   POST /api/matches                    challenge someone: { opponentId, lanes, team, pace, players: 'draft' | 'dealt' | 'constructed', ranked, teamId }
 //   GET  /api/matches/:id?since=n        one match: your view, your legal moves, and events after move n
-//   POST /api/matches/:id/accept         accept a challenge
+//   POST /api/matches/:id/accept         accept a challenge: { teamId } for a constructed match (your saved team)
 //   POST /api/matches/:id/decline        turn down a challenge, or withdraw your own
 //   POST /api/matches/:id/resign         give up a match in progress
 //   POST /api/matches/:id/moves          make a move: { action, seen } (seen = the match's moveCount)
@@ -72,11 +72,11 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, 
 
   app.get('/api/matches', (req, reply) => signedIn(req, reply, (user) => listMatches(db, user)));
 
-  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown; pace?: unknown; players?: unknown; ranked?: unknown } | undefined }>('/api/matches', (req, reply) =>
+  app.post<{ Body: { opponentId?: unknown; lanes?: unknown; team?: unknown; pace?: unknown; players?: unknown; ranked?: unknown; teamId?: unknown } | undefined }>('/api/matches', (req, reply) =>
     signedIn(req, reply, async (user) => {
       const body = req.body ?? {};
       const match = await createChallenge(db, user, {
-        opponentId: body.opponentId, lanes: body.lanes, team: body.team, pace: body.pace, players: body.players, ranked: body.ranked,
+        opponentId: body.opponentId, lanes: body.lanes, team: body.team, pace: body.pace, players: body.players, ranked: body.ranked, teamId: body.teamId,
       });
       return reply.code(201).send(changed(user, match));
     }));
@@ -87,8 +87,8 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, 
       return getMatch(db, user, Number(req.params.id), Number.isInteger(since) ? since : -1);
     }));
 
-  app.post<IdParams>('/api/matches/:id/accept', (req, reply) =>
-    signedIn(req, reply, async (user) => changed(user, await acceptChallenge(db, user, Number(req.params.id)))));
+  app.post<IdParams & { Body: { teamId?: unknown } | undefined }>('/api/matches/:id/accept', (req, reply) =>
+    signedIn(req, reply, async (user) => changed(user, await acceptChallenge(db, user, Number(req.params.id), req.body?.teamId))));
 
   app.post<IdParams>('/api/matches/:id/decline', (req, reply) =>
     signedIn(req, reply, async (user) => changed(user, await declineChallenge(db, user, Number(req.params.id)))));

@@ -3,11 +3,14 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { prototypeCards } from '../data/prototype';
+import type { Collection, SavedTeam } from '../shared/collectionApi';
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
 import { clockText, ordinal, ratingChangeText } from './labels';
 import { GameScreen } from './GameScreen';
 import { liveConnected, listenLive } from './live';
-import { acceptChallenge, declineChallenge, fetchRatings, findPlayers, listMatches, matchApi, sendChallenge } from './online';
+import {
+  acceptChallenge, declineChallenge, fetchCollection, fetchRatings, findPlayers, listMatches, matchApi, sendChallenge, type PlayersChoice,
+} from './online';
 import { useOnlineGame } from './useOnlineGame';
 
 /** How often the match list checks for changes while it's open, when live updates aren't working. */
@@ -15,17 +18,23 @@ const LIST_CHECK_MS = 15_000;
 
 const lanesText = (lanes: number) => (lanes === 3 ? 'three lanes' : 'two lanes');
 const paceText = (pace: Pace | null) => (pace === 'live' ? ', live' : '');
-const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '') + (m.ranked ? ', ranked' : '');
+const draftText = (m: MatchSummary) => (m.draft ? ', draft' : '') + (m.constructed ? ', saved teams' : '') + (m.ranked ? ', ranked' : '');
 /** " (35 h 12 m left)" for your own bank, when the match is timed. */
 const yourTimeLeft = (m: MatchSummary) => (m.clock && !m.autopilot.you ? ` (${clockText(m.clock.you)} left)` : '');
 const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.name ?? id;
 
+/** Your saved teams that are ready to play. */
+const readyTeams = (collection: Collection | null): SavedTeam[] => collection?.teams.filter((t) => !t.problems.length) ?? [];
+
 /** onDashboard and onStats: moderators and admins only (the beta and stats dashboards). */
-export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }: {
-  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onDashboard?: () => void; onStats?: () => void;
+export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onDashboard, onStats }: {
+  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onCollection: () => void; onDashboard?: () => void; onStats?: () => void;
 }) {
   const [matches, setMatches] = useState<MatchSummary[] | null>(null);
   const [ratings, setRatings] = useState<RatingsBoard | null>(null);
+  const [collection, setCollection] = useState<Collection | null>(null);
+  /** For challenges with saved teams: the team you'll accept with, by match id. */
+  const [acceptWith, setAcceptWith] = useState<Record<number, number>>({});
   const [problem, setProblem] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -36,6 +45,8 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }
     }
     // Your rating line is a nice extra: if it can't load, the lobby works without it.
     fetchRatings().then(setRatings).catch(() => {});
+    // Your saved teams, for challenges with saved teams.
+    fetchCollection().then(setCollection).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -62,10 +73,11 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }
     await reload();
   };
 
-  const accept = async (id: number) => {
+  const accept = async (m: MatchSummary) => {
+    const id = m.id;
     setProblem(null);
     try {
-      await acceptChallenge(id);
+      await acceptChallenge(id, m.constructed ? acceptWith[id] ?? readyTeams(collection)[0]?.id : undefined);
       onOpen(id);
     } catch (err) {
       setProblem((err as Error).message);
@@ -90,9 +102,10 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }
       <div className="account-row your-rating">
         <span>{yourRatingText(ratings)}</span>
         <button type="button" className="quiet" onClick={onRankings}>Rankings</button>
+        <button type="button" className="quiet" onClick={onCollection}>Your cards and teams</button>
       </div>
 
-      <ChallengeForm onSent={() => reload()} onProblem={setProblem} />
+      <ChallengeForm teams={readyTeams(collection)} onSent={() => reload()} onProblem={setProblem} />
 
       {matches === null ? <p className="small">Loading your matches…</p> : null}
 
@@ -102,9 +115,20 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onDashboard, onStats }
           <li key={m.id} className="match-row yours">
             {m.status === 'challenged' ? (
               <>
-                <span><strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}{paceText(m.pace)}{draftText(m)}, you play {teamName(m.team)}).</span>
+                <span>
+                  <strong>{m.opponent.name}</strong> challenged you ({lanesText(m.lanes)}{paceText(m.pace)}{draftText(m)}
+                  {m.constructed ? `, they bring ${m.opponentTeamName ?? 'a saved team'}` : `, you play ${teamName(m.team)}`}).
+                </span>
                 <span className="buttons">
-                  <button type="button" className="primary" onClick={() => accept(m.id)}>Accept</button>
+                  {m.constructed ? (
+                    readyTeams(collection).length ? (
+                      <select aria-label="Your team" value={acceptWith[m.id] ?? readyTeams(collection)[0]!.id}
+                        onChange={(e) => setAcceptWith({ ...acceptWith, [m.id]: Number(e.target.value) })}>
+                        {readyTeams(collection).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    ) : <span className="small">{collection ? "You need a saved team that's ready to play." : 'Loading your teams…'}</span>
+                  ) : null}
+                  <button type="button" className="primary" disabled={m.constructed && !readyTeams(collection).length} onClick={() => accept(m)}>Accept</button>
                   <button type="button" onClick={() => run(() => declineChallenge(m.id))}>Decline</button>
                 </span>
               </>
@@ -181,16 +205,20 @@ function finishedText(m: MatchSummary): string {
   return (r.outcome === 'won' ? `You beat ${name}${resigned}.` : `${name} beat you${resigned}.`) + rating;
 }
 
-/** Find a player by name, choose the field and your team, and send a challenge. */
-function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (message: string | null) => void }) {
+/** Find a player by name, choose the field and your team, and send a challenge. teams: your saved teams that are ready. */
+function ChallengeForm({ teams, onSent, onProblem }: { teams: SavedTeam[]; onSent: () => void; onProblem: (message: string | null) => void }) {
   const [search, setSearch] = useState('');
   const [found, setFound] = useState<PlayerListing[]>([]);
   const [picked, setPicked] = useState<PlayerListing | null>(null);
   const [lanes, setLanes] = useState(2);
   const [pace, setPace] = useState<Pace>('async');
-  const [draft, setDraft] = useState(true);
+  const [players, setPlayers] = useState<PlayersChoice>('draft');
   const [ranked, setRanked] = useState(true);
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
+  const [savedTeam, setSavedTeam] = useState<number | null>(null);
+  const draft = players === 'draft';
+  const constructed = players === 'constructed';
+  const teamId = savedTeam !== null && teams.some((t) => t.id === savedTeam) ? savedTeam : teams[0]?.id;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<string | null>(null);
 
@@ -209,7 +237,7 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
     setSending(true);
     onProblem(null);
     try {
-      await sendChallenge(picked.id, lanes, team, pace, draft, draft && ranked);
+      await sendChallenge({ opponentId: picked.id, lanes, team, pace, players, ranked: draft && ranked, ...(constructed ? { teamId } : {}) });
       setSent(`Challenge sent to ${picked.name}.`);
       setPicked(null);
       setSearch('');
@@ -242,12 +270,21 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
         </>
       )}
       <div className="options">
-        <label>
-          Your team
-          <select value={team} onChange={(e) => setTeam(e.target.value)}>
-            {prototypeCards.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
-        </label>
+        {constructed ? (
+          <label>
+            Your saved team
+            <select value={teamId ?? ''} disabled={!teams.length} onChange={(e) => setSavedTeam(Number(e.target.value))}>
+              {teams.length ? teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>) : <option value="">No team ready</option>}
+            </select>
+          </label>
+        ) : (
+          <label>
+            Your team
+            <select value={team} onChange={(e) => setTeam(e.target.value)}>
+              {prototypeCards.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </label>
+        )}
         <label>
           Field
           <select value={lanes} onChange={(e) => setLanes(Number(e.target.value))}>
@@ -264,9 +301,10 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
         </label>
         <label>
           Players
-          <select value={draft ? 'draft' : 'dealt'} onChange={(e) => setDraft(e.target.value === 'draft')}>
+          <select value={players} onChange={(e) => setPlayers(e.target.value as PlayersChoice)}>
             <option value="draft">Draft (pick 10 each)</option>
             <option value="dealt">Dealt at random</option>
+            <option value="constructed">Your saved team</option>
           </select>
         </label>
         <label>
@@ -278,9 +316,10 @@ function ChallengeForm({ onSent, onProblem }: { onSent: () => void; onProblem: (
         </label>
       </div>
       {!draft ? <p className="small">Only draft matches can be ranked, so everyone picks from the same cards.</p> : null}
+      {constructed ? <p className="small">You each bring a saved team from your cards. They choose theirs when they accept.</p> : null}
       <p className="small">Each player has a time bank that only runs while the game is waiting on them. If yours runs out, the computer makes the rest of your moves (or, if you never moved, you lose by forfeit).</p>
       <div className="buttons">
-        <button type="submit" className="primary" disabled={!picked || sending}>Send challenge</button>
+        <button type="submit" className="primary" disabled={!picked || sending || (constructed && teamId === undefined)}>Send challenge</button>
       </div>
       {sent ? <p className="small">{sent} They'll see it in their matches.</p> : null}
     </form>

@@ -6,6 +6,7 @@ import { ONLINE, type Me } from './online';
 import { OnlineLobby, OnlineMatchScreen } from './OnlineLobby';
 import { Rankings } from './Rankings';
 import { BetaDashboard } from './BetaDashboard';
+import { CollectionScreen } from './Collection';
 import { StatsDashboard } from './StatsDashboard';
 import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
@@ -17,8 +18,8 @@ import type { SessionOptions } from './session';
 
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
-  // Online build only: your matches, one match, and the rankings.
-  | { kind: 'lobby' } | { kind: 'match'; id: number } | { kind: 'rankings' }
+  // Online build only: your matches, one match, the rankings, and your cards and saved teams.
+  | { kind: 'lobby' } | { kind: 'match'; id: number } | { kind: 'rankings' } | { kind: 'collection' }
   // Moderators and admins: the beta dashboard and the stats dashboard.
   | { kind: 'beta' } | { kind: 'stats' };
 
@@ -106,6 +107,7 @@ export function App() {
             onOpen={(id) => setScreen({ kind: 'match', id })}
             onBack={() => setScreen({ kind: 'start' })}
             onRankings={() => setScreen({ kind: 'rankings' })}
+            onCollection={() => setScreen({ kind: 'collection' })}
             onDashboard={me && me.role !== 'player' ? () => setScreen({ kind: 'beta' }) : undefined}
             onStats={me && me.role !== 'player' ? () => setScreen({ kind: 'stats' }) : undefined}
           />
@@ -113,6 +115,7 @@ export function App() {
         {screen.kind === 'rankings' ? (
           <Rankings onBack={() => setScreen({ kind: 'lobby' })} isAdmin={me?.role === 'admin'} />
         ) : null}
+        {screen.kind === 'collection' ? <CollectionScreen onBack={() => setScreen({ kind: 'lobby' })} /> : null}
         {screen.kind === 'beta' ? (
           <BetaDashboard onBack={() => setScreen({ kind: 'lobby' })} />
         ) : null}

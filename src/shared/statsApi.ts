@@ -51,6 +51,8 @@ export interface StatsOverview {
     started: number;
     ranked: number;
     draft: number;
+    /** Each player brought a saved team. */
+    constructed: number;
     threeLanes: number;
     live: number;
     async: number;

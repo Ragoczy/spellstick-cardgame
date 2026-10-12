@@ -30,6 +30,11 @@ export interface MatchSummary {
   pace: Pace | null;
   /** True if the match starts with a head-to-head draft (otherwise players are dealt at random). */
   draft: boolean;
+  /** True if each player brings a saved team (constructed). The player challenged chooses theirs when accepting. */
+  constructed: boolean;
+  /** Constructed matches: your saved team's name and theirs (null until chosen, and for other matches). */
+  teamName: string | null;
+  opponentTeamName: string | null;
   /** True if the result changes both players' ratings (draft matches only). */
   ranked: boolean;
   /**

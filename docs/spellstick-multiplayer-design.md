@@ -154,7 +154,18 @@ Award cards don't depend on rarity and are part of v1.
 
 **Starter set.** Every new account receives a fixed, identical starter deck: one full legal team deck. No one has to spend coins to play.
 
+*Built 2026-10-12 (online phase 2).* The starter set is `data/starter.json`: 2 goalies (Save 4) and 22 field players with +1 to +3 bonus points (average 1.7; the pool averages 2), so it's about average and leaves room to collect. A player gets it, plus a ready-made "Starter team", the first time they open their cards or the online lobby. Each copy gets the next serial number for its card (`player_cards.issued`), and its history starts with the game giving it out (`card_history`).
+
 **Persistent teams.** A team is a saved deck built from cards the player owns. A player can save several teams.
+
+*Built 2026-10-12 (online phase 2), with these decisions:*
+- *Players own player cards only. Spells aren't collected yet: each saved team picks one team's 16 spells from the card data (a "spell set"). There are only about a dozen spell designs, so collecting them would add little until there are more. Spell instances can be added later without changing teams' player lists.*
+- *Each named player can be on a team only once (RULES.md "Constructed"). Spells can repeat.*
+- *Up to 10 saved teams. A team can be saved unfinished; it lists what it still needs and can't be chosen for a match until it's ready.*
+- *A constructed challenge copies the challenger's team into the match setup; the player challenged picks one of their own teams when accepting. The challenger always plays in the first team's colors. Changing or deleting a team later never changes a match.*
+- *A team's match record comes from its finished matches (`matches.team_a` and `team_b`). Crests and per-player season stats aren't built yet.*
+- *Cards in open challenges aren't locked. That only matters once cards can change hands (trading, phase 5), so locking comes with trading.*
+- *Unlinking deletes the player's cards and teams. Cards keep their history with the player's name taken out.*
 
 - Deck rules are the same as the table game: 40 cards (2 goalies, 22 field players, 16 spells), from `RULES.md` and `src/engine/config.ts`. Positions are chosen face down at setup each game, not fixed on the team.
 - *Changed 2026-10-10: the first draft described a 2/2/2/1 roster plus a reserve bench and a separate spell deck. In the real rules, the deck is the bench: substitutes come from your hand.*
@@ -315,10 +326,10 @@ Thirteen core tables in Postgres cover every feature in this design; JSON column
 | --- | --- | --- |
 | users | id, discord_id, display_name, role, joined_server_at, trade_frozen | One row per Discord account |
 | card_definitions | id, version, name, type, data (JSON), set, tradeable, rarity (future), points (future) | Loaded from `data/*.json` on deploy |
-| card_instances | id, definition_id, owner_id, serial, edition (JSON), source, acquired_at, locked_until | One row per owned copy |
-| ownership_history | instance_id, from_user, to_user, reason, ref_id, at | Starter, purchase, award, trade |
-| teams | id, owner_id, name, crest, record (JSON), valid | Persistent teams |
-| team_slots | team_id, slot, instance_id | The team's 40-card deck |
+| card_instances | id, card_id, owner_id, serial, edition (JSON), source, created_at | One row per owned copy (built: migration 010; locks come with trading) |
+| card_history | instance_id, from_user, to_user, reason, at | Starter, purchase, award, trade (built as `card_history`) |
+| teams | id, owner_id, name, spell_set, created_at, updated_at | Persistent teams (built; the record is worked out from matches, crests later) |
+| team_cards | team_id, instance_id | The team's 24 player cards; spells come from its spell set |
 | matches | id, format, tournament_id, round, player_a, player_b, seed, setup (JSON), status, winner, bank_a, bank_b, waiting_on, waiting_since, ranked, rating_change_a, rating_change_b | One per game; banks are remaining time |
 | ratings | user_id, rating, games, wins, losses, draws | Running totals since the last reset (`rating_resets`) |
 | match_events | match_id, seq, player_id, move (JSON), at | Append-only log; state is rebuilt from it |
@@ -376,6 +387,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 1. **Online play.** Server referee using the existing engine, Discord login, async 1v1 with time banks, head-to-head draft, Discord bot notifications. *Gate: a 20-reader beta finishes 100 matches with no state disagreements between client and server.*
    *Status 2026-10-10: built. The beta itself is next (see "Running the beta" below).*
 2. **Collections and teams.** Card definitions and instances, starter deck, persistent teams, Constructed.
+   *Status 2026-10-12: built, except team crests and per-player season stats. Until awards (phase 3) or the store (phase 4) give out more cards, everyone owns the same 24.*
 3. **Tournaments and awards.** Swiss plus top cut, deadlines and forfeits, automatic award cards, redeem codes. *Gate: a free beta tournament with no prize at stake.*
 4. **Store.** Coin adapter, ledger, packs, singles, cosmetics, coin rewards for play. *Gate: HexBot's debit and credit endpoints pass a retry and double-spend test.*
 5. **Trading.** Card-for-card atomic swaps with safeguards and moderator tools.
@@ -383,6 +395,7 @@ Each phase ships something playable; the gate must pass before the next phase st
 
 ## Change log
 
+- 2026-10-12: Online phase 2: owned cards and saved teams. Everyone gets the starter set (`data/starter.json`) and a ready-made team; teams are a name, a spell set, and 24 owned player cards; "Your saved team" challenges play constructed games (rules v0.13). See Cards, collection, and persistent teams for the decisions.
 - 2026-10-12: Paul approved the tournament rules and the rarity direction. Win 3, draw 1, loss 0; tiebreakers are opponents' match-win % (33% floor), goal difference, then a seeded random draw; 4-day rounds, with the current score deciding any match still unfinished at the deadline; one-game top-cut matches in async events; the first tournament awards cards only, no coins. Rarer cards will be mostly different with a small fixed stat edge.
 - 2026-10-12: Stats dashboard for moderators and admins (see Running the beta, Stats). Same access as the Beta dashboard.
 - 2026-10-11: Sign-in inside Discord is now automatic at launch, following Discord's own Activity flow: one permission request right after the game loads, covering the profile details, who you are, and your server roles. The earlier "Sign in with Discord" button inside Discord made a second request, which Discord turned down. Players with an allowed role are signed in at every launch (roles checked again each time); others get a plain message and can play the computer.

@@ -17,10 +17,11 @@ import type pg from 'pg';
 import { heuristicAgent } from '../src/ai/heuristic';
 import { prototypeCards } from '../src/data/prototype';
 import {
-  applyAction, createGame, DRAFT_PICKS, eventsFor, legalActions, makeConfig, otherSide, viewFor,
-  type Action, type GameEvent, type GameSetup, type GameState, type Side,
+  applyAction, createGame, DRAFT_PICKS, eventsFor, legalActions, makeConfig, otherSide, SetupError, viewFor,
+  type Action, type CardSet, type GameEvent, type GameSetup, type GameState, type Side,
 } from '../src/engine';
 import type { MatchChange, MatchDetail, MatchStatus, MatchSummary, MoveEvents, Pace, PlayerListing } from '../src/shared/matchApi';
+import { teamForMatch } from './collection';
 import { recordRankedResult } from './ratings';
 import type { User } from './users';
 
@@ -192,12 +193,31 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     waitingSince: row.waiting_since.toISOString(),
     pace: row.pace,
     draft: (row.setup.config?.draftPicks ?? 0) > 0,
+    constructed: isConstructed(row.setup),
+    teamName: constructedTeamName(row.setup, side),
+    opponentTeamName: constructedTeamName(row.setup, them),
     ranked: row.ranked,
     clock: banks ? { you: banks[side], them: banks[them], running: waiting === null ? null : waiting === side ? 'you' : 'them' } : null,
     autopilot: { you: autopilot[side], them: autopilot[them] },
     result,
     createdAt: row.created_at.toISOString(),
   };
+}
+
+/** True for a match where each player brings a saved team (RULES.md "Constructed"). */
+function isConstructed(setup: GameSetup): boolean {
+  return setup.decks !== undefined;
+}
+
+/** A constructed match's saved team name for one side (null until that side has chosen its team). */
+function constructedTeamName(setup: GameSetup, side: Side): string | null {
+  if (!setup.decks?.[side].length) return null;
+  return setup.cardSet.teams.find((t) => t.id === setup.teams![side])?.name ?? null;
+}
+
+/** The card set with one team renamed, so a constructed match shows each player's saved team name. */
+function withTeamName(cardSet: CardSet, teamId: string, name: string): CardSet {
+  return { ...cardSet, teams: cardSet.teams.map((t) => (t.id === teamId ? { ...t, name } : t)) };
 }
 
 async function loadRowById(db: pg.Pool | pg.PoolClient, matchId: number, lock = false): Promise<MatchRow | null> {
@@ -376,12 +396,15 @@ async function saveProgress(
 }
 
 /**
- * Challenges another player. The challenger picks the field size, the pace, and their team; the
- * other player gets the other team. (Drafts replace team picks in a later step.) A ranked
- * challenge must be a draft, so owned cards (when they come) can't buy a rating.
+ * Challenges another player. The challenger picks the field size, the pace, and how players are
+ * chosen: a draft, dealt at random, or each player's saved team (constructed: teamId is the
+ * challenger's team; the other player chooses theirs when they accept). For a draft or dealt
+ * players the challenger also picks their team colors and spells; the other player gets the
+ * other team. A ranked challenge must be a draft, so owned cards can't buy a rating.
  */
 export async function createChallenge(
-  db: pg.Pool, user: User, input: { opponentId: unknown; lanes: unknown; team: unknown; pace?: unknown; players?: unknown; ranked?: unknown },
+  db: pg.Pool, user: User,
+  input: { opponentId: unknown; lanes: unknown; team?: unknown; pace?: unknown; players?: unknown; ranked?: unknown; teamId?: unknown },
 ): Promise<MatchSummary> {
   needsName(user);
   const opponentId = Number(input.opponentId);
@@ -391,14 +414,26 @@ export async function createChallenge(
   if (!(pace in TIME_BANKS)) throw new MatchError(400, 'Choose live or at your own pace.');
   // Head-to-head draft, or players dealt at random (when not given, as before drafts existed).
   const players = input.players ?? 'dealt';
-  if (players !== 'draft' && players !== 'dealt') throw new MatchError(400, 'Choose a draft or players dealt at random.');
+  if (players !== 'draft' && players !== 'dealt' && players !== 'constructed') {
+    throw new MatchError(400, 'Choose a draft, players dealt at random, or your saved team.');
+  }
   const ranked = input.ranked ?? false;
   if (typeof ranked !== 'boolean') throw new MatchError(400, 'Choose ranked or not.');
   if (ranked && players !== 'draft') throw new MatchError(400, 'Ranked matches use a draft. Choose Draft, or turn Ranked off.');
-  const cardSet = prototypeCards;
-  const team = cardSet.teams.find((t) => t.id === input.team);
+  let cardSet = prototypeCards;
+  // Constructed matches always play the challenger in the first team's colors; the spells come
+  // with each saved team.
+  const team = players === 'constructed' ? cardSet.teams[0] : cardSet.teams.find((t) => t.id === input.team);
   if (!team) throw new MatchError(400, 'Choose one of the teams.');
   const otherTeam = cardSet.teams.find((t) => t.id !== team.id) ?? team;
+  const config = makeConfig({ lanes: input.lanes as number, draftPicks: players === 'draft' ? DRAFT_PICKS : 0 });
+  let savedTeam: { id: number; deck: string[] } | null = null;
+  if (players === 'constructed') {
+    const found = await teamForMatch(db, user.id, input.teamId, config);
+    if (!found.ok) throw new MatchError(400, found.problem);
+    savedTeam = found;
+    cardSet = withTeamName(cardSet, team.id, found.name);
+  }
 
   const { rows } = await db.query<{ display_name: string | null }>('select display_name from users where id = $1', [
     Number.isSafeInteger(opponentId) ? opponentId : 0,
@@ -413,30 +448,51 @@ export async function createChallenge(
 
   // The whole setup is saved, rules settings included, so later changes to the defaults never
   // change a match already under way.
+  // A constructed setup gets the other side's deck when they accept.
   const setup: GameSetup = {
     seed: randomInt(1, 1_000_000_000),
     cardSet,
     teams: { A: team.id, B: otherTeam.id },
-    config: makeConfig({ lanes: input.lanes as number, draftPicks: players === 'draft' ? DRAFT_PICKS : 0 }),
+    config,
+    ...(savedTeam ? { decks: { A: savedTeam.deck, B: [] } } : {}),
   };
-  createGame(setup); // throws now, not later, if the setup is broken
+  if (!savedTeam) createGame(setup); // throws now, not later, if the setup is broken
 
   const bank = TIME_BANKS[pace];
+  const format = players === 'draft' ? 'draft' : players === 'constructed' ? 'constructed' : 'prototype';
   const inserted = await db.query<{ id: string }>(
-    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms, format, ranked)
-     values ($1, $2, $3, $2, $4, $5, $5, $6, $7) returning id`,
-    [user.id, opponentId, JSON.stringify(setup), pace, bank, players === 'draft' ? 'draft' : 'prototype', ranked],
+    `insert into matches (player_a, player_b, setup, waiting_on, pace, bank_a_ms, bank_b_ms, format, ranked, team_a)
+     values ($1, $2, $3, $2, $4, $5, $5, $6, $7, $8) returning id`,
+    [user.id, opponentId, JSON.stringify(setup), pace, bank, format, ranked, savedTeam?.id ?? null],
   );
   const { row, side } = await loadRow(db, Number(inserted.rows[0]!.id), user);
   return toSummary(row, side, user.id);
 }
 
-export async function acceptChallenge(db: pg.Pool, user: User, matchId: number): Promise<MatchDetail> {
+/** Accepts a challenge. For a constructed match, teamId is the saved team the player brings. */
+export async function acceptChallenge(db: pg.Pool, user: User, matchId: number, teamId?: unknown): Promise<MatchDetail> {
   needsName(user);
   await inTransaction(db, async (client) => {
     const { row, side } = await loadRow(client, matchId, user, true);
     if (row.status !== 'challenged') throw new MatchError(409, 'This challenge is no longer open.');
     if (side !== 'B') throw new MatchError(409, 'Only the player you challenged can accept.');
+    if (row.setup.decks) {
+      const setup = row.setup;
+      const found = await teamForMatch(client, user.id, teamId, makeConfig(setup.config));
+      if (!found.ok) throw new MatchError(400, found.problem);
+      row.setup = {
+        ...setup,
+        cardSet: withTeamName(setup.cardSet, setup.teams!.B, found.name),
+        decks: { A: setup.decks!.A, B: found.deck },
+      };
+      try {
+        createGame(row.setup);
+      } catch (err) {
+        if (err instanceof SetupError) throw new MatchError(400, "This match can't start with these teams.");
+        throw err;
+      }
+      await client.query('update matches set setup = $2, team_b = $3 where id = $1', [matchId, JSON.stringify(row.setup), found.id]);
+    }
     // Banks start now: nobody has been waiting on a game yet.
     const { state } = createGame(savedSetup(row.setup));
     await saveProgress(client, { ...row, status: 'active', waiting_on: null }, { state }, []);

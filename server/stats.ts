@@ -82,6 +82,7 @@ async function matchCounts(db: pg.Pool): Promise<StatsOverview['matches']> {
        count(*) filter (where ${started})::int as started,
        count(*) filter (where ${started} and ranked)::int as ranked,
        count(*) filter (where ${started} and coalesce((setup->'config'->>'draftPicks')::int, 0) > 0)::int as draft,
+       count(*) filter (where ${started} and setup->'decks' is not null)::int as constructed,
        count(*) filter (where ${started} and (setup->'config'->>'lanes')::int = 3)::int as three_lanes,
        count(*) filter (where ${started} and pace = 'live')::int as live,
        count(*) filter (where ${started} and pace = 'async')::int as async,
@@ -98,7 +99,7 @@ async function matchCounts(db: pg.Pool): Promise<StatsOverview['matches']> {
     challenged: n('challenged'), active: n('active'), finished: n('finished'), declined: n('declined'),
     finishedWeek: n('finished_week'), finishedMonth: n('finished_month'),
     played: n('played'), resigned: n('resigned'), forfeit: n('forfeit'), draws: n('draws'), autopilot: n('autopilot'),
-    started: n('started'), ranked: n('ranked'), draft: n('draft'), threeLanes: n('three_lanes'), live: n('live'), async: n('async'),
+    started: n('started'), ranked: n('ranked'), draft: n('draft'), constructed: n('constructed'), threeLanes: n('three_lanes'), live: n('live'), async: n('async'),
     averageMoves: oneDecimal(r.average_moves ?? null),
     medianMinutesLive: oneDecimal(r.median_live ?? null),
     medianMinutesAsync: oneDecimal(r.median_async ?? null),
@@ -143,9 +144,10 @@ async function teamRecords(db: pg.Pool): Promise<StatsOverview['teams']> {
        count(*) filter (where m.winner is null)::int as draws
      from matches m
      cross join lateral (values (m.setup->'teams'->>'A', m.player_a), (m.setup->'teams'->>'B', m.player_b)) t(team, player)
-     where m.status = 'finished'
+     where m.status = 'finished' and m.setup->'decks' is null
      group by t.team order by t.team`,
   );
+  // Constructed matches are left out: those teams bring their own players and spells.
   // Matches from before team picks played A against B (GameSetup.teams defaults).
   const byId = new Map<string, Omit<StatsOverview['teams'][number], 'id' | 'name'>>();
   for (const r of rows) {

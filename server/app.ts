@@ -10,6 +10,7 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import type pg from 'pg';
 import { activityOrigin, discordActivityRoutes } from './api/discord-activity';
 import { betaRoutes } from './api/beta';
+import { collectionRoutes } from './api/collection';
 import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import { ratingRoutes } from './api/ratings';
@@ -84,6 +85,7 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   notificationRoutes(app, deps, notifier);
   betaRoutes(app, deps);
   matchRoutes(app, deps, live, notifier);
+  collectionRoutes(app, deps);
   ratingRoutes(app, deps);
   statsRoutes(app, deps);
   // Live connections never end by themselves, so end them first when the server is shutting down.

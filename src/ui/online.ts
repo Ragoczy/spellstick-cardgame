@@ -1,6 +1,7 @@
 // Talking to the game server. Only used by the online build (VITE_ONLINE=true); the plain
 // static build never calls these.
 
+import type { Collection, SavedTeam, TeamInput } from '../shared/collectionApi';
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
 import type { StatsOverview } from '../shared/statsApi';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
@@ -132,10 +133,31 @@ export const matchApi: MatchApi = {
 
 export const listMatches = () => call<MatchSummary[]>('GET', '/api/matches');
 export const findPlayers = (name: string) => call<PlayerListing[]>('GET', `/api/players?name=${encodeURIComponent(name)}`);
-export const sendChallenge = (opponentId: number, lanes: number, team: string, pace: Pace, draft: boolean, ranked: boolean) =>
-  call<MatchSummary>('POST', '/api/matches', { opponentId, lanes, team, pace, players: draft ? 'draft' : 'dealt', ranked });
-export const acceptChallenge = (id: number) => call<MatchDetail>('POST', `/api/matches/${id}/accept`);
+/** How players are chosen: a draft, dealt at random, or each player's saved team (constructed). */
+export type PlayersChoice = 'draft' | 'dealt' | 'constructed';
+export interface ChallengeInput {
+  opponentId: number;
+  lanes: number;
+  /** Team colors and spells, for a draft or dealt players. */
+  team: string;
+  pace: Pace;
+  players: PlayersChoice;
+  ranked: boolean;
+  /** Your saved team, for a constructed match. */
+  teamId?: number;
+}
+export const sendChallenge = (input: ChallengeInput) => call<MatchSummary>('POST', '/api/matches', input);
+/** teamId: your saved team, for a constructed match. */
+export const acceptChallenge = (id: number, teamId?: number) =>
+  call<MatchDetail>('POST', `/api/matches/${id}/accept`, teamId === undefined ? undefined : { teamId });
 export const declineChallenge = (id: number) => call<MatchSummary>('POST', `/api/matches/${id}/decline`);
+
+// ---- Cards and saved teams ----
+
+export const fetchCollection = () => call<Collection>('GET', '/api/collection');
+/** Saves a team: a new one, or changes to team id. */
+export const saveTeam = (team: TeamInput, id?: number) => call<SavedTeam>('POST', id === undefined ? '/api/teams' : `/api/teams/${id}`, team);
+export const deleteTeam = (id: number) => call<{ ok: true }>('POST', `/api/teams/${id}/delete`);
 
 // ---- Ratings ----
 

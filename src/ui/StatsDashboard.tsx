@@ -109,7 +109,7 @@ export function StatsDashboard({ onBack }: { onBack: () => void }) {
         </tbody>
       </table>
       <p className="small">
-        What players choose, of {plural(m.started, 'match', 'matches')} started: {pct(m.draft, m.started)} draft,{' '}
+        What players choose, of {plural(m.started, 'match', 'matches')} started: {pct(m.draft, m.started)} draft, {pct(m.constructed, m.started)} saved teams,{' '}
         {pct(m.ranked, m.started)} ranked, {pct(m.threeLanes, m.started)} three lanes, {pct(m.live, m.started)} live
         and {pct(m.async, m.started)} at their own pace.
       </p>
@@ -132,7 +132,7 @@ export function StatsDashboard({ onBack }: { onBack: () => void }) {
           ))}
         </tbody>
       </table>
-      <p className="small">Records are wins–losses, then draws if there were any. Resigning and running out of time count as losses.</p>
+      <p className="small">Records are wins–losses, then draws if there were any. Resigning and running out of time count as losses. Matches with saved teams aren't included.</p>
 
       <h3>Draft picks</h3>
       {data.drafts === 0 ? <p className="small">No drafts finished yet.</p> : (

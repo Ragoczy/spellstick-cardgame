@@ -26,10 +26,8 @@ export function FutureFeatures({ onBack }: { onBack: () => void }) {
 
       <h3>Online play</h3>
       <ul>
-        <li><b>Play other readers:</b> sign in with Discord and play live, or one move at a time over a few days.</li>
-        <li><b>Time banks:</b> each player gets a set amount of thinking time per match, like a chess clock, so games keep moving.</li>
-        <li><b>Draft matches:</b> both players pick 10 cards from the same face-up pool, and the rest of each deck is dealt at random.</li>
-        <li><b>Your own collection:</b> a free starter deck for everyone, then build and save your own teams, with records and season stats.</li>
+        <li><b>Season stats for your teams:</b> goals, saves, and injuries caused by each player on your saved teams.</li>
+        <li><b>Team crests:</b> a crest for each saved team.</li>
         <li><b>Tournaments:</b> automatic pairings, standings, and a final bracket, with alerts from a Discord bot.</li>
         <li><b>Award cards:</b> numbered cards for tournament champions and finalists, achievements, and book launches. Earned, never bought.</li>
         <li><b>Card store:</b> spend your Discord coins on packs, single cards, and cosmetics like crests and card backs. Earn coins by playing.</li>

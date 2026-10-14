@@ -72,7 +72,7 @@ export interface ContestSide {
   modifiers: Modifier[];
   /** A hit's strength, used instead of the player's stat (no abilities or injuries apply). */
   power?: { label: string; value: number };
-  /** This side's die roll in this contest, if dice were called. */
+  /** This side's die roll in this contest (every contest is rolled; see config.contestDie). */
   roll?: number;
 }
 
@@ -99,7 +99,10 @@ export type Pending =
   | { kind: 'draw'; side: Side }
   | { kind: 'action'; side: Side }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
-  /** Call for dice in this contest (spend one of your rolls)? */
+  /**
+   * Spend a roll token in this contest? With 'reroll' tokens (the rule), it rerolls your own die.
+   * With the old 'call' tokens, it calls for dice.
+   */
   | { kind: 'callDice'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'discard'; side: Side; count: number }
   /** A player was injured or carried off: their owner must bring on a substitute from hand. */

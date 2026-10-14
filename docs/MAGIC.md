@@ -94,7 +94,7 @@ How they were made (Claude):
   one use of a stat and give +3 instead of +2: Burst of Speed only when receiving a pass,
   Pinpoint only when shooting, Turn Aside only for a goalie's save, and so on. This is the one
   addition to the effect vocabulary (`boost` `when`, RULES.md v0.15).
-- **Numbers stay at the old levels:** hits strength 3, steals +2, recalls draw 2, long shots −2,
+- **Numbers stay at the old levels:** hits strength 3 (4 since rules v0.16, when every contest became rolled), steals +2, recalls draw 2, long shots −2,
   open boosts +2. Same-effect spells in different families are deliberate: they're the same card
   for different players' magic, like the old Earth and Water Shields.
 - **Names** are plain and in-world. Placeholders that named an element (Neutral Boost, Fire
@@ -103,22 +103,22 @@ How they were made (Claude):
 
 | Magic | Spell | Type | Effect | In team deck |
 |---|---|---|---|---|
-| Fire | Flambé | Action | Hit, strength 3 | A×2 |
+| Fire | Flambé | Action | Hit, strength 4 | A×2 |
 | Explosion (fire) | Blast Shot | Action | Long shot, −2 | A |
-| Water | Water Spear | Action | Hit, strength 3 | — |
+| Water | Water Spear | Action | Hit, strength 4 | — |
 | Mist (water) | Mist Veil | Reaction | Shield | — |
 | Fog (water) | Fog Bank | Action | Decoy pass | — |
 | Ice | Ice Wall | Reaction | Shield | A |
-| Earth | Earth Crush | Action | Hit, strength 3 | B×2 |
+| Earth | Earth Crush | Action | Hit, strength 4 | B×2 |
 | Stone (earth) | Stone Skin | Reaction | Shield | — |
 | Gravity (earth) | Heavy Ground | Action | Steal +2 | A, B |
 | Air | Light as Air | Reaction | Boost +3, only dodging a tackle | — |
 | Wind (air) | Tailwind | Action | Long pass | A |
 | Flight (air) | Leap | Reaction | Boost +3, only receiving | — |
-| Storm (weather) | Squall | Action | Hit, strength 3 | — |
-| Lightning | Bolt | Action | Hit, strength 3 | — |
+| Storm (weather) | Squall | Action | Hit, strength 4 | — |
+| Lightning | Bolt | Action | Hit, strength 4 | — |
 | Shock (lightning) | Jolt | Reaction | Dirty play | — |
-| Thunder (lightning) | Thunderclap | Action | Hit, strength 3 | — |
+| Thunder (lightning) | Thunderclap | Action | Hit, strength 4 | — |
 | Light | Dazzle | Reaction | Shield | — |
 | Radiance (light) | Blinding Flash | Reaction | Shield | — |
 | Shadow | Shadow Double | Action | Mirror images | — |
@@ -140,7 +140,7 @@ How they were made (Claude):
 | Hexing (curse) | Hex | Reaction | Shield | — |
 | Ill luck (curse) | Bad Luck | Reaction | Shield | — |
 | Evil eye (curse) | Evil Eye | Reaction | Shield | — |
-| Elf-shot (curse) | Elf-shot | Action | Hit, strength 3 | B |
+| Elf-shot (curse) | Elf-shot | Action | Hit, strength 4 | B |
 | Weakening (curse) | Wither | Reaction | Shield | B |
 | Pain (curse) | Sting | Reaction | Dirty play | — |
 | Warding | Ward | Reaction | Shield | B |
@@ -148,7 +148,7 @@ How they were made (Claude):
 | Binding | Snare | Action | Steal +2 | A, B |
 | Paralysis (binding) | Freeze in Place | Reaction | Shield | — |
 | Force | Force Shot | Action | Long shot, −2 | B |
-| Shattering (force) | Shatter | Action | Hit, strength 3 | A |
+| Shattering (force) | Shatter | Action | Hit, strength 4 | A |
 | Repulsion (force) | Turn Aside | Reaction | Boost +3, only saving | — |
 | Levitation (force) | Float Pass | Action | Long pass | B |
 | Haste (time) | Quicken | Reaction | Boost +3, only intercepting | — |

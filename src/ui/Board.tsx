@@ -21,6 +21,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
   const hasBall = props.view.ball?.side === side && samePos(props.view.ball.pos, pos);
   const common = {
     hasBall,
+    safe: hasBall && props.view.ballProtected,
     highlight: props.highlights.get(key) ?? null,
     selected: props.selectedKey === key,
     flip: props.justRevealed.has(key),

@@ -9,7 +9,7 @@
 // - Each player gets 1 to 4 extra skill points on top of their type's base stats: about 40 at +1,
 //   30 at +2, 20 at +3, and 10 at +4, spread evenly across the types.
 // - Points go mostly to the stats that type is known for (see src/data/playerTypes.ts), never above the
-//   card limits (6 for field stats, 8 for Save).
+//   card limit (6 for field stats). A goalie's points go to Save, kept between 5 and 6.
 // - Each player gets one given name (each used once) and one surname from data/names.json.
 // - 1 to 3 Resonants, mostly 2 (the same mix as the prototype decks: 75% two, 20% one, 5% three),
 //   drawn from the Warlock magic data the way docs/MAGIC.md describes (scripts/resonant-draw.ts).
@@ -21,7 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { PlayerRole } from '../src/engine/cards';
 import { randomInt, seedToState, shuffle } from '../src/engine/rng';
-import { FIELD_STAT_MAX, FIELD_TYPES, GOALIE_BASE_SAVE, SAVE_MAX, type FieldStat } from '../src/data/playerTypes';
+import { FIELD_STAT_MAX, FIELD_TYPES, goalieSave, type FieldStat } from '../src/data/playerTypes';
 import { drawResonants, usefulSpecs, type DrawnResonant, type ResonantData } from './resonant-draw';
 
 const SEED = 20261010;
@@ -88,7 +88,7 @@ const players = byRole.map((slot, i) => {
   const id = `pl-${String(i + 1).padStart(3, '0')}`;
   const name = `${givenNames[i]} ${surnames[i]}`;
   if (slot.role === 'goalie') {
-    const save = Math.min(SAVE_MAX, GOALIE_BASE_SAVE + slot.bonus);
+    const save = goalieSave(slot.bonus);
     return { id, team: 'pool', kind: 'goalie', role: 'goalie', name, bonusPoints: slot.bonus, resonants: resonants(), save };
   }
   const role = FIELD_TYPES[slot.role];

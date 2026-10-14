@@ -93,32 +93,46 @@ export function matchup(
 }
 
 /**
+ * Your chance of winning a contest before the dice: your value plus a die against theirs plus a
+ * die (an empty spot doesn't roll). Without dice, printed numbers decide.
+ */
+export function chanceWithDice(mine: number, theirs: number, iWinTies: boolean, die: number, theyRoll = true): number {
+  const wins = (m: number, t: number) => m > t || (m === t && iWinTies);
+  if (!die) return wins(mine, theirs) ? 1 : 0;
+  let won = 0;
+  for (let a = 1; a <= die; a++) {
+    for (let b = 1; b <= die; b++) if (wins(mine + a, theirs + (theyRoll ? b : 0))) won++;
+  }
+  return won / (die * die);
+}
+
+/**
  * Your chance of scoring if you shoot now: your Shot against their goalie's Save, with both
- * rolling (shots are always rolled). Null if their goalie is face down and you haven't seen it.
+ * rolling. Null if their goalie is face down and you haven't seen it.
  */
 export function shotPreview(view: PlayerView, from: Pos): { mine: number; theirs: number; chance: number } | null {
   const m = matchup(view, { pos: from, stat: 'shot', use: 'shoot' }, { pos: { area: 'goal' }, stat: 'save', use: 'save' });
   if (!m || m.theirs === null) return null;
   const goalieThere = !!cardAt(view, 'opponent', { area: 'goal' });
-  const die = view.config.shotDie;
-  if (!die) return { mine: m.mine, theirs: m.theirs, chance: m.mine > m.theirs ? 1 : 0 };
-  let wins = 0;
-  for (let a = 1; a <= die; a++) {
-    for (let b = 1; b <= die; b++) if (m.mine + a > m.theirs + (goalieThere ? b : 0)) wins++;
-  }
-  return { mine: m.mine, theirs: m.theirs, chance: wins / (die * die) };
+  const die = view.config.contestDie || view.config.shotDie;
+  return { mine: m.mine, theirs: m.theirs, chance: chanceWithDice(m.mine, m.theirs, false, die, goalieThere) };
 }
 
 export interface DicePreview {
   mine: number;
   theirs: number;
   iWinTies: boolean;
-  /** Chance of winning if you call for dice (both players roll), before any reaction spells. */
+  /** 'reroll' (the rule): you may reroll your own die. 'call' (online matches before v0.16): call for dice. */
+  mode: 'reroll' | 'call';
+  /** Your die and theirs, when the contest is rolled. */
+  myRoll?: number;
+  theirRoll?: number;
+  /** Chance of winning if you spend the token (reroll, or call for dice), before any reaction spells. */
   chanceIfRolled: number;
   rollsLeft: number;
 }
 
-/** The current contest from your side, and your chance of winning if you call for dice. */
+/** The current contest from your side, and your chance of winning if you spend a roll token. */
 export function dicePreview(view: PlayerView): DicePreview | null {
   const pending = view.pending;
   if (pending.kind !== 'callDice' || pending.side !== view.me) return null;
@@ -133,6 +147,17 @@ export function dicePreview(view: PlayerView): DicePreview | null {
   const mine = total(myCard, me);
   const theirs = total(theirCard, them);
   const iWinTies = contest.tiesGoTo === role;
+  const rollsLeft = view.diceLeft[view.me];
+  if (view.config.diceTokens === 'reroll') {
+    // Only your die changes: try each face in place of the one you rolled.
+    const die = view.config.contestDie || view.config.shotDie;
+    let wins = 0;
+    for (let a = 1; a <= die; a++) {
+      const m = mine - (me.roll ?? 0) + a;
+      if (m > theirs || (m === theirs && iWinTies)) wins++;
+    }
+    return { mine, theirs, iWinTies, mode: 'reroll', myRoll: me.roll, theirRoll: them.roll, chanceIfRolled: wins / die, rollsLeft };
+  }
   const die = view.config.budgetDie;
   let wins = 0;
   for (let a = 1; a <= die; a++) {
@@ -142,7 +167,7 @@ export function dicePreview(view: PlayerView): DicePreview | null {
       if (m > t || (m === t && iWinTies)) wins++;
     }
   }
-  return { mine, theirs, iWinTies, chanceIfRolled: wins / (die * die), rollsLeft: view.diceLeft[view.me] };
+  return { mine, theirs, iWinTies, mode: 'call', chanceIfRolled: wins / (die * die), rollsLeft };
 }
 
 function cardAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos) {

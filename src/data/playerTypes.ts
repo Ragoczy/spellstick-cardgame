@@ -28,10 +28,23 @@ export const FIELD_TYPES: Record<Exclude<PlayerRole, 'goalie'>, FieldType> = {
 };
 
 /**
- * A goalie's Save before bonus points. All of a goalie's bonus points go to Save, so goalies
- * average about 4, like the prototype goalies. (At 3 they averaged 5 and too few shots scored.)
+ * A goalie's Save before bonus points. All of a goalie's bonus points go to Save. (v0.16: 3, was 2.
+ * With every contest rolled, the computer attacks more, and Save 4–5 gave over 2 goals a game.)
  */
-export const GOALIE_BASE_SAVE = 2;
+export const GOALIE_BASE_SAVE = 3;
+
+/**
+ * Goalie Save is kept between these (v0.16): base plus bonus points, raised to 5 or lowered to 6.
+ * When Save ran from 3 to 6, a 3-point gap between the goalies won 4 games in 5, so one card
+ * decided the game.
+ */
+export const GOALIE_SAVE_MIN = 5;
+export const GOALIE_SAVE_MAX = 6;
+
+/** A goalie's Save from its bonus points: 1 or 2 points give Save 5, 3 or 4 give Save 6. */
+export function goalieSave(bonusPoints: number): number {
+  return Math.max(GOALIE_SAVE_MIN, Math.min(GOALIE_SAVE_MAX, GOALIE_BASE_SAVE + bonusPoints));
+}
 
 /** Highest value a field stat can reach (data/cards.schema.json). */
 export const FIELD_STAT_MAX = 6;

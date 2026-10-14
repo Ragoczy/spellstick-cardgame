@@ -37,7 +37,7 @@ export type Action =
   | { type: 'regroup'; side: Side; discard: Uid[] }
   // During a contest: play a reaction spell, or null for none
   | { type: 'react'; side: Side; card: Uid | null }
-  // During a contest: call for dice (spend one of your rolls), or not
+  // During a contest: spend a roll token (reroll your die; with the old rule, call for dice), or not
   | { type: 'callDice'; side: Side; roll: boolean }
   // End of turn, one card at a time
   | { type: 'discard'; side: Side; card: Uid }

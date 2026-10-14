@@ -66,15 +66,40 @@ export interface GameConfig {
   passTiesGoTo: 'defender' | 'attacker';
   /** Added to the receiver's Speed in every pass. */
   passBonus: number;
-  /** Shots and penalties are always rolled: the shooter and the goalie each roll a die this size and add it (0 = off). */
+  /**
+   * Every contest is rolled (v0.16): each player in a contest rolls a die this size and adds it,
+   * before reaction spells (0 = off). Online matches started before v0.16 have 0.
+   */
+  contestDie: number;
+  /**
+   * Before v0.16 only shots and penalties were rolled, with a die this size. Used only when
+   * contestDie is 0 (online matches started before v0.16).
+   */
   shotDie: number;
   /** The shared injury deck (12 cards), shuffled at setup. */
   injuries: InjuryDef[];
 
-  /** Rolls each player may spend in a game ("call for dice"). Spent after the reveal, before reaction spells. */
+  /** Roll tokens each player may spend in a game. Spent after the roll, before reaction spells. */
   diceBudget: number;
-  /** The die used when someone calls for dice. */
+  /**
+   * What a roll token does. 'reroll' (the rule since v0.16): reroll your own die in a contest.
+   * 'call' (the old rule): call for dice in a contest that isn't rolled. Kept only so online
+   * matches started before v0.16 replay the way they were played.
+   */
+  diceTokens: 'reroll' | 'call';
+  /** The die used when someone calls for dice ('call' tokens only). */
   budgetDie: number;
+  /**
+   * Catch and shoot (v0.16): a player who just caught a pass can't be tackled until their team's
+   * next turn. The rule is 'forward' (forwards only). Online matches started before v0.16 have
+   * 'off'; 'all' is a simulation what-if.
+   */
+  protectCatch: 'off' | 'forward' | 'all';
+  /**
+   * Goalie clears (v0.16): a goalie holding the ball must pass it out as your action; if it has
+   * nobody to pass to, the ball goes to a faceoff. Online matches started before this have false.
+   */
+  goalieMustClear: boolean;
   /**
    * mirror_images: how many false images a glamoured player has. Each tackle or hit against them
    * finds the real one with a chance of 1 in (images + 1).
@@ -87,12 +112,8 @@ export interface GameConfig {
   castsPerResonant: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
-  /** 'both' (the rule): calling for dice makes both players roll; only the caller pays. 'self': only the caller rolls. */
+  /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
   diceMode: 'both' | 'self';
-  /** Each player in every contest rolls a die this size and adds it (0 = off). */
-  contestDie: number;
-  /** A player who just caught a pass can't be tackled until their team's next turn. The rules say 'off'. */
-  protectCatch: 'off' | 'forward' | 'all';
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
@@ -118,9 +139,13 @@ export const DEFAULT_CONFIG: GameConfig = {
   penaltyBonus: 3,
   passTiesGoTo: 'attacker',
   passBonus: 2,
+  contestDie: 6,
   shotDie: 6,
-  diceBudget: 5,
+  diceBudget: 3,
+  diceTokens: 'reroll',
   budgetDie: 6,
+  protectCatch: 'forward',
+  goalieMustClear: true,
   mirrorImages: 2,
   castsPerResonant: 1,
   injuries: [
@@ -130,8 +155,6 @@ export const DEFAULT_CONFIG: GameConfig = {
     { id: 'bruised-ribs', name: 'Bruised ribs', count: 2, penalty: { defense: 2 } },
     { id: 'concussion', name: 'Concussion', count: 1, penalty: { speed: 1, shot: 1, defense: 1, faceoff: 1 } },
   ],
-  protectCatch: 'off',
-  contestDie: 0,
   diceMode: 'both',
 };
 

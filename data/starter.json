@@ -1,5 +1,5 @@
 {
-  "about": "The starter set every online player gets once: 2 goalies and 22 field players from the player pool in cards.prototype.json, and the spells of one team in that file. About average: goalies Save 4, field players +1 to +3 bonus points (average 1.7; the pool averages 2). See docs/spellstick-multiplayer-design.md, Starter set.",
+  "about": "The starter set every online player gets once: 2 goalies and 22 field players from the player pool in cards.prototype.json, and the spells of one team in that file. About average: goalies Save 5 (the lower of the two goalie levels), field players +1 to +3 bonus points (average 1.7; the pool averages 2). See docs/spellstick-multiplayer-design.md, Starter set.",
   "teamName": "Starter team",
   "spellSet": "A",
   "players": [

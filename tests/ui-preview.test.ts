@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { prototypeCards } from '../src/data/prototype';
 import { viewFor, type GameEvent } from '../src/engine';
 import { GameSession } from '../src/ui/session';
-import { dicePreview, matchup, reactionPreview, shotPreview } from '../src/ui/preview';
+import { chanceWithDice, dicePreview, matchup, reactionPreview, shotPreview } from '../src/ui/preview';
 import { LANE_COUNTS, boost, dfn, fwd, goalie, play, player, scenario } from './helpers';
 
 describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
@@ -46,6 +46,24 @@ describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
     expect(shotPreview(viewFor(s, 'A'), fwd(LAST))).toBeNull();
   });
 
+  it('show the chance of winning a rolled contest (Defense 5 vs Speed 4, ties to the holder: 21 in 36)', () => {
+    expect(chanceWithDice(5, 4, false, 6)).toBeCloseTo(21 / 36);
+    expect(chanceWithDice(5, 4, false, 0)).toBe(1);
+    expect(chanceWithDice(3, 3, true, 0)).toBe(1);
+  });
+
+  it('show your rolls and the chance of winning if you reroll your own die', () => {
+    const s = scenario({ lanes, config: { contestDie: 6 }, dice: 3, B: { revealed: [dfn(LAST)] } });
+    const { state } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) });
+    const pending = state.pending as Extract<typeof state.pending, { kind: 'callDice' }>;
+    const myRoll = pending.contest.attacker.roll!;
+    const theirRoll = pending.contest.defender.roll!;
+    const preview = dicePreview(viewFor(state, 'A'))!;
+    expect(preview).toMatchObject({ mode: 'reroll', myRoll, theirRoll, mine: 3 + myRoll, theirs: 3 + theirRoll, rollsLeft: 3 });
+    // Passes go to the receiver on a tie: a new die wins whenever it's at least their roll.
+    expect(preview.chanceIfRolled).toBeCloseTo((7 - theirRoll) / 6);
+  });
+
   it('still offer the reaction prompt when the opposing spot is empty (it counts as 0)', () => {
     const s = scenario({ lanes, A: { hand: [boost('A boost')] } });
     s.teams.B.lineup.defense[LAST] = null;
@@ -55,7 +73,7 @@ describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
     expect(preview!.theirs).toBe(0);
   });
 
-  it('match the final result in real games when nobody plays a spell or calls for dice', () => {
+  it('match the final result in real games when nobody plays a spell or rerolls', () => {
     let checked = 0;
     for (let seed = 1; seed <= 8; seed++) {
       const session = new GameSession({ seed, cardSet: prototypeCards, lanes, team: 'A' });
@@ -72,10 +90,13 @@ describe.each(LANE_COUNTS)('prompt previews (%i lanes)', (lanes) => {
           events = session.computerStep();
         }
         for (const e of events) {
+          // A reroll after the preview changes the totals: skip that contest.
+          if (e.type === 'rerolled') shown = null;
           if (e.type !== 'contestResolved' || !shown) continue;
           const mine = e.attacker.side === 'A' ? e.attacker : e.defender;
           const theirs = e.attacker.side === 'A' ? e.defender : e.attacker;
-          const extras = [...mine.parts, ...theirs.parts].some((x) => x.label === 'Roll' || (x.label !== 'Ability' && x.amount > 0)) || mine.shielded || theirs.shielded;
+          // The dice are already showing in the preview, so only spells and shields can still change it.
+          const extras = [...mine.parts, ...theirs.parts].some((x) => !['Ability', 'Roll'].includes(x.label) && x.amount > 0) || mine.shielded || theirs.shielded;
           if (!extras) {
             checked++;
             expect([mine.total, theirs.total]).toEqual([shown.mine, shown.theirs]);

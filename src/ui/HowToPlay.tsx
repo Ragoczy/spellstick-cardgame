@@ -37,8 +37,10 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
 
       <h3>Actions</h3>
       <ul>
-        <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed <b>+2</b> against the opponent's Defense. Ties are caught; otherwise it's intercepted. Most passes get through.</li>
-        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save, and <b>every shot is rolled</b>: you and the goalie each roll a die and add it. Ties go to the goalie. Goalies are tough: about 2 shots in 5 go in, more with a good shooter or a spell.</li>
+        <li><b>Pass:</b> to a teammate in the same row, one row forward, or any row back. Receiver's Speed <b>+2</b> against the opponent's Defense. Ties are caught; otherwise it's intercepted. Most passes get through.
+          <br /><b>Catch and shoot:</b> a forward who catches a pass can't be tackled until your next turn, so they get their chance to shoot.
+          <br /><b>Goalie clears:</b> when your goalie has the ball, your action must be a pass out to a defender. No sitting on the ball.</li>
+        <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save. Ties go to the goalie. Goalies are tough: about 1 shot in 3 goes in, more with a good shooter or a spell.</li>
         <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
         <li><b>Regroup:</b> discard 1 card and draw a new one of the same kind (or do nothing).</li>
@@ -46,8 +48,8 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
 
       <h3>Contests</h3>
       <p>
-        Both players are revealed. Either side may <b>call for dice</b> (see below). Then the attacker may play one
-        <b> reaction spell</b>, and the defender may answer with one. Highest value wins.
+        Both players are revealed, and <b>both roll a die</b> and add it. Either side may spend a <b>reroll</b> (see
+        below). Then the attacker may play one <b>reaction spell</b>, and the defender may answer with one. Highest value wins.
       </p>
 
       <h3>Playing spells</h3>
@@ -61,9 +63,9 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
 
       <h3>Dice</h3>
       <p>
-        You have <b>5 rolls</b> a game. Losing a contest that matters? Spend one to call for dice: you <i>both</i> roll a
-        die and add it, but only you use up a roll. The attacker gets the first chance to call, then the defender.
-        (Shots and penalties are always rolled, so you don't spend rolls on them.)
+        <b>Every contest is rolled</b>: both players roll a die and add it, so a better player usually wins, but not
+        always. You have <b>3 rerolls</b> a game. Rolled badly in a contest that matters? Spend one to reroll your own
+        die. The attacker gets the first chance, then the defender, and both can see the dice before playing spells.
       </p>
 
       <h3>Hits and injuries</h3>
@@ -91,7 +93,7 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
         The decks are the game clock. When a player has no cards left in either pile, they finish that turn, the other player takes one
         last turn, and it's <b>full time</b>: more goals wins. A team that reaches 3 goals wins straight away.
         If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
-        haven't shot yet (penalty shots get +3, and are rolled), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
+        haven't shot yet (penalty shots get +3), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
       </p>
 
       <h3>Something wrong?</h3>

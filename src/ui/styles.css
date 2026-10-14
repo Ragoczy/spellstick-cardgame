@@ -253,6 +253,10 @@ button.danger {
   background: radial-gradient(circle at 35% 35%, #ffe08a, var(--accent) 70%);
   box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+.safe {
+  position: absolute; top: 3px; right: 20px; padding: 0 4px; border-radius: 6px; font-size: 0.6rem; font-weight: 700;
+  line-height: 14px; text-transform: uppercase; background: #fff; color: var(--match); box-shadow: 0 0 0 1px var(--match);
+}
 .card.selected { box-shadow: 0 0 0 3px var(--select); }
 .card.hl-target { box-shadow: 0 0 0 3px var(--target); }
 .card.hl-match { box-shadow: 0 0 0 3px var(--match); }

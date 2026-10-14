@@ -1,11 +1,12 @@
 // Contests (RULES.md "Contests"):
-// 1. Reveal both players.
-// 2. The attacker may play one reaction spell, cast by its player in the contest. Then the
+// 1. Reveal both players, and both roll a die.
+// 2. The attacker may spend a roll token to reroll their die. Then the defender may.
+// 3. The attacker may play one reaction spell, cast by its player in the contest. Then the
 //    defender, having seen it, may do the same. (In a faceoff, the chooser goes first.)
-// 3. Apply abilities, injuries, and spells.
-// 4. The attacker wins only with a higher value. Ties go to the defender, except in passes
+// 4. Apply abilities, injuries, spells, and dice.
+// 5. The attacker wins only with a higher value. Ties go to the defender, except in passes
 //    (the receiver) and faceoffs (the chooser).
-// 5. Then injuries: a hit that lands, and a dirty play by the winning side.
+// 6. Then injuries: a hit that lands, and a dirty play by the winning side.
 //
 // An empty spot (a player carried off) counts as 0 and can't play reaction spells. Nor can a
 // player who has used up their casting limit.
@@ -25,12 +26,19 @@ function otherRole(role: ContestRole): ContestRole {
   return role === 'attacker' ? 'defender' : 'attacker';
 }
 
+/**
+ * The die both players roll in this contest: every contest is rolled (RULES.md "Contests").
+ * In online matches started before v0.16, only shots and penalties were. 0 = not rolled.
+ */
+function contestDie(s: GameState, contest: Contest): number {
+  const isShot = contest.kind === 'shot' || contest.kind === 'penalty';
+  return s.config.contestDie || (isShot ? s.config.shotDie : 0);
+}
+
 export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   reveal(s, contest.attacker.side, contest.attacker.pos, ev);
   reveal(s, contest.defender.side, contest.defender.pos, ev);
-  // Shots and penalties are always rolled (RULES.md "Shoot"); the experimental contestDie rolls in every contest.
-  const isShot = contest.kind === 'shot' || contest.kind === 'penalty';
-  const die = s.config.contestDie || (isShot ? s.config.shotDie : 0);
+  const die = contestDie(s, contest);
   if (die > 0) {
     for (const side of [contest.attacker, contest.defender]) {
       if (!slotAt(s, side.side, side.pos)) continue; // an empty spot doesn't roll
@@ -49,13 +57,25 @@ export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): v
   askForDice(s, contest, 'attacker', ev);
 }
 
-// ---- Calling for dice (RULES.md "Dice") ----
+// ---- Roll tokens (RULES.md "Dice") ----
 
-/** Asks a side whether to spend a roll, if it can; otherwise moves on. */
+/**
+ * Can this side spend a roll token now? With 'reroll' tokens (the rule), a side that rolled may
+ * reroll its own die. With the old 'call' tokens, a side may call for dice in a contest that
+ * isn't rolled yet.
+ */
+function canSpendToken(s: GameState, contest: Contest, role: ContestRole): boolean {
+  const me = contest[role];
+  if (s.config.diceBudget <= 0 || s.diceLeft[me.side] <= 0 || !slotAt(s, me.side, me.pos)) return false;
+  if (s.config.diceTokens === 'reroll') return !!me.roll;
+  const alreadyRolled = s.config.diceMode === 'both' ? !!(contest.attacker.roll || contest.defender.roll) : !!me.roll;
+  return !alreadyRolled;
+}
+
+/** Asks a side whether to spend a roll token, if it can; otherwise moves on. */
 function askForDice(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
   const me = contest[role];
-  const alreadyRolled = s.config.diceMode === 'both' ? !!(contest.attacker.roll || contest.defender.roll) : !!me.roll;
-  if (s.config.diceBudget > 0 && s.diceLeft[me.side] > 0 && slotAt(s, me.side, me.pos) && !alreadyRolled) {
+  if (canSpendToken(s, contest, role)) {
     s.pending = { kind: 'callDice', side: me.side, role, contest };
     return;
   }
@@ -67,12 +87,23 @@ function afterDice(s: GameState, contest: Contest, role: ContestRole, ev: GameEv
   else askForReaction(s, contest, 'attacker', ev);
 }
 
-/** A side decides whether to spend a roll. In 'both' mode both players roll; only the caller pays. */
+/**
+ * A side decides whether to spend a roll token. With 'reroll' tokens, they reroll their own die.
+ * With the old 'call' tokens, they call for dice: in 'both' mode both players roll; only the
+ * caller pays.
+ */
 export function callDice(s: GameState, roll: boolean, ev: GameEvent[]): void {
   if (s.pending.kind !== 'callDice') throw new Error('No contest is waiting for dice');
   const { contest, role } = s.pending;
   const me = contest[role];
-  if (roll) {
+  if (roll && s.config.diceTokens === 'reroll') {
+    s.diceLeft[me.side] -= 1;
+    const from = me.roll!;
+    let value: number;
+    [value, s.rng] = randomInt(s.rng, contestDie(s, contest));
+    me.roll = value + 1;
+    ev.push({ type: 'rerolled', side: me.side, role, from, to: me.roll, left: { ...s.diceLeft } });
+  } else if (roll) {
     s.diceLeft[me.side] -= 1;
     const rollers = s.config.diceMode === 'both' ? [contest.attacker, contest.defender] : [me];
     for (const side of rollers) {

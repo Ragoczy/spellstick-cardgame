@@ -11,7 +11,7 @@ import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, endedEarlyText, injuryEffect, laneName, magicLabel, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
 import { LineupScreen } from './LineupScreen';
-import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
+import { casterAffinity, chanceWithDice, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
 import { TurnSteps } from './TurnSteps';
 import { whyNotNow } from './spellHelp';
 import { posKey, useGame, type Announcement, type GameController } from './useGame';
@@ -73,6 +73,8 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const subs = legal.filter((a): a is Extract<Action, { type: 'substitute' }> => a.type === 'substitute');
   const shoot = legal.find((a) => a.type === 'shoot');
   const tackle = legal.find((a) => a.type === 'tackle');
+  // Not when your goalie has to clear the ball.
+  const canRegroup = legal.some((a) => a.type === 'regroup');
   const myBall = view.ball?.side === me ? view.ball.pos : null;
 
   const castsFor = (card: string, caster?: Pos) =>
@@ -332,7 +334,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       case 'faceoffLane':
         return (
           <div className="prompt">
-            <strong>Faceoff.</strong> Choose a lane. Both midfielders in that lane compare Faceoff, and you win ties.
+            <strong>Faceoff.</strong> Choose a lane. Both midfielders in that lane compare Faceoff (both roll a die), and you win ties.
             <div className="buttons">
               {legal.map((a) => a.type === 'faceoffLane' ? (
                 <button type="button" key={a.lane} onClick={() => act(a)}>{capitalize(laneName(a.lane, view.lanes))} lane</button>
@@ -391,7 +393,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       : h.type === 'cast' ? `cast ${view.mine.hand.find((c) => c.uid === h.card)?.def.name}`
       : h.type === 'substitute' ? `substitute your ${posName(h.pos, view.lanes)}`
       : h.type === 'regroup' ? (h.discard.length ? 'regroup (swap out weak cards)' : 'pass this action')
-      : h.type === 'callDice' ? (h.roll ? 'call for dice' : 'not roll')
+      : h.type === 'callDice' ? (view.config.diceTokens === 'reroll' ? (h.roll ? 'reroll' : 'keep its roll') : (h.roll ? 'call for dice' : 'not roll'))
       : h.type === 'draw' ? `draw a ${h.pile === 'players' ? 'player' : 'spell'}`
       : h.type;
     setHintText(`The computer would ${text}.`);
@@ -410,9 +412,16 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const imagesNote = holderSlot?.state === 'revealed' && holderSlot.images
     ? ` (mirror images: ${view.config.mirrorImages} in ${view.config.mirrorImages + 1} tackles miss)`
     : '';
-  const tackleLabel = theirHolder
-    ? versus(matchup(view, { pos: opposite(theirHolder), stat: 'defense', use: 'tackle' }, { pos: theirHolder, stat: 'speed', use: 'evade' }), 'Defense', 'Speed') + imagesNote
-    : '';
+  // Every contest is rolled, so show the chance of winning the tackle when their player is known.
+  const tackleMatchup = theirHolder
+    ? matchup(view, { pos: opposite(theirHolder), stat: 'defense', use: 'tackle' }, { pos: theirHolder, stat: 'speed', use: 'evade' })
+    : null;
+  const tackleChance = tackleMatchup && tackleMatchup.theirs !== null && view.config.contestDie
+    ? chanceWithDice(tackleMatchup.mine, tackleMatchup.theirs, false, view.config.contestDie)
+    : null;
+  const tackleLabel = !theirHolder ? ''
+    : tackleChance !== null ? ` (your Defense ${tackleMatchup!.mine} vs their Speed ${tackleMatchup!.theirs}, both roll: about ${Math.round(tackleChance * 100)}% to win)${imagesNote}`
+    : versus(tackleMatchup, 'Defense', 'Speed') + imagesNote;
 
   function actionPrompt() {
     const left = view.actionsLeft;
@@ -420,7 +429,15 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       ? ` To cast a spell, tap a glowing spell in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be cast now`}).`
       : '';
     let help = `Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.${spellHelp}`;
-    if (!myBall) help = (view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)." : `${opp.Name} has the ball. You can tackle, or play a card.`) + spellHelp;
+    // Goalie clears: the only choice is how to pass it out.
+    if (myBall?.area === 'goal' && view.config.goalieMustClear) {
+      help = `Your goalie has the ball and must clear it: tap your goalie (glowing), then a defender to pass to.${spellHelp}`;
+    }
+    if (!myBall) {
+      help = (view.ball?.pos.area === 'goal' ? "Their goalie has the ball (goalies can't be tackled)."
+        : view.ballProtected ? `${opp.Name} just caught a pass, so that player can't be tackled until ${opp.owner} next turn. You can play a card.`
+        : `${opp.Name} has the ball. You can tackle, or play a card.`) + spellHelp;
+    }
     if (selection.kind === 'holder') help = 'Tap a glowing teammate to pass to them. Tap anywhere else to cancel.';
     if (selection.kind === 'cast') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
@@ -445,7 +462,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <div className="buttons">
           {shoot ? <button type="button" className="primary" onClick={() => act(shoot)}>Shoot!{shootLabel}</button> : null}
           {tackle ? <button type="button" onClick={() => act(tackle)}>Tackle{tackleLabel}</button> : null}
-          {selection.kind === 'regroup' ? (
+          {!canRegroup ? null : selection.kind === 'regroup' ? (
             <button type="button" onClick={() => act({ type: 'regroup', side: me, discard: selection.picked })}>
               {selection.picked.length ? `Discard ${selection.picked.length} and draw` : 'Do nothing'}
             </button>
@@ -485,7 +502,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           <span className="score">You <b>{view.score[me]}</b> – <b>{view.score[them]}</b> {opp.Name}</span>
           {online ? <Clocks match={online.match} receivedAt={online.receivedAt} opp={opp} /> : null}
           <span className="meta">
-            Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 Rolls {view.diceLeft[me]} / {view.diceLeft[them]}
+            Turn {view.turn} · Cards left {view.mine.playersLeft}+{view.mine.spellsLeft} / {view.opponent.playersLeft}+{view.opponent.spellsLeft} (players+spells) · 🎲 {view.config.diceTokens === 'reroll' ? 'Rerolls' : 'Rolls'} {view.diceLeft[me]} / {view.diceLeft[them]}
             {view.endgame.finalTurnFor ? ' · Last turn!' : ''}
           </span>
           {online?.match.status === 'active' ? <button type="button" className="quiet" onClick={online.resign}>Resign</button> : null}
@@ -562,6 +579,19 @@ function DicePrompt({ view, onChoose }: { view: PlayerView; onChoose: (roll: boo
   if (!preview) return null;
   const winning = preview.mine > preview.theirs || (preview.mine === preview.theirs && preview.iWinTies);
   const chance = Math.round(preview.chanceIfRolled * 100);
+  if (preview.mode === 'reroll') {
+    return (
+      <div className="prompt">
+        <strong>Reroll your die?</strong> You rolled {preview.myRoll ?? '–'}, they rolled {preview.theirRoll ?? '–'}. Right now
+        it's {preview.mine}–{preview.theirs}: you'd {winning ? 'win' : 'lose'}{preview.mine === preview.theirs ? ' (tie)' : ''}. If you
+        reroll, you'd win about {chance}% of the time (before any spells). It uses one of your rerolls ({preview.rollsLeft} left this game).
+        <div className="buttons">
+          <button type="button" className={!winning && chance >= 40 ? 'primary' : ''} onClick={() => onChoose(true)}>🎲 Reroll ({chance}%)</button>
+          <button type="button" onClick={() => onChoose(false)}>Keep it</button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="prompt">
       <strong>Call for dice?</strong> Right now it's {preview.mine}–{preview.theirs}: you'd {winning ? 'win' : 'lose'}

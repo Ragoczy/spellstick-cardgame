@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PLAYER_ROLES, POOL_TEAM, type PlayerCardDef } from '../src/engine/cards';
-import { FIELD_STAT_MAX, FIELD_TYPES, GOALIE_BASE_SAVE, SAVE_MAX } from '../src/data/playerTypes';
+import { FIELD_STAT_MAX, FIELD_TYPES, GOALIE_SAVE_MAX, GOALIE_SAVE_MIN, goalieSave } from '../src/data/playerTypes';
 import { prototypeCards } from '../src/data/prototype';
 
 const names = JSON.parse(readFileSync(new URL('../data/names.json', import.meta.url), 'utf8')) as {
@@ -60,7 +60,9 @@ describe('named players', () => {
   it("adds exactly the bonus points to the type's base stats, within the card limits", () => {
     for (const p of players) {
       if (p.kind === 'goalie') {
-        expect(p.save).toBe(Math.min(SAVE_MAX, GOALIE_BASE_SAVE + p.bonusPoints!));
+        expect(p.save).toBe(goalieSave(p.bonusPoints!));
+        expect(p.save).toBeGreaterThanOrEqual(GOALIE_SAVE_MIN);
+        expect(p.save).toBeLessThanOrEqual(GOALIE_SAVE_MAX);
         continue;
       }
       const type = FIELD_TYPES[p.role as keyof typeof FIELD_TYPES];

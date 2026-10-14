@@ -210,6 +210,12 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return { text: `🎲 ${who(e.caller)} ${verb(e.caller, 'call', 'calls')} for dice (${left} roll${left === 1 ? '' : 's'} left). ` +
         `You roll ${myRoll ?? '–'}, ${opp.name} rolls ${theirRoll ?? '–'}.`, tone: 'turn' };
     }
+    case 'goalieCantClear':
+      return info(`${capitalize(whose(e.side))} goalie has nobody to pass to, so the ball goes to a faceoff. ${who(otherSide(e.side))} ${verb(otherSide(e.side), 'choose', 'chooses')} the lane.`);
+    case 'rerolled': {
+      const left = e.left[e.side];
+      return { text: `🎲 ${who(e.side)} ${verb(e.side, 'reroll', 'rerolls')}: ${e.from} becomes ${e.to} (${left} reroll${left === 1 ? '' : 's'} left).`, tone: 'turn' };
+    }
     case 'shootoutStarted':
       return { text: `Full time, and it's a tie: penalty shootout! ${who(e.first)} ${verb(e.first, 'shoot', 'shoots')} first.`, tone: 'goal' };
     case 'penalty':

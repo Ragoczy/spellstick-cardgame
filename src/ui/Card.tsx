@@ -101,6 +101,8 @@ export interface CardProps {
   /** On the field: substituted on this turn, so can't act yet. */
   cameOn?: boolean;
   hasBall?: boolean;
+  /** Holds the ball after catching a pass at forward: can't be tackled until their next turn. */
+  safe?: boolean;
   selected?: boolean;
   /** Can't be played right now (shown faded). */
   dim?: boolean;
@@ -111,7 +113,7 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, selected, dim, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, safe, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
   const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
@@ -137,11 +139,14 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
       {faceDown ? <span className="tag">{scried ? 'seen' : 'hidden'}</span> : null}
       {images ? <span className="tag images" title="Mirror images: most tackles and hits go for an image and miss">images</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}
+      {hasBall && safe ? <span className="safe" title={SAFE_TITLE}>safe</span> : null}
     </button>
   );
 }
 
-export function CardBack({ team, hasBall, highlight, onClick, label, injury }: { team: string; hasBall?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef }) {
+const SAFE_TITLE = "Just caught a pass: can't be tackled until their team's next turn";
+
+export function CardBack({ team, hasBall, safe, highlight, onClick, label, injury }: { team: string; hasBall?: boolean; safe?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef }) {
   const colors = useContext(TeamColors);
   return (
     <button type="button" className={`card back ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
@@ -149,6 +154,7 @@ export function CardBack({ team, hasBall, highlight, onClick, label, injury }: {
       {label ? <span className="back-label">{label}</span> : null}
       {injury ? <span className="injury on-back" title={injury.name}>✚ {injury.name}</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}
+      {hasBall && safe ? <span className="safe" title={SAFE_TITLE}>safe</span> : null}
     </button>
   );
 }

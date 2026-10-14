@@ -30,7 +30,7 @@ export function turnPhase(view: PlayerView, opp: OpponentWords = opponentWords()
     case 'action':
       return { kind: 'turn', mine, step: 'act', detail: null };
     case 'callDice':
-      return { kind: 'turn', mine, step: 'act', detail: `Contest: ${decider} may call for dice` };
+      return { kind: 'turn', mine, step: 'act', detail: `Contest: ${decider} may ${view.config.diceTokens === 'reroll' ? 'reroll' : 'call for dice'}` };
     case 'reaction':
       return { kind: 'turn', mine, step: 'act', detail: `Contest: ${decider} may play a reaction spell` };
     case 'forcedSub':

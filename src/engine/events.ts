@@ -72,6 +72,8 @@ export type GameEvent =
   | { type: 'contestResolved'; kind: ContestKind; attacker: Breakdown; defender: Breakdown; winner: Side; winnerRole: ContestRole }
   | { type: 'ballMoved'; side: Side; pos: Pos }
   | { type: 'goal'; side: Side; score: Record<Side, number> }
+  /** Goalie clears: this side's goalie had the ball but nobody to pass to, so it goes to a faceoff. */
+  | { type: 'goalieCantClear'; side: Side }
   /** The replaced player goes to hand. `removed` is null if they were face down (only their owner knows who). */
   /** A player in a contest has used up their casting limit, so their side can't play a reaction spell (public). */
   | { type: 'outOfSpells'; side: Side; pos: Pos }
@@ -93,8 +95,10 @@ export type GameEvent =
   /** fromPile: a full hand at the draw step, so the top card of that pile went to the discard pile. */
   | { type: 'discarded'; side: Side; cards: CardView[]; fromPile?: Pile }
   | { type: 'shootoutStarted'; first: Side }
-  /** A player called for dice: both players rolled (only the caller spent a roll). */
+  /** A player called for dice: both players rolled (only the caller spent a roll). Old 'call' tokens only. */
   | { type: 'diceRolled'; caller: Side; attacker: Side; attackerRoll?: number; defenderRoll?: number; left: Record<Side, number> }
+  /** A player spent a roll token to reroll their own die in a contest. */
+  | { type: 'rerolled'; side: Side; role: ContestRole; from: number; to: number; left: Record<Side, number> }
   | {
       type: 'injured';
       side: Side;

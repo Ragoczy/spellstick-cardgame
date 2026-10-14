@@ -20,8 +20,10 @@ describe.each(LANE_COUNTS)('computer opponent (%i lanes)', (lanes) => {
 
   it('values a pass to a forward more when it has a second action to shoot straight away', () => {
     // The defender tackles well, so a forward who has to wait a turn would likely lose the ball.
+    // (Without catch and shoot: with it, the forward is safe until the next turn anyway.)
     const base = {
       lanes,
+      config: { protectCatch: 'off' as const },
       ball: { side: 'A' as const, pos: mid(0) },
       A: { lineup: { forward: { 0: player('A striker', { speed: 4, shot: 6 }) } } },
       B: { lineup: { defense: { 0: player('B def', { defense: 4 }) } }, revealed: [dfn(0), GOAL_POS], goalie: goalie('B goalie', 2) },

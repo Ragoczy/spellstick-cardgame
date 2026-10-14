@@ -57,6 +57,25 @@ function faceoffLaneOk(s: GameState, lane: number): boolean {
   return !Array.from({ length: s.config.lanes }, (_, l) => l).some(hasMid);
 }
 
+/** Goalie clears (RULES.md): your goalie holds the ball, so your action must pass it out. */
+export function mustClear(s: GameState, side: Side): boolean {
+  return !!s.config.goalieMustClear && s.ball?.side === side && s.ball.pos.area === 'goal';
+}
+
+/** Whether your goalie can clear the ball: it can act, and one of your defenders is there to pass to. */
+export function canClear(s: GameState, side: Side): boolean {
+  if (justCameOn(s, side, { area: 'goal' })) return false;
+  return Array.from({ length: s.config.lanes }, (_, lane) => lane).some((lane) => !!slotAt(s, side, { area: 'defense', lane }));
+}
+
+/** A pass, or a spell that makes one (long_pass, decoy_pass). */
+function isClear(action: Action): boolean {
+  return action.type === 'pass' || (action.type === 'cast' && (action.target.kind === 'pass' || action.target.kind === 'decoyPass'));
+}
+
+const MUST_CLEAR = 'Your goalie has the ball and must clear it: pass to one of your defenders.';
+const GOALIE_CLEARING = "Your goalie has the ball and must clear it this turn, so it can't come off now.";
+
 const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
 const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
 
@@ -106,7 +125,7 @@ export function validateAction(s: GameState, action: Action): string | null {
 
     case 'callDice': {
       if (p.kind !== 'callDice') return 'There is no contest waiting for dice.';
-      if (action.roll && s.diceLeft[side] <= 0) return 'You have no rolls left.';
+      if (action.roll && s.diceLeft[side] <= 0) return s.config.diceTokens === 'reroll' ? 'You have no rerolls left.' : 'You have no rolls left.';
       return null;
     }
 
@@ -149,6 +168,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (action.pos.area === 'goal' ? kind !== 'goalie' : kind !== 'field') {
         return 'Replace a goalie with a goalie, or a field player with a field player.';
       }
+      if (action.pos.area === 'goal' && mustClear(s, side)) return GOALIE_CLEARING;
       return null;
     }
 
@@ -170,6 +190,7 @@ export function validateAction(s: GameState, action: Action): string | null {
 
   // Everything below is a turn action.
   if (p.kind !== 'action') return "It isn't time to take an action.";
+  if (mustClear(s, side) && !isClear(action)) return MUST_CLEAR;
 
   switch (action.type) {
     case 'pass':

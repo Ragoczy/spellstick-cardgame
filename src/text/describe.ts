@@ -102,6 +102,10 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} mends ${e.card.def.name} (${e.injury.name}).`;
     case 'diceRolled':
       return `${names[e.caller]} calls for dice. ${names[e.attacker]} rolls ${e.attackerRoll ?? '–'}, ${names[e.attacker === 'A' ? 'B' : 'A']} rolls ${e.defenderRoll ?? '–'}.`;
+    case 'goalieCantClear':
+      return `${names[e.side]}'s goalie has nobody to pass to, so the ball goes to a faceoff. ${names[e.side === 'A' ? 'B' : 'A']} chooses the lane.`;
+    case 'rerolled':
+      return `${names[e.side]} rerolls: ${e.from} becomes ${e.to} (${e.left[e.side]} reroll${e.left[e.side] === 1 ? '' : 's'} left).`;
     case 'gameOver':
       return `Game over: ${e.result.winner === null ? 'a draw' : `${names[e.result.winner]} wins`} (${END_REASON[e.result.reason]}).`;
   }

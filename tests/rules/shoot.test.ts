@@ -33,13 +33,6 @@ describe.each(LANE_COUNTS)('shoot (%i lanes)', (lanes) => {
     expect(contest.winner).toBe(contest.attacker.total > contest.defender.total ? 'A' : 'B');
   });
 
-  it("can't use roll tokens, since it's already rolled; a pass still can", () => {
-    const s = scenario({ lanes, config: { shotDie: DEFAULT_CONFIG.shotDie }, dice: 5, ball: { side: 'A', pos: fwd(LAST) } });
-    expect(play(s, { type: 'shoot', side: 'A' }).state.pending.kind).not.toBe('callDice');
-    const pass = scenario({ lanes, config: { shotDie: DEFAULT_CONFIG.shotDie }, dice: 5 });
-    expect(play(pass, { type: 'pass', side: 'A', to: fwd(LAST) }).state.pending.kind).toBe('callDice');
-  });
-
   it('reveals the opposing goalie', () => {
     const s = scenario({ lanes, ball: { side: 'A', pos: fwd(LAST) } });
     const { state } = play(s, { type: 'shoot', side: 'A' });

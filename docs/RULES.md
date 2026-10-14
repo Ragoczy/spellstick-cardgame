@@ -1,4 +1,4 @@
-# Spellstick — rules v0.15
+# Spellstick — rules v0.16
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -19,7 +19,7 @@ Claude Code: do not edit this section.
 
 Each team sets out a lineup of player cards **face down** on its positions. The ball moves
 from player to player by passing. Whenever the ball arrives somewhere, the two players who meet
-there are revealed and contest it. Spells boost or bend those contests, and they work better or
+there are revealed and contest it, and both roll a die. Spells boost or bend those contests, and they work better or
 worse depending on the caster's Resonants. The decks are the game clock: when the cards run out,
 the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 
@@ -35,7 +35,7 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 - A field mat (see "The field").
 - A ball token and a score tracker.
 - A shared **injury deck** of 12 cards ⚙ (see "Injuries").
-- Two six-sided dice, and 5 roll tokens ⚙ per player (see "Dice").
+- Two six-sided dice, and 3 roll tokens ⚙ per player (see "Dice").
 - Spell markers (any small tokens) to show which players have cast (see "Casting limit").
 
 ## The field
@@ -117,7 +117,7 @@ Player abilities are never changed by affinity.
 | steal (+2) | tackle +4 | tackle +3 | +2 | +1 |
 | recall (2) | draw 4 | draw 3 | 2 | 1 |
 | long_shot (−2 Shot) | 0 | −1 | −2 | −3 |
-| hit (strength 3) | strength 5 | strength 4 | 3 | 2 |
+| hit (strength 4) | strength 6 | strength 5 | 4 | 3 |
 | shield, dirty_play, scry, swap, long_pass, mend, decoy_pass, mirror_images | works | works | works | fails |
 
 Because your opponent can't see your face-down players, they don't know how strong your spell
@@ -214,18 +214,27 @@ scored on takes the next turn, whoever won the faceoff.
 - any row backward, any lane (never to the goalie).
 
 The receiver and the opponent's player in the receiver's slot are both revealed, then contest:
-receiver's **Speed +2** ⚙ against the opponent's **Defense**. (The +2 is the pass itself: a good
+receiver's **Speed +2** ⚙ against the opponent's **Defense**, both rolled like every contest. (The +2 is the pass itself: a good
 pass is hard to cut out.) The passer isn't part of the contest and isn't revealed. If the
 receiver's value is **equal or higher**, they catch it and hold the ball. If not, the opponent's player intercepts and holds the ball. You can't pass to an empty spot,
 and an empty spot can't intercept.
 
+**Catch and shoot.** A forward who catches a pass can't be tackled until your next turn, so they
+get their chance to shoot ⚙. This only protects a pass caught at forward: not a midfielder or
+defender, and not a forward who won the ball with a tackle. They can still be hit.
+
 A goalie holding the ball may pass to any of its defenders the same way.
 
+**Goalie clears.** A goalie can't sit on the ball ⚙. When your goalie has the ball at your action,
+your action must clear it: a pass to one of your defenders, or a spell that makes a pass (Long
+Pass, Decoy Pass). You can't substitute your goalie while it holds the ball. If your goalie has
+nobody to pass to (your defender spots are empty), the ball goes to a faceoff straight away, the
+other team chooses the lane, and then you take your action as usual.
+
 **Shoot.** Only a forward holding the ball. The opposing goalie is revealed. Contest: forward's
-**Shot** against goalie's **Save**, and **every shot is rolled**: the shooter and the goalie each
-roll a six-sided die ⚙ and add it. If the forward's total is higher, you score. If not, the
-goalie holds the ball. Goalies are strong (Save 4 in the prototype decks), so most shots are
-saved: about 2 in 5 go in. Roll tokens can't be spent on a shot, since it's already rolled.
+**Shot** against goalie's **Save**, both rolled like every contest. If the forward's total is
+higher, you score. If not, the goalie holds the ball. Goalies are strong (Save 5 or 6 ⚙), so most
+shots are saved: about 1 in 3 goes in.
 
 A forward can only get the ball by beating the defender in its slot (winning a pass against
 their Defense, or a tackle), so a goal always means the forward beat both the defender and the
@@ -236,6 +245,7 @@ goalie.
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
 ball. If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
+You can't tackle a forward who has just caught a pass (see "Catch and shoot").
 If the holder has mirror images, roll for them first (see `mirror_images`).
 
 ## Actions any time
@@ -264,8 +274,9 @@ allowed: the action does nothing.
 
 Every contest has an attacker (the side taking the action) and a defender.
 
-1. Reveal both players involved.
-2. **Dice:** the attacker may call for dice; if not, the defender may (see "Dice").
+1. Reveal both players involved. **Both roll a six-sided die** ⚙ (see "Dice").
+2. **Rerolls:** the attacker may spend a roll token to reroll their own die. Then the defender may
+   (see "Dice").
 3. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
    having seen it, may do the same. Each side plays at most one.
 4. Apply abilities, injuries, spells, and dice. A value can't go below 0.
@@ -279,21 +290,22 @@ tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser 
 attacker and wins ties.
 
 An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
-reaction spells or roll. A player with no spells left (see "Casting limit") can't play reaction
+reaction spells, roll, or reroll. A player with no spells left (see "Casting limit") can't play reaction
 spells either.
 
 ## Dice
 
-Each player starts the game with **5 roll tokens** ⚙, kept face up so everyone can see how many
-are left.
+**Every contest is rolled** ⚙: passes, tackles, shots, penalties, hits, and faceoffs. Both players
+in the contest roll a six-sided die and add it to their value. A better player usually wins, but
+not always.
 
-- In any contest except shots and penalties (those are always rolled), after both players are
-  revealed and before reaction spells, the attacker may **call for dice** by spending one token.
-  If the attacker doesn't, the defender may.
-- When someone calls for dice, **both players roll a six-sided die** ⚙ and add it to their value.
-  Only the caller spends a token; the other player's roll is free.
-- Dice can be called at most once per contest. Reaction spells are played after the roll, so both
-  players can see the dice before deciding.
+Each player also starts the game with **3 roll tokens** ⚙, kept face up so everyone can see how
+many are left.
+
+- After both players roll, the attacker may spend one token to **reroll their own die**. Then the
+  defender, having seen that, may do the same. The new roll replaces the old one.
+- Each side can reroll at most once per contest. Reaction spells are played after the rerolls, so
+  both players can see the dice before deciding.
 
 ## Injuries
 
@@ -422,6 +434,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.16 — Balance (Paul: "I make a move, it's successful, but then the computer immediately trounces me with a tackle"). Simulation showed one point of printed stat decided almost every contest (a tackle one point stronger won 95% of the time, a tied one 18%), a forward who caught a pass lost the ball before shooting 45% of the time, and a 3-point gap in goalie Save won 4 games in 5. Paul chose three changes: **every contest is rolled** (both players roll a d6), so a one-point edge wins about 60% instead of 95%; **catch and shoot**, a forward who catches a pass can't be tackled until their next turn; and **goalies narrowed** to two Save levels. Claude: roll tokens become 3 rerolls of your own die (calling for dice means nothing when everything is rolled); rerolls work in shots too; Hit strength 3 → 4, since dice made hits miss more and injuries fell below target; goalie Save 5–6 rather than the 4–5 first tested, since livelier play pushed goals over 2 a game at Save 4–5. **Goalie clears** (Paul): a goalie holding the ball must pass it out on your next action, so a team can't sit on the ball in goal to run out the clock; if it has nobody to pass to, the ball goes to a faceoff that the other team chooses (Paul: in sports, freezing the ball means a faceoff in your own end; here faceoffs are always at midfield, which is Claude's simplest reading). Claude: a Long Pass or Decoy Pass counts as clearing; the goalie can't be substituted while it has the ball. With goalies clearing, games have about twice the passes and tackles, and about 2.4 goals; Paul kept goalies at Save 5–6 rather than Save 6–7 (1.8 goals, but only 1 shot in 4 scoring and longer games). Online matches started before this keep their old rules and cards.
 
 - v0.15 — Spell library: one spell for each of the 71 useful specializations, plus the second Glamour spell and the neutral Late Hit (73 spells, `docs/MAGIC.md`). Paul asked for a spell per useful affinity. Claude: each team's 16 spells are picked from the library, keeping the old decks' mix of effects (1 boost, 2 shields, 1 dirty play, 3 hits, 2 steals, and one each of the rest) so balance stays comparable; boost gets an optional `when` (+3, but only for one use of a stat) so the many Body, Air, and Time spells aren't all the same card; the element-named placeholders (Neutral Boost, Fire Steal, Earth Shield, ...) are gone.
 

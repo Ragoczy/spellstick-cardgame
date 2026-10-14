@@ -4,6 +4,7 @@ import { canSubstitute, cardsLeft, discardTopOfPile, drawCards, handIsFull } fro
 import type { GameEvent } from './events';
 import { otherSide, type Side } from './field';
 import type { EndReason, GameState } from './state';
+import { canClear, mustClear } from './validate';
 
 /**
  * Called whenever an action (and any contest it caused) has finished. Works out what the
@@ -36,7 +37,7 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
   }
   // The player has actions left this turn.
   if (s.actionsLeft > 0) {
-    s.pending = { kind: 'action', side: s.activeSide };
+    askForAction(s, s.activeSide, ev);
     return;
   }
   // Discard step.
@@ -75,6 +76,23 @@ function startTurn(s: GameState, side: Side, ev: GameEvent[]): void {
   }
   // (If the final turn is already set, this player just skips the draw.)
 
+  askForAction(s, side, ev);
+}
+
+/**
+ * Waits for the player's action. Goalie clears (RULES.md): a goalie holding the ball must pass it
+ * out. If it has nobody to pass to, the ball goes to a faceoff, the other team chooses the lane,
+ * and then the player takes their action.
+ */
+function askForAction(s: GameState, side: Side, ev: GameEvent[]): void {
+  if (mustClear(s, side) && !canClear(s, side)) {
+    ev.push({ type: 'goalieCantClear', side });
+    s.ball = null;
+    s.ballProtected = false;
+    s.faceoffChooser = otherSide(side);
+    s.pending = { kind: 'faceoffLane', side: s.faceoffChooser };
+    return;
+  }
   s.pending = { kind: 'action', side };
 }
 

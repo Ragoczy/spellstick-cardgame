@@ -11,6 +11,14 @@ describe('savedSetup', () => {
     expect(setup.config?.substituteStep).toBe('action');
   });
 
+  it('gives matches from before v0.16 the old dice and goalie rules, with the old settings they saved', () => {
+    // A match saved before v0.16 had every setting but diceTokens, with the old values.
+    const { diceTokens: _, goalieMustClear: __, ...rest } = makeConfig();
+    const oldConfig = { ...rest, contestDie: 0, protectCatch: 'off' as const, diceBudget: 5 };
+    const setup = savedSetup({ seed: 1, cardSet: prototypeCards, config: oldConfig });
+    expect(setup.config).toMatchObject({ diceTokens: 'call', goalieMustClear: false, contestDie: 0, protectCatch: 'off', diceBudget: 5, shotDie: 6 });
+  });
+
   it('gives card sets from before v0.14 the new names for their magic, keeping the old rules', () => {
     const { families: _, ...rest } = prototypeCards;
     const oldSet = {
@@ -30,5 +38,7 @@ describe('savedSetup', () => {
     const setup = { seed: 1, cardSet: prototypeCards, config: makeConfig() };
     expect(savedSetup(setup)).toBe(setup);
     expect(setup.config.substituteStep).toBe('draw');
+    expect(setup.config.diceTokens).toBe('reroll');
+    expect(setup.config.goalieMustClear).toBe(true);
   });
 });

@@ -86,7 +86,10 @@ const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub 
 /**
  * A saved setup with the rules it was created under. Each match saves its full rules settings, so
  * a setting added later is missing from older matches; this fills in the value those matches were
- * played with. (substituteStep, v0.11: older matches substitute as an action.)
+ * played with. (substituteStep, v0.11: older matches substitute as an action. diceTokens, v0.16:
+ * older matches call for dice. goalieMustClear, v0.16: older matches let the goalie hold the ball.
+ * Their other v0.16 settings were already saved under the old rules: contestDie 0, protectCatch
+ * 'off', diceBudget 5.)
  *
  * The saved card set is a copy too, so a match keeps the cards it was dealt. Card sets saved
  * before v0.14 name their magic "elements" (fire, water, earth, air, with opposed pairs); those
@@ -96,6 +99,12 @@ export function savedSetup(setup: GameSetup): GameSetup {
   let result = setup;
   if (result.config && !('substituteStep' in result.config)) {
     result = { ...result, config: { ...result.config, substituteStep: 'action' } };
+  }
+  if (result.config && !('diceTokens' in result.config)) {
+    result = { ...result, config: { ...result.config, diceTokens: 'call' } };
+  }
+  if (result.config && !('goalieMustClear' in result.config)) {
+    result = { ...result, config: { ...result.config, goalieMustClear: false } };
   }
   const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
   if (old.elements && !old.families) {

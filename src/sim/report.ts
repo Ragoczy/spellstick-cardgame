@@ -64,7 +64,9 @@ export function distanceFromTarget(t: Target, n: number): number {
 export const TARGETS: Target[] = [
   { label: 'First-player win rate (decided games)', goal: '45–55%', value: (m) => m.firstWinRate, format: pctOf, low: 0.45, high: 0.55 },
   { label: 'Team A win rate (decided games)', goal: '45–55%', value: (m) => m.teamAWinRate, format: pctOf, low: 0.45, high: 0.55 },
-  { label: 'Goals per game', goal: '1–2', value: (m) => m.avgGoals, format: (n) => n.toFixed(2), low: 1, high: 2 },
+  // 1–2.5 since v0.16: Paul kept goalies at Save 5–6 with goalie clears (about 2.4 a game) over
+  // tougher goalies and longer games.
+  { label: 'Goals per game', goal: '1–2.5', value: (m) => m.avgGoals, format: (n) => n.toFixed(2), low: 1, high: 2.5 },
   { label: 'Games drawn', goal: 'under 20%', value: (m) => m.drawShare, format: pctOf, low: 0, high: 0.1999 },
   { label: 'Average turns per game', goal: '30–50', value: (m) => m.avgTurns, format: (n) => n.toFixed(1), low: 30, high: 50 },
   { label: 'Injuries per game', goal: '2–4', value: (m) => m.injuriesPerGame, format: (n) => n.toFixed(2), low: 2, high: 4 },

@@ -549,9 +549,9 @@ class Thinker {
     }
   }
 
-  // ---- Calling for dice ----
+  // ---- Roll tokens ----
 
-  /** Worth of spending a roll now: the gain in win chance in a contest that matters, minus the roll's value. */
+  /** Worth of spending a roll token now: the gain in win chance in a contest that matters, minus the token's value. */
   private scoreDice(): number {
     const pending = this.view.pending;
     if (pending.kind !== 'callDice') return -1;
@@ -566,10 +566,13 @@ class Thinker {
     const mine = total(myCard, me);
     const theirs = total(theirCard, them);
     const iWinTies = contest.tiesGoTo === role;
-    const now = this.chance(mine, theirs, iWinTies);
-    const die = this.config.budgetDie;
+    // Rerolling: the dice are already showing, so only spells are still unknown.
+    const reroll = this.config.diceTokens === 'reroll';
+    const now = reroll ? winChance(mine, theirs, iWinTies) : this.chance(mine, theirs, iWinTies);
+    const die = reroll ? (this.config.contestDie || this.config.shotDie) : this.config.budgetDie;
     let withDice = 0;
     for (let a = 1; a <= die; a++) {
+      if (reroll) { withDice += winChance(mine - me.roll! + a, theirs, iWinTies) / die; continue; }
       if (this.config.diceMode === 'self') withDice += this.chance(mine + a, theirs, iWinTies) / die;
       else for (let b = 1; b <= die; b++) withDice += this.chance(mine + a, theirs + b, iWinTies) / (die * die);
     }
@@ -608,10 +611,11 @@ class Thinker {
     const theirTotal = scoreSide({ player: theirPlayer, injury: theirCard?.injury, side: them, spell: theirSpell, shielded: !!iShield }, this.config).total;
 
     const iWinTies = contest.tiesGoTo === role;
-    // The defender reacts last, so knows the outcome. The attacker has to allow for a reply.
+    // The defender reacts last, so knows the outcome. The attacker has to allow for a reply
+    // (the dice are already showing, so that's the only thing left unknown).
     const pWin = role === 'defender'
       ? (myTotal > theirTotal || (myTotal === theirTotal && iWinTies) ? 1 : 0)
-      : this.chance(myTotal, theirTotal, iWinTies);
+      : (me.roll || them.roll) ? winChance(myTotal, theirTotal, iWinTies) : this.chance(myTotal, theirTotal, iWinTies);
 
     const reactionsInHand = this.view.mine.hand.filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction').length;
     const cost = mySpell ? (reactionsInHand > 1 ? 0.08 : 0.12) * this.unit() : 0;

@@ -1,5 +1,5 @@
 {
-  "version": "0.14-prototype",
+  "version": "0.16-prototype",
   "families": [
     "air",
     "binding",
@@ -2120,7 +2120,7 @@
           "affinity": "time"
         }
       ],
-      "save": 5
+      "save": 6
     },
     {
       "id": "pl-090",
@@ -2141,7 +2141,7 @@
           "affinity": "divination.true-sight"
         }
       ],
-      "save": 5
+      "save": 6
     },
     {
       "id": "pl-091",
@@ -2162,7 +2162,7 @@
           "affinity": "time.slowing"
         }
       ],
-      "save": 4
+      "save": 5
     },
     {
       "id": "pl-092",
@@ -2183,7 +2183,7 @@
           "affinity": "body.strength"
         }
       ],
-      "save": 4
+      "save": 5
     },
     {
       "id": "pl-093",
@@ -2199,7 +2199,7 @@
           "affinity": "air.wind"
         }
       ],
-      "save": 4
+      "save": 5
     },
     {
       "id": "pl-094",
@@ -2220,7 +2220,7 @@
           "affinity": "divination"
         }
       ],
-      "save": 4
+      "save": 5
     },
     {
       "id": "pl-095",
@@ -2241,7 +2241,7 @@
           "affinity": "healing.vitality"
         }
       ],
-      "save": 4
+      "save": 5
     },
     {
       "id": "pl-096",
@@ -2262,7 +2262,7 @@
           "affinity": "light"
         }
       ],
-      "save": 3
+      "save": 5
     },
     {
       "id": "pl-097",
@@ -2278,7 +2278,7 @@
           "affinity": "shadow"
         }
       ],
-      "save": 3
+      "save": 5
     },
     {
       "id": "pl-098",
@@ -2304,7 +2304,7 @@
           "affinity": "body"
         }
       ],
-      "save": 3
+      "save": 5
     },
     {
       "id": "pl-099",
@@ -2325,7 +2325,7 @@
           "affinity": "translocation.summoning"
         }
       ],
-      "save": 3
+      "save": 5
     },
     {
       "id": "pl-100",
@@ -2346,7 +2346,7 @@
           "affinity": "warding"
         }
       ],
-      "save": 3
+      "save": 5
     },
     {
       "id": "promo-canon-01",
@@ -2378,10 +2378,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-blast-shot",
@@ -2410,10 +2410,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-mist-veil",
@@ -2468,10 +2468,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-stone-skin",
@@ -2562,10 +2562,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-bolt",
@@ -2578,10 +2578,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-jolt",
@@ -2608,10 +2608,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-dazzle",
@@ -2942,10 +2942,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-wither",
@@ -3060,10 +3060,10 @@
       "ability": {
         "effect": "hit",
         "params": {
-          "strength": 3
+          "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
     },
     {
       "id": "sp-turn-aside",

@@ -154,7 +154,7 @@ Award cards don't depend on rarity and are part of v1.
 
 **Starter set.** Every new account receives a fixed, identical starter deck: one full legal team deck. No one has to spend coins to play.
 
-*Built 2026-10-12 (online phase 2).* The starter set is `data/starter.json`: 2 goalies (Save 4) and 22 field players with +1 to +3 bonus points (average 1.7; the pool averages 2), so it's about average and leaves room to collect. A player gets it, plus a ready-made "Starter team", the first time they open their cards or the online lobby. Each copy gets the next serial number for its card (`player_cards.issued`), and its history starts with the game giving it out (`card_history`).
+*Built 2026-10-12 (online phase 2).* The starter set is `data/starter.json`: 2 goalies (Save 5, the lower goalie level since rules v0.16; Save 4 before) and 22 field players with +1 to +3 bonus points (average 1.7; the pool averages 2), so it's about average and leaves room to collect. A player gets it, plus a ready-made "Starter team", the first time they open their cards or the online lobby. Each copy gets the next serial number for its card (`player_cards.issued`), and its history starts with the game giving it out (`card_history`).
 
 **Persistent teams.** A team is a saved deck built from cards the player owns. A player can save several teams.
 

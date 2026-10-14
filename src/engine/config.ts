@@ -23,7 +23,7 @@ export interface GameConfig {
   handLimit: number;
   /** Setup: draw players for every field spot + this many more, from the Players pile. */
   setupExtraPlayers: number;
-  /** Setup: draw this many from the Spells pile. */
+  /** Setup: draw this many from the Spells pile (3 since v0.17, which shortened games by about a turn; 2 before). */
   setupSpells: number;
   /** Regroup: discard up to this many cards, then draw that many. */
   regroupMax: number;
@@ -110,6 +110,15 @@ export interface GameConfig {
    * substituted out to recharge. 0 = no limit.
    */
   castsPerResonant: number;
+  /**
+   * What a Shield does to the opposing player's value (their stat after abilities and injuries,
+   * or a hit's strength). 'minus' (the rule since v0.17): it loses shieldAmount, but not below 0.
+   * 'half': it counts half, rounded up (a simulation what-if). 'zero' (the old rule): it counts as
+   * 0 and their abilities and injuries are ignored; online matches started before v0.17 keep it.
+   */
+  shieldEffect: 'minus' | 'half' | 'zero';
+  /** With shieldEffect 'minus': how much a Shield takes off. */
+  shieldAmount: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -121,7 +130,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   goalsToWin: 3,
   handLimit: 7,
   setupExtraPlayers: 2,
-  setupSpells: 2,
+  setupSpells: 3,
   regroupMax: 1,
   affinityMatchBonus: 1,
   affinitySpecialistBonus: 2,
@@ -148,6 +157,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   goalieMustClear: true,
   mirrorImages: 2,
   castsPerResonant: 1,
+  shieldEffect: 'minus',
+  shieldAmount: 2,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

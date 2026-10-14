@@ -50,12 +50,12 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(s.teams.A.spells.every((u) => s.cards[u]!.kind === 'spell')).toBe(true);
   });
 
-  it(`draws ${spots} + 2 players and 2 spells`, () => {
+  it(`draws ${spots} + 2 players and 3 spells`, () => {
     for (let seed = 1; seed <= 10; seed++) {
       const s = chooseFirstGoalie(createGame({ seed, cardSet: prototypeCards, config: { lanes } }).state);
       const hand = s.teams.A.hand.map((u) => s.cards[u]!.kind);
-      expect(hand).toHaveLength(spots + 4);
-      expect(hand.filter((k) => k === 'spell')).toHaveLength(2);
+      expect(hand).toHaveLength(spots + 5);
+      expect(hand.filter((k) => k === 'spell')).toHaveLength(3);
       // At most one of the players drawn is the spare goalie, so every spot can be filled.
       expect(hand.filter((k) => k === 'field').length).toBeGreaterThanOrEqual(spots);
     }

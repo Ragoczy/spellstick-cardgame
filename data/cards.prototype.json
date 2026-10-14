@@ -2427,7 +2427,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-fog-bank",
@@ -2455,7 +2455,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-earth-crush",
@@ -2485,7 +2485,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-heavy-ground",
@@ -2625,7 +2625,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-blinding-flash",
@@ -2639,7 +2639,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-shadow-double",
@@ -2901,7 +2901,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-bad-luck",
@@ -2915,7 +2915,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-evil-eye",
@@ -2929,7 +2929,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-elf-shot",
@@ -2959,7 +2959,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-sting",
@@ -2987,7 +2987,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-alarm-ward",
@@ -3031,7 +3031,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-force-shot",
@@ -3125,7 +3125,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-blink",
@@ -3314,7 +3314,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-befuddle",

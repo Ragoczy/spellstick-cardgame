@@ -4,7 +4,11 @@
 //
 //   npm run spell-tiers                      (1000 games per spell, split across CPU cores)
 //   npm run spell-tiers -- --games 400
+//   npm run spell-tiers -- --workers 8           (fewer processes, if memory is short)
 //   npm run spell-tiers -- --from reports/spell-tiers-2026-10-14.json   (rewrite the report only)
+//   npm run spell-tiers -- --effects shield,boost --set shieldEffect=half --label shield-half
+//       (only some effects, or a rule what-if: writes reports/spell-tiers-<date>-<label>.md and
+//        leaves the tiers in the card data alone)
 //
 // The test: both teams use Team A's 16 spells and players dealt from the pool. The test team
 // swaps four rarely-cast spells (Scrying Bowl, Precognition, Mend, Blast Shot) for four copies of
@@ -20,14 +24,16 @@ import { runGame } from '../src/ai/runGame';
 import { prototypeCards } from '../src/data/prototype';
 import { LIBRARY_TEAM, type CardSet, type SpellCardDef } from '../src/engine/cards';
 import { makeConfig } from '../src/engine/config';
+import { arg, args, configOverrides } from '../src/sim/configArgs';
 
-const arg = (name: string) => {
-  const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
-};
 const games = Number(arg('games') ?? 1000);
-const config = makeConfig();
-const library = prototypeCards.cards.filter((c): c is SpellCardDef => c.kind === 'spell' && c.team === LIBRARY_TEAM);
+const config = makeConfig(configOverrides(args('set')));
+const effects = arg('effects')?.split(',');
+const library = prototypeCards.cards.filter((c): c is SpellCardDef =>
+  c.kind === 'spell' && c.team === LIBRARY_TEAM && (!effects || effects.includes(c.ability.effect)));
+/** Only some effects, or a rule what-if: its own report, and the card data's tiers stay as they are. */
+const partial = effects !== undefined || args('set').length > 0;
+const label = arg('label') ?? 'partial';
 const base = prototypeCards.teams.find((t) => t.id === 'A')!.spells!;
 const SWAPPED_OUT = ['sp-scrying-bowl', 'sp-precognition', 'sp-mend', 'sp-blast-shot'];
 const COPIES = SWAPPED_OUT.length;
@@ -78,10 +84,10 @@ interface Saved { games: number; control: number; rows: { id: string; edge: numb
 async function measureAll(): Promise<Saved> {
   rmSync(tmp, { recursive: true, force: true });
   mkdirSync(tmp, { recursive: true });
-  const workers = Math.max(2, Math.min(availableParallelism() - 2, 20));
+  const workers = Math.max(2, Math.min(Number(arg('workers') ?? availableParallelism() - 2), 20, library.length + 1));
   console.log(`Measuring ${library.length} spells (${games} games each) and a control (${4 * games}) on ${workers} workers...`);
   await Promise.all(Array.from({ length: workers }, (_, i) => new Promise<void>((resolve, reject) => {
-    const child = spawn(process.execPath, [...process.execArgv, process.argv[1]!, '--games', String(games), '--shard', `${i}/${workers}`], { stdio: 'inherit' });
+    const child = spawn(process.execPath, [...process.execArgv, ...process.argv.slice(1), '--shard', `${i}/${workers}`], { stdio: 'inherit' });
     child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`worker ${i} failed`))));
   })));
   const results: Result[] = Array.from({ length: workers }, (_, i) => JSON.parse(readFileSync(new URL(`shard-${i}.json`, tmp), 'utf8')) as Result[]).flat();
@@ -129,8 +135,9 @@ function writeReport(saved: Saved): void {
   const sign = (n: number) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}`;
   const date = new Date().toISOString().slice(0, 10);
   const out: string[] = [];
-  out.push(`# Spell power tiers, ${date}`, '');
-  out.push(`Made by \`npm run spell-tiers\`: ${saved.games} computer games per spell. The test team swaps four rarely-cast spells (${SWAPPED_OUT.map((id) => byId.get(id)!.name).join(', ')}) for ${COPIES} copies of the spell; the other team keeps Team A's 16. "Edge" is how many more points in 100 games the test team scores than with no swap (a win is 1, a draw ½). The control team scored ${saved.control.toFixed(1)}. Luck moves one spell's edge by about ${noise.toFixed(1)} points either way (one standard error); an effect's average over several spells is steadier, and an edge under about 2 is no clear edge at all.`, '');
+  out.push(`# Spell power tiers, ${date}${partial ? ` (${label})` : ''}`, '');
+  if (partial) out.push(`Only some spells${effects ? ` (effects: ${effects.join(', ')})` : ''}, with config changes: ${args('set').join(', ') || 'none'}. The tiers in the card data are unchanged.`, '');
+  out.push(`Made by \`npm run spell-tiers\`: ${saved.games} computer games per spell. The test team swaps four rarely-cast spells (${SWAPPED_OUT.map((id) => prototypeCards.cards.find((c) => c.id === id)!.name).join(', ')}) for ${COPIES} copies of the spell; the other team keeps Team A's 16. "Edge" is how many more points in 100 games the test team scores than with no swap (a win is 1, a draw ½). The control team scored ${saved.control.toFixed(1)}. Luck moves one spell's edge by about ${noise.toFixed(1)} points either way (one standard error); an effect's average over several spells is steadier, and an edge under about 2 is no clear edge at all.`, '');
   for (const tier of TIERS) {
     const inTier = variants.filter((v) => v.tier === tier.name);
     if (!inTier.length) continue;
@@ -143,10 +150,11 @@ function writeReport(saved: Saved): void {
     }
     out.push('');
   }
-  writeFileSync(new URL(`../reports/spell-tiers-${date}.md`, import.meta.url), out.join('\n'));
-  writeFileSync(new URL(`../reports/spell-tiers-${date}.json`, import.meta.url), `${JSON.stringify(saved, null, 2)}\n`);
-  console.log(`Report written to reports/spell-tiers-${date}.md`);
-  writeTiersToCards(variants);
+  const name = partial ? `spell-tiers-${date}-${label}` : `spell-tiers-${date}`;
+  writeFileSync(new URL(`../reports/${name}.md`, import.meta.url), out.join('\n'));
+  writeFileSync(new URL(`../reports/${name}.json`, import.meta.url), `${JSON.stringify(saved, null, 2)}\n`);
+  console.log(`Report written to reports/${name}.md`);
+  if (!partial) writeTiersToCards(variants);
 }
 
 /**
@@ -173,4 +181,11 @@ function writeTiersToCards(variants: { variant: string; edge: number }[]): void 
 }
 
 const from = arg('from');
-writeReport(from ? (JSON.parse(readFileSync(from, 'utf8')) as Saved) : await measureAll());
+let saved: Saved;
+if (from) saved = JSON.parse(readFileSync(from, 'utf8')) as Saved;
+else {
+  saved = await measureAll();
+  // Saved before the report is written, so a long run is never lost (rewrite it with --from).
+  writeFileSync(new URL('../reports/.spell-tiers-last.json', import.meta.url), JSON.stringify(saved));
+}
+writeReport(saved);

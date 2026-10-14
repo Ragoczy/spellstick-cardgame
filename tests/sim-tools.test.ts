@@ -57,8 +57,11 @@ describe('contest chances', () => {
     expect(winChance(5, 0, 6)).toBeCloseTo(35 / 36);
   });
 
-  it("works out an unanswered Shield with the engine's own scoring (v0.16: Save counts 0)", () => {
-    expect(shieldExampleChance(config)).toBeCloseTo(35 / 36);
+  it("works out an unanswered Shield with the engine's own scoring (PLAN.md's Shot 5 vs Save 6 table)", () => {
+    expect(shieldExampleChance(makeConfig({ shieldEffect: 'zero' }))).toBeCloseTo(35 / 36);
+    expect(shieldExampleChance(makeConfig({ shieldEffect: 'half' }))).toBeCloseTo(26 / 36);
+    expect(shieldExampleChance(makeConfig({ shieldEffect: 'minus', shieldAmount: 3 }))).toBeCloseTo(26 / 36);
+    expect(shieldExampleChance(makeConfig({ shieldEffect: 'minus', shieldAmount: 2 }))).toBeCloseTo(21 / 36);
   });
 });
 

@@ -63,7 +63,7 @@ ABILITIES = [
 # Spells shared by both teams: (effect, spellType, params, copies-by-element, rules text)
 SPELLS = [
     ("boost",     "reaction", {"amount": 2},  [None], "+2 to your side in this contest."),
-    ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat counts as 0 in this contest."),
+    ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat is 2 less in this contest."),
     ("scry",      "action",   {},             ["water"], "Look at one of your opponent's face-down cards."),
     ("mirror_images", "action", {},           ["air"], "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."),
     ("long_pass", "action",   {},             ["air"], "Pass, skipping one row forward."),

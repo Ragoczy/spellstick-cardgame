@@ -144,7 +144,7 @@ per Resonant** ⚙: a player with 2 Resonants can cast 2 spells, then no more.
    the team's 16 spells to make its deck, and play in the team's color for this game.
 1. Each player chooses one of their 2 goalies, places it **face down** in goal, and shuffles the
    other into their Players pile. Shuffle both piles.
-2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 2 ⚙
+2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 3 ⚙
    from their Spells pile. Place field players **face down**, one in each of your defense,
    midfield, and forward slots, and keep the rest as your hand. (At most one card drawn can be
    the spare goalie, so there are always enough field players.)
@@ -382,9 +382,11 @@ engine together. "Numeric" effects are adjusted by affinity.
   when your player's stat is being used that way, for example only when receiving a pass. Such a
   boost is bigger (+3 on the current cards, instead of +2) to make up for it. A hit's attacker isn't resisting, so
   only the player being hit can play a `resist` boost.
-- `shield` — `{}`, non-numeric. The opposing player's stat (or a hit's strength) counts as 0 in
-  this contest, and their abilities and injuries are ignored. Their own spell still counts. If both
-  sides shield, both stats are 0.
+- `shield` — `{}`, non-numeric. The opposing player's value in this contest is **2 less** ⚙, but
+  not below 0. Work out their stat as usual first (abilities and injuries), or take the hit's
+  strength, then take 2 off. Dice and spells are added after, so their own spell still counts in
+  full. If both sides shield, both lose 2. (Before v0.17 a Shield made the value 0 and ignored
+  abilities and injuries; online matches started before then keep that rule.)
 - `dirty_play` — `{}`, non-numeric. Play during any contest. If your side wins, the opposing player
   in that contest is injured (unless it's the goalie).
 
@@ -434,6 +436,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase a — Shield cap, from the v0.17 plan Paul approved (`PLAN.md`). A Shield takes **2** off the opposing player's value instead of making it 0, worked out after their abilities and injuries; dice and spells are added after. Claude tested three caps on the same 5,000 games (half rounded up, −3, −2): all brought an unanswered Shield under 75% and kept goals in range, but only −2 left Shield no stronger than an open +2 Boost (win edge +19.0 against +20.4; half was +21.4 against +20.5, within luck). **Setup draws 3 spells** instead of 2, since games ran just over the 50-turn limit (50.4 → 49.6 turns). Report: `reports/sim-2026-10-14-v17a.md`. Online matches started before this keep the old Shield and 2 setup spells.
 
 - 2026-10-14 — Late Hit pulled from the spell library (Paul): it becomes a physical attack card in the v0.17 plan, so a spell with the same name would be confusing. The library has 72 spells. Neither team deck used it, so play is unchanged; the other dirty-play spells (Jolt, Red Mist, Jinx, Sting) remain.
 

@@ -28,7 +28,7 @@ export interface Breakdown {
   stat: StatName;
   /** Shown instead of the stat name when the value isn't a stat (a hit's strength). */
   baseLabel?: string;
-  /** The printed stat, or 0 if shielded. */
+  /** The printed stat (0 if shielded under the old zero Shield; the v0.17 Shield is a "Shield" part). */
   base: number;
   /** Abilities, spells, and modifiers added to the base. */
   parts: BreakdownPart[];

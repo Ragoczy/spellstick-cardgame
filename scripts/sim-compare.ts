@@ -7,6 +7,7 @@
 //   npm run sim-compare -- --cards data/my-cards.json                  (current cards vs these)
 //   npm run sim-compare -- --base-cards data/old.json --cards data/new.json
 //   npm run sim-compare -- --lanes 3 --seed 2 --name "Shield half" --out reports/my-report.md
+//   npm run sim-compare -- --workers 8                                (fewer processes, if memory is short)
 //
 // "Before" is the current rules and cards plus any --base-set and --base-cards. "After" is the
 // same plus --set and --cards. Both play the same seeds, so the deals and the first player match
@@ -19,38 +20,19 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { prototypeCards } from '../src/data/prototype';
 import { loadCardSet, type CardSet } from '../src/engine/cards';
-import { DEFAULT_CONFIG, makeConfig, type GameConfig } from '../src/engine/config';
+import { makeConfig, type GameConfig } from '../src/engine/config';
+import { arg, args, configOverrides } from '../src/sim/configArgs';
 import { gameSeeds, simulate } from '../src/sim/simulate';
 import type { GameTally } from '../src/sim/stats';
 import { comparisonTable, matchSeeds, OTHER_MEASURES, shieldExampleChance, singleRunTable, TARGETS } from '../src/sim/targets';
-
-const arg = (name: string) => {
-  const i = process.argv.indexOf(`--${name}`);
-  return i >= 0 ? process.argv[i + 1] : undefined;
-};
-
-/** Every value given with --name (for flags that may repeat, such as --set). */
-const args = (name: string) => process.argv.flatMap((value, i) => (value === `--${name}` ? [process.argv[i + 1] ?? ''] : []));
-
-/** "key=value" pairs into config overrides. Numbers and true/false are converted; anything else stays text. */
-function overrides(pairs: string[]): Partial<GameConfig> {
-  const out: Record<string, unknown> = {};
-  for (const pair of pairs) {
-    const [key, raw] = pair.split('=');
-    if (!key || raw === undefined) throw new Error(`Bad setting "${pair}". Use name=value.`);
-    if (!(key in DEFAULT_CONFIG)) throw new Error(`There's no config setting "${key}" (see src/engine/config.ts).`);
-    out[key] = raw === 'true' ? true : raw === 'false' ? false : raw !== '' && !Number.isNaN(Number(raw)) ? Number(raw) : raw;
-  }
-  return out as Partial<GameConfig>;
-}
 
 const cardsFrom = (path: string | undefined): CardSet => (path ? loadCardSet(JSON.parse(readFileSync(path, 'utf8'))) : prototypeCards);
 
 const games = Number(arg('games') ?? 5000);
 const seedBlock = Number(arg('seed') ?? 1);
 const lanes = Number(arg('lanes') ?? 2);
-const baseSet = overrides(args('base-set'));
-const afterSet = overrides(args('set'));
+const baseSet = configOverrides(args('base-set'));
+const afterSet = configOverrides(args('set'));
 const variants = [{ name: 'Before', config: makeConfig({ lanes, ...baseSet }), cardsPath: arg('base-cards') }];
 const comparing = args('set').length > 0 || arg('cards') !== undefined;
 if (comparing) {
@@ -85,7 +67,7 @@ if (worker !== undefined) {
 const started = Date.now();
 rmSync(tmp, { recursive: true, force: true });
 mkdirSync(tmp, { recursive: true });
-const workers = Math.max(1, Math.min(availableParallelism() - 2, 20, games));
+const workers = Math.max(1, Math.min(Number(arg('workers') ?? availableParallelism() - 2), 20, games));
 console.log(`Playing ${games} games${comparing ? ' twice (before and after)' : ''} on ${workers} workers...`);
 await Promise.all(Array.from({ length: workers }, (_, i) => new Promise<void>((resolve, reject) => {
   const child = spawn(process.execPath, [...process.execArgv, ...process.argv.slice(1), '--worker', `${i}/${workers}`], { stdio: 'inherit' });

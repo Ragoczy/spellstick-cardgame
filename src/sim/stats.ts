@@ -79,7 +79,8 @@ export function unansweredShieldChance(shooterPrinted: number, goalie: PlayerCar
     spell: null,
     shielded: true,
   }, config);
-  return winChance(shooterPrinted, shielded.printed, config.contestDie || config.shotDie);
+  // With no dice, spells, or modifiers, the total is the goalie's Save after the Shield.
+  return winChance(shooterPrinted, shielded.total, config.contestDie || config.shotDie);
 }
 
 /** Reads one finished game into a GameTally. */

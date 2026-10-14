@@ -146,6 +146,10 @@ the same seeds. Keep the first one that passes all of these:
 "Half, rounded up" should average about 70% over real shots. Shot 6 shooters are the risk (83%).
 If the average comes out at 75% or more, I'll fall back to −2.
 
+**Result (done 2026-10-14):** −2. All three caps passed checks 1 and 3, but only −2 passed check 2
+(Shield +19.0 against Boost +20.4; half was +21.4 against +20.5, within luck). Setup now draws 3
+spells, since games ran at 50.4 turns. Details: `reports/sim-2026-10-14-v17a.md`.
+
 ### Phase b: Toughness, knockdowns, and severity
 
 **Toughness** (new stat on field-player cards, set by type ⚙). When a player is knocked down,

@@ -20,10 +20,12 @@ const END_REASON: Record<EndReason, string> = {
 
 const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit' } as const;
 
-/** "Speed 5 + Fire Boost 3 = 8", or "Defense 0 (shielded)". */
+/** "Speed 5 + Fire Boost 3 = 8", "Defense 6 − Shield 3 = 3", or "Defense 0 (shielded)". */
 export function describeValue(b: Breakdown): string {
   if (!b.card) return 'empty spot 0';
-  let text = `${b.baseLabel ?? STAT_LABEL[b.stat]} ${b.base}${b.shielded ? ' (shielded)' : ''}`;
+  // The Shield shows as its own part when it cut the value; otherwise just mark the player shielded.
+  const marked = b.shielded && !b.parts.some((p) => p.label === 'Shield');
+  let text = `${b.baseLabel ?? STAT_LABEL[b.stat]} ${b.base}${marked ? ' (shielded)' : ''}`;
   for (const part of b.parts) text += ` ${part.amount < 0 ? '−' : '+'} ${part.label} ${Math.abs(part.amount)}`;
   if (b.parts.length > 0) text += ` = ${b.total}`;
   return text;

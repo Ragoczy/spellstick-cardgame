@@ -106,6 +106,9 @@ export function savedSetup(setup: GameSetup): GameSetup {
   if (result.config && !('goalieMustClear' in result.config)) {
     result = { ...result, config: { ...result.config, goalieMustClear: false } };
   }
+  if (result.config && !('shieldEffect' in result.config)) {
+    result = { ...result, config: { ...result.config, shieldEffect: 'zero' } };
+  }
   const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
   if (old.elements && !old.families) {
     const { elements, ...rest } = result.cardSet as unknown as { elements: string[] } & Record<string, unknown>;

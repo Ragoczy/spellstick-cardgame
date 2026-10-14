@@ -102,6 +102,7 @@ export function CollectionScreen({ onBack }: { onBack: () => void }) {
         choose "Your saved team" when you challenge someone. Ranked matches are always drafts, so your cards never
         change your rating.
       </p>
+      <p className="small">The card art is AI-generated placeholder art until commissioned art is ready.</p>
       {problem ? <p className="account-problem">{problem}</p> : null}
       {!data ? <p className="small">Loading your cards…</p> : (
         <>

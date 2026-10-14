@@ -95,7 +95,7 @@ export function App() {
               {ONLINE && me?.displayName ? <button type="button" className="primary" onClick={() => setScreen({ kind: 'lobby' })}>Play online</button> : null}
               <button type="button" onClick={() => setScreen({ kind: 'rules' })}>How to play</button>
             </div>
-            <p className="small">Prototype: card names, teams, and art are placeholders.</p>
+            <p className="small">Prototype: card names and teams are placeholders. The card art is AI-generated placeholder art until commissioned art is ready.</p>
             <button type="button" className="quiet" onClick={() => setScreen({ kind: 'future' })}>Future features</button>
             <RecentChanges />
           </div>

@@ -13,7 +13,7 @@ export function FutureFeatures({ onBack }: { onBack: () => void }) {
       <h3>Coming to this game</h3>
       <ul>
         <li><b>Two players at one screen:</b> pass the device between turns, with hands and lineups hidden.</li>
-        <li><b>Real teams and art:</b> in-world team names, colors, card names, flavor text, and final card art in place of the placeholders.</li>
+        <li><b>Real teams and art:</b> in-world team names, colors, card names, and flavor text, and commissioned card art in place of today's AI-generated placeholder art.</li>
         <li><b>A canon player:</b> the one book character who plays spellstick, as a special card.</li>
       </ul>
 

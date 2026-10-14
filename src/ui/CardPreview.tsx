@@ -30,7 +30,7 @@ export function CardPreview() {
   return (
     <main className="screen card-preview">
       <h1>Card design preview</h1>
-      <p className="small">Every card at the 2.5" × 3.5" poker-card shape. Frame color comes from the card's element (a player's first Resonant).</p>
+      <p className="small">Every card at the 2.5" × 3.5" poker-card shape. Frame color comes from the card's element (a player's first Resonant). The art is AI-generated placeholder art until commissioned art is ready.</p>
       <h2>All kinds of card at 260 px</h2>
       <div className="card-row">
         {cards.map((def) => <CardFace key={def.id} def={def} width={260} />)}

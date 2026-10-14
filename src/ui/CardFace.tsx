@@ -123,8 +123,9 @@ function sportLine(def: PhysicalCardDef): string {
 export interface CardFaceProps {
   def: FaceDef;
   /**
-   * PLAN.md (v0.17): a player's Toughness and cost, shown when given. They aren't in the card
-   * data yet, so for now only the design preview passes them.
+   * Toughness to show instead of the card's own (v0.17). Field players show their own Toughness
+   * without it; card sets saved before v0.17 have none. Cost isn't in the card data yet, so for
+   * now only the design preview passes it.
    */
   toughness?: number;
   cost?: number;
@@ -142,8 +143,9 @@ export interface CardFaceProps {
   onClick?: () => void;
 }
 
-export function CardFace({ def, toughness, cost, width, serial, injury, selected, dim, highlight, onClick }: CardFaceProps) {
+export function CardFace({ def, toughness: toughnessShown, cost, width, serial, injury, selected, dim, highlight, onClick }: CardFaceProps) {
   const art = cardArt(def.id);
+  const toughness = toughnessShown ?? (def.kind === 'field' ? def.toughness : undefined);
   const classes = ['cf', def.kind === 'physical' ? 'physical' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', injury ? 'injured' : '']
     .filter(Boolean)
     .join(' ');

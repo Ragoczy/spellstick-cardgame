@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { PlayerRole } from '../src/engine/cards';
 import { randomInt, seedToState, shuffle } from '../src/engine/rng';
+import { DEFAULT_CONFIG } from '../src/engine/config';
 import { FIELD_STAT_MAX, FIELD_TYPES, goalieSave, type FieldStat } from '../src/data/playerTypes';
 import { drawResonants, usefulSpecs, type DrawnResonant, type ResonantData } from './resonant-draw';
 
@@ -97,7 +98,9 @@ const players = byRole.map((slot, i) => {
     const open = Object.fromEntries(Object.entries(role.weights).filter(([stat]) => stats[stat as FieldStat] < FIELD_STAT_MAX)) as Partial<Record<FieldStat, number>>;
     stats[pickWeighted(open)] += 1;
   }
-  return { id, team: 'pool', kind: 'field', role: slot.role, name, bonusPoints: slot.bonus, resonants: resonants(), ...stats };
+  // Toughness comes from the player's type (v0.17), so Stoppers and Anchors are hardest to hurt.
+  const toughness = DEFAULT_CONFIG.toughnessByRole[slot.role as keyof typeof DEFAULT_CONFIG.toughnessByRole];
+  return { id, team: 'pool', kind: 'field', role: slot.role, name, bonusPoints: slot.bonus, resonants: resonants(), ...stats, toughness };
 });
 
 // Replace the old placeholder players (team players and goalies) and any earlier named players.

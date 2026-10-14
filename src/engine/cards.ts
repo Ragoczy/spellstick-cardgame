@@ -108,6 +108,11 @@ export interface FieldCardDef extends PlayerBase {
   shot: number;
   defense: number;
   faceoff: number;
+  /**
+   * Knocked down, this player is fine on a roll at or below this, and hurt above it (v0.17).
+   * Card sets saved by online matches before v0.17 don't have it; those matches never roll it.
+   */
+  toughness: number;
 }
 
 export interface GoalieCardDef extends PlayerBase {
@@ -277,7 +282,7 @@ export function loadCardSet(json: unknown): CardSet {
     switch (card.kind) {
       case 'field':
         checkResonants(card, families, where);
-        for (const stat of ['speed', 'shot', 'defense', 'faceoff']) needInt(card, stat, where);
+        for (const stat of ['speed', 'shot', 'defense', 'faceoff', 'toughness']) needInt(card, stat, where);
         if (ability) {
           if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
           checkParams(ability, where);

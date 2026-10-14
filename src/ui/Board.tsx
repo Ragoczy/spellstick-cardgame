@@ -35,7 +35,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
       </button>
     );
   }
-  if (slot.state === 'unknown') return <CardBack team={team} injury={slot.injury} {...common} />;
+  if (slot.state === 'unknown') return <CardBack team={team} injury={slot.injury} shaken={slot.shaken} {...common} />;
   // Casting limit: each Resonant is worth castsPerResonant spells, so a dot goes hollow per that many cast.
   const def = slot.card.def;
   const perResonant = props.view.config.castsPerResonant;
@@ -44,7 +44,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     : 0;
   return (
     <Card def={def} injury={slot.card.injury} position={pos.area} faceDown={slot.state === 'faceDown'} scried={slot.state === 'faceDown' && slot.scried}
-      images={slot.state === 'revealed' && slot.images} castsLeft={slot.castsLeft} usedDots={usedDots} cameOn={slot.cameOn} {...common} />
+      images={slot.state === 'revealed' && slot.images} castsLeft={slot.castsLeft} usedDots={usedDots} cameOn={slot.cameOn} shaken={slot.shaken} {...common} />
   );
 }
 

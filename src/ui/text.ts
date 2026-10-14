@@ -193,6 +193,24 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
         : `${where} is hurt, but the injury deck is empty, so there's no injury card.`;
       return { text: `${e.cause}! ${hurt}`, tone: isMe(e.side) ? 'bad' : 'good' };
     }
+    case 'knockedDown': {
+      const where = capitalize(at(e.side, e.pos));
+      const result = e.hurt ? 'hurt' : 'no harm done';
+      return { text: `${where} (${e.card.def.name}) is knocked down. Toughness roll ${e.roll} against ${e.toughness}: ${result}.`, tone: e.hurt ? (isMe(e.side) ? 'bad' : 'good') : 'info' };
+    }
+    case 'hurt': {
+      const where = capitalize(at(e.side, e.pos));
+      const result = e.result === 'shaken'
+        ? `Shaken. The card turns sideways: they can't pass, shoot, tackle, or cast, and they're weaker in contests, until the end of ${whose(e.side)} next turn.`
+        : e.result === 'injured'
+          ? 'injured.'
+          : `knocked out! They go beside the mat and roll to come back at each faceoff.`;
+      return { text: `${e.cause}! ${where} (${e.card.def.name}) is hurt. Severity roll ${e.roll}: ${result}`, tone: isMe(e.side) ? 'bad' : 'good' };
+    }
+    case 'stoodUp':
+      return info(`${capitalize(at(e.side, e.pos))} (${e.card.def.name}) stands up.`);
+    case 'returnRoll':
+      return { text: `${capitalize(whose(e.side))} knocked-out ${e.card.def.name} rolls ${e.roll}: ${e.returned ? `back in ${whose(e.side)} hand` : 'still out'}.`, tone: e.returned ? (isMe(e.side) ? 'good' : 'bad') : 'info' };
     case 'forcedSub':
       if (e.toHand) {
         return info(`${who(e.side)} ${verb(e.side, 'bring', 'brings')} on a substitute for ${at(e.side, e.pos)}, face down. ` +

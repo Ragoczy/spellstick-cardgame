@@ -39,7 +39,10 @@ export interface Breakdown {
 }
 
 export type DrawReason = 'setup' | 'turn' | 'recall' | 'ability' | 'regroup';
-export type InjurySource = 'hit' | 'dirty_play';
+/** What hurt a player: a hit, a dirty play, or (v0.17) being knocked down by a tackle. */
+export type InjurySource = 'hit' | 'dirty_play' | 'tackle';
+/** How badly a player was hurt (v0.17). */
+export type Severity = 'shaken' | 'injured' | 'knockedOut';
 
 export type GameEvent =
   | { type: 'gameStarted'; firstSide: Side }
@@ -114,6 +117,21 @@ export type GameEvent =
     }
   /** A forced substitution: a new player comes on face down. `toHand` is the injured player going to hand. */
   | { type: 'forcedSub'; side: Side; pos: Pos; toHand: CardView | null }
+  /**
+   * A tackle knocked a player down (v0.17): they rolled against their Toughness, fine at or below
+   * it, hurt above it.
+   */
+  | { type: 'knockedDown'; side: Side; pos: Pos; card: CardView; toughness: number; roll: number; hurt: boolean }
+  /**
+   * A player was hurt and rolled for how badly (v0.17). An injury is followed by an 'injured'
+   * event; a knocked-out player leaves the field (then a forced substitution, or an empty spot).
+   * until: a Shaken player stands up at the end of this turn.
+   */
+  | { type: 'hurt'; side: Side; pos: Pos; card: CardView; source: InjurySource; cause: string; roll: number; result: Severity; until?: number }
+  /** A Shaken player stood up: at the end of their team's turn, or at full time. */
+  | { type: 'stoodUp'; side: Side; pos: Pos; card: CardView }
+  /** At a faceoff, a knocked-out player rolled to come back: returned means back in the hand. */
+  | { type: 'returnRoll'; side: Side; card: CardView; roll: number; returned: boolean }
   /** Nobody could replace a carried-off player: the spot is empty. */
   | { type: 'slotEmptied'; side: Side; pos: Pos }
   | { type: 'mended'; side: Side; card: CardView; injury: InjuryDef }

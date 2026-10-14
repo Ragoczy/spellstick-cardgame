@@ -2,7 +2,8 @@
 
 import { canSubstitute, cardsLeft, discardTopOfPile, drawCards, handIsFull } from './board';
 import type { GameEvent } from './events';
-import { otherSide, type Side } from './field';
+import { otherSide, SIDES, type Side } from './field';
+import { returnRolls, standUp } from './injuries';
 import type { EndReason, GameState } from './state';
 import { canClear, mustClear } from './validate';
 
@@ -27,7 +28,7 @@ export function continueGame(s: GameState, ev: GameEvent[]): void {
   }
   // After a goal (or at the start), the ball goes to a faceoff before anything else.
   if (s.ball === null) {
-    s.pending = { kind: 'faceoffLane', side: s.faceoffChooser };
+    askForFaceoff(s, ev);
     return;
   }
   // The opening faceoff is done: the first player takes turn 1.
@@ -90,10 +91,16 @@ function askForAction(s: GameState, side: Side, ev: GameEvent[]): void {
     s.ball = null;
     s.ballProtected = false;
     s.faceoffChooser = otherSide(side);
-    s.pending = { kind: 'faceoffLane', side: s.faceoffChooser };
+    askForFaceoff(s, ev);
     return;
   }
   s.pending = { kind: 'action', side };
+}
+
+/** A faceoff is due. First (v0.17) each knocked-out player rolls to come back; then the lane is chosen. */
+function askForFaceoff(s: GameState, ev: GameEvent[]): void {
+  if (s.config.knockdowns) returnRolls(s, ev);
+  s.pending = { kind: 'faceoffLane', side: s.faceoffChooser };
 }
 
 function endTurn(s: GameState, ev: GameEvent[]): void {
@@ -101,6 +108,8 @@ function endTurn(s: GameState, ev: GameEvent[]): void {
   // Players who came on this turn can act again from now on.
   const team = s.teams[finished];
   for (const slot of [team.goalie, ...Object.values(team.lineup).flat()]) if (slot) delete slot.cameOn;
+  // Shaken players stand up at the end of their team's next turn.
+  standUp(s, finished, ev);
 
   if (s.endgame.finalTurnFor === finished) {
     // Full time: the last turn after a deck ran out is over.
@@ -138,6 +147,8 @@ export function scoreGoal(s: GameState, side: Side, ev: GameEvent[]): void {
 
 /** Tied at full time: teams alternate penalty shots. `first` is the team that didn't take the last turn. */
 function startShootout(s: GameState, first: Side, ev: GameEvent[]): void {
+  // Full time: every Shaken player stands up.
+  for (const side of SIDES) standUp(s, side, ev, true);
   s.ball = null;
   s.ballProtected = false;
   s.shootout = { first, taken: { A: 0, B: 0 }, goals: { A: 0, B: 0 }, shooters: [] };

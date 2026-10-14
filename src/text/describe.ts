@@ -96,6 +96,16 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'injured':
       if (e.carriedOff) return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} was already hurt and is carried off.`;
       return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is injured${e.injury ? `: ${e.injury.name}` : ' (no injury cards left)'}.`;
+    case 'knockedDown':
+      return `${names[e.side]}'s ${e.card.def.name} is knocked down. Toughness roll ${e.roll} against ${e.toughness}: ${e.hurt ? 'hurt' : 'no harm done'}.`;
+    case 'hurt': {
+      const result = e.result === 'shaken' ? 'Shaken until the end of their next turn' : e.result === 'injured' ? 'injured' : 'knocked out';
+      return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is hurt. Severity roll ${e.roll}: ${result}.`;
+    }
+    case 'stoodUp':
+      return `${names[e.side]}'s ${e.card.def.name} stands up.`;
+    case 'returnRoll':
+      return `${names[e.side]}'s knocked-out ${e.card.def.name} rolls ${e.roll}: ${e.returned ? 'back in the hand' : 'still out'}.`;
     case 'forcedSub':
       return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
     case 'slotEmptied':

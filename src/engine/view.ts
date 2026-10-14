@@ -12,17 +12,18 @@ import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
 export type SlotView =
   | { state: 'empty' }
   /** An opponent's face-down card you haven't seen. */
-  | { state: 'unknown'; injury?: InjuryDef }
+  | { state: 'unknown'; injury?: InjuryDef; shaken?: boolean }
   /**
    * Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried.
    * castsLeft: spells this player can still cast before they need a rest (left out when there is no limit).
    */
-  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number; cameOn?: boolean }
+  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number; cameOn?: boolean; shaken?: boolean }
   /**
    * images: the player has mirror images around them (public). castsLeft is public too.
    * cameOn: substituted on at this turn's Draw step, so can't act yet (public: the substitution was).
+   * shaken: the card is turned sideways (v0.17, public).
    */
-  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number; cameOn?: boolean };
+  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number; cameOn?: boolean; shaken?: boolean };
 
 export interface PlayerView {
   me: Side;
@@ -69,6 +70,8 @@ export interface PlayerView {
     playersLeft: number;
     spellsLeft: number;
     discard: CardView[];
+    /** Knocked-out players, face up beside the mat (v0.17). */
+    knockedOut: CardView[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -78,6 +81,7 @@ export interface PlayerView {
     playersLeft: number;
     spellsLeft: number;
     discard: CardView[];
+    knockedOut: CardView[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -88,8 +92,8 @@ function castsLeftOf(s: GameState, slot: Slot): { castsLeft?: number } {
   return s.config.castsPerResonant > 0 ? { castsLeft: castsLeftIn(s, slot) } : {};
 }
 
-function cameOnOf(slot: Slot): { cameOn?: boolean } {
-  return slot.cameOn ? { cameOn: true } : {};
+function cameOnOf(slot: Slot): { cameOn?: boolean; shaken?: boolean } {
+  return { ...(slot.cameOn ? { cameOn: true } : {}), ...(slot.shakenUntil !== undefined ? { shaken: true } : {}) };
 }
 
 function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
@@ -98,9 +102,9 @@ function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
     return { state: 'revealed', card: cardView(s, slot.uid), ...(slot.images ? { images: true } : {}), ...castsLeftOf(s, slot), ...cameOnOf(slot) };
   }
   if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried, ...castsLeftOf(s, slot), ...cameOnOf(slot) };
-  // Injury cards are face up, so an injury shows even on a player you can't see.
+  // Injury cards are face up, so an injury shows even on a player you can't see. So does a sideways card.
   const injury = injuryOf(s, slot.uid);
-  return injury ? { state: 'unknown', injury } : { state: 'unknown' };
+  return { state: 'unknown', ...(injury ? { injury } : {}), ...(slot.shakenUntil !== undefined ? { shaken: true } : {}) };
 }
 
 function lineupView(s: GameState, side: Side, mine: boolean): Record<Area, SlotView[]> {
@@ -149,6 +153,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       playersLeft: my.players.length,
       spellsLeft: my.spells.length,
       discard: my.discard.map((uid) => cardView(s, uid)),
+      knockedOut: my.knockedOut.map((uid) => cardView(s, uid)),
       goalie: slotView(s, my.goalie, true),
       lineup: lineupView(s, me, true),
     },
@@ -158,6 +163,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       playersLeft: their.players.length,
       spellsLeft: their.spells.length,
       discard: their.discard.map((uid) => cardView(s, uid)),
+      knockedOut: their.knockedOut.map((uid) => cardView(s, uid)),
       goalie: slotView(s, their.goalie, false),
       lineup: lineupView(s, them, false),
     },

@@ -4,6 +4,7 @@
 import { physicalCards } from '../data/physicalCards';
 import { prototypeCards } from '../data/prototype';
 import type { CardDef, PlayerRole } from '../engine';
+import { Card, CardBack } from './Card';
 import { CardFace } from './CardFace';
 import { cardArt } from './cardArt';
 
@@ -19,13 +20,8 @@ function samples(): CardDef[] {
   return [...withArt, noArt, reaction, action, byId('promo-canon-01')].filter((c): c is CardDef => Boolean(c));
 }
 
-/** PLAN.md (v0.17) Toughness by player type, for the mock-ups below. */
-const MOCK_TOUGHNESS: Record<PlayerRole, number> = {
-  stopper: 5, anchor: 5, playmaker: 4, allrounder: 4, runner: 3, striker: 3, goalie: 0,
-};
-
-/** One field player of each type, with plan Toughness and a made-up cost, to lay out the v0.17 card. */
-function mockPlayers(): { def: CardDef; toughness?: number; cost: number }[] {
+/** One field player of each type, with their Toughness and a made-up cost, to lay out the v0.17 card. */
+function mockPlayers(): { def: CardDef; cost: number }[] {
   const roles: PlayerRole[] = ['runner', 'striker', 'playmaker', 'allrounder', 'anchor', 'stopper'];
   const players = roles
     .map((role) => prototypeCards.cards.find((c) => c.kind === 'field' && c.team === 'pool' && c.role === role))
@@ -34,7 +30,6 @@ function mockPlayers(): { def: CardDef; toughness?: number; cost: number }[] {
   return [
     ...players.map((def) => ({
       def,
-      toughness: def.kind === 'field' && def.role ? MOCK_TOUGHNESS[def.role] : undefined,
       cost: def.kind === 'field' ? Math.round((def.speed + def.shot + def.defense + def.faceoff) / 1.7) : 10,
     })),
     ...(goalie ? [{ def: goalie, cost: 11 }] : []),
@@ -48,6 +43,19 @@ const SIZES = [
   { width: 180, label: '180 px: a card in your hand' },
   { width: 120, label: '120 px: too small to read; the field needs a compact version' },
 ];
+
+/** Field tiles for the Shaken look: one player standing, the same player Shaken, and a Shaken card back. */
+function fieldTiles() {
+  const def = prototypeCards.cards.find((c) => c.kind === 'field' && c.team === 'pool' && c.role === ('runner' satisfies PlayerRole));
+  if (!def) return null;
+  return (
+    <>
+      <div className="tile-spot"><Card def={def} position="forward" /></div>
+      <div className="tile-spot"><Card def={def} position="forward" shaken hasBall /></div>
+      <div className="tile-spot"><CardBack team="A" shaken /></div>
+    </>
+  );
+}
 
 export function CardPreview() {
   const cards = samples();
@@ -78,13 +86,18 @@ export function CardPreview() {
         {physicalCards.map((def) => <CardFace key={def.id} def={def} width={260} />)}
       </div>
 
-      <h2>Players with Toughness and cost (mock values, rules v0.17)</h2>
+      <h2>Players with Toughness and cost (mock costs, rules v0.17)</h2>
       <p className="small">
-        Toughness follows the plan's table by player type. The costs are made up for the layout; real costs come from
+        Toughness is on the cards, by player type. The costs are made up for the layout; real costs come from
         measured win rates.
       </p>
       <div className="card-row">
-        {mockPlayers().map(({ def, toughness, cost }) => <CardFace key={def.id} def={def} toughness={toughness} cost={cost} width={260} />)}
+        {mockPlayers().map(({ def, cost }) => <CardFace key={def.id} def={def} cost={cost} width={260} />)}
+      </div>
+      <h2>On the field (rules v0.17)</h2>
+      <p className="small">A player's tile, the same player Shaken (the physical card turns sideways; on screen it tips over), and a face-down opponent who is Shaken.</p>
+      <div className="tile-row">
+        {fieldTiles()}
       </div>
     </main>
   );

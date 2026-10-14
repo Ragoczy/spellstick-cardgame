@@ -15,6 +15,8 @@ export interface SideScoreInput {
   player: PlayerCardDef | null;
   /** The player's injury, if any. */
   injury?: InjuryDef | null;
+  /** The player is Shaken (v0.17): config.shakenPenalty off every skill. */
+  shaken?: boolean;
   /** Which stat, what it's used for, where the player is, and any action-spell modifiers. */
   side: Pick<ContestSide, 'stat' | 'use' | 'pos' | 'modifiers' | 'power' | 'roll'>;
   /** This side's reaction spell, if one was played and didn't fail. */
@@ -70,6 +72,7 @@ export function scoreSide(input: SideScoreInput, config: GameConfig): SideScore 
     if (bonus !== 0) parts.push({ label: 'Ability', amount: bonus });
     const penalty = injuryPenalty(input.injury, player, side.stat);
     if (penalty !== 0) parts.push({ label: input.injury!.name, amount: -penalty });
+    if (input.shaken && config.shakenPenalty) parts.push({ label: 'Shaken', amount: -config.shakenPenalty });
   }
   const printed = Math.max(0, base + parts.reduce((sum, p) => sum + p.amount, 0));
   // Shield (v0.17): the value worked out so far is cut down. Dice and spells are added after.

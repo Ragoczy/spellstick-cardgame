@@ -3,6 +3,7 @@
 
 import type { Action } from './actions';
 import { castsLeft, defOf, isActionSpell, isReactionSpell, justCameOn, slotAt } from './board';
+import { isShaken } from './injuries';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 import { reactionFits, type SpellCardDef } from './cards';
@@ -26,7 +27,8 @@ function holds(s: GameState, side: Side): boolean {
 
 function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to pass.';
-  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
+  const passer = cantAct(s, side, s.ball!.pos);
+  if (passer) return passer;
   if (!validField(s, to)) return 'That is not a spot on the field.';
   const targets = passTargets(s.ball!.pos, s.config.lanes, longPass);
   if (!targets.some((t) => samePos(t, to))) return "You can't pass there.";
@@ -36,7 +38,8 @@ function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): str
 
 function canShoot(s: GameState, side: Side, from: 'forward' | 'midfield'): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to shoot.';
-  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
+  const shooter = cantAct(s, side, s.ball!.pos);
+  if (shooter) return shooter;
   if (s.ball!.pos.area !== from) return from === 'forward' ? 'Only a forward holding the ball can shoot.' : 'A long shot needs a midfielder holding the ball.';
   return null;
 }
@@ -46,8 +49,7 @@ function canTackle(s: GameState, side: Side): string | null {
   if (s.ball.pos.area === 'goal') return "Goalies can't be tackled.";
   if (s.ballProtected) return "That player just caught a pass and can't be tackled until their next turn.";
   if (!slotAt(s, side, opposite(s.ball.pos))) return 'You have nobody in that spot to tackle with.';
-  if (justCameOn(s, side, opposite(s.ball.pos))) return JUST_CAME_ON;
-  return null;
+  return cantAct(s, side, opposite(s.ball.pos));
 }
 
 /** A lane can be chosen for a faceoff unless both midfielders are missing (and some lane has one). */
@@ -78,6 +80,14 @@ const GOALIE_CLEARING = "Your goalie has the ball and must clear it this turn, s
 
 const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
 const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
+const SHAKEN = "That player is Shaken, so they can't pass, shoot, tackle, or cast until they stand up.";
+
+/** Why the player in a spot can't pass, shoot, tackle, or cast right now, or null if they can. */
+function cantAct(s: GameState, side: Side, pos: Pos): string | null {
+  if (justCameOn(s, side, pos)) return JUST_CAME_ON;
+  if (isShaken(s, side, pos)) return SHAKEN;
+  return null;
+}
 
 /** Whether a card (on the field or in hand) is one of your injured players. */
 function isInjured(s: GameState, uid: string | undefined): boolean {
@@ -135,8 +145,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
       if (!reactionFits(defOf(s, action.card) as SpellCardDef, p.contest[p.role])) return `${defOf(s, action.card).name} doesn't work in this contest.`;
       if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
-      if (justCameOn(s, side, p.contest[p.role].pos)) return JUST_CAME_ON;
-      return null;
+      return cantAct(s, side, p.contest[p.role].pos);
     }
 
     case 'shootoutPick': {
@@ -216,7 +225,8 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (!isActionSpell(spell)) return isReactionSpell(spell) ? 'Reaction spells can only be played during a contest.' : 'That card is not a spell.';
       if (!validPos(s, action.caster) || !slotAt(s, side, action.caster)) return 'Choose one of your players to cast the spell.';
       if (castsLeft(s, side, action.caster) <= 0) return NEEDS_REST;
-      if (justCameOn(s, side, action.caster)) return JUST_CAME_ON;
+      const caster = cantAct(s, side, action.caster);
+      if (caster) return caster;
       const target = action.target;
 
       switch (spell.ability.effect) {

@@ -50,6 +50,15 @@ describe.each(LANE_COUNTS)('hidden information (%i lanes)', (lanes) => {
     expect(JSON.stringify(view)).not.toContain('Hidden star');
   });
 
+  it("hides a face-down opponent's Toughness, so the computer has to guess how easily they're hurt", () => {
+    const s = scenario({ lanes, B: { lineup: { midfield: { 0: player('Tough one', { toughness: 6 }) } } } });
+    const view = viewFor(s, 'A');
+    expect(view.opponent.lineup.midfield[0]).toEqual({ state: 'unknown' });
+    expect(JSON.stringify(view.opponent.lineup)).not.toContain('toughness');
+    // Your own face-down players show theirs.
+    expect(JSON.stringify(viewFor(s, 'B').mine.lineup.midfield[0])).toContain('"toughness":6');
+  });
+
   it("shows the opponent's hand and both decks only as counts", () => {
     const s = scenario({ lanes, B: { hand: [player('Secret hand card')] } });
     const view = viewFor(s, 'A');

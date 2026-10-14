@@ -10,11 +10,12 @@ function playerAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): Playe
   return (cardAt(view, owner, pos)?.def as PlayerCardDef | undefined) ?? null;
 }
 
-/** A player's value in a contest, from the card you can see (including any injury). */
+/** A player's value in a contest, from the card you can see (including any injury, and Shaken). */
 function valueOf(view: PlayerView, owner: 'mine' | 'opponent', side: Parameters<typeof scoreSide>[0]['side'],
   spell: { def: SpellCardDef; affinity: Affinity } | null, shielded: boolean): number {
   const card = cardAt(view, owner, side.pos);
-  return scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, side, spell, shielded }, view.config).total;
+  const shaken = shakenAt(view, owner, side.pos);
+  return scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, shaken, side, spell, shielded }, view.config).total;
 }
 
 export function casterAffinity(view: PlayerView, caster: Pos, spell: CardDef): Affinity | null {
@@ -142,10 +143,10 @@ export function dicePreview(view: PlayerView): DicePreview | null {
   const myCard = cardAt(view, 'mine', me.pos);
   const theirCard = cardAt(view, 'opponent', them.pos);
   if (!myCard) return null;
-  const total = (card: ReturnType<typeof cardAt>, side: typeof me) =>
-    scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, side, spell: null, shielded: false }, view.config).total;
-  const mine = total(myCard, me);
-  const theirs = total(theirCard, them);
+  const total = (card: ReturnType<typeof cardAt>, side: typeof me, owner: 'mine' | 'opponent') =>
+    scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, shaken: shakenAt(view, owner, side.pos), side, spell: null, shielded: false }, view.config).total;
+  const mine = total(myCard, me, 'mine');
+  const theirs = total(theirCard, them, 'opponent');
   const iWinTies = contest.tiesGoTo === role;
   const rollsLeft = view.diceLeft[view.me];
   if (view.config.diceTokens === 'reroll') {
@@ -174,4 +175,11 @@ function cardAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos) {
   const team = view[owner];
   const slot = pos.area === 'goal' ? team.goalie : team.lineup[pos.area][pos.lane];
   return slot && (slot.state === 'revealed' || slot.state === 'faceDown') ? slot.card : null;
+}
+
+/** Whether the player in a spot is Shaken (public: the card is sideways). */
+function shakenAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
+  const team = view[owner];
+  const slot = pos.area === 'goal' ? team.goalie : team.lineup[pos.area][pos.lane];
+  return !!slot && slot.state !== 'empty' && !!slot.shaken;
 }

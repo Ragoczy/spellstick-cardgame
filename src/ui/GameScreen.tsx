@@ -566,6 +566,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           <div className="piles">
             Your discard pile: {view.mine.discard.length} · Their discard pile: {view.opponent.discard.length}
           </div>
+          {view.mine.knockedOut.length + view.opponent.knockedOut.length > 0 ? (
+            <div className="piles knocked-out" title="Knocked-out players sit beside the mat. At each faceoff each one rolls: 4 or more and they go back to the hand.">
+              Knocked out: {knockedOutList(view.mine.knockedOut, 'yours')} · {knockedOutList(view.opponent.knockedOut, 'theirs')}
+            </div>
+          ) : null}
         </div>
 
         {game.announcement ? <AnnouncementView a={game.announcement} opp={opp} onClose={game.dismissAnnouncement} /> : null}
@@ -631,6 +636,11 @@ function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: Opponent
       </div>
     </div>
   );
+}
+
+/** "none yours" or "yours: Ann Lee, Bo Park". */
+function knockedOutList(cards: import('../engine').CardView[], whose: string): string {
+  return cards.length ? `${whose}: ${cards.map((c) => c.def.name).join(', ')}` : `none ${whose}`;
 }
 
 function duelCard(card: import('../engine').CardView | null) {

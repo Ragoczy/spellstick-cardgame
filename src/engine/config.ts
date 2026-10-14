@@ -119,6 +119,26 @@ export interface GameConfig {
   shieldEffect: 'minus' | 'half' | 'zero';
   /** With shieldEffect 'minus': how much a Shield takes off. */
   shieldAmount: number;
+  /**
+   * Contact (v0.17): a successful tackle knocks the tackled player down (a Toughness check), and
+   * every hurt rolls for severity: Shaken, Injured, or Knocked out. false (the old rule): only
+   * hits and dirty plays hurt, and every hurt is an injury; online matches started before v0.17
+   * keep it.
+   */
+  knockdowns: boolean;
+  /** The die for Toughness checks, severity rolls, and knocked-out return rolls. */
+  contactDie: number;
+  /**
+   * Toughness by player type, printed on each field player (scripts/generate-players.ts). A
+   * knocked-down player is fine on a roll at or below their Toughness, and hurt above it.
+   */
+  toughnessByRole: Record<'stopper' | 'anchor' | 'playmaker' | 'allrounder' | 'runner' | 'striker', number>;
+  /** Severity roll: up to `shaken` is Shaken, up to `injured` is Injured, anything higher Knocked out. */
+  severity: { shaken: number; injured: number };
+  /** Taken off every skill of a Shaken player in a contest. */
+  shakenPenalty: number;
+  /** At each faceoff, each knocked-out player goes back to their owner's hand on this roll or higher. */
+  knockedOutReturn: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -159,6 +179,12 @@ export const DEFAULT_CONFIG: GameConfig = {
   castsPerResonant: 1,
   shieldEffect: 'minus',
   shieldAmount: 2,
+  knockdowns: true,
+  contactDie: 6,
+  toughnessByRole: { stopper: 5, anchor: 5, playmaker: 4, allrounder: 4, runner: 3, striker: 3 },
+  severity: { shaken: 3, injured: 5 },
+  shakenPenalty: 2,
+  knockedOutReturn: 4,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

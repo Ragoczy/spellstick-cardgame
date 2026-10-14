@@ -436,7 +436,8 @@ opponent is updated in the same phase as each rule, or that phase's numbers woul
 `server/matches.ts` `savedSetup()` (old matches keep `'zero'`). The computer reads the same
 `scoreSide` math, so it follows automatically.
 
-**Phase b: Toughness and severity.**
+**Phase b: Toughness and severity.** *(Done 2026-10-14: 3.55 hurts a game, 51% Shaken, real
+injuries 1.75. Under the 4–8 and 3.5 targets; see `reports/sim-2026-10-14-v17b.md`.)*
 - Engine: `config.ts` (`knockdowns`, `severity`, `shakenPenalty`, `knockedOutReturn`,
   `toughnessByRole`), `cards.ts` (`toughness` on field cards; the loader checks it), `state.ts`
   (`Slot.shakenUntil`, `TeamState.knockedOut`), `injuries.ts` (knockdown, Toughness check,

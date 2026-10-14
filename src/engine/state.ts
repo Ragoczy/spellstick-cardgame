@@ -27,6 +27,12 @@ export interface Slot {
   casts?: number;
   /** Substituted on at the Draw step this turn: can't pass, shoot, tackle, or cast until the turn ends. */
   cameOn?: boolean;
+  /**
+   * Shaken (v0.17, public): the card is turned sideways. The player can't pass, shoot, tackle, or
+   * cast, and loses config.shakenPenalty from every skill in a contest. They stand up at the end
+   * of this turn number, which is always one of their own team's turns.
+   */
+  shakenUntil?: number;
 }
 
 /** The two face-down draw piles each team has. */
@@ -40,6 +46,11 @@ export interface TeamState {
   hand: Uid[];
   /** Public. Newest card last. */
   discard: Uid[];
+  /**
+   * Knocked-out players (v0.17), face up beside the mat (public). At each faceoff each one rolls to
+   * go back to the hand.
+   */
+  knockedOut: Uid[];
   /** null during setup, or if the goalie was carried off with nobody to replace them. */
   goalie: Slot | null;
   /** Indexed by lane. null during setup, or if a player was carried off with nobody to replace them. */

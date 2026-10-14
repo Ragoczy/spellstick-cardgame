@@ -67,6 +67,7 @@
           "shot": { "type": "integer", "minimum": 0, "maximum": 6 },
           "defense": { "type": "integer", "minimum": 0, "maximum": 6 },
           "faceoff": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "toughness": { "type": "integer", "minimum": 1, "maximum": 6, "description": "Field players (v0.17): knocked down, the player is fine on a roll at or below this, hurt above it." },
           "save": { "type": "integer", "minimum": 0, "maximum": 8 },
           "spellType": { "enum": ["reaction", "action"] },
           "tier": { "enum": ["legendary", "rare", "uncommon", "common"], "description": "Spells: power tier, named like a card rarity, strongest first. Measured by npm run spell-tiers (docs/MAGIC.md). Changes nothing in play." },
@@ -81,7 +82,7 @@
         },
         "allOf": [
           { "if": { "properties": { "kind": { "const": "field" } } },
-            "then": { "required": ["resonants", "speed", "shot", "defense", "faceoff"] } },
+            "then": { "required": ["resonants", "speed", "shot", "defense", "faceoff", "toughness"] } },
           { "if": { "properties": { "kind": { "const": "goalie" } } },
             "then": { "required": ["resonants", "save"] } },
           { "if": { "properties": { "kind": { "const": "spell" } } },

@@ -3,6 +3,10 @@
 import type { GameConfig } from '../engine/config';
 import type { SimResult } from './simulate';
 import type { CardStats, SimStats } from './stats';
+import type { InjurySource } from '../engine/events';
+
+/** Injuries (injury cards and carry-offs) one team suffered, from every cause. */
+const injuriesOf = (bySource: Record<InjurySource, number>) => bySource.hit + bySource.dirty_play + bySource.tackle;
 
 export interface KeyMetrics {
   firstWinRate: number;
@@ -29,7 +33,7 @@ export function keyMetrics(s: SimStats): KeyMetrics {
     teamAWinRate: decided ? s.wins.A / decided : NaN,
     goalEndShare: s.games ? s.reasons.goals / s.games : NaN,
     shootoutShare: s.games ? s.reasons.shootout / s.games : NaN,
-    injuriesPerGame: s.games ? (s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play) / s.games : NaN,
+    injuriesPerGame: s.games ? (injuriesOf(s.injuries.A) + injuriesOf(s.injuries.B)) / s.games : NaN,
     moreInjuredWinRate: s.moreInjured.games ? s.moreInjured.wins / s.moreInjured.games : NaN,
     upsetRate: s.upsets.contests ? s.upsets.weakerWon / s.upsets.contests : NaN,
     passCatch: s.contests.pass.count ? s.contests.pass.attackerWins / s.contests.pass.count : NaN,
@@ -294,9 +298,9 @@ export function buildReport(input: ReportInput): string {
   const injuryRate = (n: number) => (n / s.games).toFixed(2);
   const hits = s.contests.hit;
   out.push(table(['Measure', 'Value'], [
-    ['Injuries per game (carry-offs included)', injuryRate(s.injuries.A.hit + s.injuries.A.dirty_play + s.injuries.B.hit + s.injuries.B.dirty_play)],
-    ['…suffered by Team A', injuryRate(s.injuries.A.hit + s.injuries.A.dirty_play)],
-    ['…suffered by Team B', injuryRate(s.injuries.B.hit + s.injuries.B.dirty_play)],
+    ['Injuries per game (carry-offs included)', injuryRate(injuriesOf(s.injuries.A) + injuriesOf(s.injuries.B))],
+    ['…suffered by Team A', injuryRate(injuriesOf(s.injuries.A))],
+    ['…suffered by Team B', injuryRate(injuriesOf(s.injuries.B))],
     ['…caused by hits', injuryRate(s.injuries.A.hit + s.injuries.B.hit)],
     ['…caused by dirty plays', injuryRate(s.injuries.A.dirty_play + s.injuries.B.dirty_play)],
     ['Players carried off per game', injuryRate(s.carriedOff)],

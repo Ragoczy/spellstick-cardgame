@@ -6,7 +6,8 @@
 // 4. Apply abilities, injuries, spells, and dice.
 // 5. The attacker wins only with a higher value. Ties go to the defender, except in passes
 //    (the receiver) and faceoffs (the chooser).
-// 6. Then injuries: a hit that lands, and a dirty play by the winning side.
+// 6. Then hurts: a hit that lands, a dirty play by the winning side, and (v0.17) a successful
+//    tackle, which knocks the tackled player down. A player is hurt at most once per contest.
 //
 // An empty spot (a player carried off) counts as 0 and can't play reaction spells. Nor can a
 // player who has used up their casting limit.
@@ -17,7 +18,7 @@ import type { PlayerCardDef, SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
 import { continueGame, recordPenalty, scoreGoal } from './flow';
-import { injurePlayer } from './injuries';
+import { hurtPlayer, injurePlayer, isShaken, knockDown } from './injuries';
 import { randomInt } from './rng';
 import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
@@ -131,8 +132,8 @@ function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: G
   // A tired player is announced whatever the hand holds: their spells left are public anyway.
   const left = castsLeft(s, me.side, me.pos);
   if (slotAt(s, me.side, me.pos) && left === 0) ev.push({ type: 'outOfSpells', side: me.side, pos: me.pos });
-  // A player who came on this turn can't cast yet.
-  if (hasReactionSpell(s, me.side, me) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn) {
+  // A player who came on this turn can't cast yet, and a Shaken player can't cast at all.
+  if (hasReactionSpell(s, me.side, me) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn && !isShaken(s, me.side, me.pos)) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }
@@ -179,7 +180,8 @@ export function contestValue(s: GameState, contest: Contest, role: ContestRole):
     : null;
   const player = slot ? (defOf(s, slot.uid) as PlayerCardDef) : null;
   const injury = slot ? injuryOf(s, slot.uid) : null;
-  const score = scoreSide({ player, injury, side: me, spell, shielded: activeSpell(s, them, 'shield') }, s.config);
+  const shaken = slot?.shakenUntil !== undefined;
+  const score = scoreSide({ player, injury, shaken, side: me, spell, shielded: activeSpell(s, them, 'shield') }, s.config);
   return {
     side: me.side,
     pos: me.pos,
@@ -199,7 +201,6 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
     attacker.total > defender.total || (attacker.total === defender.total && contest.tiesGoTo === 'attacker');
   const winnerRole: ContestRole = attackerWins ? 'attacker' : 'defender';
   const winner = contest[winnerRole];
-  const loser = contest[otherRole(winnerRole)];
   ev.push({ type: 'contestResolved', kind: contest.kind, attacker, defender, winner: winner.side, winnerRole });
 
   // draw_on_win: ignored if the winner was shielded.
@@ -212,16 +213,31 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
 
   applyOutcome(s, contest, attackerWins, ev);
 
-  // Injuries: a hit that lands injures its target; a dirty play by the winner injures the loser.
-  if (!s.result) {
-    if (contest.kind === 'hit' && attackerWins) {
-      injurePlayer(s, contest.defender.side, contest.defender.pos, 'hit', contest.attacker.power?.label ?? 'Hit', ev);
-    }
-    if (activeSpell(s, winner, 'dirty_play')) {
-      injurePlayer(s, loser.side, loser.pos, 'dirty_play', defOf(s, winner.spell!.uid).name, ev);
-    }
-  }
+  if (!s.result) applyHurts(s, contest, attackerWins, ev);
   continueGame(s, ev);
+}
+
+/**
+ * Hurts after a contest: a hit that lands hurts its target, a dirty play by the winner hurts the
+ * loser, and (v0.17) a successful tackle knocks the tackled player down.
+ */
+function applyHurts(s: GameState, contest: Contest, attackerWins: boolean, ev: GameEvent[]): void {
+  const winner = attackerWins ? contest.attacker : contest.defender;
+  const loser = attackerWins ? contest.defender : contest.attacker;
+  const hitLands = contest.kind === 'hit' && attackerWins;
+  const dirty = activeSpell(s, winner, 'dirty_play') ? defOf(s, winner.spell!.uid).name : null;
+  const hitName = contest.attacker.power?.label ?? 'Hit';
+
+  if (!s.config.knockdowns) {
+    // Before v0.17: every hurt is an injury, and a hit and a dirty play both count.
+    if (hitLands) injurePlayer(s, contest.defender.side, contest.defender.pos, 'hit', hitName, ev);
+    if (dirty) injurePlayer(s, loser.side, loser.pos, 'dirty_play', dirty, ev);
+    return;
+  }
+  // A player is hurt at most once per contest: a hit first, then a dirty play, then a knockdown.
+  if (hitLands) hurtPlayer(s, contest.defender.side, contest.defender.pos, 'hit', hitName, ev);
+  else if (dirty) hurtPlayer(s, loser.side, loser.pos, 'dirty_play', dirty, ev);
+  else if (contest.kind === 'tackle' && attackerWins) knockDown(s, contest.defender.side, contest.defender.pos, 'Tackle', ev);
 }
 
 function giveBall(s: GameState, side: Side, pos: ContestSide['pos'], ev: GameEvent[]): void {

@@ -65,6 +65,8 @@ slot, not the card: if the player in that slot changes (substitute, swap), the n
 - **Shot**: shooting.
 - **Defense**: intercepting passes and tackling.
 - **Faceoff**: winning faceoffs.
+- **Toughness**: how hard they are to hurt when knocked down (see "Contact"). It comes from the
+  player's type ⚙: Stoppers and Anchors 5, Playmakers and All-rounders 4, Runners and Strikers 3.
 - **Resonants**: 1 to 3 ⚙. A Resonant is a feeling or sensation (for example, Anger, Vigor, or
   Fatigue). Each has one **Affinity**: the kind of magic it's good at. That is either a whole
   magic family (Fire, Illusion, Body, ...) or one specialization in a family (Glamour, in
@@ -75,7 +77,7 @@ Any field player can play any field position. Where you put them is the strategy
 
 Each player card also has a **type** that says what it is good at: Runner (Speed), Striker
 (Shot), Playmaker (Faceoff), All-rounder (even), Anchor and Stopper (Defense), or Goalie. The
-type is just a label: it changes nothing in play.
+type sets the printed Toughness; otherwise it's just a label and changes nothing in play.
 
 **Goalie cards** have **Save** and 1 to 3 Resonants. They can only play in goal.
 
@@ -182,7 +184,8 @@ Nobody sees the other team's deck. There's no draft in a constructed game.
 
 ## Faceoff
 
-Used at the start and after every goal that doesn't end the game. The team that didn't take the
+Used at the start and after every goal that doesn't end the game. First, each team rolls for each
+of its knocked-out players (see "Contact"). Then the team that didn't take the
 last turn (at the start: the second player; after a goal: the team that was scored on) chooses a
 midfield lane. Both midfielders in that lane are revealed and contest using **Faceoff**.
 The chooser may play a reaction spell first, then the other side. Ties go to the chooser.
@@ -244,7 +247,7 @@ goalie.
 
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
-ball. If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
+ball and the holder is **knocked down** (see "Contact"). If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
 You can't tackle a forward who has just caught a pass (see "Catch and shoot").
 If the holder has mirror images, roll for them first (see `mirror_images`).
 
@@ -282,14 +285,14 @@ Every contest has an attacker (the side taking the action) and a defender.
 4. Apply abilities, injuries, spells, and dice. A value can't go below 0.
 5. **The attacker wins only if their value is higher.** Ties go to the defender, except in
    passes (ties go to the receiver) and faceoffs (ties go to the chooser).
-6. **Injuries:** a hit that lands injures its target, and a dirty play injures the losing player
-   if its side won (see "Injuries").
+6. **Hurts:** a hit that lands hurts its target, a dirty play hurts the losing player if its side
+   won, and a successful tackle knocks the holder down (see "Contact").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
 tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser acts first like an
 attacker and wins ties.
 
-An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
+An **empty spot** (a player was carried off or knocked out and nobody replaced them) counts as 0 and can't play
 reaction spells, roll, or reroll. A player with no spells left (see "Casting limit") can't play reaction
 spells either.
 
@@ -307,12 +310,48 @@ many are left.
 - Each side can reroll at most once per contest. Reaction spells are played after the rerolls, so
   both players can see the dice before deciding.
 
+## Contact
+
+Spellstick is a rough sport. Players get hurt three ways:
+
+- **Knockdown.** A successful tackle (a Steal too) knocks the tackled player down. Their owner rolls
+  a die ⚙: **at or below their Toughness, they're fine; above it, they're hurt.** A tackle that
+  goes for a mirror image knocks nobody down.
+- **Hit.** A hit that lands hurts its target, with no Toughness roll: the hit already had to beat
+  their Defense.
+- **Dirty play.** A dirty play by the winning side hurts the losing player, with no Toughness roll.
+
+A player is hurt at most once in a contest (a hit first, then a dirty play, then a knockdown).
+**Goalies are never hurt:** they can't be tackled or hit, and a dirty play against a goalie does
+nothing.
+
+**Severity.** A hurt player's owner rolls a die ⚙:
+
+| Roll | Result |
+| --- | --- |
+| 1–3 | **Shaken** |
+| 4–5 | **Injured** (see "Injuries") |
+| 6 | **Knocked out** |
+
+**Shaken.** Turn the card sideways (not face down: face down means hidden). A Shaken player can't
+pass, shoot, tackle, or cast (action or reaction spells), and gets −2 ⚙ to every skill in a
+contest. They can still catch a pass, defend, and take part in a faceoff, and if they hold the
+ball, they keep it. They stand up at the end of their team's next turn: a player hurt on the other
+team's turn sits out your coming turn, and one hurt on your own turn sits out the one after. They
+also stand up when substituted out, and at full time. Shaken again while Shaken: the count starts
+over.
+
+**Knocked out.** The player leaves the field and goes face up beside the mat, injury card and all.
+A forced substitution follows, as for a carry-off (see "Injuries"). If there's nobody to bring on,
+the spot is empty, and a ball they held goes to the opposing player in that spot. **At each
+faceoff,** before the lane is chosen, roll a die ⚙ for each of your knocked-out players: on 4–6
+they go back to your hand.
+
+Toughness, severity, and return rolls are never rerolled: roll tokens are only for contest dice.
+
 ## Injuries
 
-Spellstick is a rough sport. Hits and dirty plays injure players.
-
-- **Hitting the goalie isn't allowed.** Goalies can't be injured: Hit can't target them, and a
-  dirty play against a goalie does nothing. (Fouls and penalties will come later.)
+A player is **injured** when their severity roll comes up Injured (see "Contact").
 
 - **Injury cards** are face up, so everyone can see an injury, even on a face-down player. The
   deck ⚙ has 3 Singed hair (−1 Speed), 3 Broken finger (−2 Shot), 3 Twisted ankle (−2 Speed),
@@ -436,6 +475,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase b — Contact, from the v0.17 plan Paul approved (`PLAN.md`; Paul: too few injuries, and more injuries means real ones). Field players get **Toughness** by type (5, 4, or 3). A successful tackle **knocks the holder down**: a roll above their Toughness hurts them. Hits and dirty plays hurt with no Toughness roll. Every hurt rolls for **severity**: 1–3 Shaken, 4–5 Injured, 6 Knocked out. **Shaken** players (card sideways) can't pass, shoot, tackle, or cast and get −2 in contests until the end of their team's next turn (Paul's decision 2); **knocked-out** players sit beside the mat and roll 4–6 at each faceoff to go back to the hand. Claude: a player is hurt at most once per contest (a hit, then a dirty play, then a knockdown), so one contest can't stack two severity rolls; a knocked-out player keeps any injury card. Result (`reports/sim-2026-10-14-v17b.md`): 3.55 hurts a game (target 4–8), half of them Shaken, but real injuries fell from 2.87 to 1.75; physical attacks (phase c2) and the phase e levers are meant to raise them. Online matches started before this keep the old injuries (no knockdowns).
 
 - v0.17 (in progress), phase a — Shield cap, from the v0.17 plan Paul approved (`PLAN.md`). A Shield takes **2** off the opposing player's value instead of making it 0, worked out after their abilities and injuries; dice and spells are added after. Claude tested three caps on the same 5,000 games (half rounded up, −3, −2): all brought an unanswered Shield under 75% and kept goals in range, but only −2 left Shield no stronger than an open +2 Boost (win edge +19.0 against +20.4; half was +21.4 against +20.5, within luck). **Setup draws 3 spells** instead of 2, since games ran just over the 50-turn limit (50.4 → 49.6 turns). Report: `reports/sim-2026-10-14-v17a.md`. Online matches started before this keep the old Shield and 2 setup spells.
 

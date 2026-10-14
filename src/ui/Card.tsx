@@ -68,6 +68,7 @@ function Stats({ def }: { def: CardDef }) {
         <span>Sht <b>{def.shot}</b></span>
         <span>Def <b>{def.defense}</b></span>
         <span>Fo <b>{def.faceoff}</b></span>
+        {def.toughness !== undefined ? <span title="Toughness: knocked down, they're fine on a roll at or below this">Tgh <b>{def.toughness}</b></span> : null}
       </div>
     );
   }
@@ -100,6 +101,8 @@ export interface CardProps {
   usedDots?: number;
   /** On the field: substituted on this turn, so can't act yet. */
   cameOn?: boolean;
+  /** On the field: Shaken (v0.17), so the card is turned sideways. */
+  shaken?: boolean;
   hasBall?: boolean;
   /** Holds the ball after catching a pass at forward: can't be tackled until their next turn. */
   safe?: boolean;
@@ -113,9 +116,9 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, safe, selected, dim, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, shaken, hasBall, safe, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
-  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
+  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', shaken ? 'shaken' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
     .join(' ');
   return (
@@ -126,10 +129,11 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
         {def.name}
       </div>
       <Figure def={def} position={position} injured={Boolean(injury)} />
-      {def.kind !== 'spell' && (def.role || cameOn) ? (
+      {def.kind !== 'spell' && (def.role || cameOn || shaken) ? (
         <div className="card-role">
           {def.role ? roleLabel(def.role) : null}
           {cameOn ? <span className="just-on" title="Came on this turn: can't pass, shoot, tackle, or cast until the next turn">{def.role ? ' · ' : ''}just on</span> : null}
+          {shaken ? <span className="shaken-tag" title={SHAKEN_TITLE}>{def.role || cameOn ? ' · ' : ''}Shaken</span> : null}
         </div>
       ) : null}
       <Stats def={def} />
@@ -144,13 +148,16 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
   );
 }
 
+const SHAKEN_TITLE = "Shaken: can't pass, shoot, tackle, or cast, and weaker in contests, until the end of their team's next turn";
+
 const SAFE_TITLE = "Just caught a pass: can't be tackled until their team's next turn";
 
-export function CardBack({ team, hasBall, safe, highlight, onClick, label, injury }: { team: string; hasBall?: boolean; safe?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef }) {
+export function CardBack({ team, hasBall, safe, highlight, onClick, label, injury, shaken }: { team: string; hasBall?: boolean; safe?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef; shaken?: boolean }) {
   const colors = useContext(TeamColors);
   return (
-    <button type="button" className={`card back ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
+    <button type="button" className={`card back ${shaken ? 'shaken' : ''} ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
       <span className="back-mark">?</span>
+      {shaken ? <span className="back-label" title={SHAKEN_TITLE}>Shaken</span> : null}
       {label ? <span className="back-label">{label}</span> : null}
       {injury ? <span className="injury on-back" title={injury.name}>✚ {injury.name}</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}

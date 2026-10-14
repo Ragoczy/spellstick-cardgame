@@ -12,7 +12,7 @@ export function findProblems(s: GameState): string[] {
   for (const side of SIDES) {
     const team = s.teams[side];
     const onField = [team.goalie, ...AREAS.flatMap((a) => team.lineup[a])].filter((slot) => slot !== null).map((slot) => slot.uid);
-    const all = [...team.players, ...team.spells, ...team.hand, ...team.discard, ...onField];
+    const all = [...team.players, ...team.spells, ...team.hand, ...team.discard, ...team.knockedOut, ...onField];
     if (new Set(all).size !== all.length) problems.push(`${side}: a card is in two places at once`);
     if (all.length !== deckSize(side)) problems.push(`${side}: has ${all.length} cards, expected ${deckSize(side)}`);
     if (!all.every((uid) => uid.startsWith(side))) problems.push(`${side}: holds the other team's card`);
@@ -44,7 +44,15 @@ export function findProblems(s: GameState): string[] {
     const side = uid.startsWith('A') ? 'A' : 'B';
     const team = s.teams[side];
     const onField = [team.goalie, ...AREAS.flatMap((a) => team.lineup[a])].some((slot) => slot?.uid === uid);
-    if (!onField && !team.hand.includes(uid)) problems.push(`injured card ${uid} is not on the field or in hand`);
+    if (!onField && !team.hand.includes(uid) && !team.knockedOut.includes(uid)) {
+      problems.push(`injured card ${uid} is not on the field, in hand, or knocked out`);
+    }
+  }
+  // Only field players can be Shaken or knocked out, and only on the field (or beside it).
+  for (const side of SIDES) {
+    const team = s.teams[side];
+    if (team.goalie?.shakenUntil !== undefined) problems.push(`${side}: the goalie is Shaken`);
+    if (team.knockedOut.some((uid) => s.cards[uid]?.kind !== 'field')) problems.push(`${side}: a non-field card is knocked out`);
   }
   if (s.result && s.pending.kind !== 'gameOver') problems.push('game has a result but is still waiting for a move');
   if (!s.result && s.pending.kind === 'gameOver') problems.push('game is over without a result');

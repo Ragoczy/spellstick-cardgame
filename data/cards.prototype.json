@@ -92,7 +92,8 @@
       "speed": 5,
       "shot": 5,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-002",
@@ -111,7 +112,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 3
     },
     {
       "id": "pl-003",
@@ -135,7 +137,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-004",
@@ -154,7 +157,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-005",
@@ -178,7 +182,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-006",
@@ -202,7 +207,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-007",
@@ -221,7 +227,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-008",
@@ -245,7 +252,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-009",
@@ -269,7 +277,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-010",
@@ -293,7 +302,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-011",
@@ -317,7 +327,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-012",
@@ -341,7 +352,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-013",
@@ -365,7 +377,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-014",
@@ -389,7 +402,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-015",
@@ -413,7 +427,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-016",
@@ -437,7 +452,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-017",
@@ -461,7 +477,8 @@
       "speed": 5,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-018",
@@ -480,7 +497,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-019",
@@ -504,7 +522,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-020",
@@ -528,7 +547,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-021",
@@ -552,7 +572,8 @@
       "speed": 4,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-022",
@@ -576,7 +597,8 @@
       "speed": 3,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-023",
@@ -595,7 +617,8 @@
       "speed": 3,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-024",
@@ -619,7 +642,8 @@
       "speed": 4,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-025",
@@ -643,7 +667,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-026",
@@ -667,7 +692,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-027",
@@ -691,7 +717,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-028",
@@ -720,7 +747,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-029",
@@ -739,7 +767,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 3,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-030",
@@ -758,7 +787,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 2,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-031",
@@ -782,7 +812,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-032",
@@ -806,7 +837,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-033",
@@ -825,7 +857,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 4
     },
     {
       "id": "pl-034",
@@ -849,7 +882,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-035",
@@ -873,7 +907,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 4
     },
     {
       "id": "pl-036",
@@ -897,7 +932,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-037",
@@ -921,7 +957,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-038",
@@ -945,7 +982,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-039",
@@ -974,7 +1012,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-040",
@@ -998,7 +1037,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-041",
@@ -1022,7 +1062,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-042",
@@ -1046,7 +1087,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-043",
@@ -1065,7 +1107,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-044",
@@ -1089,7 +1132,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-045",
@@ -1113,7 +1157,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 5,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-046",
@@ -1137,7 +1182,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 5,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-047",
@@ -1156,7 +1202,8 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-048",
@@ -1180,7 +1227,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-049",
@@ -1204,7 +1252,8 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-050",
@@ -1228,7 +1277,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-051",
@@ -1247,7 +1297,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-052",
@@ -1271,7 +1322,8 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-053",
@@ -1295,7 +1347,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-054",
@@ -1319,7 +1372,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-055",
@@ -1343,7 +1397,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-056",
@@ -1367,7 +1422,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-057",
@@ -1391,7 +1447,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-058",
@@ -1415,7 +1472,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-059",
@@ -1439,7 +1497,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-060",
@@ -1458,7 +1517,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-061",
@@ -1482,7 +1542,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-062",
@@ -1506,7 +1567,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-063",
@@ -1530,7 +1592,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-064",
@@ -1554,7 +1617,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-065",
@@ -1573,7 +1637,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-066",
@@ -1597,7 +1662,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-067",
@@ -1621,7 +1687,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-068",
@@ -1640,7 +1707,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-069",
@@ -1664,7 +1732,8 @@
       "speed": 4,
       "shot": 2,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-070",
@@ -1688,7 +1757,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-071",
@@ -1707,7 +1777,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-072",
@@ -1731,7 +1802,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-073",
@@ -1755,7 +1827,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-074",
@@ -1779,7 +1852,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-075",
@@ -1803,7 +1877,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-076",
@@ -1827,7 +1902,8 @@
       "speed": 4,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-077",
@@ -1846,7 +1922,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-078",
@@ -1865,7 +1942,8 @@
       "speed": 4,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-079",
@@ -1884,7 +1962,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-080",
@@ -1908,7 +1987,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 3,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-081",
@@ -1932,7 +2012,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-082",
@@ -1956,7 +2037,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-083",
@@ -1980,7 +2062,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-084",
@@ -2004,7 +2087,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-085",
@@ -2028,7 +2112,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-086",
@@ -2057,7 +2142,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-087",
@@ -2363,6 +2449,7 @@
       "shot": 4,
       "defense": 3,
       "faceoff": 4,
+      "toughness": 4,
       "promo": true,
       "placeholder": true,
       "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks."

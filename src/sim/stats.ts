@@ -31,6 +31,9 @@ export interface GameTally {
   tacklesWon: number;
   hits: number;
   hitsLanded: number;
+  /** Tackles that knocked a player down (v0.17), and how many of those failed the Toughness check. */
+  knockdowns: number;
+  knockdownHurts: number;
   /** Every time a player was hurt, whatever the result (Shaken, Injured, Knocked out, carried off). */
   hurts: number;
   hurtsBySource: Record<InjurySource, number>;
@@ -93,7 +96,7 @@ export function tallyGame(record: GameRecord): GameTally {
     turns: s.turn,
     goals: s.score.A + s.score.B,
     shots: 0, shotGoals: 0, spellsCast: 0, tackles: 0, tacklesWon: 0, hits: 0, hitsLanded: 0,
-    hurts: 0, hurtsBySource: { hit: 0, dirty_play: 0 },
+    knockdowns: 0, knockdownHurts: 0, hurts: 0, hurtsBySource: { hit: 0, dirty_play: 0, tackle: 0 },
     shaken: 0, injured: 0, knockedOut: 0, carriedOff: 0,
     fouls: 0, foulsCaught: 0, sentOff: 0, penalties: 0,
     firstSerious: null, shieldShots: 0, shieldChanceSum: 0,
@@ -111,6 +114,21 @@ export function tallyGame(record: GameRecord): GameTally {
           t.carriedOff += 1;
           t.firstSerious ??= e.side;
         } else t.injured += 1;
+        break;
+      case 'knockedDown':
+        t.knockdowns += 1;
+        if (e.hurt) t.knockdownHurts += 1;
+        break;
+      case 'hurt':
+        // An injury is counted by the 'injured' event that follows it.
+        if (e.result === 'injured') break;
+        t.hurts += 1;
+        t.hurtsBySource[e.source] += 1;
+        if (e.result === 'shaken') t.shaken += 1;
+        else {
+          t.knockedOut += 1;
+          t.firstSerious ??= e.side;
+        }
         break;
       case 'contestResolved': {
         const won = e.winnerRole === 'attacker' ? 1 : 0;
@@ -187,7 +205,7 @@ export class SimStats {
     hit: { count: 0, attackerWins: 0 },
   };
   /** Injuries suffered, by the injured team and by what caused them (carry-offs included). */
-  injuries: Record<Side, Record<InjurySource, number>> = { A: { hit: 0, dirty_play: 0 }, B: { hit: 0, dirty_play: 0 } };
+  injuries: Record<Side, Record<InjurySource, number>> = { A: { hit: 0, dirty_play: 0, tackle: 0 }, B: { hit: 0, dirty_play: 0, tackle: 0 } };
   carriedOff = 0;
   /** Goals (and shootout penalties) scored into an empty goal. */
   emptyGoalGoals = 0;

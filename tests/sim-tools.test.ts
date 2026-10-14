@@ -75,8 +75,9 @@ describe('per-game tallies', () => {
     expect(tallies.reduce((sum, t) => sum + t.goals, 0)).toBe(result.stats.goals);
     expect(tallies.reduce((sum, t) => sum + t.shots, 0)).toBe(result.stats.shots);
     expect(tallies.reduce((sum, t) => sum + t.carriedOff, 0)).toBe(result.stats.carriedOff);
-    const injuries = result.stats.injuries;
-    expect(tallies.reduce((sum, t) => sum + t.hurts, 0)).toBe(injuries.A.hit + injuries.A.dirty_play + injuries.B.hit + injuries.B.dirty_play);
+    // SimStats counts injury cards and carry-offs; the tallies also count Shaken and knocked out.
+    const injuries = Object.values(result.stats.injuries).flatMap((bySource) => Object.values(bySource)).reduce((a, b) => a + b, 0);
+    expect(tallies.reduce((sum, t) => sum + t.injured + t.carriedOff, 0)).toBe(injuries);
   });
 
   it('splits every hurt into exactly one result', () => {

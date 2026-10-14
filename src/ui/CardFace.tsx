@@ -8,12 +8,12 @@ import type { CardDef, InjuryDef } from '../engine';
 import { roleLabel } from '../data/playerTypes';
 import { cardArt } from './cardArt';
 import { TYPE_POSITION } from './Card';
-import { capitalize, cardText, elementColor, injuryEffect } from './labels';
+import { cardText, injuryEffect, magicColor, magicLabel } from './labels';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
 
-/** The element that colors the frame: a spell's element, or a player's first Resonant's Affinity. */
-function frameElement(def: CardDef): string | null {
-  return def.kind === 'spell' ? def.element : def.resonants[0]?.affinity ?? null;
+/** The magic whose family colors the frame: a spell's magic, or a player's first Resonant's Affinity. */
+function frameMagic(def: CardDef): string | null {
+  return def.kind === 'spell' ? def.magic : def.resonants[0]?.affinity ?? null;
 }
 
 /** The position a player is drawn in on the type line. */
@@ -22,16 +22,16 @@ function figurePosition(def: CardDef): FigurePosition {
   return def.kind === 'field' && def.role ? TYPE_POSITION[def.role] : 'midfield';
 }
 
-/** Element pips in the name bar, like the cost symbols on other card games. */
+/** Magic pips in the name bar, like the cost symbols on other card games: one per family. */
 function Pips({ def }: { def: CardDef }) {
   const pips = def.kind === 'spell'
-    ? [{ key: 'spell', element: def.element, title: def.element ? `${capitalize(def.element)} spell` : 'Neutral spell' }]
-    : def.resonants.map((r) => ({ key: r.name, element: r.affinity, title: `${r.name} Resonant: ${capitalize(r.affinity)} Affinity` }));
+    ? [{ key: 'spell', magic: def.magic, title: `${magicLabel(def.magic)} spell` }]
+    : def.resonants.map((r) => ({ key: r.name, magic: r.affinity, title: `${r.name} Resonant: ${magicLabel(r.affinity)} Affinity` }));
   return (
     <span className="cf-pips">
       {pips.map((p) => (
-        <span key={p.key} className="cf-pip" style={{ background: elementColor(p.element) }} title={p.title}>
-          {p.element ? p.element.charAt(0).toUpperCase() : '·'}
+        <span key={p.key} className="cf-pip" style={{ background: magicColor(p.magic) }} title={p.title}>
+          {p.magic ? p.magic.charAt(0).toUpperCase() : '·'}
         </span>
       ))}
     </span>
@@ -47,10 +47,10 @@ function nameSize(def: CardDef): number {
   return Math.min(5.6, (128 - 7 * pipCount) / def.name.length);
 }
 
-/** "Anger (fire) · Joy (air)": the pips spelled out, since a printed card has no tooltips. */
+/** "Anger: Fire · Joy: Wind (air)": the pips spelled out, since a printed card has no tooltips. */
 function resonantLine(def: CardDef): string | null {
   if (def.kind === 'spell') return null;
-  return def.resonants.map((r) => `${r.name} (${r.affinity})`).join(' · ');
+  return def.resonants.map((r) => `${r.name}: ${magicLabel(r.affinity)}`).join(' · ');
 }
 
 function typeLine(def: CardDef): string {
@@ -89,15 +89,15 @@ export interface CardFaceProps {
 }
 
 export function CardFace({ def, width, serial, injury, selected, dim, highlight, onClick }: CardFaceProps) {
-  const element = frameElement(def);
+  const magic = frameMagic(def);
   const art = cardArt(def.id);
   const text = cardText(def);
   const classes = ['cf', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', injury ? 'injured' : '']
     .filter(Boolean)
     .join(' ');
-  // The outer box sets the size that every cqw inside is measured against. --el is the frame
+  // The outer box sets the size that every cqw inside is measured against. --frame is the frame
   // color; styles.css mixes the lighter frame shades from it.
-  const style = { width, '--el': elementColor(element) } as CSSProperties;
+  const style = { width, '--frame': magicColor(magic) } as CSSProperties;
   const body = (
     <div className="cf-card">
       <div className="cf-inner">
@@ -107,13 +107,13 @@ export function CardFace({ def, width, serial, injury, selected, dim, highlight,
         </div>
         <div className="cf-art">
           {art ? <img src={art} alt="" loading="lazy" /> : def.kind === 'spell'
-            ? <span className="cf-art-empty">{element ? capitalize(element) : 'Neutral'}</span>
-            : <PlayerFigure position={figurePosition(def)} element={element} className="cf-art-figure" />}
+            ? <span className="cf-art-empty">{magicLabel(magic)}</span>
+            : <PlayerFigure position={figurePosition(def)} magic={magic} className="cf-art-figure" />}
           {injury ? <span className="cf-injury">✚ {injury.name}: {injuryEffect(injury, def)}</span> : null}
         </div>
         <div className="cf-bar cf-type">
           <span>{typeLine(def)}</span>
-          {def.kind === 'spell' ? null : <PlayerFigure position={figurePosition(def)} element={element} className="cf-type-figure" />}
+          {def.kind === 'spell' ? null : <PlayerFigure position={figurePosition(def)} magic={magic} className="cf-type-figure" />}
         </div>
         <div className="cf-text">
           <Stats def={def} />

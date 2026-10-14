@@ -6,6 +6,7 @@ import type pg from 'pg';
 import type { Collection, SavedTeam } from '../../src/shared/collectionApi';
 import type { MatchDetail, MatchSummary } from '../../src/shared/matchApi';
 import { MAX_TEAMS, starterSet } from '../../src/data/teams';
+import { prototypeCards } from '../../src/data/prototype';
 import { buildApp } from '../../server/app';
 import { loadPlayerCards } from '../../server/cardData';
 import { unlinkAccount } from '../../server/unlink';
@@ -159,7 +160,7 @@ describe.skipIf(!haveDb)('collections and saved teams', () => {
       // Bob's spells are set B's.
       const { rows } = await db.query('select setup, team_a, team_b, format from matches where id = $1', [match.id]);
       expect(rows[0].format).toBe('constructed');
-      expect(rows[0].setup.decks.B.filter((id: string) => id.startsWith('b-s-'))).toHaveLength(16);
+      expect(rows[0].setup.decks.B.slice(-16)).toEqual(prototypeCards.teams.find((t) => t.id === 'B')!.spells);
       expect([Number(rows[0].team_a), Number(rows[0].team_b)]).toEqual([aliceTeam.id, bobTeam.id]);
 
       // Changing a team afterwards doesn't change the match.

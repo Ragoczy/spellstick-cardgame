@@ -1,12 +1,12 @@
 // Small helpers for reading and changing the table. Functions that change things work on a
 // draft copy of the state made by applyAction, never on the caller's state.
 
-import type { CardDef, PlayerCardDef, SpellCardDef, StatName } from './cards';
+import { reactionFits, type CardDef, type PlayerCardDef, type SpellCardDef, type StatName } from './cards';
 import type { InjuryDef } from './config';
 import type { CardView, DrawReason, GameEvent } from './events';
 import { type Pos, type Side } from './field';
 import { shuffle } from './rng';
-import type { GameState, Pile, Slot, TeamState, Uid } from './state';
+import type { ContestSide, GameState, Pile, Slot, TeamState, Uid } from './state';
 
 export function cardView(s: GameState, uid: Uid): CardView {
   const injury = injuryOf(s, uid);
@@ -95,8 +95,12 @@ export function isReactionSpell(def: CardDef): def is SpellCardDef & { spellType
   return def.kind === 'spell' && def.spellType === 'reaction';
 }
 
-export function hasReactionSpell(s: GameState, side: Side): boolean {
-  return s.teams[side].hand.some((uid) => isReactionSpell(defOf(s, uid)));
+/** Whether this side holds a reaction spell it could play in this side of a contest. */
+export function hasReactionSpell(s: GameState, side: Side, contestSide: ContestSide): boolean {
+  return s.teams[side].hand.some((uid) => {
+    const def = defOf(s, uid);
+    return isReactionSpell(def) && reactionFits(def, contestSide);
+  });
 }
 
 function removeFromHand(team: TeamState, uid: Uid): void {

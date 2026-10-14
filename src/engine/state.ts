@@ -1,7 +1,7 @@
 // The full game state. This is the "real" table, including hidden cards. Players (human or
 // computer) must never read it directly; they read viewFor(state, side) instead.
 
-import type { Area, CardDef, Element, PlayerCardDef, StatName, StatUse } from './cards';
+import type { Area, CardDef, PlayerCardDef, StatName, StatUse } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import type { Pos, Side } from './field';
 
@@ -46,7 +46,7 @@ export interface TeamState {
   lineup: Record<Area, (Slot | null)[]>;
 }
 
-export type Affinity = 'match' | 'neutral' | 'opposed';
+export type Affinity = 'specialist' | 'match' | 'neutral' | 'opposed';
 
 /** A reaction spell played in a contest. */
 export interface PlayedSpell {
@@ -151,8 +151,8 @@ export interface DraftState {
 
 export interface GameState {
   config: GameConfig;
-  elements: Element[];
-  opposedPairs: [Element, Element][];
+  families: string[];
+  opposedPairs: [string, string][];
   /** Definition for every card instance in the game. */
   cards: Record<Uid, CardDef>;
   /** Seeded RNG state. */

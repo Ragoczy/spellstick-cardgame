@@ -32,7 +32,7 @@ export interface PlayerView {
   activeSide: Side;
   firstSide: Side;
   lanes: number;
-  elements: string[];
+  families: string[];
   opposedPairs: [string, string][];
   score: Record<Side, number>;
   ball: { side: Side; pos: Pos } | null;
@@ -120,7 +120,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
     activeSide: s.activeSide,
     firstSide: s.firstSide,
     lanes: s.config.lanes,
-    elements: s.elements,
+    families: s.families,
     opposedPairs: s.opposedPairs,
     score: s.score,
     ball: s.ball,

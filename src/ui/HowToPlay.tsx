@@ -22,8 +22,8 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <ul>
         <li><b>Field players</b> have Speed (catching passes, dodging tackles), Shot (scoring), Defense (intercepting, tackling), and Faceoff.</li>
         <li><b>Goalies</b> have Save.</li>
-        <li>Players have 1–3 <b>Resonants</b>, emotions like Anger, each with an elemental <b>Affinity</b> (the colored dots).</li>
-        <li><b>Spells</b> have an element. Cast by a player whose Affinity matches, number effects get +1. Cast by a player with the opposite element (fire–water, earth–air), they get −1, and other effects fail.</li>
+        <li>Players have 1–3 <b>Resonants</b>, feelings or sensations like Anger or Vigor. Each has an <b>Affinity</b>, the kind of magic it's good at (the colored dots): a whole family like Fire, or one specialty in a family, like Glamour in Illusion.</li>
+        <li><b>Spells</b> have a kind of magic too. Cast by a player with an Affinity in the spell's family, number effects get +1. If the Affinity is exactly the spell's specialty, they get +2.</li>
         <li>Casting is tiring. A player on the field can cast <b>one spell per Resonant</b> (each cast empties a dot). Then they need a rest: substitute them out to your hand, and they come back fresh.</li>
       </ul>
 
@@ -53,7 +53,7 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <h3>Playing spells</h3>
       <p>Every spell card says when it's played. Spells you can play right now glow; the others are faded.</p>
       <ul>
-        <li><b>Action spells</b> (<i>Play on your turn</i>) are your action for the turn. Tap the spell, then the player who casts it (green = affinity match, stronger; red = opposed, weaker), then the target if it has one.</li>
+        <li><b>Action spells</b> (<i>Play on your turn</i>) are your action for the turn. Tap the spell, then the player who casts it (green = affinity match, stronger), then the target if it has one.</li>
         <li><b>Reaction spells</b> (<i>Play during a contest</i>) can't be played on your own. When a contest starts, you'll be asked whether to play one. Your player in that contest casts it.</li>
         <li>Casting turns the caster face up, and uses up one of their Resonants until they're substituted out to rest.</li>
         <li>Tap a faded spell to see why it can't be played yet.</li>

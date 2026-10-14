@@ -1,40 +1,51 @@
-// Affinity (RULES.md "Affinity"): compare a spell's element to the caster's Resonants.
-// - Match: any Resonant has the spell's element. Numeric effects get stronger.
-// - Opposed: no match, and some Resonant is opposed to the spell's element. Numeric effects
-//   get weaker (never below 0); non-numeric effects fail.
-// - Neutral: anything else, including neutral spells (no element).
+// Affinity (RULES.md "Affinity"): compare a spell's magic to the caster's Resonants.
+// - Specialist: a Resonant's Affinity is exactly the spell's specialization ("illusion.glamour").
+//   Numeric effects get much stronger.
+// - Match: a Resonant's Affinity is in the spell's family (a whole family like "illusion", or any
+//   specialization in it). Numeric effects get stronger.
+// - Opposed: no match, and some Resonant's family is opposed to the spell's family. Numeric
+//   effects get weaker (never below 0); non-numeric effects fail. The current card set has no
+//   opposed families, so this never happens with it.
+// - Neutral: anything else, including neutral spells (no magic).
 
-import { NUMERIC_EFFECTS, type Element, type PlayerCardDef, type SpellCardDef } from './cards';
+import { NUMERIC_EFFECTS, familyOf, type Magic, type PlayerCardDef, type SpellCardDef } from './cards';
 import type { GameConfig } from './config';
 import type { Affinity } from './state';
 
 export function affinityFor(
   caster: PlayerCardDef,
-  spellElement: Element | null,
-  opposedPairs: [Element, Element][],
+  spellMagic: Magic | null,
+  opposedPairs: [string, string][],
 ): Affinity {
-  if (spellElement === null) return 'neutral';
-  const casterElements = caster.resonants.map((r) => r.affinity);
-  if (casterElements.includes(spellElement)) return 'match';
+  if (spellMagic === null) return 'neutral';
+  const affinities = caster.resonants.map((r) => r.affinity);
+  if (spellMagic.includes('.') && affinities.includes(spellMagic)) return 'specialist';
+  const spellFamily = familyOf(spellMagic);
+  const casterFamilies = affinities.map(familyOf);
+  if (casterFamilies.includes(spellFamily)) return 'match';
   const isOpposed = opposedPairs.some(
     ([x, y]) =>
-      (x === spellElement && casterElements.includes(y)) || (y === spellElement && casterElements.includes(x)),
+      (x === spellFamily && casterFamilies.includes(y)) || (y === spellFamily && casterFamilies.includes(x)),
   );
   return isOpposed ? 'opposed' : 'neutral';
 }
 
-/** Adjusts a numeric effect's amount (boost, steal, recall). */
+/** How much stronger (or, if negative, weaker) a numeric effect gets. */
+export function affinityBonus(affinity: Affinity, config: GameConfig): number {
+  if (affinity === 'specialist') return config.affinitySpecialistBonus;
+  if (affinity === 'match') return config.affinityMatchBonus;
+  if (affinity === 'opposed') return -config.affinityOpposedPenalty;
+  return 0;
+}
+
+/** Adjusts a numeric effect's amount (boost, steal, recall, hit). */
 export function adjustAmount(amount: number, affinity: Affinity, config: GameConfig): number {
-  if (affinity === 'match') return amount + config.affinityMatchBonus;
-  if (affinity === 'opposed') return Math.max(0, amount - config.affinityOpposedPenalty);
-  return amount;
+  return Math.max(0, amount + affinityBonus(affinity, config));
 }
 
 /** Adjusts a penalty (long shot). A stronger spell means a smaller penalty. */
 export function adjustPenalty(penalty: number, affinity: Affinity, config: GameConfig): number {
-  if (affinity === 'match') return Math.max(0, penalty - config.affinityMatchBonus);
-  if (affinity === 'opposed') return penalty + config.affinityOpposedPenalty;
-  return penalty;
+  return Math.max(0, penalty - affinityBonus(affinity, config));
 }
 
 /** A non-numeric spell cast with an opposed affinity fails entirely. */

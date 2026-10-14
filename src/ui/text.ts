@@ -100,6 +100,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       const numeric = NUMERIC_EFFECTS.has(e.card.def.kind === 'spell' ? e.card.def.ability.effect : '');
       const note = e.fizzled
         ? ' Opposed affinity: it fails.'
+        : e.affinity === 'specialist' ? (numeric ? ' Specialist affinity: +2.' : ' Specialist affinity.')
         : e.affinity === 'match' ? (numeric ? ' Affinity match: +1.' : ' Affinity match.')
         : e.affinity === 'opposed' ? ' Opposed affinity: −1.' : '';
       return info(`${who(e.side)} ${verb(e.side, 'cast', 'casts')} ${e.card.def.name} with ${at(e.side, e.caster)}.${note}`);

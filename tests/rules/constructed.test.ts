@@ -9,7 +9,7 @@ const config = makeConfig();
 const players = prototypeCards.cards.filter((c) => c.team === 'pool');
 const goalieIds = players.filter((c) => c.kind === 'goalie').map((c) => c.id);
 const fieldIds = players.filter((c) => c.kind === 'field').map((c) => c.id);
-const spellsOf = (team: string) => prototypeCards.cards.filter((c) => c.team === team && c.kind === 'spell').map((c) => c.id);
+const spellsOf = (team: string) => prototypeCards.teams.find((t) => t.id === team)!.spells!;
 
 /** A legal deck: the first or last goalies and field players, and one team's spells. */
 function deck(from: 'start' | 'end', spells = 'A'): string[] {

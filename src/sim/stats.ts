@@ -86,7 +86,7 @@ export class SimStats {
     midfield: { count: 0, attackerWins: 0 },
     forward: { count: 0, attackerWins: 0 },
   };
-  affinity: Record<Affinity, AffinityStats> = { match: zeroAffinity(), neutral: zeroAffinity(), opposed: zeroAffinity() };
+  affinity: Record<Affinity, AffinityStats> = { specialist: zeroAffinity(), match: zeroAffinity(), neutral: zeroAffinity(), opposed: zeroAffinity() };
   cards = new Map<string, CardStats>();
 
   constructor(allCards: CardDef[]) {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { LANE_COUNTS, GOAL_POS, actionSpell, boost, dfn, eventsOfType, fwd, lastContest, mid, play, player, scenario, shield, uid } from '../helpers';
 
-const hit = (element: string | null = null) => actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } }, element);
+const hit = (magic: string | null = null) => actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } }, magic);
 const castHit = (s: ReturnType<typeof scenario>, caster: ReturnType<typeof fwd>) =>
   play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Flambé'), caster, target: { kind: 'hit' } });
 

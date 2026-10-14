@@ -4,7 +4,7 @@
 
 import { adjustAmount } from './affinity';
 import { statOf } from './board';
-import type { PlayerCardDef, SpellCardDef } from './cards';
+import { reactionFits, type PlayerCardDef, type SpellCardDef } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import { injuryPenalty } from './injuries';
 import type { BreakdownPart } from './events';
@@ -61,7 +61,7 @@ export function scoreSide(input: SideScoreInput, config: GameConfig): SideScore 
   const printed = Math.max(0, base + parts.reduce((sum, p) => sum + p.amount, 0));
   if (side.roll) parts.push({ label: 'Roll', amount: side.roll });
 
-  if (spell && spell.def.ability.effect === 'boost') {
+  if (spell && spell.def.ability.effect === 'boost' && reactionFits(spell.def, side)) {
     parts.push({ label: spell.def.name, amount: adjustAmount(spell.def.ability.params.amount, spell.affinity, config) });
   }
   parts.push(...side.modifiers);

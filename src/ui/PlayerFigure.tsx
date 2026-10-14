@@ -1,6 +1,6 @@
 // Placeholder player art: one flat pictogram per field position, like sports-event pictograms.
-// Every shape is filled with currentColor, so CSS sets the color (an element class, see
-// styles.css "Element colors"). All four poses share one viewBox and one set of body
+// Every shape is filled with currentColor, so CSS sets the color (a magic family class, see
+// styles.css "Magic family colors"). All four poses share one viewBox and one set of body
 // proportions, so they line up on cards.
 //
 // Each pose is a skeleton: where the hips are, how far the body leans, and the angle of each
@@ -8,7 +8,7 @@
 // forward (right, toward the goal being attacked), 180 points up, -90 points back.
 // Every body part is a filled shape with round ends, so tweaking a pose is just changing a number.
 
-import type { Area } from '../engine';
+import { familyOf, type Area } from '../engine';
 
 /** The engine's position names: the goalie, then the three field rows. */
 export type FigurePosition = Area | 'goal';
@@ -167,16 +167,16 @@ export function figureParts(position: FigurePosition): Part[] {
 
 export interface PlayerFigureProps {
   position: FigurePosition;
-  /** An element id from the card data ("fire"), or null for no element (grey). */
-  element: string | null;
+  /** A magic id from the card data ("fire" or "illusion.glamour"), or null for none (grey). Its family sets the color. */
+  magic: string | null;
   injured?: boolean;
   className?: string;
   title?: string;
 }
 
-/** A player pictogram, colored by element through the el-* classes in styles.css. */
-export function PlayerFigure({ position, element, injured, className, title }: PlayerFigureProps) {
-  const classes = ['figure', `figure-${position}`, element ? `el-${element}` : 'el-none', injured ? 'injured' : '', className ?? '']
+/** A player pictogram, colored by magic family through the fam-* classes in styles.css. */
+export function PlayerFigure({ position, magic, injured, className, title }: PlayerFigureProps) {
+  const classes = ['figure', `figure-${position}`, magic ? `fam-${familyOf(magic)}` : 'fam-none', injured ? 'injured' : '', className ?? '']
     .filter(Boolean)
     .join(' ');
   return (

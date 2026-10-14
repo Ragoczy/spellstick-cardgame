@@ -1,30 +1,30 @@
-// Dev preview of the player figures: every position in every element color, healthy and
+// Dev preview of the player figures: every position in every magic family color, healthy and
 // injured, at several sizes, and on real cards. Open the game with ?figures in the address
 // (for example http://localhost:5173/?figures).
 
 import { prototypeCards } from '../data/prototype';
-import { DEFAULT_CONFIG, type CardDef } from '../engine';
+import { DEFAULT_CONFIG, familyOf, type CardDef } from '../engine';
 import { Card, TeamColors } from './Card';
-import { capitalize, roleName } from './labels';
+import { capitalize, magicLabel, roleName } from './labels';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
 
 const POSITIONS: FigurePosition[] = ['forward', 'midfield', 'defense', 'goal'];
-/** Every element in the card data, then "no element" (grey). */
-const ELEMENTS: (string | null)[] = [...prototypeCards.elements, null];
+/** Every magic family in the card data, then "none" (grey). */
+const FAMILIES: (string | null)[] = [...prototypeCards.families, null];
 const SIZES = [96, 48, 34, 27, 20];
 
 const teamColors = Object.fromEntries(prototypeCards.teams.map((t) => [t.id, t.color]));
 const injury = DEFAULT_CONFIG.injuries[0]!;
 
-/** A field player whose first Resonant has this element, and a goalie. */
-function sampleCards(element: string): { field?: CardDef; goalie?: CardDef } {
+/** A field player whose first Resonant's Affinity is in this family, and a goalie. */
+function sampleCards(family: string): { field?: CardDef; goalie?: CardDef } {
   const first = (kind: 'field' | 'goalie') =>
-    prototypeCards.cards.find((c) => c.kind === kind && c.resonants[0]?.affinity === element);
+    prototypeCards.cards.find((c) => c.kind === kind && familyOf(c.resonants[0]?.affinity ?? '') === family);
   return { field: first('field'), goalie: first('goalie') };
 }
 
-function elementLabel(element: string | null): string {
-  return element ? capitalize(element) : 'No element';
+function familyLabel(family: string | null): string {
+  return family ? magicLabel(family) : 'None';
 }
 
 function FigureGrid({ injured, dark }: { injured?: boolean; dark?: boolean }) {
@@ -33,16 +33,16 @@ function FigureGrid({ injured, dark }: { injured?: boolean; dark?: boolean }) {
       <thead>
         <tr>
           <th />
-          {ELEMENTS.map((e) => <th key={e ?? 'none'}>{elementLabel(e)}</th>)}
+          {FAMILIES.map((e) => <th key={e ?? 'none'}>{familyLabel(e)}</th>)}
         </tr>
       </thead>
       <tbody>
         {POSITIONS.map((pos) => (
           <tr key={pos}>
             <th>{capitalize(roleName(pos))}</th>
-            {ELEMENTS.map((e) => (
+            {FAMILIES.map((e) => (
               <td key={e ?? 'none'}>
-                <PlayerFigure position={pos} element={e} injured={injured} title={`${elementLabel(e)} ${roleName(pos)}${injured ? ', injured' : ''}`} />
+                <PlayerFigure position={pos} magic={e} injured={injured} title={`${familyLabel(e)} ${roleName(pos)}${injured ? ', injured' : ''}`} />
               </td>
             ))}
           </tr>
@@ -59,10 +59,10 @@ export function FigurePreview() {
         <h1>Player figures</h1>
         <p className="small">
           Placeholder art: one pictogram per position, colored by the player's first Resonant. Colors are set
-          once in styles.css (--el-fire and so on). <a href="./">Back to the game</a>
+          once in styles.css (--fam-fire and so on). <a href="./">Back to the game</a>
         </p>
 
-        <h2>Every position, every element</h2>
+        <h2>Every position, every magic family</h2>
         <FigureGrid />
 
         <h2>Injured</h2>
@@ -77,7 +77,7 @@ export function FigurePreview() {
           <div className="figure-sizes" key={pos}>
             {SIZES.map((size) => (
               <span key={size} style={{ width: size, height: size }}>
-                <PlayerFigure position={pos} element={prototypeCards.elements[0] ?? null} />
+                <PlayerFigure position={pos} magic={prototypeCards.families[0] ?? null} />
               </span>
             ))}
           </div>
@@ -85,11 +85,11 @@ export function FigurePreview() {
 
         <h2>On cards</h2>
         <p className="small">On the field, a player is drawn in the position they stand in. In hand, they're drawn in the position their type suits best.</p>
-        {prototypeCards.elements.map((element) => {
-          const { field, goalie } = sampleCards(element);
+        {prototypeCards.families.map((family) => {
+          const { field, goalie } = sampleCards(family);
           return (
-            <div key={element}>
-              <h3>{capitalize(element)}</h3>
+            <div key={family}>
+              <h3>{familyLabel(family)}</h3>
               <div className="hand">
                 {field ? (['forward', 'midfield', 'defense'] as const).map((pos) => <Card key={pos} def={field} position={pos} />) : null}
                 {goalie ? <Card def={goalie} /> : null}

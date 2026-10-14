@@ -19,6 +19,9 @@
     "demo": "tsx scripts/demo-game.ts",
     "sim": "tsx scripts/sim.ts",
     "generate-players": "tsx scripts/generate-players.ts",
+    "assign-resonants": "tsx scripts/assign-resonants.ts",
+    "spell-library-sim": "tsx scripts/spell-library-sim.ts",
+    "spell-tiers": "tsx scripts/spell-tiers.ts",
     "generate-art": "tsx scripts/generate-art.ts"
   },
   "dependencies": {

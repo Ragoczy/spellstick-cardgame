@@ -2,7 +2,7 @@
 // so the screen never re-implements a rule.
 
 import {
-  affinityFor, scoreSide, spellFizzles,
+  affinityFor, reactionFits, scoreSide, spellFizzles,
   type Affinity, type CardDef, type ContestRole, type PlayerCardDef, type PlayerView, type Pos, type SpellCardDef, type StatName, type StatUse,
 } from '../engine';
 
@@ -20,7 +20,7 @@ function valueOf(view: PlayerView, owner: 'mine' | 'opponent', side: Parameters<
 export function casterAffinity(view: PlayerView, caster: Pos, spell: CardDef): Affinity | null {
   const player = playerAt(view, 'mine', caster);
   if (!player || spell.kind !== 'spell') return null;
-  return affinityFor(player, spell.element, view.opposedPairs);
+  return affinityFor(player, spell.magic, view.opposedPairs);
 }
 
 export interface ReactionPreview {
@@ -62,10 +62,10 @@ export function reactionPreview(view: PlayerView): ReactionPreview | null {
 
   const now = score(null);
   const options = view.mine.hand
-    .filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction')
+    .filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction' && reactionFits(c.def, me))
     .map((c) => {
       const def = c.def as SpellCardDef;
-      const affinity = affinityFor(myPlayer, def.element, view.opposedPairs);
+      const affinity = affinityFor(myPlayer, def.magic, view.opposedPairs);
       const fizzles = spellFizzles(def, affinity);
       const result = score(fizzles ? null : { def, affinity });
       return { uid: c.uid, def, affinity, fizzles, ...result };

@@ -5,6 +5,7 @@ import type { Action } from './actions';
 import { castsLeft, defOf, isActionSpell, isReactionSpell, justCameOn, slotAt } from './board';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
+import { reactionFits, type SpellCardDef } from './cards';
 
 function validField(s: GameState, pos: FieldPos): boolean {
   return Number.isInteger(pos.lane) && pos.lane >= 0 && pos.lane < s.config.lanes &&
@@ -113,6 +114,7 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (p.kind !== 'reaction') return 'There is no contest to react to.';
       if (action.card === null) return null;
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
+      if (!reactionFits(defOf(s, action.card) as SpellCardDef, p.contest[p.role])) return `${defOf(s, action.card).name} doesn't work in this contest.`;
       if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
       if (justCameOn(s, side, p.contest[p.role].pos)) return JUST_CAME_ON;
       return null;

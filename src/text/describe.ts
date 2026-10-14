@@ -55,7 +55,7 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'contestStarted':
       return null;
     case 'spellCast': {
-      const how = e.fizzled ? 'but it fails (opposed affinity)' : e.affinity === 'match' ? '(affinity match)' : e.affinity === 'opposed' ? '(opposed affinity)' : '';
+      const how = e.fizzled ? 'but it fails (opposed affinity)' : e.affinity === 'specialist' ? '(specialist affinity)' : e.affinity === 'match' ? '(affinity match)' : e.affinity === 'opposed' ? '(opposed affinity)' : '';
       return `${names[e.side]} casts ${e.card.def.name} from ${posLabel(e.caster)} ${how}`.trim() + '.';
     }
     case 'contestResolved': {

@@ -23,12 +23,20 @@ function hiddenFrom(state: GameState, viewer: Side): Uid[] {
   return hidden;
 }
 
-/** Fails if any hidden card's instance id or card id appears anywhere in what the player was given. */
+/**
+ * Fails if any hidden card's instance id or card id appears anywhere in what the player was given.
+ * Library spells can be in both decks, and a deck can hold two copies, so a hidden card's id only
+ * counts as leaked if no copy the player may see has that id.
+ */
 function expectNoLeak(state: GameState, viewer: Side, given: unknown) {
   const json = JSON.stringify(given);
-  for (const uid of hiddenFrom(state, viewer)) {
+  const hidden = hiddenFrom(state, viewer);
+  const hiddenSet = new Set(hidden);
+  const seenIds = new Set(Object.keys(state.cards).filter((uid) => !hiddenSet.has(uid)).map((uid) => state.cards[uid]!.id));
+  for (const uid of hidden) {
     expect(json, `card ${uid} leaked to ${viewer}`).not.toContain(`"${uid}"`);
-    expect(json, `card ${state.cards[uid]!.id} leaked to ${viewer}`).not.toContain(`"${state.cards[uid]!.id}"`);
+    const id = state.cards[uid]!.id;
+    if (!seenIds.has(id)) expect(json, `card ${id} leaked to ${viewer}`).not.toContain(`"${id}"`);
   }
 }
 

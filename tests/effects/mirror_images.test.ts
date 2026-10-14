@@ -6,7 +6,7 @@ import type { GameState } from '../../src/engine/state';
 import { viewFor } from '../../src/engine/view';
 import { LANE_COUNTS, GOAL_POS, actionSpell, dfn, eventsOfType, fwd, lastContest, mid, play, player, scenario, uid } from '../helpers';
 
-const glamourSelf = (element: string | null = null) => actionSpell('Glamour Self', { effect: 'mirror_images', params: {} }, element);
+const glamourSelf = (magic: string | null = null) => actionSpell('Glamour Self', { effect: 'mirror_images', params: {} }, magic);
 const hit = () => actionSpell('Flambé', { effect: 'hit', params: { strength: 3 } });
 const steal = () => actionSpell('Steal', { effect: 'steal', params: { amount: 2 } });
 

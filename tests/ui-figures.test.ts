@@ -1,4 +1,4 @@
-// Player figures (src/ui/PlayerFigure.tsx) and the element palette in styles.css.
+// Player figures (src/ui/PlayerFigure.tsx) and the magic family palette in styles.css.
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -8,17 +8,17 @@ import { FIGURE_VIEWBOX, figureParts, type FigurePosition } from '../src/ui/Play
 const POSITIONS: FigurePosition[] = ['forward', 'midfield', 'defense', 'goal'];
 const css = readFileSync(new URL('../src/ui/styles.css', import.meta.url), 'utf8');
 
-describe('element palette', () => {
-  it('has a color and a class for every element in the card data', () => {
-    for (const element of prototypeCards.elements) {
-      expect(css, `--el-${element}`).toMatch(new RegExp(`--el-${element}:\\s*#`));
-      expect(css, `.el-${element}`).toMatch(new RegExp(`\\.el-${element} \\{ color: var\\(--el-${element}\\); \\}`));
+describe('magic family palette', () => {
+  it('has a color and a class for every family in the card data', () => {
+    for (const family of prototypeCards.families) {
+      expect(css, `--fam-${family}`).toMatch(new RegExp(`--fam-${family}:\\s*#`));
+      expect(css, `.fam-${family}`).toMatch(new RegExp(`\\.fam-${family} \\{ color: var\\(--fam-${family}\\); \\}`));
     }
-    expect(css).toMatch(/\.el-none \{ color: var\(--el-none\); \}/);
+    expect(css).toMatch(/\.fam-none \{ color: var\(--fam-none\); \}/);
   });
 
   it('greys out injured figures', () => {
-    expect(css).toMatch(/\.figure\.injured \{[^}]*color: var\(--el-none\)/);
+    expect(css).toMatch(/\.figure\.injured \{[^}]*color: var\(--fam-none\)/);
   });
 });
 

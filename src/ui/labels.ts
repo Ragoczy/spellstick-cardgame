@@ -1,6 +1,6 @@
-// Plain-language names for positions, stats, and elements, from the person's point of view.
+// Plain-language names for positions, stats, and kinds of magic, from the person's point of view.
 
-import type { Area, CardDef, InjuryDef, StatName } from '../engine';
+import { familyOf, type Area, type CardDef, type InjuryDef, type StatName } from '../engine';
 import type { Pos } from '../engine';
 import type { MatchSummary } from '../shared/matchApi';
 
@@ -30,11 +30,19 @@ export const STAT_SHORT: Record<StatName, string> = {
 };
 
 /**
- * An element's color, for inline styles. The colors themselves are set once, in styles.css
- * (--el-fire and so on). Unknown elements and neutral spells get grey.
+ * The color of a kind of magic's family, for inline styles. The colors themselves are set once,
+ * in styles.css (--fam-fire and so on). Unknown families and neutral spells get grey.
  */
-export function elementColor(element: string | null): string {
-  return element ? `var(--el-${element}, var(--el-none))` : 'var(--el-none)';
+export function magicColor(magic: string | null): string {
+  return magic ? `var(--fam-${familyOf(magic)}, var(--fam-none))` : 'var(--fam-none)';
+}
+
+/** "Fire" for a whole family; "Glamour (illusion)" for a specialization. Null is a neutral spell. */
+export function magicLabel(magic: string | null): string {
+  if (!magic) return 'Neutral';
+  const [family, spec] = magic.split('.');
+  const words = (slug: string) => capitalize(slug.replace(/-/g, ' '));
+  return spec ? `${words(spec)} (${family!.replace(/-/g, ' ')})` : words(family!);
 }
 
 /** "−1 Speed", "−2 Save", or "−1 to all stats". A goalie loses the biggest penalty from Save. */

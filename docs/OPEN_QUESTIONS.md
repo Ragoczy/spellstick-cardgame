@@ -6,13 +6,24 @@ None of these block M1 or M2.
 
 - How does spellstick work in the books? Fill in "Canon notes" in RULES.md.
 - Are goals worth one point each in canon, or is scoring different?
-- Elements: what's the canon set? Fire, water, earth, and air are placeholders, with fire–water
-  and earth–air as opposed pairs. Celtic or Wheel-of-the-Year themes might fit the series better.
 - Restarts: is there a faceoff after goals, as in lacrosse? The rules assume so.
-- Resonants are emotions or experiences (Anger, Love, Pain), and a Resonant is weaker at magic
-  opposed to its Affinity (Anger: fire, so weaker at water). Still open: the full list, and which
-  element each goes with. The prototype guesses Love = water, Pain = earth, and uses Joy as a
-  placeholder for air.
+- Resonants and Affinities now come from `data/warlock-resonants.json` (decided 2026-10-14; see
+  `docs/MAGIC.md`). Still open:
+  - Opposition: the data opposes Resonants (Joy–Sorrow), not magic families, so spells are never
+    weakened now. Should opposite Resonants matter in play, for example in a contest between an
+    Anger player and a Fear player, or should Paul name some opposed families?
+  - The data has no "Love". Is that deliberate? The nearest are Care, Tenderness, Devotion, and
+    Romance.
+  - Specialist bonus: an Affinity that is exactly a spell's specialization gives +2, and one
+    elsewhere in the family +1 (Claude). Confirm or change.
+- The spell library (73 spells, `docs/MAGIC.md`) uses Claude's names and choices of effect.
+  Rename or swap any that don't fit the books, and add flavor text if you like. Also open:
+  - Narrow boosts (+3, but only for one use of a stat, such as receiving a pass) are Claude's
+    addition, to keep the many Body, Air, and Time spells from being the same card.
+  - Injuries are at 1.7 a game, under the 2–4 target. Raise hit strength from 3 to 4?
+  - Power tiers (`docs/MAGIC.md`): shields are far stronger than anything else, and hits,
+    mends, long shots, scrying, and swaps barely help the computer. Soften shields (−3 instead of
+    0) and strengthen the weak effects? Claude can test any change in the simulator first.
 - Do the positions have canon names (attack, middie, defense, goalie, or something else)?
 
 ## Rules details to confirm
@@ -22,7 +33,7 @@ None of these block M1 or M2.
     receiver stays face down.
   - Glamour Self: the images last until a tackle or hit finds the real player (not just one turn).
     They only affect tackles and hits, not interceptions or anything else.
-  - Both are air spells (placeholder element).
+  - Both are Glamour spells, in the Illusion family (changed from air, 2026-10-14).
 
 ## Content (needed by M5)
 

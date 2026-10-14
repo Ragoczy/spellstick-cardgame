@@ -308,9 +308,9 @@ export function buildReport(input: ReportInput): string {
 
   out.push('### Spells by affinity');
   out.push('');
-  const totalCast = s.affinity.match.cast + s.affinity.neutral.cast + s.affinity.opposed.cast;
+  const totalCast = s.affinity.specialist.cast + s.affinity.match.cast + s.affinity.neutral.cast + s.affinity.opposed.cast;
   out.push(table(['Affinity', 'Casts', 'Share of casts', 'Failed (opposed, non-numeric)', "Caster's side won the contest"],
-    (['match', 'neutral', 'opposed'] as const).map((a) => {
+    (['specialist', 'match', 'neutral', 'opposed'] as const).map((a) => {
       const x = s.affinity[a];
       return [a, x.cast, pct(x.cast, totalCast), pct(x.fizzled, x.cast), pct(x.contestWins, x.inContest)];
     })));

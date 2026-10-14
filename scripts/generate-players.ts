@@ -11,7 +11,9 @@
 // - Points go mostly to the stats that type is known for (see src/data/playerTypes.ts), never above the
 //   card limits (6 for field stats, 8 for Save).
 // - Each player gets one given name (each used once) and one surname from data/names.json.
-// - 1 to 3 Resonants, mostly 2 (the same mix as the prototype decks: 75% two, 20% one, 5% three).
+// - 1 to 3 Resonants, mostly 2 (the same mix as the prototype decks: 75% two, 20% one, 5% three),
+//   drawn from the Warlock magic data the way docs/MAGIC.md describes (scripts/resonant-draw.ts).
+//   To redraw only the Resonants and keep everything else, use npm run assign-resonants.
 //
 // The players go in the shared pool (team "pool"), replacing the old placeholder players.
 // Each game deals both sides their players from this pool.
@@ -20,6 +22,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import type { PlayerRole } from '../src/engine/cards';
 import { randomInt, seedToState, shuffle } from '../src/engine/rng';
 import { FIELD_STAT_MAX, FIELD_TYPES, GOALIE_BASE_SAVE, SAVE_MAX, type FieldStat } from '../src/data/playerTypes';
+import { drawResonants, usefulSpecs, type DrawnResonant, type ResonantData } from './resonant-draw';
 
 const SEED = 20261010;
 const PLAYER_COUNT = 100;
@@ -28,17 +31,15 @@ const BONUS_MIX: Record<number, number> = { 1: 40, 2: 30, 3: 20, 4: 10 };
 /** Order the types are dealt in: goalie last, so it's one of the types that gets 14. */
 const ROLE_ORDER: PlayerRole[] = ['runner', 'striker', 'playmaker', 'allrounder', 'anchor', 'stopper', 'goalie'];
 
-const RESONANTS = [
-  { name: 'Anger', affinity: 'fire' },
-  { name: 'Love', affinity: 'water' },
-  { name: 'Pain', affinity: 'earth' },
-  { name: 'Joy', affinity: 'air' },
-];
 
 const cardsPath = new URL('../data/cards.prototype.json', import.meta.url);
 const namesPath = new URL('../data/names.json', import.meta.url);
 const cardSet = JSON.parse(readFileSync(cardsPath, 'utf8'));
 const names = JSON.parse(readFileSync(namesPath, 'utf8')) as { givenNames: string[]; surnames: string[]; compoundSurnames: [string, string][] };
+const magic = JSON.parse(readFileSync(new URL('../data/warlock-resonants.json', import.meta.url), 'utf8')) as { resonants: ResonantData[] };
+const usefulMagic = JSON.parse(readFileSync(new URL('../data/useful-magic.json', import.meta.url), 'utf8')) as { specializations: { id: string }[] };
+const useful = new Set(usefulMagic.specializations.map((s) => s.id));
+const usefulResonants = magic.resonants.filter((r) => usefulSpecs(r, useful).length > 0);
 
 const isNamed = (card: { team: string; kind: string }) => card.team === 'pool';
 if (cardSet.cards.some(isNamed) && !process.argv.includes('--force')) {
@@ -75,12 +76,10 @@ let surnames: string[];
 [surnames, rng] = shuffle(Array.from({ length: PLAYER_COUNT }, (_, i) => allSurnames[i % allSurnames.length]!), rng);
 if (givenNames.length < PLAYER_COUNT) throw new Error(`Need ${PLAYER_COUNT} given names, found ${givenNames.length}`);
 
-function resonants(): { name: string; affinity: string }[] {
+function resonants(): DrawnResonant[] {
   const r = roll(100);
   const count = r < 20 ? 1 : r < 95 ? 2 : 3;
-  let order: typeof RESONANTS;
-  [order, rng] = shuffle(RESONANTS, rng);
-  return order.slice(0, count);
+  return drawResonants(roll, count, usefulResonants, useful);
 }
 
 // Sort by type so the file reads in groups; ids follow that order.

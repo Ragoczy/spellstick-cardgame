@@ -202,7 +202,7 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
   moveHandToDiscard(s, side, card);
   reveal(s, side, caster, ev);
   countCast(s, side, caster);
-  const affinity = affinityFor(playerAt(s, side, caster), spell.element, s.opposedPairs);
+  const affinity = affinityFor(playerAt(s, side, caster), spell.magic, s.opposedPairs);
   const fizzled = spellFizzles(spell, affinity);
   ev.push({ type: 'spellCast', side, card: cardView(s, card), caster, affinity, fizzled });
   if (fizzled) {

@@ -87,10 +87,27 @@ const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub 
  * A saved setup with the rules it was created under. Each match saves its full rules settings, so
  * a setting added later is missing from older matches; this fills in the value those matches were
  * played with. (substituteStep, v0.11: older matches substitute as an action.)
+ *
+ * The saved card set is a copy too, so a match keeps the cards it was dealt. Card sets saved
+ * before v0.14 name their magic "elements" (fire, water, earth, air, with opposed pairs); those
+ * are families now, so the old set just gets the new field names and keeps its old rules.
  */
 export function savedSetup(setup: GameSetup): GameSetup {
-  if (!setup.config || 'substituteStep' in setup.config) return setup;
-  return { ...setup, config: { ...setup.config, substituteStep: 'action' } };
+  let result = setup;
+  if (result.config && !('substituteStep' in result.config)) {
+    result = { ...result, config: { ...result.config, substituteStep: 'action' } };
+  }
+  const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
+  if (old.elements && !old.families) {
+    const { elements, ...rest } = result.cardSet as unknown as { elements: string[] } & Record<string, unknown>;
+    const cards = result.cardSet.cards.map((card) => {
+      if (card.kind !== 'spell' || 'magic' in card) return card;
+      const { element, ...spell } = card as unknown as { element: string | null } & Record<string, unknown>;
+      return { ...spell, magic: element } as unknown as typeof card;
+    });
+    result = { ...result, cardSet: { ...(rest as unknown as GameSetup['cardSet']), families: elements, cards } };
+  }
+  return result;
 }
 
 /** Replays the moves. events[0] is the start of the game; events[n] came from move n. */

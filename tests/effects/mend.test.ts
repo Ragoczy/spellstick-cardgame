@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { LANE_COUNTS, actionSpell, eventsOfType, mid, play, player, scenario, uid } from '../helpers';
 
-const mendSpell = (element: string | null = 'water') => actionSpell('Mend', { effect: 'mend', params: {} }, element);
+const mendSpell = (magic: string | null = 'water') => actionSpell('Mend', { effect: 'mend', params: {} }, magic);
 
 /** Attaches the top injury card to a player, as if they had been hurt earlier. */
 function injure(s: ReturnType<typeof scenario>, cardUid: string) {

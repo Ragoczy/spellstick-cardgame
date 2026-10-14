@@ -4,7 +4,7 @@ import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { eventsFor, viewFor } from '../../src/engine/view';
 import { LANE_COUNTS, GOAL_POS, actionSpell, dfn, eventsOfType, fwd, mid, play, player, scenario, uid } from '../helpers';
 
-const scry = (element: string | null = null) => actionSpell('Scry', { effect: 'scry', params: {} }, element);
+const scry = (magic: string | null = null) => actionSpell('Scry', { effect: 'scry', params: {} }, magic);
 
 describe.each(LANE_COUNTS)('scry (%i lanes)', (lanes) => {
   const LAST = lanes - 1;

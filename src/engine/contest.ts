@@ -101,7 +101,7 @@ function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: G
   const left = castsLeft(s, me.side, me.pos);
   if (slotAt(s, me.side, me.pos) && left === 0) ev.push({ type: 'outOfSpells', side: me.side, pos: me.pos });
   // A player who came on this turn can't cast yet.
-  if (hasReactionSpell(s, me.side) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn) {
+  if (hasReactionSpell(s, me.side, me) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }
@@ -121,7 +121,7 @@ export function playReaction(s: GameState, card: Uid | null, ev: GameEvent[]): v
   if (card !== null) {
     const spell = defOf(s, card) as SpellCardDef;
     const caster = playerAt(s, me.side, me.pos);
-    const affinity = affinityFor(caster, spell.element, s.opposedPairs);
+    const affinity = affinityFor(caster, spell.magic, s.opposedPairs);
     const fizzled = spellFizzles(spell, affinity);
     me.spell = { uid: card, affinity, fizzled };
     moveHandToDiscard(s, me.side, card);

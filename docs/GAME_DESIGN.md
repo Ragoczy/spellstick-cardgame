@@ -6,7 +6,7 @@ A quick two-player game of spellstick, the lacrosse-with-spells sport from the W
 Each team sets out its lineup face down: two forwards, two midfielders, two defenders, and a
 goalie. The ball moves by passing, and every pass reveals the two players who meet over it, so
 where you hide your best players is the strategy. Spells swing contests, and they hit harder
-when the caster's elemental affinity matches. When the cards run out, the team with more goals
+when the caster's Resonants have an affinity for that kind of magic. When the cards run out, the team with more goals
 wins, and a tie goes to a penalty shootout. Reaching three goals wins straight away.
 
 ## Who it's for
@@ -66,11 +66,12 @@ Swiss tournaments with draft and constructed formats. Full design and phases:
 
 - One layout for screen and print, shaped like a printed trading card (2.5" × 3.5"). The code is
   `src/ui/CardFace.tsx`; open the game with `?cards` to preview it.
-- Top to bottom: a name bar with element pips (one per Resonant, or the spell's element); a 4:3
+- Top to bottom: a name bar with magic pips (one per Resonant, or the spell's magic); a 4:3
   art window; a type line (player type or spell type, with the position figure); a text box
   (stats, the Resonants spelled out, what a spell does, flavor text); and a footer (card number,
   plus the serial number of an owned copy online).
-- The frame color comes from the element: a player's first Resonant, or the spell's element.
+- The frame color comes from the magic family: a player's first Resonant's Affinity, or the
+  spell's magic. (Changed 2026-10-14 from elements; see `docs/MAGIC.md`.)
 - Art is landscape, cropped to 4:3: the player from about the knees up, face in the upper third.
 - On screen, full cards appear in your hand, the draft, your collection, the card you click to
   look at, and contest reveals. The field uses compact tiles (an art strip, name, and stats),

@@ -49,8 +49,8 @@ describe('card data', () => {
   it('leaves promo cards out of the decks, and add-on cards out unless there are 3 lanes', () => {
     expect(buildDeck(prototypeCards, 'A', makeConfig()).some((c) => c.promo)).toBe(false);
     expect(playerPool(prototypeCards, makeConfig()).some((c) => c.promo)).toBe(false);
-    const spell = prototypeCards.cards.find((c) => c.team === 'A' && c.kind === 'spell')!;
-    const withAddon = { ...prototypeCards, cards: [...prototypeCards.cards, { ...spell, id: 'addon-1', addon: true }] };
+    const spell = prototypeCards.cards.find((c) => c.kind === 'spell')!;
+    const withAddon = { ...prototypeCards, cards: [...prototypeCards.cards, { ...spell, id: 'addon-1', team: 'A', addon: true }] };
     expect(buildDeck(withAddon, 'A', makeConfig({ lanes: 2 })).some((c) => c.id === 'addon-1')).toBe(false);
     expect(buildDeck(withAddon, 'A', makeConfig({ lanes: 3 })).some((c) => c.id === 'addon-1')).toBe(true);
   });
@@ -71,14 +71,22 @@ describe('card data', () => {
       ['a field player without Faceoff', { ...field, faceoff: undefined }],
       ['an unknown affinity', { ...field, resonants: [{ name: 'Mystery', affinity: 'void' }] }],
       ['more than 3 Resonants', { ...field, resonants: Array(4).fill({ name: 'Anger', affinity: 'fire' }) }],
-      ['an unknown effect', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'action', element: null, ability: { effect: 'fireball', params: {} } }],
-      ['a reaction spell with an action effect', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'reaction', element: null, ability: { effect: 'recall', params: { count: 1 } } }],
+      ['an unknown effect', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'action', magic: null, ability: { effect: 'fireball', params: {} } }],
+      ['a reaction spell with an action effect', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'reaction', magic: null, ability: { effect: 'recall', params: { count: 1 } } }],
       ['a duplicate id', { ...field, id: 'pl-001' }],
       ['an unknown role', { ...field, role: 'sweeper' }],
       ['a field player with the goalie role', { ...field, role: 'goalie' }],
-      ['a spell in the player pool', { id: 'x', team: 'pool', kind: 'spell', name: 'X', spellType: 'action', element: null, ability: { effect: 'scry', params: {} } }],
+      ['a player in the spell library', { ...field, team: 'library' }],
+      ['a boost with an unknown "when"', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'reaction', magic: null, ability: { effect: 'boost', params: { amount: 3, when: 'sprint' } } }],
+      ['a spell with an unknown tier', { id: 'x', team: 'A', kind: 'spell', name: 'X', spellType: 'action', magic: null, tier: 'mythic', ability: { effect: 'scry', params: {} } }],
+      ['a spell in the player pool', { id: 'x', team: 'pool', kind: 'spell', name: 'X', spellType: 'action', magic: null, ability: { effect: 'scry', params: {} } }],
     ])('%s', (_label, card) => {
       expect(() => loadCardSet(withCard(card))).toThrow(CardDataError);
+    });
+
+    it('a team whose spells list names a card that is not a library spell', () => {
+      expect(() => loadCardSet({ ...base, teams: base.teams.map((t: object) => ({ ...t, spells: ['pl-001'] })) })).toThrow(CardDataError);
+      expect(() => loadCardSet({ ...base, teams: base.teams.map((t: object) => ({ ...t, spells: ['sp-nothing'] })) })).toThrow(CardDataError);
     });
 
     it('a team called "pool"', () => {

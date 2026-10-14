@@ -1,24 +1,27 @@
-// Generates placeholder player art with OpenAI's image API and saves it to assets/cards/<card id>.webp.
+// Generates placeholder card art (players and spells) with OpenAI's image API and saves it to assets/cards/<card id>.webp.
 //
 //   npm run generate-art -- --dry-run      (prints the prompts; costs nothing)
 //   npm run generate-art -- --limit 5      (makes the first 5 missing images, to check the style)
 //   npm run generate-art                   (makes every missing image)
 //   npm run generate-art -- --only pl-001,pl-002 --force   (remakes those two)
+//   npm run generate-art -- --spells --limit 5   (only spells; --players for only players)
 //
 // Needs OPENAI_API_KEY in a .env file at the repo root or in scripts/ (git ignores both). Optional settings there:
 //   OPENAI_IMAGE_MODEL    default gpt-image-1
 //   OPENAI_IMAGE_QUALITY  low, medium (default), or high. Medium is about 6 US cents an image.
 //
-// Only the shared player pool gets art. The canon promo card is left alone on purpose: how that
+// The shared player pool and the spell library get art. The canon promo card is left alone on purpose: how that
 // character looks is Paul's call. Cards that already have art are skipped unless --force is
 // given, so to replace one bad image, delete it (or use --only <id> --force) and run again.
 //
 // The art is a placeholder until commissioned art replaces it. It aims at the same polished
 // fantasy card-game look the commissioned art will have. Every image uses the same style text
 // (STYLE below), so a different look for the whole set is one edit here plus a --force run.
+// Spell prompts (family look, tier scale, and a scene for each spell) are in scripts/spell-art.ts.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { CardDef, PlayerCardDef, PlayerRole } from '../src/engine/cards';
+import { familyOf, type CardDef, type PlayerRole } from '../src/engine/cards';
+import { spellPromptFor } from './spell-art';
 
 const ART_DIR = 'assets/cards';
 /** Landscape, for the card's 4:3 art window (see .cf-art in styles.css); the sides get trimmed a little. */
@@ -27,21 +30,25 @@ const IMAGE_SIZE = '1536x1024';
 const PARALLEL = 3;
 const MAX_TRIES = 4;
 
-/** The look every card shares. */
+/** The look every card shares, players and spells alike. */
 const STYLE = [
   'Polished digital fantasy trading card illustration, in the style of modern fantasy card games:',
   'painterly digital rendering, vivid saturated color, bright clean daylight, crisp detail, a',
   'dynamic heroic action pose.',
-  'Background: an outdoor spellstick field on a bright day, with stands and sky behind her, softly',
+  'Background: an outdoor spellstick field on a bright day, with stands and sky behind, softly',
   'detailed so it does not distract.',
+  'The sport is spellstick: lacrosse played with magic, in a present-day world where magic is hidden.',
+  'No logos, no numbers, no text, no letters, and no card border anywhere in the picture.',
+].join(' ');
+
+/** Player cards: one athlete, posed like a portrait. Spells are framed differently (scripts/spell-art.ts). */
+const PLAYER_STYLE = [
   'Wide landscape composition: one athlete only, shown from the knees up, centered, filling most of',
   'the height, her face in the upper third, with some open space on both sides.',
-  'The sport is spellstick: lacrosse played with magic, in a present-day world where magic is hidden.',
   'She wears a plain charcoal-grey athletic shirt and shorts: no pads, no gloves, no arm guards,',
   'no helmet, bare hands.',
   'She carries a spellstick: a lacrosse-style stick with a small net pocket and faintly glowing',
   'runes carved along the shaft.',
-  'No logos, no numbers, no text, no letters, and no card border anywhere in the picture.',
 ].join(' ');
 
 /** Pose by player type, so each type reads at a glance. */
@@ -57,8 +64,8 @@ const POSES: Record<PlayerRole, string> = {
     'behind her.',
 };
 
-/** A touch of magic by the element of her first Resonant. */
-const ELEMENT_MAGIC: Record<string, string> = {
+/** A touch of magic by the family of her first Resonant's Affinity. Families not listed get a plain glow. */
+const FAMILY_MAGIC: Record<string, string> = {
   fire: 'Bright orange flames and embers curl around her hands and stick.',
   water: 'Swirling ribbons of clear blue water circle her hands and stick.',
   earth: 'Chunks of rock and a moss-green glow float around her hands and stick.',
@@ -90,15 +97,16 @@ function pick<T>(list: T[], id: string, salt: string): T {
   return list[hash(id + salt) % list.length]!;
 }
 
-/** The full prompt for one player card. */
-function promptFor(card: PlayerCardDef): string {
+/** The full prompt for one card. */
+function promptFor(card: CardDef): string {
+  if (card.kind === 'spell') return spellPromptFor(card, STYLE, pick(HAIR, card.id, 'hair'));
   const role: PlayerRole = card.kind === 'goalie' ? 'goalie' : card.role ?? 'allrounder';
-  const element = card.resonants[0]?.affinity ?? '';
+  const family = familyOf(card.resonants[0]?.affinity ?? '');
   const person =
     `The athlete is a white European woman in her ${pick(AGES, card.id, 'age')}, ${pick(BUILDS, card.id, 'build')}, ` +
     `with fair, light skin, a clearly feminine face, ${pick(LOOKS, card.id, 'look')}, and ${pick(HAIR, card.id, 'hair')}.`;
-  const magic = ELEMENT_MAGIC[element] ?? `A faint glow of ${element} magic surrounds her hands.`;
-  return [STYLE, person, POSES[role], magic].join(' ');
+  const magic = FAMILY_MAGIC[family] ?? `A faint glow of ${family} magic surrounds her hands.`;
+  return [STYLE, PLAYER_STYLE, person, POSES[role], magic].join(' ');
 }
 
 // ---- Command line ----
@@ -114,6 +122,8 @@ const dryRun = flag('dry-run');
 const force = flag('force');
 const limit = option('limit') ? Number(option('limit')) : Infinity;
 const only = option('only')?.split(',').map((id) => id.trim());
+const spellsOnly = flag('spells');
+const playersOnly = flag('players');
 
 // The key can live in .env at the repo root or in scripts/.env.
 for (const envFile of ['.env', 'scripts/.env']) if (existsSync(envFile)) process.loadEnvFile(envFile);
@@ -131,7 +141,7 @@ function existingArt(): Set<string> {
   );
 }
 
-async function generate(card: PlayerCardDef): Promise<void> {
+async function generate(card: CardDef): Promise<void> {
   for (let attempt = 1; ; attempt++) {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -169,11 +179,14 @@ async function generate(card: PlayerCardDef): Promise<void> {
 
 async function main(): Promise<void> {
   const cardSet = JSON.parse(readFileSync('data/cards.prototype.json', 'utf8')) as { cards: CardDef[] };
-  const players = cardSet.cards.filter(
-    (c): c is PlayerCardDef => c.kind !== 'spell' && (only ? only.includes(c.id) : c.team === 'pool'),
-  );
+  const wanted = (c: CardDef): boolean => {
+    if (only) return only.includes(c.id);
+    if (c.kind === 'spell') return !playersOnly && c.team === 'library';
+    return !spellsOnly && c.team === 'pool';
+  };
+  const cards = cardSet.cards.filter(wanted);
   const have = existingArt();
-  const todo = players.filter((c) => force || !have.has(c.id)).slice(0, limit);
+  const todo = cards.filter((c) => force || !have.has(c.id)).slice(0, limit);
 
   if (dryRun) {
     for (const card of todo) console.log(`${card.id} (${card.name})\n${promptFor(card)}\n`);

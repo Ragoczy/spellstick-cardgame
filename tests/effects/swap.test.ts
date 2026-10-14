@@ -4,7 +4,7 @@ import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { viewFor } from '../../src/engine/view';
 import { LANE_COUNTS, GOAL_POS, actionSpell, dfn, fwd, mid, play, player, scenario, uid } from '../helpers';
 
-const swap = (element: string | null = null) => actionSpell('Swap', { effect: 'swap', params: {} }, element);
+const swap = (magic: string | null = null) => actionSpell('Swap', { effect: 'swap', params: {} }, magic);
 
 describe.each(LANE_COUNTS)('swap (%i lanes)', (lanes) => {
   const LAST = lanes - 1;

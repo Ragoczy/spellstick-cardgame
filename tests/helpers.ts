@@ -13,7 +13,9 @@ import type { GameState, Slot, TeamState, Uid } from '../src/engine/state';
 
 export const LANE_COUNTS = [2, 3] as const;
 
-export const ELEMENTS = ['fire', 'water', 'earth', 'air'];
+// Test families and an opposed pairing, so the engine's opposition rule can still be tested. (The
+// current card set has no opposed families.)
+export const FAMILIES = ['fire', 'water', 'earth', 'air', 'illusion'];
 export const OPPOSED: [string, string][] = [['fire', 'water'], ['earth', 'air']];
 
 let counter = 0;
@@ -41,18 +43,18 @@ export function goalie(name: string, save = 4, options: { affinities?: string[];
   };
 }
 
-export function reaction(name: string, ability: ReactionEffect, element: string | null = null): SpellCardDef {
-  return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'reaction', element, ability };
+export function reaction(name: string, ability: ReactionEffect, magic: string | null = null): SpellCardDef {
+  return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'reaction', magic, ability };
 }
 
-export function actionSpell(name: string, ability: ActionEffect, element: string | null = null): SpellCardDef {
-  return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'action', element, ability };
+export function actionSpell(name: string, ability: ActionEffect, magic: string | null = null): SpellCardDef {
+  return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'action', magic, ability };
 }
 
-export const boost = (name: string, amount = 2, element: string | null = null) =>
-  reaction(name, { effect: 'boost', params: { amount } }, element);
-export const shield = (name: string, element: string | null = null) =>
-  reaction(name, { effect: 'shield', params: {} }, element);
+export const boost = (name: string, amount = 2, magic: string | null = null) =>
+  reaction(name, { effect: 'boost', params: { amount } }, magic);
+export const shield = (name: string, magic: string | null = null) =>
+  reaction(name, { effect: 'shield', params: {} }, magic);
 
 export interface SideSpec {
   goalie?: GoalieCardDef;
@@ -146,7 +148,7 @@ export function scenario(options: ScenarioOptions = {}): GameState {
 
   return {
     config,
-    elements: ELEMENTS,
+    families: FAMILIES,
     opposedPairs: OPPOSED,
     cards,
     rng: 12345,

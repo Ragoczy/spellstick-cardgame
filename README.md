@@ -2,7 +2,7 @@
 
 A two-player card game based on spellstick from the Warlock series: face-down lineups of
 forwards, midfielders, defenders, and a goalie; passing that reveals matchups; and spells that
-play off each player's elemental affinity.
+play off the magic each player's Resonants have an affinity for.
 One ruleset drives two products:
 
 1. **Browser game** — playable prototype first, free fan game later.
@@ -15,10 +15,13 @@ One ruleset drives two products:
 | `CLAUDE.md` | Standing instructions for Claude Code. It reads this automatically. |
 | `docs/GAME_DESIGN.md` | Goals, audience, scope, and constraints. |
 | `docs/RULES.md` | The rules, written precisely enough to implement. |
+| `docs/MAGIC.md` | How magic works on the cards, and how players get their Resonants. |
 | `docs/ROADMAP.md` | Milestones in build order, with "done" criteria. |
 | `docs/OPEN_QUESTIONS.md` | Decisions only you can make. |
 | `data/cards.schema.json` | Card data format. |
-| `data/cards.prototype.json` | Placeholder 40-card decks for two teams. Names, elements, and flavor are placeholders. |
+| `data/cards.prototype.json` | The prototype cards: 100 named players in a shared pool and each team's spells. |
+| `data/warlock-resonants.json` | Paul's Warlock magic data: Resonants, specializations, and magic families. See `docs/MAGIC.md`. |
+| `data/useful-magic.json` | The specializations useful in a match, which decide the players' Resonants. |
 | `scripts/generate_prototype_cards.py` | Regenerates the placeholder decks. |
 | `src/engine/` | The rules engine (pure TypeScript, no UI). |
 | `src/ai/` | Computer players: a rule-of-thumb opponent, and a random player for stress tests. |

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { LANE_COUNTS, GOAL_POS, actionSpell, fwd, goalie, lastContest, mid, play, player, scenario, uid } from '../helpers';
 
-const longShot = (element: string | null = 'fire') => actionSpell('Long shot', { effect: 'long_shot', params: { penalty: 2 } }, element);
+const longShot = (magic: string | null = 'fire') => actionSpell('Long shot', { effect: 'long_shot', params: { penalty: 2 } }, magic);
 
 describe.each(LANE_COUNTS)('long_shot (%i lanes)', (lanes) => {
   const LAST = lanes - 1;

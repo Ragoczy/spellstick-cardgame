@@ -1,33 +1,77 @@
 {
-  "version": "0.11-prototype",
-  "elements": [
-    "fire",
-    "water",
+  "version": "0.14-prototype",
+  "families": [
+    "air",
+    "binding",
+    "body",
+    "curse",
+    "divination",
     "earth",
-    "air"
+    "enchantment",
+    "fire",
+    "force",
+    "healing",
+    "ice",
+    "illusion",
+    "light",
+    "lightning",
+    "mind",
+    "shadow",
+    "time",
+    "translocation",
+    "warding",
+    "water",
+    "weather"
   ],
-  "opposedPairs": [
-    [
-      "fire",
-      "water"
-    ],
-    [
-      "earth",
-      "air"
-    ]
-  ],
+  "opposedPairs": [],
   "teams": [
     {
       "id": "A",
       "name": "Placeholder Team A",
       "color": "#B5462E",
-      "placeholder": true
+      "placeholder": true,
+      "spells": [
+        "sp-second-wind",
+        "sp-ice-wall",
+        "sp-slow",
+        "sp-red-mist",
+        "sp-scrying-bowl",
+        "sp-glamour-self",
+        "sp-tailwind",
+        "sp-glamour-ball",
+        "sp-blast-shot",
+        "sp-heavy-ground",
+        "sp-snare",
+        "sp-precognition",
+        "sp-mend",
+        "sp-flambe",
+        "sp-flambe",
+        "sp-shatter"
+      ]
     },
     {
       "id": "B",
       "name": "Placeholder Team B",
       "color": "#2E6FB5",
-      "placeholder": true
+      "placeholder": true,
+      "spells": [
+        "sp-fresh-legs",
+        "sp-wither",
+        "sp-ward",
+        "sp-jinx",
+        "sp-true-sight",
+        "sp-hall-of-mirrors",
+        "sp-float-pass",
+        "sp-misdirection",
+        "sp-force-shot",
+        "sp-heavy-ground",
+        "sp-snare",
+        "sp-summon",
+        "sp-knit",
+        "sp-earth-crush",
+        "sp-earth-crush",
+        "sp-elf-shot"
+      ]
     }
   ],
   "cards": [
@@ -40,8 +84,9 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.panic",
+          "name": "Panic",
+          "affinity": "body.speed"
         }
       ],
       "speed": 5,
@@ -58,8 +103,9 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.revulsion",
+          "name": "Revulsion",
+          "affinity": "force"
         }
       ],
       "speed": 6,
@@ -76,12 +122,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.triumph",
+          "name": "Triumph",
+          "affinity": "body.strength"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.pride",
+          "name": "Pride",
+          "affinity": "fire"
         }
       ],
       "speed": 6,
@@ -98,8 +146,9 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "healing.vitality"
         }
       ],
       "speed": 6,
@@ -116,12 +165,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.alertness",
+          "name": "Alertness",
+          "affinity": "body"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.romance",
+          "name": "Romance",
+          "affinity": "binding"
         }
       ],
       "speed": 6,
@@ -138,12 +189,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.euphoria",
+          "name": "Euphoria",
+          "affinity": "air.flight"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.repugnance",
+          "name": "Repugnance",
+          "affinity": "force.repulsion"
         }
       ],
       "speed": 5,
@@ -160,8 +213,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.feebleness",
+          "name": "Feebleness",
+          "affinity": "curse.weakening"
         }
       ],
       "speed": 6,
@@ -178,12 +232,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.wonder",
+          "name": "Wonder",
+          "affinity": "divination"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.fear",
+          "name": "Fear",
+          "affinity": "ice"
         }
       ],
       "speed": 5,
@@ -200,12 +256,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.smallness",
+          "name": "Smallness",
+          "affinity": "illusion.concealment"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time"
         }
       ],
       "speed": 5,
@@ -222,12 +280,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.lust",
+          "name": "Lust",
+          "affinity": "fire"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time"
         }
       ],
       "speed": 4,
@@ -244,12 +304,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.longing",
+          "name": "Longing",
+          "affinity": "translocation"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "light"
         }
       ],
       "speed": 4,
@@ -266,11 +328,13 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.aching",
+          "name": "Aching",
+          "affinity": "healing"
         },
         {
-          "name": "Anger",
+          "id": "phy.heat",
+          "name": "Heat",
           "affinity": "fire"
         }
       ],
@@ -288,12 +352,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.wonder",
+          "name": "Wonder",
+          "affinity": "divination"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.frenzy",
+          "name": "Frenzy",
+          "affinity": "fire"
         }
       ],
       "speed": 4,
@@ -310,12 +376,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.dignity",
+          "name": "Dignity",
+          "affinity": "warding"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time.slowing"
         }
       ],
       "speed": 4,
@@ -332,12 +400,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
+          "id": "phy.heat",
+          "name": "Heat",
           "affinity": "fire"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.climax",
+          "name": "Climax",
+          "affinity": "fire"
         }
       ],
       "speed": 5,
@@ -354,12 +424,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.cold",
+          "name": "Cold",
+          "affinity": "ice"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time"
         }
       ],
       "speed": 4,
@@ -376,12 +448,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.malice",
+          "name": "Malice",
+          "affinity": "shadow"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.obedience",
+          "name": "Obedience",
+          "affinity": "binding"
         }
       ],
       "speed": 5,
@@ -398,8 +472,9 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.blood-hunger",
+          "name": "Blood-hunger",
+          "affinity": "enchantment"
         }
       ],
       "speed": 4,
@@ -416,12 +491,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "healing"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.might",
+          "name": "Might",
+          "affinity": "body.strength"
         }
       ],
       "speed": 3,
@@ -438,12 +515,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
+          "id": "phy.climax",
+          "name": "Climax",
           "affinity": "fire"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination"
         }
       ],
       "speed": 4,
@@ -460,12 +539,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.cold",
+          "name": "Cold",
+          "affinity": "ice"
         }
       ],
       "speed": 4,
@@ -482,12 +563,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.grace",
+          "name": "Grace",
+          "affinity": "body"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.balance",
+          "name": "Balance",
+          "affinity": "body"
         }
       ],
       "speed": 3,
@@ -504,8 +587,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.alertness",
+          "name": "Alertness",
+          "affinity": "warding"
         }
       ],
       "speed": 3,
@@ -522,12 +606,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.ease",
+          "name": "Ease",
+          "affinity": "healing"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.contentment",
+          "name": "Contentment",
+          "affinity": "warding"
         }
       ],
       "speed": 4,
@@ -544,11 +630,13 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.intoxication",
+          "name": "Intoxication",
+          "affinity": "illusion"
         },
         {
-          "name": "Pain",
+          "id": "emo.sorrow",
+          "name": "Sorrow",
           "affinity": "earth"
         }
       ],
@@ -566,12 +654,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
+          "id": "phy.fever",
+          "name": "Fever",
           "affinity": "fire"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination"
         }
       ],
       "speed": 3,
@@ -588,11 +678,13 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.awe",
+          "name": "Awe",
+          "affinity": "lightning"
         },
         {
-          "name": "Love",
+          "id": "emo.surrender",
+          "name": "Surrender",
           "affinity": "water"
         }
       ],
@@ -610,16 +702,19 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
+          "id": "emo.aversion",
+          "name": "Aversion",
+          "affinity": "warding"
+        },
+        {
+          "id": "phy.frostbite",
+          "name": "Frostbite",
+          "affinity": "ice"
+        },
+        {
+          "id": "phy.parching",
+          "name": "Parching",
           "affinity": "fire"
-        },
-        {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Pain",
-          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -636,8 +731,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.lust",
+          "name": "Lust",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -654,8 +750,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.pity",
+          "name": "Pity",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -672,12 +769,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.weakness",
+          "name": "Weakness",
+          "affinity": "curse"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "healing"
         }
       ],
       "speed": 5,
@@ -694,12 +793,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Joy",
+          "id": "phy.balance",
+          "name": "Balance",
           "affinity": "air"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.resolve",
+          "name": "Resolve",
+          "affinity": "earth"
         }
       ],
       "speed": 4,
@@ -716,8 +817,9 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time.slowing"
         }
       ],
       "speed": 4,
@@ -734,12 +836,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "air"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.agony",
+          "name": "Agony",
+          "affinity": "body.endurance"
         }
       ],
       "speed": 4,
@@ -756,12 +860,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.hostility",
+          "name": "Hostility",
+          "affinity": "force"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.sensuality",
+          "name": "Sensuality",
+          "affinity": "illusion"
         }
       ],
       "speed": 3,
@@ -778,12 +884,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.intoxication",
+          "name": "Intoxication",
+          "affinity": "illusion"
         },
         {
+          "id": "phy.pain",
           "name": "Pain",
-          "affinity": "earth"
+          "affinity": "body.strength"
         }
       ],
       "speed": 4,
@@ -800,12 +908,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "air"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.pain",
+          "name": "Pain",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -822,11 +932,13 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.resolve",
+          "name": "Resolve",
+          "affinity": "body.endurance"
         },
         {
-          "name": "Anger",
+          "id": "phy.exertion",
+          "name": "Exertion",
           "affinity": "fire"
         }
       ],
@@ -844,15 +956,18 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
-        },
-        {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
+          "id": "emo.anger",
           "name": "Anger",
+          "affinity": "body.strength"
+        },
+        {
+          "id": "emo.vulnerability",
+          "name": "Vulnerability",
+          "affinity": "healing"
+        },
+        {
+          "id": "emo.hatred",
+          "name": "Hatred",
           "affinity": "fire"
         }
       ],
@@ -870,12 +985,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.panic",
+          "name": "Panic",
+          "affinity": "body"
         }
       ],
       "speed": 3,
@@ -892,12 +1009,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.contempt",
+          "name": "Contempt",
+          "affinity": "ice"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.shivering",
+          "name": "Shivering",
+          "affinity": "ice"
         }
       ],
       "speed": 3,
@@ -914,12 +1033,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.care",
+          "name": "Care",
+          "affinity": "healing"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.freezing",
+          "name": "Freezing",
+          "affinity": "ice"
         }
       ],
       "speed": 3,
@@ -936,8 +1057,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.revulsion",
+          "name": "Revulsion",
+          "affinity": "force.repulsion"
         }
       ],
       "speed": 3,
@@ -954,12 +1076,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.embarrassment",
+          "name": "Embarrassment",
+          "affinity": "illusion.invisibility"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.desire",
+          "name": "Desire",
+          "affinity": "fire"
         }
       ],
       "speed": 4,
@@ -976,12 +1100,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "light"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination"
         }
       ],
       "speed": 3,
@@ -998,12 +1124,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "air"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.revulsion",
+          "name": "Revulsion",
+          "affinity": "force.repulsion"
         }
       ],
       "speed": 3,
@@ -1020,8 +1148,9 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.stillness",
+          "name": "Stillness",
+          "affinity": "earth"
         }
       ],
       "speed": 4,
@@ -1038,12 +1167,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "air"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.resolve",
+          "name": "Resolve",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -1060,12 +1191,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.revulsion",
+          "name": "Revulsion",
+          "affinity": "force.repulsion"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.sensuality",
+          "name": "Sensuality",
+          "affinity": "fire"
         }
       ],
       "speed": 4,
@@ -1082,12 +1215,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "body"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.nourishment",
+          "name": "Nourishment",
+          "affinity": "body.strength"
         }
       ],
       "speed": 4,
@@ -1104,8 +1239,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.giddiness",
+          "name": "Giddiness",
+          "affinity": "force.levitation"
         }
       ],
       "speed": 3,
@@ -1122,12 +1258,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.contentment",
+          "name": "Contentment",
+          "affinity": "warding"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.faith",
+          "name": "Faith",
+          "affinity": "healing"
         }
       ],
       "speed": 4,
@@ -1144,12 +1282,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.malice",
+          "name": "Malice",
+          "affinity": "curse"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.wonder",
+          "name": "Wonder",
+          "affinity": "light"
         }
       ],
       "speed": 4,
@@ -1166,12 +1306,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
+          "id": "phy.pain",
           "name": "Pain",
-          "affinity": "earth"
+          "affinity": "body"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.ease",
+          "name": "Ease",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -1188,12 +1330,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.apathy",
+          "name": "Apathy",
+          "affinity": "ice"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.spite",
+          "name": "Spite",
+          "affinity": "curse"
         }
       ],
       "speed": 4,
@@ -1210,12 +1354,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
+          "id": "phy.heat",
+          "name": "Heat",
           "affinity": "fire"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.warmth",
+          "name": "Warmth",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -1232,12 +1378,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.disappointment",
+          "name": "Disappointment",
+          "affinity": "curse"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.anger",
+          "name": "Anger",
+          "affinity": "body.strength"
         }
       ],
       "speed": 4,
@@ -1254,12 +1402,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.disappointment",
+          "name": "Disappointment",
+          "affinity": "curse.weakening"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.repletion",
+          "name": "Repletion",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -1276,12 +1426,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.wonder",
+          "name": "Wonder",
+          "affinity": "divination"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.anger",
+          "name": "Anger",
+          "affinity": "lightning"
         }
       ],
       "speed": 5,
@@ -1298,8 +1450,9 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.heft",
+          "name": "Heft",
+          "affinity": "body"
         }
       ],
       "speed": 5,
@@ -1316,12 +1469,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.letting-go",
+          "name": "Letting go",
+          "affinity": "air.wind"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.sorrow",
+          "name": "Sorrow",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -1338,12 +1493,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.blood-hunger",
+          "name": "Blood-hunger",
+          "affinity": "enchantment"
         }
       ],
       "speed": 3,
@@ -1360,12 +1517,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.romance",
+          "name": "Romance",
+          "affinity": "binding"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.tipsiness",
+          "name": "Tipsiness",
+          "affinity": "illusion.glamour"
         }
       ],
       "speed": 3,
@@ -1382,12 +1541,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.disappointment",
+          "name": "Disappointment",
+          "affinity": "curse"
         }
       ],
       "speed": 3,
@@ -1404,8 +1565,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.lightness",
+          "name": "Lightness",
+          "affinity": "air"
         }
       ],
       "speed": 3,
@@ -1422,12 +1584,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.falling",
+          "name": "Falling",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -1444,12 +1608,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.exposure",
+          "name": "Exposure",
+          "affinity": "light"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.heat",
+          "name": "Heat",
+          "affinity": "fire"
         }
       ],
       "speed": 3,
@@ -1466,8 +1632,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time"
         }
       ],
       "speed": 3,
@@ -1484,12 +1651,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.sweating",
+          "name": "Sweating",
+          "affinity": "water"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.revulsion",
+          "name": "Revulsion",
+          "affinity": "force"
         }
       ],
       "speed": 4,
@@ -1506,12 +1675,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time.slowing"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.scheming",
+          "name": "Scheming",
+          "affinity": "illusion"
         }
       ],
       "speed": 3,
@@ -1528,8 +1699,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.determination",
+          "name": "Determination",
+          "affinity": "body.endurance"
         }
       ],
       "speed": 3,
@@ -1546,12 +1718,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.heat",
+          "name": "Heat",
+          "affinity": "fire"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.blood-hunger",
+          "name": "Blood-hunger",
+          "affinity": "enchantment.mesmerism"
         }
       ],
       "speed": 3,
@@ -1568,12 +1742,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.sorrow",
+          "name": "Sorrow",
+          "affinity": "water"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.apathy",
+          "name": "Apathy",
+          "affinity": "ice"
         }
       ],
       "speed": 3,
@@ -1590,12 +1766,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.care",
+          "name": "Care",
+          "affinity": "warding"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.anger",
+          "name": "Anger",
+          "affinity": "lightning"
         }
       ],
       "speed": 3,
@@ -1612,12 +1790,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.shame",
+          "name": "Shame",
+          "affinity": "illusion"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.warmth",
+          "name": "Warmth",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -1634,12 +1814,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.playfulness",
+          "name": "Playfulness",
+          "affinity": "illusion"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.compassion",
+          "name": "Compassion",
+          "affinity": "healing"
         }
       ],
       "speed": 4,
@@ -1656,8 +1838,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.intoxication",
+          "name": "Intoxication",
+          "affinity": "illusion"
         }
       ],
       "speed": 3,
@@ -1674,8 +1857,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "air"
         }
       ],
       "speed": 4,
@@ -1692,8 +1876,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.spinning",
+          "name": "Spinning",
+          "affinity": "air.wind"
         }
       ],
       "speed": 3,
@@ -1710,12 +1895,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.tenacity",
+          "name": "Tenacity",
+          "affinity": "binding"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.care",
+          "name": "Care",
+          "affinity": "warding"
         }
       ],
       "speed": 5,
@@ -1732,12 +1919,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.whirling",
+          "name": "Whirling",
+          "affinity": "weather"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.fullness",
+          "name": "Fullness",
+          "affinity": "earth"
         }
       ],
       "speed": 3,
@@ -1754,12 +1943,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.frostbite",
+          "name": "Frostbite",
+          "affinity": "ice"
         },
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.cold",
+          "name": "Cold",
+          "affinity": "ice"
         }
       ],
       "speed": 3,
@@ -1776,12 +1967,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.care",
+          "name": "Care",
+          "affinity": "healing"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.anger",
+          "name": "Anger",
+          "affinity": "lightning"
         }
       ],
       "speed": 3,
@@ -1798,12 +1991,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.apathy",
+          "name": "Apathy",
+          "affinity": "ice"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.derision",
+          "name": "Derision",
+          "affinity": "curse.hexing"
         }
       ],
       "speed": 3,
@@ -1820,12 +2015,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "light"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.nurture",
+          "name": "Nurture",
+          "affinity": "healing"
         }
       ],
       "speed": 3,
@@ -1842,16 +2039,19 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "emo.numbness",
+          "name": "Numbness",
+          "affinity": "ice"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.arrogance",
+          "name": "Arrogance",
+          "affinity": "ice"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.intoxication",
+          "name": "Intoxication",
+          "affinity": "illusion"
         }
       ],
       "speed": 3,
@@ -1868,12 +2068,14 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.shame",
+          "name": "Shame",
+          "affinity": "illusion.invisibility"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "healing.vitality"
         }
       ],
       "save": 6
@@ -1887,8 +2089,9 @@
       "bonusPoints": 4,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.fullness",
+          "name": "Fullness",
+          "affinity": "earth"
         }
       ],
       "save": 6
@@ -1902,16 +2105,19 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.derision",
+          "name": "Derision",
+          "affinity": "curse"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
-        },
-        {
-          "name": "Love",
+          "id": "emo.regret",
+          "name": "Regret",
           "affinity": "water"
+        },
+        {
+          "id": "phy.leadenness",
+          "name": "Leadenness",
+          "affinity": "time"
         }
       ],
       "save": 5
@@ -1925,12 +2131,14 @@
       "bonusPoints": 3,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.weariness",
+          "name": "Weariness",
+          "affinity": "time.slowing"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.lucidity",
+          "name": "Lucidity",
+          "affinity": "divination.true-sight"
         }
       ],
       "save": 5
@@ -1944,12 +2152,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time.slowing"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "phy.tiredness",
+          "name": "Tiredness",
+          "affinity": "time.slowing"
         }
       ],
       "save": 4
@@ -1963,12 +2173,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.fear",
+          "name": "Fear",
+          "affinity": "body.speed"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.triumph",
+          "name": "Triumph",
+          "affinity": "body.strength"
         }
       ],
       "save": 4
@@ -1982,8 +2194,9 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.exuberance",
+          "name": "Exuberance",
+          "affinity": "air.wind"
         }
       ],
       "save": 4
@@ -1997,12 +2210,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
+          "id": "emo.anger",
           "name": "Anger",
-          "affinity": "fire"
+          "affinity": "body.strength"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "emo.wonder",
+          "name": "Wonder",
+          "affinity": "divination"
         }
       ],
       "save": 4
@@ -2016,12 +2231,14 @@
       "bonusPoints": 2,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.famishment",
+          "name": "Famishment",
+          "affinity": "curse.weakening"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "healing.vitality"
         }
       ],
       "save": 4
@@ -2035,12 +2252,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Pain",
+          "id": "emo.numbness",
+          "name": "Numbness",
           "affinity": "earth"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "emo.joy",
+          "name": "Joy",
+          "affinity": "light"
         }
       ],
       "save": 3
@@ -2054,8 +2273,9 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.horror",
+          "name": "Horror",
+          "affinity": "shadow"
         }
       ],
       "save": 3
@@ -2069,16 +2289,19 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Anger",
-          "affinity": "fire"
+          "id": "phy.repletion",
+          "name": "Repletion",
+          "affinity": "healing"
         },
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.stillness",
+          "name": "Stillness",
+          "affinity": "earth.stone"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.vigor",
+          "name": "Vigor",
+          "affinity": "body"
         }
       ],
       "save": 3
@@ -2092,12 +2315,14 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Love",
-          "affinity": "water"
+          "id": "phy.fatigue",
+          "name": "Fatigue",
+          "affinity": "time"
         },
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.craving",
+          "name": "Craving",
+          "affinity": "translocation.summoning"
         }
       ],
       "save": 3
@@ -2111,495 +2336,17 @@
       "bonusPoints": 1,
       "resonants": [
         {
-          "name": "Joy",
-          "affinity": "air"
+          "id": "emo.abandonment",
+          "name": "Abandonment",
+          "affinity": "ice"
         },
         {
-          "name": "Pain",
-          "affinity": "earth"
+          "id": "phy.clearheadedness",
+          "name": "Clearheadedness",
+          "affinity": "warding"
         }
       ],
       "save": 3
-    },
-    {
-      "id": "a-s-01",
-      "team": "A",
-      "kind": "spell",
-      "name": "Neutral Boost",
-      "spellType": "reaction",
-      "element": null,
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-02",
-      "team": "A",
-      "kind": "spell",
-      "name": "Earth Shield",
-      "spellType": "reaction",
-      "element": "earth",
-      "ability": {
-        "effect": "shield",
-        "params": {}
-      },
-      "text": "The opposing player's stat counts as 0 in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-03",
-      "team": "A",
-      "kind": "spell",
-      "name": "Water Shield",
-      "spellType": "reaction",
-      "element": "water",
-      "ability": {
-        "effect": "shield",
-        "params": {}
-      },
-      "text": "The opposing player's stat counts as 0 in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-04",
-      "team": "A",
-      "kind": "spell",
-      "name": "Water Scry",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "scry",
-        "params": {}
-      },
-      "text": "Look at one of your opponent's face-down cards.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-05",
-      "team": "A",
-      "kind": "spell",
-      "name": "Glamour Self",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "mirror_images",
-        "params": {}
-      },
-      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-06",
-      "team": "A",
-      "kind": "spell",
-      "name": "Air Long Pass",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "long_pass",
-        "params": {}
-      },
-      "text": "Pass, skipping one row forward.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-07",
-      "team": "A",
-      "kind": "spell",
-      "name": "Glamour Ball",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "decoy_pass",
-        "params": {}
-      },
-      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-08",
-      "team": "A",
-      "kind": "spell",
-      "name": "Fire Long Shot",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "long_shot",
-        "params": {
-          "penalty": 2
-        }
-      },
-      "text": "A midfielder holding the ball may shoot, with -2 Shot.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-09",
-      "team": "A",
-      "kind": "spell",
-      "name": "Fire Steal",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "steal",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "Tackle with +2.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-10",
-      "team": "A",
-      "kind": "spell",
-      "name": "Earth Steal",
-      "spellType": "action",
-      "element": "earth",
-      "ability": {
-        "effect": "steal",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "Tackle with +2.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-11",
-      "team": "A",
-      "kind": "spell",
-      "name": "Neutral Recall",
-      "spellType": "action",
-      "element": null,
-      "ability": {
-        "effect": "recall",
-        "params": {
-          "count": 2
-        }
-      },
-      "text": "Draw 2 cards.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-12",
-      "team": "A",
-      "kind": "spell",
-      "name": "Late Hit",
-      "spellType": "reaction",
-      "element": null,
-      "ability": {
-        "effect": "dirty_play",
-        "params": {}
-      },
-      "text": "If your side wins this contest, the opposing player is injured.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-13",
-      "team": "A",
-      "kind": "spell",
-      "name": "Mend",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "mend",
-        "params": {}
-      },
-      "text": "Remove the injury from one of your players, on the field or in your hand.",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-14",
-      "team": "A",
-      "kind": "spell",
-      "name": "Flambé",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-15",
-      "team": "A",
-      "kind": "spell",
-      "name": "Flambé",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "a-s-16",
-      "team": "A",
-      "kind": "spell",
-      "name": "Thunderclap",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-01",
-      "team": "B",
-      "kind": "spell",
-      "name": "Neutral Boost",
-      "spellType": "reaction",
-      "element": null,
-      "ability": {
-        "effect": "boost",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "+2 to your side in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-02",
-      "team": "B",
-      "kind": "spell",
-      "name": "Earth Shield",
-      "spellType": "reaction",
-      "element": "earth",
-      "ability": {
-        "effect": "shield",
-        "params": {}
-      },
-      "text": "The opposing player's stat counts as 0 in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-03",
-      "team": "B",
-      "kind": "spell",
-      "name": "Water Shield",
-      "spellType": "reaction",
-      "element": "water",
-      "ability": {
-        "effect": "shield",
-        "params": {}
-      },
-      "text": "The opposing player's stat counts as 0 in this contest.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-04",
-      "team": "B",
-      "kind": "spell",
-      "name": "Water Scry",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "scry",
-        "params": {}
-      },
-      "text": "Look at one of your opponent's face-down cards.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-05",
-      "team": "B",
-      "kind": "spell",
-      "name": "Glamour Self",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "mirror_images",
-        "params": {}
-      },
-      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-06",
-      "team": "B",
-      "kind": "spell",
-      "name": "Air Long Pass",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "long_pass",
-        "params": {}
-      },
-      "text": "Pass, skipping one row forward.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-07",
-      "team": "B",
-      "kind": "spell",
-      "name": "Glamour Ball",
-      "spellType": "action",
-      "element": "air",
-      "ability": {
-        "effect": "decoy_pass",
-        "params": {}
-      },
-      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-08",
-      "team": "B",
-      "kind": "spell",
-      "name": "Fire Long Shot",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "long_shot",
-        "params": {
-          "penalty": 2
-        }
-      },
-      "text": "A midfielder holding the ball may shoot, with -2 Shot.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-09",
-      "team": "B",
-      "kind": "spell",
-      "name": "Fire Steal",
-      "spellType": "action",
-      "element": "fire",
-      "ability": {
-        "effect": "steal",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "Tackle with +2.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-10",
-      "team": "B",
-      "kind": "spell",
-      "name": "Earth Steal",
-      "spellType": "action",
-      "element": "earth",
-      "ability": {
-        "effect": "steal",
-        "params": {
-          "amount": 2
-        }
-      },
-      "text": "Tackle with +2.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-11",
-      "team": "B",
-      "kind": "spell",
-      "name": "Neutral Recall",
-      "spellType": "action",
-      "element": null,
-      "ability": {
-        "effect": "recall",
-        "params": {
-          "count": 2
-        }
-      },
-      "text": "Draw 2 cards.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-12",
-      "team": "B",
-      "kind": "spell",
-      "name": "Late Hit",
-      "spellType": "reaction",
-      "element": null,
-      "ability": {
-        "effect": "dirty_play",
-        "params": {}
-      },
-      "text": "If your side wins this contest, the opposing player is injured.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-13",
-      "team": "B",
-      "kind": "spell",
-      "name": "Mend",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "mend",
-        "params": {}
-      },
-      "text": "Remove the injury from one of your players, on the field or in your hand.",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-14",
-      "team": "B",
-      "kind": "spell",
-      "name": "Water Spear",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-15",
-      "team": "B",
-      "kind": "spell",
-      "name": "Water Spear",
-      "spellType": "action",
-      "element": "water",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
-    },
-    {
-      "id": "b-s-16",
-      "team": "B",
-      "kind": "spell",
-      "name": "Earth Crush",
-      "spellType": "action",
-      "element": "earth",
-      "ability": {
-        "effect": "hit",
-        "params": {
-          "strength": 3
-        }
-      },
-      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)",
-      "placeholder": true
     },
     {
       "id": "promo-canon-01",
@@ -2619,6 +2366,1095 @@
       "promo": true,
       "placeholder": true,
       "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks."
+    },
+    {
+      "id": "sp-flambe",
+      "team": "library",
+      "kind": "spell",
+      "name": "Flambé",
+      "spellType": "action",
+      "magic": "fire",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-blast-shot",
+      "team": "library",
+      "kind": "spell",
+      "name": "Blast Shot",
+      "spellType": "action",
+      "magic": "fire.explosion",
+      "tier": "common",
+      "ability": {
+        "effect": "long_shot",
+        "params": {
+          "penalty": 2
+        }
+      },
+      "text": "A midfielder holding the ball may shoot, with -2 Shot."
+    },
+    {
+      "id": "sp-water-spear",
+      "team": "library",
+      "kind": "spell",
+      "name": "Water Spear",
+      "spellType": "action",
+      "magic": "water",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-mist-veil",
+      "team": "library",
+      "kind": "spell",
+      "name": "Mist Veil",
+      "spellType": "reaction",
+      "magic": "water.mist",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-fog-bank",
+      "team": "library",
+      "kind": "spell",
+      "name": "Fog Bank",
+      "spellType": "action",
+      "magic": "water.fog",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-ice-wall",
+      "team": "library",
+      "kind": "spell",
+      "name": "Ice Wall",
+      "spellType": "reaction",
+      "magic": "ice",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-earth-crush",
+      "team": "library",
+      "kind": "spell",
+      "name": "Earth Crush",
+      "spellType": "action",
+      "magic": "earth",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-stone-skin",
+      "team": "library",
+      "kind": "spell",
+      "name": "Stone Skin",
+      "spellType": "reaction",
+      "magic": "earth.stone",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-heavy-ground",
+      "team": "library",
+      "kind": "spell",
+      "name": "Heavy Ground",
+      "spellType": "action",
+      "magic": "earth.gravity",
+      "tier": "rare",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2."
+    },
+    {
+      "id": "sp-light-as-air",
+      "team": "library",
+      "kind": "spell",
+      "name": "Light as Air",
+      "spellType": "reaction",
+      "magic": "air",
+      "tier": "rare",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "evade"
+        }
+      },
+      "text": "Only when your player is dodging a tackle: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-tailwind",
+      "team": "library",
+      "kind": "spell",
+      "name": "Tailwind",
+      "spellType": "action",
+      "magic": "air.wind",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward."
+    },
+    {
+      "id": "sp-leap",
+      "team": "library",
+      "kind": "spell",
+      "name": "Leap",
+      "spellType": "reaction",
+      "magic": "air.flight",
+      "tier": "common",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "receive"
+        }
+      },
+      "text": "Only when your player is receiving a pass: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-squall",
+      "team": "library",
+      "kind": "spell",
+      "name": "Squall",
+      "spellType": "action",
+      "magic": "weather.storm",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-bolt",
+      "team": "library",
+      "kind": "spell",
+      "name": "Bolt",
+      "spellType": "action",
+      "magic": "lightning",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-jolt",
+      "team": "library",
+      "kind": "spell",
+      "name": "Jolt",
+      "spellType": "reaction",
+      "magic": "lightning.shock",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured."
+    },
+    {
+      "id": "sp-thunderclap",
+      "team": "library",
+      "kind": "spell",
+      "name": "Thunderclap",
+      "spellType": "action",
+      "magic": "lightning.thunder",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-dazzle",
+      "team": "library",
+      "kind": "spell",
+      "name": "Dazzle",
+      "spellType": "reaction",
+      "magic": "light",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-blinding-flash",
+      "team": "library",
+      "kind": "spell",
+      "name": "Blinding Flash",
+      "spellType": "reaction",
+      "magic": "light.radiance",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-shadow-double",
+      "team": "library",
+      "kind": "spell",
+      "name": "Shadow Double",
+      "spellType": "action",
+      "magic": "shadow",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "mirror_images",
+        "params": {}
+      },
+      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."
+    },
+    {
+      "id": "sp-cloak-of-night",
+      "team": "library",
+      "kind": "spell",
+      "name": "Cloak of Night",
+      "spellType": "action",
+      "magic": "shadow.darkness",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-mend",
+      "team": "library",
+      "kind": "spell",
+      "name": "Mend",
+      "spellType": "action",
+      "magic": "healing",
+      "tier": "common",
+      "ability": {
+        "effect": "mend",
+        "params": {}
+      },
+      "text": "Remove the injury from one of your players, on the field or in your hand."
+    },
+    {
+      "id": "sp-knit",
+      "team": "library",
+      "kind": "spell",
+      "name": "Knit",
+      "spellType": "action",
+      "magic": "healing.regeneration",
+      "tier": "common",
+      "ability": {
+        "effect": "mend",
+        "params": {}
+      },
+      "text": "Remove the injury from one of your players, on the field or in your hand."
+    },
+    {
+      "id": "sp-set-the-bone",
+      "team": "library",
+      "kind": "spell",
+      "name": "Set the Bone",
+      "spellType": "action",
+      "magic": "healing.bone-setting",
+      "tier": "common",
+      "ability": {
+        "effect": "mend",
+        "params": {}
+      },
+      "text": "Remove the injury from one of your players, on the field or in your hand."
+    },
+    {
+      "id": "sp-shrug-it-off",
+      "team": "library",
+      "kind": "spell",
+      "name": "Shrug It Off",
+      "spellType": "reaction",
+      "magic": "healing.pain-blocking",
+      "tier": "common",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "resist"
+        }
+      },
+      "text": "Only when your player is resisting a hit: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-fresh-legs",
+      "team": "library",
+      "kind": "spell",
+      "name": "Fresh Legs",
+      "spellType": "reaction",
+      "magic": "healing.vitality",
+      "tier": "legendary",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest."
+    },
+    {
+      "id": "sp-brute-strength",
+      "team": "library",
+      "kind": "spell",
+      "name": "Brute Strength",
+      "spellType": "reaction",
+      "magic": "body.strength",
+      "tier": "rare",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "tackle"
+        }
+      },
+      "text": "Only when your player is tackling: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-second-wind",
+      "team": "library",
+      "kind": "spell",
+      "name": "Second Wind",
+      "spellType": "reaction",
+      "magic": "body.endurance",
+      "tier": "legendary",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest."
+    },
+    {
+      "id": "sp-burst-of-speed",
+      "team": "library",
+      "kind": "spell",
+      "name": "Burst of Speed",
+      "spellType": "reaction",
+      "magic": "body.speed",
+      "tier": "common",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "receive"
+        }
+      },
+      "text": "Only when your player is receiving a pass: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-sidestep",
+      "team": "library",
+      "kind": "spell",
+      "name": "Sidestep",
+      "spellType": "reaction",
+      "magic": "body.agility",
+      "tier": "rare",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "evade"
+        }
+      },
+      "text": "Only when your player is dodging a tackle: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-low-stance",
+      "team": "library",
+      "kind": "spell",
+      "name": "Low Stance",
+      "spellType": "reaction",
+      "magic": "body.balance",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "faceoff"
+        }
+      },
+      "text": "Only when your player is in a faceoff: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-pinpoint",
+      "team": "library",
+      "kind": "spell",
+      "name": "Pinpoint",
+      "spellType": "reaction",
+      "magic": "body.precision",
+      "tier": "rare",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "shoot"
+        }
+      },
+      "text": "Only when your player is shooting: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-red-mist",
+      "team": "library",
+      "kind": "spell",
+      "name": "Red Mist",
+      "spellType": "reaction",
+      "magic": "body.berserking",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured."
+    },
+    {
+      "id": "sp-empower",
+      "team": "library",
+      "kind": "spell",
+      "name": "Empower",
+      "spellType": "reaction",
+      "magic": "body.empowerment",
+      "tier": "legendary",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 to your side in this contest."
+    },
+    {
+      "id": "sp-jinx",
+      "team": "library",
+      "kind": "spell",
+      "name": "Jinx",
+      "spellType": "reaction",
+      "magic": "curse",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured."
+    },
+    {
+      "id": "sp-hex",
+      "team": "library",
+      "kind": "spell",
+      "name": "Hex",
+      "spellType": "reaction",
+      "magic": "curse.hexing",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-bad-luck",
+      "team": "library",
+      "kind": "spell",
+      "name": "Bad Luck",
+      "spellType": "reaction",
+      "magic": "curse.ill-luck",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-evil-eye",
+      "team": "library",
+      "kind": "spell",
+      "name": "Evil Eye",
+      "spellType": "reaction",
+      "magic": "curse.evil-eye",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-elf-shot",
+      "team": "library",
+      "kind": "spell",
+      "name": "Elf-shot",
+      "spellType": "action",
+      "magic": "curse.elf-shot",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-wither",
+      "team": "library",
+      "kind": "spell",
+      "name": "Wither",
+      "spellType": "reaction",
+      "magic": "curse.weakening",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-sting",
+      "team": "library",
+      "kind": "spell",
+      "name": "Sting",
+      "spellType": "reaction",
+      "magic": "curse.pain",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured."
+    },
+    {
+      "id": "sp-ward",
+      "team": "library",
+      "kind": "spell",
+      "name": "Ward",
+      "spellType": "reaction",
+      "magic": "warding",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-alarm-ward",
+      "team": "library",
+      "kind": "spell",
+      "name": "Alarm Ward",
+      "spellType": "action",
+      "magic": "warding.alarms",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-snare",
+      "team": "library",
+      "kind": "spell",
+      "name": "Snare",
+      "spellType": "action",
+      "magic": "binding",
+      "tier": "rare",
+      "ability": {
+        "effect": "steal",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "Tackle with +2."
+    },
+    {
+      "id": "sp-freeze-in-place",
+      "team": "library",
+      "kind": "spell",
+      "name": "Freeze in Place",
+      "spellType": "reaction",
+      "magic": "binding.paralysis",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-force-shot",
+      "team": "library",
+      "kind": "spell",
+      "name": "Force Shot",
+      "spellType": "action",
+      "magic": "force",
+      "tier": "common",
+      "ability": {
+        "effect": "long_shot",
+        "params": {
+          "penalty": 2
+        }
+      },
+      "text": "A midfielder holding the ball may shoot, with -2 Shot."
+    },
+    {
+      "id": "sp-shatter",
+      "team": "library",
+      "kind": "spell",
+      "name": "Shatter",
+      "spellType": "action",
+      "magic": "force.shattering",
+      "tier": "common",
+      "ability": {
+        "effect": "hit",
+        "params": {
+          "strength": 3
+        }
+      },
+      "text": "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+    },
+    {
+      "id": "sp-turn-aside",
+      "team": "library",
+      "kind": "spell",
+      "name": "Turn Aside",
+      "spellType": "reaction",
+      "magic": "force.repulsion",
+      "tier": "legendary",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "save"
+        }
+      },
+      "text": "Only when your goalie is making a save: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-float-pass",
+      "team": "library",
+      "kind": "spell",
+      "name": "Float Pass",
+      "spellType": "action",
+      "magic": "force.levitation",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward."
+    },
+    {
+      "id": "sp-quicken",
+      "team": "library",
+      "kind": "spell",
+      "name": "Quicken",
+      "spellType": "reaction",
+      "magic": "time.haste",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "intercept"
+        }
+      },
+      "text": "Only when your player is intercepting a pass: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-slow",
+      "team": "library",
+      "kind": "spell",
+      "name": "Slow",
+      "spellType": "reaction",
+      "magic": "time.slowing",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-blink",
+      "team": "library",
+      "kind": "spell",
+      "name": "Blink",
+      "spellType": "action",
+      "magic": "translocation.blink",
+      "tier": "common",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down field players. They stay face down. (Not the caster.)"
+    },
+    {
+      "id": "sp-sending",
+      "team": "library",
+      "kind": "spell",
+      "name": "Sending",
+      "spellType": "action",
+      "magic": "translocation.sending",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "long_pass",
+        "params": {}
+      },
+      "text": "Pass, skipping one row forward."
+    },
+    {
+      "id": "sp-summon",
+      "team": "library",
+      "kind": "spell",
+      "name": "Summon",
+      "spellType": "action",
+      "magic": "translocation.summoning",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "recall",
+        "params": {
+          "count": 2
+        }
+      },
+      "text": "Draw 2 cards."
+    },
+    {
+      "id": "sp-divine",
+      "team": "library",
+      "kind": "spell",
+      "name": "Divine",
+      "spellType": "action",
+      "magic": "divination",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-precognition",
+      "team": "library",
+      "kind": "spell",
+      "name": "Precognition",
+      "spellType": "action",
+      "magic": "divination.precognition",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "recall",
+        "params": {
+          "count": 2
+        }
+      },
+      "text": "Draw 2 cards."
+    },
+    {
+      "id": "sp-scrying-bowl",
+      "team": "library",
+      "kind": "spell",
+      "name": "Scrying Bowl",
+      "spellType": "action",
+      "magic": "divination.scrying",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-far-sight",
+      "team": "library",
+      "kind": "spell",
+      "name": "Far Sight",
+      "spellType": "action",
+      "magic": "divination.far-sight",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-second-sight",
+      "team": "library",
+      "kind": "spell",
+      "name": "Second Sight",
+      "spellType": "action",
+      "magic": "divination.second-sight",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-true-sight",
+      "team": "library",
+      "kind": "spell",
+      "name": "True Sight",
+      "spellType": "action",
+      "magic": "divination.true-sight",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-danger-sense",
+      "team": "library",
+      "kind": "spell",
+      "name": "Danger Sense",
+      "spellType": "reaction",
+      "magic": "divination.danger-sense",
+      "tier": "rare",
+      "ability": {
+        "effect": "boost",
+        "params": {
+          "amount": 3,
+          "when": "evade"
+        }
+      },
+      "text": "Only when your player is dodging a tackle: +3 to your side in this contest."
+    },
+    {
+      "id": "sp-read-their-mind",
+      "team": "library",
+      "kind": "spell",
+      "name": "Read Their Mind",
+      "spellType": "action",
+      "magic": "mind.mind-reading",
+      "tier": "common",
+      "ability": {
+        "effect": "scry",
+        "params": {}
+      },
+      "text": "Look at one of your opponent's face-down cards."
+    },
+    {
+      "id": "sp-silent-call",
+      "team": "library",
+      "kind": "spell",
+      "name": "Silent Call",
+      "spellType": "action",
+      "magic": "mind.telepathy",
+      "tier": "common",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down field players. They stay face down. (Not the caster.)"
+    },
+    {
+      "id": "sp-mesmerize",
+      "team": "library",
+      "kind": "spell",
+      "name": "Mesmerize",
+      "spellType": "reaction",
+      "magic": "enchantment.mesmerism",
+      "tier": "legendary",
+      "ability": {
+        "effect": "shield",
+        "params": {}
+      },
+      "text": "The opposing player's stat counts as 0 in this contest."
+    },
+    {
+      "id": "sp-befuddle",
+      "team": "library",
+      "kind": "spell",
+      "name": "Befuddle",
+      "spellType": "action",
+      "magic": "enchantment.confusion",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-sleight",
+      "team": "library",
+      "kind": "spell",
+      "name": "Sleight",
+      "spellType": "action",
+      "magic": "illusion",
+      "tier": "common",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down field players. They stay face down. (Not the caster.)"
+    },
+    {
+      "id": "sp-glamour-ball",
+      "team": "library",
+      "kind": "spell",
+      "name": "Glamour Ball",
+      "spellType": "action",
+      "magic": "illusion.glamour",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-glamour-self",
+      "team": "library",
+      "kind": "spell",
+      "name": "Glamour Self",
+      "spellType": "action",
+      "magic": "illusion.glamour",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "mirror_images",
+        "params": {}
+      },
+      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."
+    },
+    {
+      "id": "sp-unseen-pass",
+      "team": "library",
+      "kind": "spell",
+      "name": "Unseen Pass",
+      "spellType": "action",
+      "magic": "illusion.invisibility",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-hidden-hands",
+      "team": "library",
+      "kind": "spell",
+      "name": "Hidden Hands",
+      "spellType": "action",
+      "magic": "illusion.concealment",
+      "tier": "common",
+      "ability": {
+        "effect": "swap",
+        "params": {}
+      },
+      "text": "Swap two of your face-down field players. They stay face down. (Not the caster.)"
+    },
+    {
+      "id": "sp-hall-of-mirrors",
+      "team": "library",
+      "kind": "spell",
+      "name": "Hall of Mirrors",
+      "spellType": "action",
+      "magic": "illusion.mirrors",
+      "tier": "uncommon",
+      "ability": {
+        "effect": "mirror_images",
+        "params": {}
+      },
+      "text": "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."
+    },
+    {
+      "id": "sp-misdirection",
+      "team": "library",
+      "kind": "spell",
+      "name": "Misdirection",
+      "spellType": "action",
+      "magic": "illusion.misdirection",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-trick-pass",
+      "team": "library",
+      "kind": "spell",
+      "name": "Trick Pass",
+      "spellType": "action",
+      "magic": "illusion.trickery",
+      "tier": "common",
+      "ability": {
+        "effect": "decoy_pass",
+        "params": {}
+      },
+      "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "sp-late-hit",
+      "team": "library",
+      "kind": "spell",
+      "name": "Late Hit",
+      "spellType": "reaction",
+      "magic": null,
+      "tier": "uncommon",
+      "ability": {
+        "effect": "dirty_play",
+        "params": {}
+      },
+      "text": "If your side wins this contest, the opposing player is injured."
     }
   ]
 }

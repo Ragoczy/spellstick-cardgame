@@ -2,14 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Spellstick card set",
   "type": "object",
-  "required": ["version", "elements", "opposedPairs", "teams", "cards"],
+  "required": ["version", "families", "opposedPairs", "teams", "cards"],
   "properties": {
     "version": { "type": "string" },
-    "elements": {
-      "description": "Element names used for affinities and spells. Placeholders until canon is set.",
-      "type": "array", "items": { "type": "string" }, "minItems": 2
+    "families": {
+      "description": "Magic family ids (data/warlock-resonants.json) that affinities and spells may use. See docs/MAGIC.md.",
+      "type": "array", "items": { "type": "string", "pattern": "^[a-z-]+$" }, "minItems": 1
     },
     "opposedPairs": {
+      "description": "Families that weaken each other. Empty: the canon opposes Resonants, not families.",
       "type": "array",
       "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
     },
@@ -22,7 +23,11 @@
           "id": { "type": "string" },
           "name": { "type": "string" },
           "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
-          "placeholder": { "type": "boolean" }
+          "placeholder": { "type": "boolean" },
+          "spells": {
+            "description": "The library spells in this team's deck, by card id. An id listed twice is two copies.",
+            "type": "array", "items": { "type": "string" }
+          }
         }
       }
     },
@@ -33,7 +38,7 @@
         "required": ["id", "team", "kind", "name"],
         "properties": {
           "id": { "type": "string", "description": "Also the art filename stem in assets/cards/." },
-          "team": { "type": "string", "description": "A team id, or \"pool\" for player cards in the shared pool. Each game deals both sides their goalies and field players at random from the pool." },
+          "team": { "type": "string", "description": "A team id, \"pool\" for player cards in the shared pool (each game deals both sides their goalies and field players at random from it), or \"library\" for spells in the spell library (teams pick them with their \"spells\" list)." },
           "kind": { "enum": ["field", "goalie", "spell"] },
           "name": { "type": "string" },
           "role": {
@@ -45,14 +50,15 @@
             "type": "integer", "minimum": 0, "maximum": 4
           },
           "resonants": {
-            "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity (e.g. fire).",
+            "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity: a whole family (\"fire\") or one specialization in it (\"fire.explosion\").",
             "type": "array", "minItems": 1, "maxItems": 3,
             "items": {
               "type": "object",
               "required": ["name", "affinity"],
               "properties": {
+                "id": { "type": "string", "description": "The Resonant's id in data/warlock-resonants.json, e.g. \"emo.anger\"." },
                 "name": { "type": "string" },
-                "affinity": { "type": "string" }
+                "affinity": { "type": "string", "pattern": "^[a-z-]+([.][a-z-]+)?$" }
               },
               "additionalProperties": false
             }
@@ -63,7 +69,8 @@
           "faceoff": { "type": "integer", "minimum": 0, "maximum": 6 },
           "save": { "type": "integer", "minimum": 0, "maximum": 8 },
           "spellType": { "enum": ["reaction", "action"] },
-          "element": { "type": ["string", "null"], "description": "Spell element, or null for neutral." },
+          "tier": { "enum": ["legendary", "rare", "uncommon", "common"], "description": "Spells: power tier, named like a card rarity, strongest first. Measured by npm run spell-tiers (docs/MAGIC.md). Changes nothing in play." },
+          "magic": { "type": ["string", "null"], "pattern": "^[a-z-]+([.][a-z-]+)?$", "description": "The spell's kind of magic: a family (\"fire\") or a specialization (\"illusion.glamour\"), or null for neutral." },
           "ability": { "$ref": "#/$defs/ability" },
           "text": { "type": "string", "description": "Rules text printed on the card." },
           "flavor": { "type": "string" },
@@ -78,7 +85,7 @@
           { "if": { "properties": { "kind": { "const": "goalie" } } },
             "then": { "required": ["resonants", "save"] } },
           { "if": { "properties": { "kind": { "const": "spell" } } },
-            "then": { "required": ["spellType", "element", "ability"] } }
+            "then": { "required": ["spellType", "magic", "ability"] } }
         ]
       }
     }
@@ -110,7 +117,14 @@
           "then": { "properties": { "params": {
             "type": "object", "required": ["count"], "additionalProperties": false,
             "properties": { "count": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["boost", "steal"] } } },
+        { "if": { "properties": { "effect": { "const": "boost" } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["amount"], "additionalProperties": false,
+            "properties": {
+              "amount": { "$ref": "#/$defs/count" },
+              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist"] }
+            } } } } },
+        { "if": { "properties": { "effect": { "const": "steal" } } },
           "then": { "properties": { "params": {
             "type": "object", "required": ["amount"], "additionalProperties": false,
             "properties": { "amount": { "$ref": "#/$defs/count" } } } } } },

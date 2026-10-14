@@ -56,7 +56,7 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   const empty = (): TeamState => ({ players: [], spells: [], hand: [], discard: [], goalie: null, lineup: emptyLineup(config.lanes) });
   const state: GameState = {
     config,
-    elements: [...setup.cardSet.elements],
+    families: [...setup.cardSet.families],
     opposedPairs: setup.cardSet.opposedPairs.map(([x, y]) => [x, y] as [string, string]),
     cards: {},
     rng,

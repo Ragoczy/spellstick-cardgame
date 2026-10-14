@@ -11,6 +11,21 @@ describe('savedSetup', () => {
     expect(setup.config?.substituteStep).toBe('action');
   });
 
+  it('gives card sets from before v0.14 the new names for their magic, keeping the old rules', () => {
+    const { families: _, ...rest } = prototypeCards;
+    const oldSet = {
+      ...rest,
+      elements: ['fire', 'water', 'earth', 'air'],
+      opposedPairs: [['fire', 'water'], ['earth', 'air']],
+      cards: [{ id: 's-1', team: 'A', kind: 'spell', name: 'Water Shield', spellType: 'reaction', element: 'water', ability: { effect: 'shield', params: {} } }],
+    };
+    const setup = savedSetup({ seed: 1, cardSet: oldSet as never, config: makeConfig() });
+    expect(setup.cardSet.families).toEqual(['fire', 'water', 'earth', 'air']);
+    expect(setup.cardSet.opposedPairs).toEqual([['fire', 'water'], ['earth', 'air']]);
+    expect(setup.cardSet.cards[0]).toMatchObject({ magic: 'water' });
+    expect(setup.cardSet.cards[0]).not.toHaveProperty('element');
+  });
+
   it('leaves newer matches alone', () => {
     const setup = { seed: 1, cardSet: prototypeCards, config: makeConfig() };
     expect(savedSetup(setup)).toBe(setup);

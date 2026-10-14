@@ -14,13 +14,31 @@
   --match: #3fbf6b;
   --opposed: #e0533d;
   --select: #2f7fd1;
-  /* Element colors: the one place they are set. Every element in data/cards.prototype.json
-     needs a --el-* color here and an .el-* class below (tests/ui-figures.test.ts checks). */
-  --el-fire: #d9572b;
-  --el-water: #2f7fd1;
-  --el-earth: #7a8b2e;
-  --el-air: #8fa6b8;
-  --el-none: #888;
+  /* Magic family colors: the one place they are set. Every family in data/cards.prototype.json
+     needs a --fam-* color here and a .fam-* class below (tests/ui-figures.test.ts checks).
+     Placeholder colors, picked to tell families apart. */
+  --fam-air: #8fa6b8;
+  --fam-binding: #6d5a8a;
+  --fam-body: #b04a5a;
+  --fam-curse: #5e2750;
+  --fam-divination: #4b5bd6;
+  --fam-earth: #7a8b2e;
+  --fam-enchantment: #d0508f;
+  --fam-fire: #d9572b;
+  --fam-force: #5f6f80;
+  --fam-healing: #3aa86b;
+  --fam-ice: #6cc4d9;
+  --fam-illusion: #9a5fd1;
+  --fam-light: #e3c04a;
+  --fam-lightning: #f39c12;
+  --fam-mind: #a0628a;
+  --fam-shadow: #3d3d55;
+  --fam-time: #8c7a4f;
+  --fam-translocation: #2aa198;
+  --fam-warding: #2e5e8c;
+  --fam-water: #2f7fd1;
+  --fam-weather: #6f8fa0;
+  --fam-none: #888;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -322,15 +340,32 @@ button.danger {
 .tap { font-size: 0.75rem; color: var(--muted); }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---- Element colors and player figures (PlayerFigure.tsx) ---- */
-.el-fire { color: var(--el-fire); }
-.el-water { color: var(--el-water); }
-.el-earth { color: var(--el-earth); }
-.el-air { color: var(--el-air); }
-.el-none { color: var(--el-none); }
+/* ---- Magic family colors and player figures (PlayerFigure.tsx) ---- */
+.fam-air { color: var(--fam-air); }
+.fam-binding { color: var(--fam-binding); }
+.fam-body { color: var(--fam-body); }
+.fam-curse { color: var(--fam-curse); }
+.fam-divination { color: var(--fam-divination); }
+.fam-earth { color: var(--fam-earth); }
+.fam-enchantment { color: var(--fam-enchantment); }
+.fam-fire { color: var(--fam-fire); }
+.fam-force { color: var(--fam-force); }
+.fam-healing { color: var(--fam-healing); }
+.fam-ice { color: var(--fam-ice); }
+.fam-illusion { color: var(--fam-illusion); }
+.fam-light { color: var(--fam-light); }
+.fam-lightning { color: var(--fam-lightning); }
+.fam-mind { color: var(--fam-mind); }
+.fam-shadow { color: var(--fam-shadow); }
+.fam-time { color: var(--fam-time); }
+.fam-translocation { color: var(--fam-translocation); }
+.fam-warding { color: var(--fam-warding); }
+.fam-water { color: var(--fam-water); }
+.fam-weather { color: var(--fam-weather); }
+.fam-none { color: var(--fam-none); }
 .figure { display: block; }
 /* Injured: greyed out and faded until mended. */
-.figure.injured { color: var(--el-none); opacity: 0.4; }
+.figure.injured { color: var(--fam-none); opacity: 0.4; }
 /* The figure sits just under the name, on the right; the lines below make room for it. */
 .card .figure { float: right; width: 32px; height: 32px; margin: 1px -2px 0 3px; pointer-events: none; }
 .card.face-down .figure { opacity: 0.75; }
@@ -340,6 +375,7 @@ button.danger {
   float: left; width: 50px; height: 50px; margin: 1px 6px 2px -2px; border: 2px solid; border-radius: 4px;
   background-size: auto 150%; background-position: 50% 12%; background-repeat: no-repeat; pointer-events: none;
 }
+.card .tile-art.spell { background-size: cover; background-position: 50% 50%; }
 .card .tile-art.injured { filter: grayscale(1); opacity: 0.5; }
 .card.face-down .tile-art { opacity: 0.75; }
 
@@ -429,9 +465,9 @@ button.danger {
 
 /* ---- Full card (CardFace.tsx) ----
    A printed-card layout at the 5:7 poker-card shape. Every size is in cqw (hundredths of the
-   card's width), so the card looks the same at any width, from the hand to print. --el is the
-   frame color, set per card from its element. */
-.cf { --el: var(--el-none); container-type: inline-size; flex: none; }
+   card's width), so the card looks the same at any width, from the hand to print. --frame is the
+   frame color, set per card from its magic family. */
+.cf { --frame: var(--fam-none); container-type: inline-size; flex: none; }
 /* A card you can tap is a button: drop the browser's button look. */
 button.cf { display: block; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 button.cf:hover .cf-card { transform: translateY(-3px); }
@@ -455,13 +491,13 @@ button.cf:hover .cf-card { transform: translateY(-3px); }
 .cf-inner {
   flex: 1; display: flex; flex-direction: column; gap: 1.6cqw; min-height: 0;
   padding: 2.2cqw; border-radius: 2.5cqw;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--el) 55%, white), color-mix(in srgb, var(--el) 80%, black));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--frame) 55%, white), color-mix(in srgb, var(--frame) 80%, black));
 }
 .cf-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 2cqw;
   padding: 0 2.6cqw; border-radius: 3cqw / 50%;
-  background: linear-gradient(color-mix(in srgb, var(--el) 10%, #fbf7ec), color-mix(in srgb, var(--el) 22%, #e9e1cc));
-  border: 0.6cqw solid color-mix(in srgb, var(--el) 60%, black);
+  background: linear-gradient(color-mix(in srgb, var(--frame) 10%, #fbf7ec), color-mix(in srgb, var(--frame) 22%, #e9e1cc));
+  border: 0.6cqw solid color-mix(in srgb, var(--frame) 60%, black);
   box-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.35);
 }
 .cf-name { height: 9.5cqw; font-size: 5.6cqw; font-weight: 700; }
@@ -474,17 +510,17 @@ button.cf:hover .cf-card { transform: translateY(-3px); }
 /* The art window: 4:3, about the shape of the art box on most printed card games. */
 .cf-art {
   position: relative; aspect-ratio: 4 / 3; margin: 0 1cqw; overflow: hidden;
-  border: 0.6cqw solid #222; background: color-mix(in srgb, var(--el) 35%, #ddd);
+  border: 0.6cqw solid #222; background: color-mix(in srgb, var(--frame) 35%, #ddd);
   display: grid; place-items: center;
 }
 .cf-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
 .cf-art-figure { width: 45%; height: 60%; }
-.cf-art-empty { font-size: 6cqw; font-style: italic; color: color-mix(in srgb, var(--el) 60%, black); }
+.cf-art-empty { font-size: 6cqw; font-style: italic; color: color-mix(in srgb, var(--frame) 60%, black); }
 .cf-type { height: 8.5cqw; font-size: 4.6cqw; font-weight: 700; }
 .cf-type-figure { width: 6.5cqw; height: 6.5cqw; flex: none; }
 .cf-text {
   flex: 1; min-height: 0; overflow: hidden; margin: 0 1cqw; padding: 2.2cqw 3cqw;
-  background: color-mix(in srgb, var(--el) 8%, #f6f0e0); border: 0.5cqw solid color-mix(in srgb, var(--el) 50%, black);
+  background: color-mix(in srgb, var(--frame) 8%, #f6f0e0); border: 0.5cqw solid color-mix(in srgb, var(--frame) 50%, black);
   font-size: 4.3cqw; line-height: 1.25;
 }
 .cf-text p { margin: 0 0 1.6cqw; }

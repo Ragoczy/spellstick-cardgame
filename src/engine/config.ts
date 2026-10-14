@@ -27,8 +27,10 @@ export interface GameConfig {
   setupSpells: number;
   /** Regroup: discard up to this many cards, then draw that many. */
   regroupMax: number;
-  /** Numeric spell effects get this much stronger when the caster's affinity matches. */
+  /** Numeric spell effects get this much stronger when the caster's affinity matches the spell's family. */
   affinityMatchBonus: number;
+  /** Instead, this much stronger when the caster's affinity is exactly the spell's specialization. */
+  affinitySpecialistBonus: number;
   /** Numeric spell effects get this much weaker when the caster's affinity is opposed. */
   affinityOpposedPenalty: number;
   /** Safety cap on total turns. Reaching it ends the game as a draw and counts as a bug. */
@@ -101,6 +103,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   setupSpells: 2,
   regroupMax: 1,
   affinityMatchBonus: 1,
+  affinitySpecialistBonus: 2,
   affinityOpposedPenalty: 1,
   maxTurns: 300,
   deckSize: 40,

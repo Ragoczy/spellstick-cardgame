@@ -8,7 +8,7 @@ import { viewFor } from '../../src/engine/view';
 import type { CardSet } from '../../src/engine/cards';
 import type { GameState } from '../../src/engine/state';
 import { prototypeCards } from '../../src/data/prototype';
-import { ELEMENTS, LANE_COUNTS, OPPOSED, actionSpell, goalie, player, play } from '../helpers';
+import { LANE_COUNTS, actionSpell, goalie, player, play } from '../helpers';
 
 function chooseFirstGoalie(state: GameState): GameState {
   const side = (state.pending as { side: 'A' | 'B' }).side;

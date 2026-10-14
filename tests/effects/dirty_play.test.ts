@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { LANE_COUNTS, dfn, eventsOfType, fwd, lastContest, mid, play, player, reaction, scenario, uid } from '../helpers';
 
-const lateHit = (element: string | null = null) => reaction('Late Hit', { effect: 'dirty_play', params: {} }, element);
+const lateHit = (magic: string | null = null) => reaction('Late Hit', { effect: 'dirty_play', params: {} }, magic);
 
 describe.each(LANE_COUNTS)('dirty_play (%i lanes)', (lanes) => {
   const LAST = lanes - 1;

@@ -8,7 +8,7 @@ import { CardBack, type CardProps } from './Card';
 import { CardFace } from './CardFace';
 import { Clocks } from './Clocks';
 import { gamePresence, setDiscordPresence } from './discord';
-import { capitalize, endedEarlyText, injuryEffect, laneName, posName, ratingChangeText } from './labels';
+import { capitalize, endedEarlyText, injuryEffect, laneName, magicLabel, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
 import { LineupScreen } from './LineupScreen';
 import { casterAffinity, dicePreview, matchup, reactionPreview, shotPreview } from './preview';
@@ -123,7 +123,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
           for (const a of castsFor(selection.card)) {
             const aff = def ? casterAffinity(view, a.caster, def) : null;
-            map.set(posKey(me, a.caster), aff === 'match' ? 'match' : aff === 'opposed' ? 'opposed' : 'target');
+            map.set(posKey(me, a.caster), aff === 'match' || aff === 'specialist' ? 'match' : aff === 'opposed' ? 'opposed' : 'target');
           }
         } else {
           for (const a of castsFor(selection.card, selection.caster)) {
@@ -430,7 +430,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         : effect === 'decoy_pass' ? `Now tap the teammate to pass to. ${opp.Name} will think it went to another lane, so it can't be intercepted.`
         : 'Now choose the target.';
       help = !selection.caster
-        ? `Choose who casts ${def?.name}. Green = affinity match (stronger), red = opposed (weaker).`
+        ? `Choose who casts ${def?.name}. Green = affinity match (stronger).`
         : selection.first ? (effect === 'decoy_pass' ? `Now tap the spot where ${opp.name} will think the ball went.` : 'Now tap the second player to swap.') : targetHelp;
     }
     if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
@@ -514,7 +514,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
               <div className="inspector" onClick={() => setInspected(null)}>
                 <CardFace def={inspected.def} injury={inspected.injury} />
                 <div className="inspector-text">
-                  {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
+                  {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {magicLabel(r.affinity)} Affinity</div>) : null}
                   {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
                   {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
                 </div>
@@ -594,7 +594,7 @@ function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: Opponent
       <div className="buttons">
         {preview.options.map((o) => {
           const wins = o.mine > o.theirs || (o.mine === o.theirs && preview.iWinTies);
-          const note = o.fizzles ? 'fails: opposed affinity' : `${o.mine}–${o.theirs}, you'd ${wins ? 'win' : 'lose'}${o.affinity === 'match' ? ' (affinity match)' : o.affinity === 'opposed' ? ' (opposed: weaker)' : ''}`;
+          const note = o.fizzles ? 'fails: opposed affinity' : `${o.mine}–${o.theirs}, you'd ${wins ? 'win' : 'lose'}${o.affinity === 'specialist' ? ' (specialist affinity)' : o.affinity === 'match' ? ' (affinity match)' : o.affinity === 'opposed' ? ' (opposed: weaker)' : ''}`;
           return <button type="button" key={o.uid} className={wins && !o.fizzles ? 'primary' : ''} onClick={() => onPlay(o.uid)}>{o.def.name}: {note}</button>;
         })}
         <button type="button" onClick={() => onPlay(null)}>No spell</button>

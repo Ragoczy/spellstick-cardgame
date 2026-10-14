@@ -32,7 +32,7 @@ function twoHitsPerTeam(cardSet: CardSet): CardSet {
   return {
     ...cardSet,
     cards: cardSet.cards.map((card) => replaced.has(card.id)
-      ? { ...card, name: 'Neutral Boost', spellType: 'reaction', element: null, ability: { effect: 'boost', params: { amount: 2 } }, text: '+2 to your side in this contest.' } as CardDef
+      ? { ...card, name: 'Neutral Boost', spellType: 'reaction', magic: null, ability: { effect: 'boost', params: { amount: 2 } }, text: '+2 to your side in this contest.' } as CardDef
       : card),
   };
 }

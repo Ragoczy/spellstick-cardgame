@@ -9,11 +9,11 @@
 // - Unknown opposing players are treated as average for their position.
 // - Ball value grows the closer the ball is to the other goal.
 // - Reaction spells are saved for contests that matter (shots, defending near its own goal).
-// - Casters are chosen to match the spell's element, preferring players already face up.
+// - Casters are chosen to match the spell's magic, preferring players already face up.
 // - Hits go after strong revealed players and the ball carrier (goalies can't be hit).
 // - Dirty plays go into contests it expects to win. Mend goes on players it values.
 
-import { affinityFor } from '../engine/affinity';
+import { adjustAmount, adjustPenalty, affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
 import { NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
 import type { GameConfig, InjuryDef, InjuryStat } from '../engine/config';
@@ -302,13 +302,16 @@ class Thinker {
     return [...onField, ...this.view.opponent.discard.map((c) => c.def)].filter((d): d is FieldCardDef => d.kind === 'field');
   }
 
-  /** The biggest boost this side could add with a reaction spell cast by the player at `pos`. */
-  private bestBoost(pos: Pos): number {
+  /**
+   * The biggest boost this side could add with a reaction spell cast by the player at `pos`,
+   * using their stat for `use` (a boost with a "when" only counts for that use). No use: a hit.
+   */
+  private bestBoost(pos: Pos, use?: StatUse): number {
     const caster = knownPlayer(this.view, 'mine', pos);
     if (!caster) return 0;
     let best = 0;
     for (const { def } of this.view.mine.hand) {
-      if (def.kind === 'spell' && def.ability.effect === 'boost') {
+      if (def.kind === 'spell' && def.ability.effect === 'boost' && (def.ability.params.when ?? use) === use) {
         best = Math.max(best, this.adjusted(def.ability.params.amount, this.affinity(caster, def)));
       }
     }
@@ -316,13 +319,11 @@ class Thinker {
   }
 
   private affinity(caster: PlayerCardDef, spell: SpellCardDef): Affinity {
-    return affinityFor(caster, spell.element, this.view.opposedPairs);
+    return affinityFor(caster, spell.magic, this.view.opposedPairs);
   }
 
   private adjusted(amount: number, affinity: Affinity): number {
-    if (affinity === 'match') return amount + this.config.affinityMatchBonus;
-    if (affinity === 'opposed') return Math.max(0, amount - this.config.affinityOpposedPenalty);
-    return amount;
+    return adjustAmount(amount, affinity, this.config);
   }
 
   // ---- Ball values ----
@@ -336,7 +337,7 @@ class Thinker {
     const worth = pos.area === 'forward' ? Math.max(this.ladder().midfield, this.shotChance(pos, [])) : this.ladder()[pos.area];
     if (safeFromTackles) return worth;
     const tackler = opposite(pos);
-    const keep = this.chance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos), this.theirValue(tackler, 'defense', 'tackle'), true);
+    const keep = this.chance(this.myValue(pos, 'speed', 'evade') + 0.6 * this.bestBoost(pos, 'evade'), this.theirValue(tackler, 'defense', 'tackle'), true);
     // The opponent tackles when it looks worthwhile; images make most tackles miss.
     const lose = 0.7 * (1 - keep) * (images ? this.findsRealPlayer() : 1);
     return (1 - lose) * worth - lose * this.ladder()[tackler.area];
@@ -356,7 +357,7 @@ class Thinker {
   private passValue(to: FieldPos, modifiers: Modifier[]): number {
     const interceptor = opposite(to);
     const passBonus = this.config.passBonus ? [{ label: 'Pass', amount: this.config.passBonus }] : [];
-    const mine = this.myValue(to, 'speed', 'receive', [...modifiers, ...passBonus]) + 0.6 * this.bestBoost(to);
+    const mine = this.myValue(to, 'speed', 'receive', [...modifiers, ...passBonus]) + 0.6 * this.bestBoost(to, 'receive');
     const p = this.chance(mine, this.theirValue(interceptor, 'defense', 'intercept'), this.config.passTiesGoTo === 'attacker');
     const protect = this.config.protectCatch;
     const safe = protect === 'all' || (protect === 'forward' && to.area === 'forward');
@@ -375,7 +376,7 @@ class Thinker {
 
   /** Chance a shot from `from` goes in. */
   private shotChance(from: Pos, modifiers: Modifier[]): number {
-    const mine = this.myValue(from, 'shot', 'shoot', modifiers) + 0.6 * this.bestBoost(from);
+    const mine = this.myValue(from, 'shot', 'shoot', modifiers) + 0.6 * this.bestBoost(from, 'shoot');
     return this.shotOdds(mine, this.theirValue({ area: 'goal' }, 'save', 'save'));
   }
 
@@ -419,7 +420,7 @@ class Thinker {
   private tackleValue(modifiers: Modifier[]): number {
     const holder = this.view.ball!.pos as FieldPos;
     const tackler = opposite(holder);
-    const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler);
+    const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler, 'tackle');
     const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
     const lost = -this.ladder()[holder.area];
     const tackled = p * this.afterGaining(tackler) + (1 - p) * lost;
@@ -503,9 +504,7 @@ class Thinker {
         return hold + IMAGES_WORTH[action.caster.area] * unit - cost;
       }
       case 'long_shot': {
-        const penalty = affinity === 'match'
-          ? Math.max(0, ability.params.penalty - this.config.affinityMatchBonus)
-          : affinity === 'opposed' ? ability.params.penalty + this.config.affinityOpposedPenalty : ability.params.penalty;
+        const penalty = adjustPenalty(ability.params.penalty, affinity, this.config);
         return this.shotValue(this.view.ball!.pos, [{ label: spell.name, amount: -penalty }], cost);
       }
       case 'scry': {

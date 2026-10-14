@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { LANE_COUNTS, actionSpell, eventsOfType, mid, play, player, scenario, uid } from '../helpers';
 
 describe.each(LANE_COUNTS)('recall (%i lanes)', (lanes) => {
-  function recallWith(casterAffinity: string, element: string | null = 'fire') {
+  function recallWith(casterAffinity: string, magic: string | null = 'fire') {
     const s = scenario({
       lanes,
       A: {
-        hand: [actionSpell('Recall', { effect: 'recall', params: { count: 2 } }, element)],
+        hand: [actionSpell('Recall', { effect: 'recall', params: { count: 2 } }, magic)],
         lineup: { midfield: { 0: player('caster', {}, { affinities: [casterAffinity] }) } },
       },
     });

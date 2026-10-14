@@ -10,8 +10,8 @@ import {
   LANE_COUNTS, actionSpell, boost, eventsOfType, fwd, mid, play, player, scenario, uid,
 } from '../helpers';
 
-const recall = (name = 'Recall', element: string | null = null) =>
-  actionSpell(name, { effect: 'recall', params: { count: 1 } }, element);
+const recall = (name = 'Recall', magic: string | null = null) =>
+  actionSpell(name, { effect: 'recall', params: { count: 1 } }, magic);
 
 /** Marks the player at midfield lane 0 of side A as having cast `n` spells already (and so face up). */
 function alreadyCast(s: GameState, n: number): void {

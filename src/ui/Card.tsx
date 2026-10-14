@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 import type { CardDef, InjuryDef, PlayerRole } from '../engine';
-import { capitalize, cardText, elementColor, injuryEffect } from './labels';
+import { cardText, injuryEffect, magicColor, magicLabel } from './labels';
 import { spellWhen } from './spellHelp';
 import { roleLabel } from '../data/playerTypes';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
@@ -21,14 +21,16 @@ export const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
 };
 
 /**
- * A small square of the card's art at the left of the tile, edged in the player's first
- * Resonant's Affinity color and zoomed in on the head and shoulders (see .tile-art in styles.css).
+ * A small square of the card's art at the left of the tile (see .tile-art in styles.css). A
+ * player's is edged in their first Resonant's Affinity color and zoomed in on the head and
+ * shoulders; a spell's is edged in its magic's color and shows the middle of the picture.
  */
 function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
-  const art = def.kind === 'spell' ? undefined : cardArt(def.id);
-  if (!art || def.kind === 'spell') return null;
-  const edge = elementColor(def.resonants[0]?.affinity ?? null);
-  return <span className={`tile-art ${injured ? 'injured' : ''}`} style={{ backgroundImage: `url(${art})`, borderColor: edge }} />;
+  const art = cardArt(def.id);
+  if (!art) return null;
+  const edge = magicColor(def.kind === 'spell' ? def.magic : def.resonants[0]?.affinity ?? null);
+  const classes = ['tile-art', def.kind === 'spell' ? 'spell' : '', injured ? 'injured' : ''].filter(Boolean).join(' ');
+  return <span className={classes} style={{ backgroundImage: `url(${art})`, borderColor: edge }} />;
 }
 
 /**
@@ -38,7 +40,7 @@ function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
 function Figure({ def, position, injured }: { def: CardDef; position?: FigurePosition; injured: boolean }) {
   if (def.kind === 'spell' || cardArt(def.id)) return null;
   const pos = def.kind === 'goalie' ? 'goal' : position ?? (def.role ? TYPE_POSITION[def.role] : 'midfield');
-  return <PlayerFigure position={pos} element={def.resonants[0]?.affinity ?? null} injured={injured} />;
+  return <PlayerFigure position={pos} magic={def.resonants[0]?.affinity ?? null} injured={injured} />;
 }
 
 /** Resonant dots. On the field, a dot goes hollow for each Resonant's worth of spells cast. */
@@ -50,7 +52,7 @@ function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: 
   return (
     <span className="resonants" title={title}>
       {def.resonants.map((r, i) => (
-        <span key={r.name} className={`dot ${i < usedDots ? 'used' : ''}`} style={{ background: elementColor(r.affinity) }} title={title ? undefined : `${r.name} Resonant: ${capitalize(r.affinity)} Affinity`} />
+        <span key={r.name} className={`dot ${i < usedDots ? 'used' : ''}`} style={{ background: magicColor(r.affinity) }} title={title ? undefined : `${r.name} Resonant: ${magicLabel(r.affinity)} Affinity`} />
       ))}
       {castsLeft === 0 ? <span className="rest">needs rest</span> : null}
     </span>
@@ -72,7 +74,7 @@ function Stats({ def }: { def: CardDef }) {
   return (
     <>
       <div className="stats spell-line">
-        <span className="chip" style={{ background: elementColor(def.element) }}>{def.element ? capitalize(def.element) : 'Neutral'}</span>
+        <span className="chip" style={{ background: magicColor(def.magic) }}>{magicLabel(def.magic)}</span>
         <span>{def.spellType === 'reaction' ? 'Reaction' : 'Action'}</span>
       </div>
       <div className={`spell-when ${def.spellType}`}>{spellWhen(def)}</div>

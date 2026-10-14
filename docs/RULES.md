@@ -1,4 +1,4 @@
-# Spellstick — rules v0.13
+# Spellstick — rules v0.15
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -26,7 +26,9 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
 ## Components
 
 - Two team decks of 40 cards ⚙: 2 goalies, 22 field players, 16 spells. Each team has its own
-  16 spells. Its goalies and field players are dealt at random from a shared **player pool** of
+  16 spells, picked from the **spell library** (one spell for each kind of magic that's useful in
+  a match; see `docs/MAGIC.md`). A team can hold two copies of a spell, and both teams can hold
+  the same spell. Its goalies and field players are dealt at random from a shared **player pool** of
   named players (100 in the prototype) at the start of each game. Each deck is kept as
   two face-down **draw piles**: **Players** (field players, plus the spare goalie once the game
   starts) and **Spells**.
@@ -63,10 +65,10 @@ slot, not the card: if the player in that slot changes (substitute, swap), the n
 - **Shot**: shooting.
 - **Defense**: intercepting passes and tackling.
 - **Faceoff**: winning faceoffs.
-- **Resonants**: 1 to 3 ⚙. A Resonant is an emotion or experience (for example, Anger, Love,
-  or Pain). Each has one **Affinity**: the element ⚙ that goes with it (placeholders: fire, water,
-  earth, air). Anger goes with fire, so an Anger Resonant has a Fire Affinity: better at fire
-  magic, weaker at water magic.
+- **Resonants**: 1 to 3 ⚙. A Resonant is a feeling or sensation (for example, Anger, Vigor, or
+  Fatigue). Each has one **Affinity**: the kind of magic it's good at. That is either a whole
+  magic family (Fire, Illusion, Body, ...) or one specialization in a family (Glamour, in
+  Illusion). Where these come from: `docs/MAGIC.md`.
 - Optionally one ability (see "Effect vocabulary").
 
 Any field player can play any field position. Where you put them is the strategy.
@@ -77,7 +79,8 @@ type is just a label: it changes nothing in play.
 
 **Goalie cards** have **Save** and 1 to 3 Resonants. They can only play in goal.
 
-**Spell cards** have an element (or none, for neutral spells) and are either:
+**Spell cards** have a kind of magic, a family or a specialization (or none, for neutral spells),
+and are either:
 - **Reaction spells**, played during a contest.
 - **Action spells**, played as your action for the turn.
 
@@ -95,25 +98,27 @@ type is just a label: it changes nothing in play.
 
 ## Affinity
 
-When a spell is cast, compare its element to the Affinities of the caster's Resonants:
+When a spell is cast, compare its magic to the Affinities of the caster's Resonants:
 
-- **Match** (any Resonant has the spell's element): the spell is stronger. Numeric effects get
-  +1 ⚙.
-- **Opposed** (no match, and a Resonant has the opposite element: fire–water, earth–air ⚙): the
-  spell is weaker. Numeric effects get −1 ⚙ (never below 0). Non-numeric effects fail entirely;
-  the card is still discarded.
+- **Specialist** (a Resonant's Affinity is exactly the spell's specialization, such as Glamour
+  for a Glamour spell): the spell is much stronger. Numeric effects get +2 ⚙.
+- **Match** (otherwise, any Affinity in the spell's family: the whole family, or any
+  specialization in it): the spell is stronger. Numeric effects get +1 ⚙.
+- **Opposed** (no match, and a Resonant's family is opposed to the spell's family ⚙): the spell
+  is weaker. Numeric effects get −1 ⚙ (never below 0). Non-numeric effects fail entirely; the
+  card is still discarded. The current cards have no opposed families, so this doesn't happen.
 - **Neutral** (anything else, or a neutral spell): normal effect.
 
 Player abilities are never changed by affinity.
 
-| Spell | Match | Neutral | Opposed |
-|---|---|---|---|
-| boost (+2) | +3 | +2 | +1 |
-| steal (+2) | tackle +3 | +2 | +1 |
-| recall (2) | draw 3 | 2 | 1 |
-| long_shot (−2 Shot) | −1 | −2 | −3 |
-| hit (strength 3) | strength 4 | 3 | 2 |
-| shield, dirty_play, scry, swap, long_pass, mend, decoy_pass, mirror_images | works | works | fails |
+| Spell | Specialist | Match | Neutral | Opposed |
+|---|---|---|---|---|
+| boost (+2) | +4 | +3 | +2 | +1 |
+| steal (+2) | tackle +4 | tackle +3 | +2 | +1 |
+| recall (2) | draw 4 | draw 3 | 2 | 1 |
+| long_shot (−2 Shot) | 0 | −1 | −2 | −3 |
+| hit (strength 3) | strength 5 | strength 4 | 3 | 2 |
+| shield, dirty_play, scry, swap, long_pass, mend, decoy_pass, mirror_images | works | works | works | fails |
 
 Because your opponent can't see your face-down players, they don't know how strong your spell
 will be until the caster is revealed.
@@ -360,7 +365,11 @@ engine together. "Numeric" effects are adjusted by affinity.
 
 **Reaction spells**
 
-- `boost` — `{ amount }`, numeric. Add `amount` to your side's value in this contest.
+- `boost` — `{ amount, when? }`, numeric. Add `amount` to your side's value in this contest. With
+  `when` (receive, intercept, tackle, evade, shoot, save, faceoff, resist), it can only be played
+  when your player's stat is being used that way, for example only when receiving a pass. Such a
+  boost is bigger (+3 on the current cards, instead of +2) to make up for it. A hit's attacker isn't resisting, so
+  only the player being hit can play a `resist` boost.
 - `shield` — `{}`, non-numeric. The opposing player's stat (or a hit's strength) counts as 0 in
   this contest, and their abilities and injuries are ignored. Their own spell still counts. If both
   sides shield, both stats are 0.
@@ -377,8 +386,8 @@ engine together. "Numeric" effects are adjusted by affinity.
 - `long_pass` — `{}`, non-numeric. Your ball holder makes a Pass that may skip one row forward.
   A goalie can reach midfield this way.
 - `long_shot` — `{ penalty }`, numeric. A midfielder holding the ball may Shoot. Their Shot is
-  reduced by `penalty`; the caster's affinity changes the penalty (match: −1 penalty,
-  opposed: +1 penalty).
+  reduced by `penalty`; the caster's affinity changes the penalty (specialist: −2 penalty,
+  match: −1 penalty, opposed: +1 penalty; never below 0).
 - `steal` — `{ amount }`, numeric. Make a Tackle now and add `amount` to your value. Needs a
   legal Tackle.
 - `recall` — `{ count }`, numeric. Draw `count` cards (from your Spells pile, then Players).
@@ -413,6 +422,10 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.15 — Spell library: one spell for each of the 71 useful specializations, plus the second Glamour spell and the neutral Late Hit (73 spells, `docs/MAGIC.md`). Paul asked for a spell per useful affinity. Claude: each team's 16 spells are picked from the library, keeping the old decks' mix of effects (1 boost, 2 shields, 1 dirty play, 3 hits, 2 steals, and one each of the rest) so balance stays comparable; boost gets an optional `when` (+3, but only for one use of a stat) so the many Body, Air, and Time spells aren't all the same card; the element-named placeholders (Neutral Boost, Fire Steal, Earth Shield, ...) are gone.
+
+- v0.14 — Magic follows the Warlock data (`data/warlock-resonants.json`), not four placeholder elements. An Affinity is a magic family or one specialization in it, and spells have a family or specialization. Paul: players get Resonants useful in play, drawn 50% from a root and the rest from deeper levels, and Affinities 50% a whole family and the rest specializations (`docs/MAGIC.md`). Claude: a specialization match is a "specialist" (+2), any other Affinity in the family a match (+1); opposition is dropped, since the data opposes Resonants, not families (the engine still supports opposed families); spells renamed where the old name named an element they no longer use (Water Scry is now Scrying Bowl, a divination spell). Online matches started before this keep their old cards and rules.
 
 - v0.13 — Constructed (optional): each team brings its own 40-card deck (2 goalies, 22 field players, 16 spells) instead of being dealt players. Each named player at most once per team; spells can repeat. For online saved teams (online phase 2). Claude's simplest reading of the design's "same deck rules as the table game".
 - v0.12 — Draft (optional): 30 face-up field players, 10 picks each in snake order, the second player first; goalies and the remaining field players are dealt at random. The online design said the pool includes at least 2 goalies; in the simulator, the first picker took the best goalie and won 58% of games, and leaving goalies out of the draft brought it back to 50% (Claude). Spells stay with each team, as in v0.11.

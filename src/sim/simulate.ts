@@ -2,7 +2,7 @@
 
 import { heuristicAgent } from '../ai/heuristic';
 import { runGame } from '../ai/runGame';
-import type { CardSet } from '../engine/cards';
+import { LIBRARY_TEAM, type CardSet } from '../engine/cards';
 import type { GameConfig } from '../engine/config';
 import { findProblems } from './invariants';
 import { SimStats } from './stats';
@@ -28,7 +28,9 @@ export interface SimResult {
 
 export function simulate(options: SimOptions): SimResult {
   const started = Date.now();
-  const stats = new SimStats(options.cardSet.cards);
+  // Library spells no team uses never reach a game, so they'd only clutter the report.
+  const listed = new Set(options.cardSet.teams.flatMap((t) => t.spells ?? []));
+  const stats = new SimStats(options.cardSet.cards.filter((c) => c.team !== LIBRARY_TEAM || listed.has(c.id)));
   const crashes: string[] = [];
   const problems: string[] = [];
   const capped: string[] = [];

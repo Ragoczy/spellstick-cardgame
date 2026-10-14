@@ -5,7 +5,7 @@ import { IllegalActionError, applyAction } from '../../src/engine/reducer';
 import { viewFor } from '../../src/engine/view';
 import { LANE_COUNTS, GOAL_POS, actionSpell, dfn, eventsOfType, fwd, mid, play, player, scenario, uid } from '../helpers';
 
-const glamourBall = (element: string | null = null) => actionSpell('Glamour Ball', { effect: 'decoy_pass', params: {} }, element);
+const glamourBall = (magic: string | null = null) => actionSpell('Glamour Ball', { effect: 'decoy_pass', params: {} }, magic);
 
 describe.each(LANE_COUNTS)('decoy_pass (%i lanes)', (lanes) => {
   const LAST = lanes - 1;

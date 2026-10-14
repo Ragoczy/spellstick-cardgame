@@ -4,13 +4,22 @@
 
 import type { GameConfig } from './config';
 
-export type Element = string;
+/**
+ * A kind of magic: a whole family ("fire") or one specialization in it ("illusion.glamour").
+ * The ids come from data/warlock-resonants.json (docs/MAGIC.md).
+ */
+export type Magic = string;
+
+/** The family a magic id belongs to: "illusion.glamour" -> "illusion", "fire" -> "fire". */
+export const familyOf = (magic: Magic): string => magic.split('.')[0]!;
 
 export interface Resonant {
+  /** The Resonant's id in data/warlock-resonants.json, for example "emo.anger". */
+  id?: string;
   /** For example "Anger". */
   name: string;
-  /** For example "fire". */
-  affinity: Element;
+  /** What magic it's good at: a family ("fire") or a specialization ("fire.explosion"). */
+  affinity: Magic;
 }
 
 export type StatName = 'speed' | 'shot' | 'defense' | 'faceoff' | 'save';
@@ -25,7 +34,7 @@ export type PlayerAbility =
   | { effect: 'draw_on_win'; params: { count: number } };
 
 export type ReactionEffect =
-  | { effect: 'boost'; params: { amount: number } }
+  | { effect: 'boost'; params: { amount: number; when?: StatUse } }
   | { effect: 'shield'; params: Record<string, never> }
   | { effect: 'dirty_play'; params: Record<string, never> };
 
@@ -43,6 +52,15 @@ export type ActionEffect =
 
 export type SpellEffect = ReactionEffect | ActionEffect;
 
+/**
+ * Whether a reaction spell can be played by this side of a contest. A boost with `when` only
+ * works for that use of a stat (for example "receive"); a hit's attacker is never resisting.
+ */
+export function reactionFits(def: SpellCardDef, side: { use: StatUse; power?: unknown }): boolean {
+  if (def.ability.effect !== 'boost' || def.ability.params.when === undefined) return true;
+  return def.ability.params.when === side.use && !side.power;
+}
+
 /** Effects whose number is adjusted by affinity. The rest fail outright when opposed. */
 export const NUMERIC_EFFECTS: ReadonlySet<string> = new Set(['boost', 'long_shot', 'steal', 'recall', 'hit']);
 
@@ -53,6 +71,12 @@ export const NUMERIC_EFFECTS: ReadonlySet<string> = new Set(['boost', 'long_shot
  * and field players at random from this shared pool (RULES.md "Setup").
  */
 export const POOL_TEAM = 'pool';
+
+/**
+ * Spell cards whose team is "library" belong to no team. Each is defined once; a team's
+ * `spells` list picks the library spells in its deck, by id (RULES.md "Spell library").
+ */
+export const LIBRARY_TEAM = 'library';
 
 /** A player card's type. It only says what the card is good at: any field player can play any position. */
 export type PlayerRole = 'runner' | 'striker' | 'playmaker' | 'allrounder' | 'anchor' | 'stopper' | 'goalie';
@@ -91,17 +115,28 @@ export interface GoalieCardDef extends PlayerBase {
   save: number;
 }
 
+/**
+ * A spell's power tier, named like a card rarity, from strongest to weakest. Measured by
+ * npm run spell-tiers (docs/MAGIC.md, "Power tiers"). It changes nothing in play.
+ */
+export type SpellTier = 'legendary' | 'rare' | 'uncommon' | 'common';
+export const SPELL_TIERS: SpellTier[] = ['legendary', 'rare', 'uncommon', 'common'];
+
 export interface ReactionSpellDef extends CardBase {
   kind: 'spell';
   spellType: 'reaction';
-  element: Element | null;
+  /** The spell's kind of magic, or null for a neutral spell. */
+  magic: Magic | null;
+  tier?: SpellTier;
   ability: ReactionEffect;
 }
 
 export interface ActionSpellDef extends CardBase {
   kind: 'spell';
   spellType: 'action';
-  element: Element | null;
+  /** The spell's kind of magic, or null for a neutral spell. */
+  magic: Magic | null;
+  tier?: SpellTier;
   ability: ActionEffect;
 }
 
@@ -114,12 +149,16 @@ export interface TeamDef {
   name: string;
   color: string;
   placeholder?: boolean;
+  /** The library spells in this team's deck, by card id. An id listed twice is two copies. */
+  spells?: string[];
 }
 
 export interface CardSet {
   version: string;
-  elements: Element[];
-  opposedPairs: [Element, Element][];
+  /** The magic families players and spells may use. */
+  families: string[];
+  /** Families that weaken each other (RULES.md "Affinity"). Empty in the current card set. */
+  opposedPairs: [string, string][];
   teams: TeamDef[];
   cards: CardDef[];
 }
@@ -162,6 +201,9 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
       needInt(params, 'count', where);
       break;
     case 'boost':
+      needInt(params, 'amount', where);
+      if (params.when !== undefined && !USES.includes(params.when as StatUse)) fail(where, 'boost "when" is not valid');
+      break;
     case 'steal':
       needInt(params, 'amount', where);
       break;
@@ -185,31 +227,37 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
   }
 }
 
-function checkResonants(card: Record<string, unknown>, elements: string[], where: string): void {
+/** A family id ("fire") or a specialization id ("fire.explosion") in one of the card set's families. */
+function isKnownMagic(magic: unknown, families: string[]): boolean {
+  return typeof magic === 'string' && /^[a-z-]+(\.[a-z-]+)?$/.test(magic) && families.includes(familyOf(magic));
+}
+
+function checkResonants(card: Record<string, unknown>, families: string[], where: string): void {
   const list = card.resonants;
   if (!Array.isArray(list) || list.length < 1 || list.length > 3) fail(where, 'needs 1 to 3 resonants');
   for (const r of list) {
     if (!isObject(r) || typeof r.name !== 'string') fail(where, 'each resonant needs a name');
-    if (!elements.includes(r.affinity as string)) fail(where, `unknown affinity "${String(r.affinity)}"`);
+    if (!isKnownMagic(r.affinity, families)) fail(where, `unknown affinity "${String(r.affinity)}"`);
   }
 }
 
 /** Checks parsed JSON card data and returns it as a typed CardSet. Throws CardDataError if anything is wrong. */
 export function loadCardSet(json: unknown): CardSet {
   if (!isObject(json)) fail('card set', 'must be an object');
-  const elements = json.elements;
-  if (!Array.isArray(elements) || !elements.every((e) => typeof e === 'string')) {
-    fail('card set', '"elements" must be a list of names');
+  const families = json.families;
+  if (!Array.isArray(families) || !families.every((e) => typeof e === 'string')) {
+    fail('card set', '"families" must be a list of names');
   }
   const opposedPairs = json.opposedPairs;
   if (!Array.isArray(opposedPairs)) fail('card set', '"opposedPairs" must be a list');
   for (const pair of opposedPairs) {
-    if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((e) => elements.includes(e))) {
-      fail('card set', 'each opposed pair must name two known elements');
+    if (!Array.isArray(pair) || pair.length !== 2 || !pair.every((e) => families.includes(e))) {
+      fail('card set', 'each opposed pair must name two known families');
     }
   }
   if (!Array.isArray(json.teams)) fail('card set', '"teams" must be a list');
   if (json.teams.some((t) => isObject(t) && t.id === POOL_TEAM)) fail('card set', `"${POOL_TEAM}" is reserved for the shared player pool`);
+  if (json.teams.some((t) => isObject(t) && t.id === LIBRARY_TEAM)) fail('card set', `"${LIBRARY_TEAM}" is reserved for the spell library`);
   if (!Array.isArray(json.cards)) fail('card set', '"cards" must be a list');
 
   const seen = new Set<string>();
@@ -220,6 +268,7 @@ export function loadCardSet(json: unknown): CardSet {
     seen.add(card.id);
     if (typeof card.team !== 'string' || typeof card.name !== 'string') fail(where, 'needs "team" and "name"');
     if (card.team === POOL_TEAM && card.kind !== 'field' && card.kind !== 'goalie') fail(where, 'only player cards can be in the pool');
+    if (card.team === LIBRARY_TEAM && card.kind !== 'spell') fail(where, 'only spells can be in the spell library');
     if (card.role !== undefined && !PLAYER_ROLES.includes(card.role as PlayerRole)) fail(where, `unknown role "${String(card.role)}"`);
     if ((card.role === 'goalie') !== (card.kind === 'goalie') && card.role !== undefined) fail(where, 'only goalies have the goalie role');
     if (card.ability !== undefined && !isObject(card.ability)) fail(where, '"ability" must be an object');
@@ -227,7 +276,7 @@ export function loadCardSet(json: unknown): CardSet {
 
     switch (card.kind) {
       case 'field':
-        checkResonants(card, elements, where);
+        checkResonants(card, families, where);
         for (const stat of ['speed', 'shot', 'defense', 'faceoff']) needInt(card, stat, where);
         if (ability) {
           if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
@@ -235,7 +284,7 @@ export function loadCardSet(json: unknown): CardSet {
         }
         break;
       case 'goalie':
-        checkResonants(card, elements, where);
+        checkResonants(card, families, where);
         needInt(card, 'save', where);
         if (ability) {
           if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
@@ -243,7 +292,8 @@ export function loadCardSet(json: unknown): CardSet {
         }
         break;
       case 'spell': {
-        if (card.element !== null && !elements.includes(card.element as string)) fail(where, `unknown element "${String(card.element)}"`);
+        if (card.magic !== null && !isKnownMagic(card.magic, families)) fail(where, `unknown magic "${String(card.magic)}"`);
+        if (card.tier !== undefined && !SPELL_TIERS.includes(card.tier as SpellTier)) fail(where, `unknown tier "${String(card.tier)}"`);
         if (!ability) fail(where, 'spells need an ability');
         const effects = card.spellType === 'reaction' ? REACTION_EFFECTS : card.spellType === 'action' ? ACTION_EFFECTS : null;
         if (!effects) fail(where, '"spellType" must be reaction or action');
@@ -255,19 +305,34 @@ export function loadCardSet(json: unknown): CardSet {
         fail(where, `unknown kind "${String(card.kind)}"`);
     }
   }
+  const library = new Set(json.cards.filter((c) => isObject(c) && c.team === LIBRARY_TEAM).map((c) => (c as { id: string }).id));
+  for (const team of json.teams) {
+    if (!isObject(team) || team.spells === undefined) continue;
+    if (!Array.isArray(team.spells)) fail(`team ${String(team.id)}`, '"spells" must be a list of card ids');
+    for (const id of team.spells) {
+      if (!library.has(id as string)) fail(`team ${String(team.id)}`, `"${String(id)}" is not a spell in the library`);
+    }
+  }
   return json as unknown as CardSet;
 }
 
 /**
- * Builds one team's deck from a card set: expands copies, leaves out promo cards, and leaves
- * out add-on cards unless the game uses 3 or more lanes.
+ * Builds one team's deck from a card set: the team's own cards (copies expanded) and the library
+ * spells its `spells` list names. Leaves out promo cards, and add-on cards unless the game uses 3
+ * or more lanes.
  */
 export function buildDeck(cardSet: CardSet, teamId: string, config: GameConfig): CardDef[] {
   const deck: CardDef[] = [];
+  const leftOut = (card: CardDef) => card.promo || (card.addon && config.lanes < 3);
   for (const card of cardSet.cards) {
-    if (card.team !== teamId || card.promo) continue;
-    if (card.addon && config.lanes < 3) continue;
+    if (card.team !== teamId || leftOut(card)) continue;
     for (let i = 0; i < (card.copies ?? 1); i++) deck.push(card);
+  }
+  // The team's spells from the library: one card for each time an id is listed, playing for the team.
+  const byId = new Map(cardSet.cards.map((c) => [c.id, c]));
+  for (const id of cardSet.teams.find((t) => t.id === teamId)?.spells ?? []) {
+    const card = byId.get(id)!;
+    if (!leftOut(card)) deck.push({ ...card, team: teamId });
   }
   return deck;
 }

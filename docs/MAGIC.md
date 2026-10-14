@@ -82,9 +82,11 @@ Full analysis and the list of every player: `reports/resonants-2026-10-14.md`. S
 ## The spell library (2026-10-14)
 
 Paul asked for a spell for each useful specialization. The library (`team: "library"` in
-`data/cards.prototype.json`) has 73 spells: one for each of the 71 useful specializations, plus
-a second Glamour spell (Glamour Ball and Glamour Self are both Paul's) and Late Hit, a neutral
-foul. Each spell is defined once; a team's `spells` list picks its 16 by id.
+`data/cards.prototype.json`) has 72 spells: one for each of the 71 useful specializations, plus
+a second Glamour spell (Glamour Ball and Glamour Self are both Paul's). Each spell is defined
+once; a team's `spells` list picks its 16 by id. *(Changed 2026-10-14: Late Hit, a neutral
+foul, was the 73rd. Paul pulled it from the spells; it becomes a physical attack card in the
+v0.17 plan.)*
 
 How they were made (Claude):
 - **One effect each, from the vocabulary.** Each spell uses an effect its magic can power in
@@ -99,7 +101,7 @@ How they were made (Claude):
   for different players' magic, like the old Earth and Water Shields.
 - **Names** are plain and in-world. Placeholders that named an element (Neutral Boost, Fire
   Steal, Earth Shield, Air Long Pass, ...) are gone. Flambé, Thunderclap, Water Spear, Earth
-  Crush, Mend, Late Hit, and the Glamour spells kept their names. Flavor text is left for Paul.
+  Crush, Mend, and the Glamour spells kept their names. Flavor text is left for Paul.
 
 | Magic | Spell | Type | Effect | In team deck |
 |---|---|---|---|---|
@@ -175,7 +177,6 @@ How they were made (Claude):
 | Mirrors (illusion) | Hall of Mirrors | Action | Mirror images | B |
 | Misdirection (illusion) | Misdirection | Action | Decoy pass | B |
 | Trickery (illusion) | Trick Pass | Action | Decoy pass | — |
-| Neutral | Late Hit | Reaction | Dirty play | — |
 
 **Team decks.** Each team keeps the old decks' mix of effects (1 boost, 2 shields, 1 dirty play,
 1 scry, 1 mirror images, 1 long pass, 1 decoy pass, 1 long shot, 2 steals, 1 recall, 1 mend,

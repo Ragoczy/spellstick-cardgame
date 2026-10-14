@@ -161,8 +161,6 @@ export const SPELL_SCENES: Record<string, string> = {
   'sp-hall-of-mirrors': 'Glowing mirror panes surround her, each reflecting a different copy of her.',
   'sp-misdirection': 'She fakes a pass one way with a shimmering illusion of a throw while the real pass goes the other way.',
   'sp-trick-pass': 'A shimmering illusion shows her passing to an empty patch of field.',
-  // No magic
-  'sp-late-hit': 'Well after the whistle, she slams her shoulder into an opposing player, who is caught off guard.',
 };
 
 /**

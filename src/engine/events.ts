@@ -107,7 +107,7 @@ export type GameEvent =
       /** The injury card drawn, or null if the injury deck was empty or the player was carried off. */
       injury: InjuryDef | null;
       source: InjurySource;
-      /** The spell that did it, e.g. "Flambé" or "Late Hit". */
+      /** The spell that did it, e.g. "Flambé" or "Red Mist". */
       cause: string;
       /** Already injured, so carried off and discarded. */
       carriedOff: boolean;

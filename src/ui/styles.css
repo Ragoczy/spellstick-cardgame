@@ -39,6 +39,10 @@
   --fam-water: #2f7fd1;
   --fam-weather: #6f8fa0;
   --fam-none: #888;
+  /* Physical attack card tiers (PLAN.md), like a referee's cards: yellow, orange, red. */
+  --tier-minor: #d9a92b;
+  --tier-major: #d9702b;
+  --tier-brutal: #b3261e;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -535,6 +539,34 @@ button.cf:hover .cf-card { transform: translateY(-3px); }
 .cf-stat { display: flex; flex-direction: column; align-items: center; min-width: 15cqw; }
 .cf-stat small { font: 600 2.7cqw/1.1 system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.04em; color: #5d574b; }
 .cf-stat b { font-size: 8.5cqw; line-height: 1.05; }
+/* Five stats (with Toughness, PLAN.md v0.17) need narrower cells. */
+.cf-stats-five .cf-stat { min-width: 12cqw; }
+.cf-stats-five .cf-stat b { font-size: 7.5cqw; }
+
+/* Cost (PLAN.md v0.17): a coin at the start of the name bar. */
+.cf-name .cf-title { flex: 1; min-width: 0; }
+.cf-cost {
+  flex: none; width: 6.6cqw; height: 6.6cqw; border-radius: 50%; display: grid; place-items: center;
+  font: 800 3.8cqw/1 system-ui, sans-serif; color: #3d2a00;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, #e0b33a 60%, #a87a12);
+  box-shadow: 0 0 0 0.4cqw #7a5a0c, 0 0.3cqw 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Physical attack cards (draft, PLAN.md Phase c2): no magic, so a striped frame in the tier color,
+   a referee's card on the type line showing the penalty turns, and smaller stat values. */
+.cf.physical .cf-inner {
+  background:
+    repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.16) 0 2cqw, transparent 2cqw 4cqw),
+    linear-gradient(160deg, color-mix(in srgb, var(--frame) 70%, white), color-mix(in srgb, var(--frame) 75%, black));
+}
+.cf-penalty-card {
+  flex: none; width: 4.6cqw; height: 6.4cqw; border-radius: 0.6cqw; display: grid; place-items: center;
+  background: var(--frame); border: 0.4cqw solid rgba(0, 0, 0, 0.55); transform: rotate(8deg);
+  font: 800 3.4cqw/1 system-ui, sans-serif; color: #fff; text-shadow: 0 0.2cqw 0 rgba(0, 0, 0, 0.5);
+}
+.cf-stats-physical .cf-stat b { font-size: 6.6cqw; white-space: nowrap; }
+.cf.physical .cf-text { font-size: 4cqw; padding-top: 1.6cqw; padding-bottom: 1.2cqw; }
+.cf.physical .cf-text p, .cf.physical .cf-stats { margin-bottom: 1cqw; }
 .cf-footer {
   height: 6cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 2cqw;
   font: 600 2.5cqw/1 system-ui, sans-serif; color: #cfcfcf; letter-spacing: 0.03em;

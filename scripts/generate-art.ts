@@ -4,13 +4,14 @@
 //   npm run generate-art -- --limit 5      (makes the first 5 missing images, to check the style)
 //   npm run generate-art                   (makes every missing image)
 //   npm run generate-art -- --only pl-001,pl-002 --force   (remakes those two)
-//   npm run generate-art -- --spells --limit 5   (only spells; --players for only players)
+//   npm run generate-art -- --spells --limit 5   (only spells; --players or --physical for only those)
 //
 // Needs OPENAI_API_KEY in a .env file at the repo root or in scripts/ (git ignores both). Optional settings there:
 //   OPENAI_IMAGE_MODEL    default gpt-image-1
 //   OPENAI_IMAGE_QUALITY  low, medium (default), or high. Medium is about 6 US cents an image.
 //
-// The shared player pool and the spell library get art. The canon promo card is left alone on purpose: how that
+// The shared player pool, the spell library, and the draft physical attack cards
+// (data/physical.draft.json; prompts in scripts/physical-art.ts) get art. The canon promo card is left alone on purpose: how that
 // character looks is Paul's call. Cards that already have art are skipped unless --force is
 // given, so to replace one bad image, delete it (or use --only <id> --force) and run again.
 //
@@ -21,7 +22,12 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { familyOf, type CardDef, type PlayerRole } from '../src/engine/cards';
+import { physicalCards, type PhysicalCardDef } from '../src/data/physicalCards';
+import { physicalPromptFor } from './physical-art';
 import { spellPromptFor } from './spell-art';
+
+/** Every kind of card that gets art: players, spells, and the draft physical attack cards. */
+type ArtCard = CardDef | PhysicalCardDef;
 
 const ART_DIR = 'assets/cards';
 /** Landscape, for the card's 4:3 art window (see .cf-art in styles.css); the sides get trimmed a little. */
@@ -98,7 +104,8 @@ function pick<T>(list: T[], id: string, salt: string): T {
 }
 
 /** The full prompt for one card. */
-function promptFor(card: CardDef): string {
+function promptFor(card: ArtCard): string {
+  if (card.kind === 'physical') return physicalPromptFor(card, STYLE);
   if (card.kind === 'spell') return spellPromptFor(card, STYLE, pick(HAIR, card.id, 'hair'));
   const role: PlayerRole = card.kind === 'goalie' ? 'goalie' : card.role ?? 'allrounder';
   const family = familyOf(card.resonants[0]?.affinity ?? '');
@@ -124,6 +131,7 @@ const limit = option('limit') ? Number(option('limit')) : Infinity;
 const only = option('only')?.split(',').map((id) => id.trim());
 const spellsOnly = flag('spells');
 const playersOnly = flag('players');
+const physicalOnly = flag('physical');
 
 // The key can live in .env at the repo root or in scripts/.env.
 for (const envFile of ['.env', 'scripts/.env']) if (existsSync(envFile)) process.loadEnvFile(envFile);
@@ -141,7 +149,7 @@ function existingArt(): Set<string> {
   );
 }
 
-async function generate(card: CardDef): Promise<void> {
+async function generate(card: ArtCard): Promise<void> {
   for (let attempt = 1; ; attempt++) {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
@@ -179,12 +187,15 @@ async function generate(card: CardDef): Promise<void> {
 
 async function main(): Promise<void> {
   const cardSet = JSON.parse(readFileSync('data/cards.prototype.json', 'utf8')) as { cards: CardDef[] };
-  const wanted = (c: CardDef): boolean => {
+  // With --spells, --players, or --physical, only that kind; with none of them, every kind.
+  const anyKindFlag = spellsOnly || playersOnly || physicalOnly;
+  const wanted = (c: ArtCard): boolean => {
     if (only) return only.includes(c.id);
-    if (c.kind === 'spell') return !playersOnly && c.team === 'library';
-    return !spellsOnly && c.team === 'pool';
+    if (c.kind === 'physical') return !anyKindFlag || physicalOnly;
+    if (c.kind === 'spell') return (!anyKindFlag || spellsOnly) && c.team === 'library';
+    return (!anyKindFlag || playersOnly) && c.team === 'pool';
   };
-  const cards = cardSet.cards.filter(wanted);
+  const cards = [...cardSet.cards, ...physicalCards].filter(wanted);
   const have = existingArt();
   const todo = cards.filter((c) => force || !have.has(c.id)).slice(0, limit);
 

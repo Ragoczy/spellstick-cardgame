@@ -3441,20 +3441,6 @@
         "params": {}
       },
       "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
-    },
-    {
-      "id": "sp-late-hit",
-      "team": "library",
-      "kind": "spell",
-      "name": "Late Hit",
-      "spellType": "reaction",
-      "magic": null,
-      "tier": "uncommon",
-      "ability": {
-        "effect": "dirty_play",
-        "params": {}
-      },
-      "text": "If your side wins this contest, the opposing player is injured."
     }
   ]
 }

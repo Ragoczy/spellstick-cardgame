@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { allFieldPositions, type Action, type Area, type FieldPos, type PlayerView } from '../engine';
 import { Card } from './Card';
+import { CardFace } from './CardFace';
 import { capitalize, laneName, roleName } from './labels';
 
 const ROWS: Area[] = ['forward', 'midfield', 'defense'];
@@ -84,12 +85,12 @@ export function LineupScreen({ view, legal, onPlace, onAuto }: {
       </div>
       <h3>Your field players</h3>
       <div className="hand">
-        {unplaced.map((c) => <Card key={c.uid} def={c.def} showText selected={picked === c.uid} onClick={() => setPicked(picked === c.uid ? null : c.uid)} />)}
+        {unplaced.map((c) => <CardFace key={c.uid} def={c.def} selected={picked === c.uid} onClick={() => setPicked(picked === c.uid ? null : c.uid)} />)}
       </div>
       {others.length ? (
         <>
           <h3>The rest of your hand</h3>
-          <div className="hand">{others.map((c) => <Card key={c.uid} def={c.def} showText />)}</div>
+          <div className="hand">{others.map((c) => <CardFace key={c.uid} def={c.def} />)}</div>
         </>
       ) : null}
     </div>

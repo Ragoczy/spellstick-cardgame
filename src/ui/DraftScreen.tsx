@@ -3,6 +3,7 @@
 
 import type { Action, CardView, PlayerView } from '../engine';
 import { Card } from './Card';
+import { CardFace } from './CardFace';
 import type { OpponentWords } from './text';
 
 type Pick = Extract<Action, { type: 'draftPick' }>;
@@ -37,10 +38,9 @@ export function DraftScreen({ view, legal, myDecision, opp, sending, onPick, onP
   const poolCard = (c: CardView) => {
     const pick = myDecision ? pickFor(c.uid) : undefined;
     return (
-      <Card
+      <CardFace
         key={c.uid}
         def={c.def}
-        showText
         highlight={pick ? 'target' : null}
         dim={myDecision && !pick}
         onClick={() => (pick ? onPick(pick) : undefined)}

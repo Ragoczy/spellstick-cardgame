@@ -81,7 +81,8 @@ was fun. Feed the notes back as changes to RULES.md.
 - Final team identities, rosters, card names, and flavor text (Claude drafts, Paul approves).
 - The canon player promo card.
 - Final deck sizes.
-- Swap placeholder card frames for final art from `assets/cards/`.
+- Swap the AI placeholder art in `assets/cards/` for commissioned art. *(The card frame itself is
+  done, 2026-10-14: see "Card layout" in GAME_DESIGN.md.)*
 
 ## M6 — Print files
 

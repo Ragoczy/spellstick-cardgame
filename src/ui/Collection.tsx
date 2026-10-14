@@ -7,7 +7,7 @@ import { prototypeCards } from '../data/prototype';
 import { spellSets, TEAM_NAME_MAX, teamProblems } from '../data/teams';
 import { makeConfig, type CardDef, type PlayerCardDef } from '../engine';
 import type { Collection, OwnedCard, SavedTeam } from '../shared/collectionApi';
-import { Card } from './Card';
+import { CardFace } from './CardFace';
 import { deleteTeam, fetchCollection, saveTeam } from './online';
 
 const config = makeConfig();
@@ -42,14 +42,13 @@ function spellList(setId: string): string {
   return [...counts].map(([name, n]) => (n > 1 ? `${name} ×${n}` : name)).join(', ');
 }
 
-/** A card you own, with its serial number underneath. */
+/** A card you own, with its serial number in the footer. */
 function OwnedCardView({ card, dim, highlight, onClick }: { card: OwnedCard; dim?: boolean; highlight?: boolean; onClick?: () => void }) {
   const def = defOf(card);
   if (!def) return null;
   return (
-    <div className="owned-card">
-      <Card def={def} dim={dim} highlight={highlight ? 'target' : null} onClick={onClick} />
-      <span className="serial" title="This copy's number: copies are numbered in the order they were given out">#{card.serial}</span>
+    <div className="owned-card" title="Copies are numbered in the order they were given out">
+      <CardFace def={def} serial={card.serial} dim={dim} highlight={highlight ? 'target' : null} onClick={onClick} />
     </div>
   );
 }

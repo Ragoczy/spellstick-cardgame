@@ -6,6 +6,7 @@ import { capitalize, cardText, elementColor, injuryEffect } from './labels';
 import { spellWhen } from './spellHelp';
 import { roleLabel } from '../data/playerTypes';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
+import { cardArt } from './cardArt';
 
 /** Team colors by team id, from the card data. */
 export const TeamColors = createContext<Record<string, string>>({});
@@ -14,14 +15,28 @@ export const TeamColors = createContext<Record<string, string>>({});
  * Where a player is drawn when they aren't on the field (in hand, in the draft): the row their
  * type suits best. Any field player can still play any position.
  */
-const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
+export const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
   striker: 'forward', runner: 'midfield', playmaker: 'midfield', allrounder: 'midfield',
   anchor: 'defense', stopper: 'defense', goalie: 'goal',
 };
 
-/** The player's figure: the position they stand in, colored by their first Resonant's Affinity. */
+/**
+ * A small square of the card's art at the left of the tile, edged in the player's first
+ * Resonant's Affinity color and zoomed in on the head and shoulders (see .tile-art in styles.css).
+ */
+function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
+  const art = def.kind === 'spell' ? undefined : cardArt(def.id);
+  if (!art || def.kind === 'spell') return null;
+  const edge = elementColor(def.resonants[0]?.affinity ?? null);
+  return <span className={`tile-art ${injured ? 'injured' : ''}`} style={{ backgroundImage: `url(${art})`, borderColor: edge }} />;
+}
+
+/**
+ * The player's figure, for a player with no art yet: the position they stand in, colored by
+ * their first Resonant's Affinity.
+ */
 function Figure({ def, position, injured }: { def: CardDef; position?: FigurePosition; injured: boolean }) {
-  if (def.kind === 'spell') return null;
+  if (def.kind === 'spell' || cardArt(def.id)) return null;
   const pos = def.kind === 'goalie' ? 'goal' : position ?? (def.role ? TYPE_POSITION[def.role] : 'midfield');
   return <PlayerFigure position={pos} element={def.resonants[0]?.affinity ?? null} injured={injured} />;
 }
@@ -101,6 +116,7 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
     .join(' ');
   return (
     <button type="button" className={classes} onClick={onClick} style={{ borderTopColor: colors[def.team] ?? '#555' }}>
+      <ArtStrip def={def} injured={Boolean(injury)} />
       <div className="card-name">
         {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}

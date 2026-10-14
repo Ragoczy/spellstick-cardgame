@@ -4,7 +4,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { isFieldPos, opposite, samePos, type Action, type CardDef, type FieldPos, type InjuryDef, type PlayerView, type Pos, type Side, type SpellTarget } from '../engine';
 import { Board } from './Board';
-import { Card, CardBack, type CardProps } from './Card';
+import { CardBack, type CardProps } from './Card';
+import { CardFace } from './CardFace';
 import { Clocks } from './Clocks';
 import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, endedEarlyText, injuryEffect, laneName, posName, ratingChangeText } from './labels';
@@ -286,7 +287,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <p>Your goalie starts face down in goal. The other one is shuffled into your deck.</p>
         <div className="choice-row">
           {legal.map((a) => a.type === 'chooseGoalie' ? (
-            <Card key={a.card} def={view.mine.hand.find((c) => c.uid === a.card)!.def} showText onClick={() => act(a)} />
+            <CardFace key={a.card} def={view.mine.hand.find((c) => c.uid === a.card)!.def} width={220} onClick={() => act(a)} />
           ) : null)}
         </div>
       </div>
@@ -460,11 +461,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   }
 
   const handCard = (c: PlayerView['mine']['hand'][number]) => (
-    <Card
+    <CardFace
       key={c.uid}
       def={c.def}
       injury={c.injury}
-      showText
       selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
       highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
       dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
@@ -498,17 +498,6 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         </div>
 
         <div className="table">
-          <section className="hand-col players-col" aria-label="Your players">
-            <div className="hand-label">
-              <strong>Your players</strong>
-              <span>{myPlayers.length}</span>
-            </div>
-            <div className="hand">
-              {myPlayers.map(handCard)}
-              {myPlayers.length === 0 ? <span className="empty-hand">No players in hand.</span> : null}
-            </div>
-          </section>
-
           <div className="table-center">
             <Board view={view} teams={teams} highlights={highlights} selectedKey={selectedKey} justRevealed={game.justRevealed} onSpot={onSpot} />
 
@@ -521,31 +510,36 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
             ) : null}
             {prompt()}
             {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
+            {inspected ? (
+              <div className="inspector" onClick={() => setInspected(null)}>
+                <CardFace def={inspected.def} injury={inspected.injury} />
+                <div className="inspector-text">
+                  {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
+                  {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
+                  {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
+                </div>
+              </div>
+            ) : null}
           </div>
 
-          <section className="hand-col spells-col" aria-label="Your spells">
+          {/* Your hand: full cards, players first, then spells. Beside the field on wide screens, below it on narrow ones. */}
+          <section className="my-hand" aria-label="Your hand">
             <div className="hand-label">
-              <strong>Your spells</strong>
-              <span><span className="action">Action</span>: on your turn, as your action</span>
-              <span><span className="reaction">Reaction</span>: when a contest starts</span>
+              <strong>Your hand</strong>
+              <span>{myPlayers.length} {myPlayers.length === 1 ? 'player' : 'players'}, {mySpells.length} {mySpells.length === 1 ? 'spell' : 'spells'}</span>
+              <span><span className="action">Action</span> spells: on your turn, as your action</span>
+              <span><span className="reaction">Reaction</span> spells: when a contest starts</span>
             </div>
-            <div className="hand">
+            <div className="hand hand-strip">
+              {myPlayers.map(handCard)}
+              {myPlayers.length && mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
               {mySpells.map(handCard)}
-              {mySpells.length === 0 ? <span className="empty-hand">No spells in hand.</span> : null}
+              {view.mine.hand.length === 0 ? <span className="empty-hand">No cards in hand.</span> : null}
             </div>
           </section>
         </div>
 
-        {inspected ? (
-          <div className="inspector" onClick={() => setInspected(null)}>
-            <Card def={inspected.def} injury={inspected.injury} showText />
-            <div className="inspector-text">
-              {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {capitalize(r.affinity)} Affinity</div>) : null}
-              {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
-              {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
-            </div>
-          </div>
-        ) : null}
+
 
         <div className="log">
           <button type="button" className="quiet" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} play-by-play</button>
@@ -610,7 +604,7 @@ function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: Opponent
 }
 
 function duelCard(card: import('../engine').CardView | null) {
-  return card ? <Card def={card.def} injury={card.injury} /> : <div className="card empty">Empty spot</div>;
+  return card ? <CardFace def={card.def} injury={card.injury} /> : <div className="card empty">Empty spot</div>;
 }
 
 function AnnouncementView({ a, opp, onClose }: { a: Announcement; opp: OpponentWords; onClose: () => void }) {

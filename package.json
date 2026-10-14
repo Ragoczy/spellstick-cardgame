@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "demo": "tsx scripts/demo-game.ts",
     "sim": "tsx scripts/sim.ts",
-    "generate-players": "tsx scripts/generate-players.ts"
+    "generate-players": "tsx scripts/generate-players.ts",
+    "generate-art": "tsx scripts/generate-art.ts"
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "2.5.0",

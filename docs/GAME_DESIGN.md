@@ -62,12 +62,32 @@ async over days, with the server as referee using the same rules engine. Players
 Swiss tournaments with draft and constructed formats. Full design and phases:
 `docs/spellstick-multiplayer-design.md`.
 
+## Card layout (added 2026-10-14)
+
+- One layout for screen and print, shaped like a printed trading card (2.5" × 3.5"). The code is
+  `src/ui/CardFace.tsx`; open the game with `?cards` to preview it.
+- Top to bottom: a name bar with element pips (one per Resonant, or the spell's element); a 4:3
+  art window; a type line (player type or spell type, with the position figure); a text box
+  (stats, the Resonants spelled out, what a spell does, flavor text); and a footer (card number,
+  plus the serial number of an owned copy online).
+- The frame color comes from the element: a player's first Resonant, or the spell's element.
+- Art is landscape, cropped to 4:3: the player from about the knees up, face in the upper third.
+- On screen, full cards appear in your hand, the draft, your collection, the card you click to
+  look at, and contest reveals. The field uses compact tiles (an art strip, name, and stats),
+  since full cards are unreadable below about 180 pixels wide.
+
 ## Canon and content constraints
 
 - **The sport's rules follow the books.** How scoring, possession, and spells work must not
   contradict the spellstick scenes. See "Canon notes" in RULES.md.
 - **Players are invented.** Only one book character really plays spellstick, so team rosters
   are original. That one character appears as a special promo card.
+- **Spellstick players are white.** Spellstick magic is a European tradition, so player art shows
+  white European players. Other regions and peoples have their own magical traditions.
+  (Paul, 2026-10-14.)
+- **Player art: no pads or gloves.** Players wear a plain athletic kit. Card art aims at a
+  polished digital fantasy card-game look, and the AI placeholder art uses the same style.
+  (Paul, 2026-10-14.)
 - **The world supplies the flavor.** Team identities, team names, mascots, flavor text, and spell
   card commentary can reference things readers know. This is where the "I get the joke" value
   comes from.

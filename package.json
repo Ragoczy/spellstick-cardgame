@@ -22,6 +22,7 @@
     "assign-resonants": "tsx scripts/assign-resonants.ts",
     "spell-library-sim": "tsx scripts/spell-library-sim.ts",
     "spell-tiers": "tsx scripts/spell-tiers.ts",
+    "sim-compare": "tsx scripts/sim-compare.ts",
     "generate-art": "tsx scripts/generate-art.ts"
   },
   "dependencies": {

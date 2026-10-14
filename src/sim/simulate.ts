@@ -12,6 +12,8 @@ export interface SimOptions {
   seed: number;
   config: GameConfig;
   cardSet: CardSet;
+  /** Play exactly these game seeds instead of `games` games numbered from `seed` (used to split a run across processes). */
+  seeds?: readonly number[];
   onProgress?: (done: number) => void;
 }
 
@@ -26,6 +28,11 @@ export interface SimResult {
   milliseconds: number;
 }
 
+/** The game seeds a run of `games` games from block `seed` plays: seed 1 is 100000, 100001, ... */
+export function gameSeeds(seed: number, games: number): number[] {
+  return Array.from({ length: games }, (_, g) => seed * 100_000 + g);
+}
+
 export function simulate(options: SimOptions): SimResult {
   const started = Date.now();
   // Library spells no team uses never reach a game, so they'd only clutter the report.
@@ -35,8 +42,8 @@ export function simulate(options: SimOptions): SimResult {
   const problems: string[] = [];
   const capped: string[] = [];
 
-  for (let g = 0; g < options.games; g++) {
-    const seed = options.seed * 100_000 + g;
+  const seeds = options.seeds ?? gameSeeds(options.seed, options.games);
+  for (const [g, seed] of seeds.entries()) {
     try {
       const record = runGame(
         { seed, cardSet: options.cardSet, config: options.config },

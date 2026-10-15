@@ -414,9 +414,17 @@ substitution is waiting.
 
 ## The penalty box
 
-After the rerolls, if the attacker's die in a physical attack shows 1, they roll the **penalty
-die** (never rerolled). On another 1, the referee calls a **penalty**: 1 in 36 per attack. Rerolling
-a 1 away avoids the check. The attack still resolves as normal, then:
+Each team has a **penalty risk**, starting at 1, kept face up. After the rerolls, if the attacker's
+die in a physical attack shows the penalty risk or lower, they roll the **penalty die** (never
+rerolled). If that also shows the penalty risk or lower, the referee calls a **penalty**. At risk 1
+that's a 1 and then a 1: 1 in 36. Rerolling your die above the risk avoids the check.
+
+The risk **goes up by 1 with each physical attack** your team makes (after that attack's check),
+and **down by 1 at the end of each of your turns without one**, never below 1 ⚙. So a second attack
+in a row needs both dice at 2 or lower (1 in 9), a third at 3 or lower (1 in 4), and so on: the
+referee watches a team that keeps fouling. Late Hit and Elbow count too.
+
+The attack still resolves as normal, then:
 
 - The attacker goes to the **penalty box** beside the mat, face up, for their card's penalty: 1, 2,
   or 3 turns ⚙ by tier. The count goes down at the end of each of their own team's turns, starting
@@ -597,6 +605,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase c2 — Escalating penalties (Paul): each team's penalty risk starts at 1 and goes up by 1 with each physical attack and down by 1 with each of its turns without one; a penalty is called when the attacker's die and the penalty die both show the risk or lower. Claude: the attack's own check uses the risk before it goes up, so a team's first attack is the old 1-and-1; the risk tops out at 6 (a sixth attack in a row is always penalized); attacks on the other team's turn (Late Hit, Elbow) count. Also tried, not adopted yet: blind physical draw (`reports/sim-2026-10-15-v17c2-blind.md`). Result (`reports/sim-2026-10-15-v17c2-escalation-hand.md`): with cards in hand, penalties 0.17 → 0.27 a game and little else changes; with blind draw it adds penalties more than it stops attacks. Claude also fixed the Draw step skipping the goalie-clears check (a goalie with both defenders in the penalty box froze the game).
 
 - v0.17 (in progress), phase c2 — Physical attack cards and the penalty box, from the v0.17 plan Paul approved (`PLAN.md`; Paul: more injuries, real ones, from cheap shots like Gouge, Kneecap, and Atomic Wedgie, with a penalty box; decisions 8, 9, and 11). Each team has a 16-card **Physical pile** (draw 2 at setup, 1 at each faceoff). An **attack** is an action: the attacker's Speed (Defense for muscle cards) plus the card's bonus against the target's Speed; a win makes the target drop the ball and knocks them down with the card's modifiers. A 1 on the attacker's die, then a 1 on the penalty die, sends the attacker to the **penalty box** for 1–3 turns by tier, with the spot empty and no substitution; a goal by the other team brings them back. Claude: the tier modifiers are printed on each card (its own text included); "body Affinity" counts the exact specialization or the whole Body family; reaction cards need the side not to have played a reaction spell in that contest, and don't chain; the penalty count starts with the team's next turn, so even a 1-turn penalty costs something. Result (`reports/sim-2026-10-15-v17c2.md`): 7.7 attacks a game; hurts 3.85 → 5.70 and real injuries 1.92 → 2.87 (target 3.5); 0.17 penalties a game; but turns 47.1 → 50.7 and spells cast 16.3 → 13.5 now miss their targets. Online matches started before this have no physical cards.
 

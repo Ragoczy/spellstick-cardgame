@@ -217,8 +217,8 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return { text: `${capitalize(at(e.side, e.pos))} drops the ball.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'penaltyCheck':
       return e.called
-        ? { text: `${capitalize(whose(e.side))} attacker rolled a 1, then the penalty die came up 1 too: the referee calls a penalty!`, tone: isMe(e.side) ? 'bad' : 'good' }
-        : info(`${capitalize(whose(e.side))} attacker rolled a 1, so the referee looked: penalty die ${e.roll}, no penalty.`);
+        ? { text: `${capitalize(whose(e.side))} attacker rolled ${e.attackerRoll}, then the penalty die came up ${e.roll}: both ${e.level} or lower, so the referee calls a penalty!`, tone: isMe(e.side) ? 'bad' : 'good' }
+        : info(`${capitalize(whose(e.side))} attacker rolled ${e.attackerRoll} (${e.level} or lower), so the referee looked: penalty die ${e.roll}, no penalty.`);
     case 'penalized':
       return { text: `${capitalize(at(e.side, e.pos))} (${e.card.def.name}) goes to the penalty box for ${e.turns} turn${e.turns === 1 ? '' : 's'}. The spot stays empty and nobody can come on there until the penalty is over.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'penaltyServed':

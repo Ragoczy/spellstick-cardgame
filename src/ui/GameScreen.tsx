@@ -498,10 +498,14 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     if (selection.kind === 'attack') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const stat = def?.kind === 'physical' && def.uses === 'muscle' ? 'Defense' : 'Speed';
+      const level = view.mine.penaltyLevel;
+      const risk = level === 1
+        ? 'Roll a 1, then another 1 on the penalty die, and the referee sends your player to the penalty box.'
+        : `Penalty risk ${level}: if your die and the penalty die both show ${level} or lower, the referee sends your player to the penalty box. Each attack raises the risk; each turn without one lowers it.`;
       help = !selection.card
-        ? 'Choose who attacks the opposing player in their spot. You flip the top card of your Physical pile, and that\'s the move: usually their Speed against the target\'s Speed, both roll. If you win, the target drops the ball and may be hurt. Roll a 1, then another 1, and the referee sends your player to the penalty box.'
+        ? `Choose who attacks the opposing player in their spot. You flip the top card of your Physical pile, and that's the move: usually their Speed against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. ${risk}`
         : !selection.attacker
-          ? `Choose who attacks with ${def?.name}: their ${stat} against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. Roll a 1, then another 1, and the referee sends your player to the penalty box.`
+          ? `Choose who attacks with ${def?.name}: their ${stat} against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. ${risk}`
           : 'Now tap the opposing player to attack.';
     }
     if (selection.kind === 'regroup') {
@@ -516,7 +520,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           {shoot ? <button type="button" className="primary" onClick={() => act(shoot)}>Shoot!{shootLabel}</button> : null}
           {tackle ? <button type="button" onClick={() => act(tackle)}>Tackle{tackleLabel}</button> : null}
           {view.config.physicalDraw === 'blind' && attacksFor(undefined).length && selection.kind === 'none' ? (
-            <button type="button" onClick={() => setSelection({ kind: 'attack' })}>Physical attack ({view.mine.physicalLeft || view.mine.physicalDiscard.length} cards)</button>
+            <button type="button" onClick={() => setSelection({ kind: 'attack' })}>Physical attack (penalty risk {view.mine.penaltyLevel})</button>
           ) : null}
           {!canRegroup ? null : selection.kind === 'regroup' ? (
             <button type="button" onClick={() => act({ type: 'regroup', side: me, discard: selection.picked })}>

@@ -108,7 +108,7 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'ballDropped':
       return `${names[e.side]}'s player at ${posLabel(e.pos)} drops the ball.`;
     case 'penaltyCheck':
-      return `${names[e.side]}'s attacker rolled a 1, so the penalty die: ${e.roll}${e.called ? '. The referee calls a penalty!' : ', no penalty.'}`;
+      return `${names[e.side]}'s attacker rolled ${e.attackerRoll} (penalty risk ${e.level}), so the penalty die: ${e.roll}${e.called ? '. The referee calls a penalty!' : ', no penalty.'}`;
     case 'penalized':
       return `${names[e.side]}'s ${e.card.def.name} goes to the penalty box for ${e.turns} turn${e.turns === 1 ? '' : 's'}; ${posLabel(e.pos)} is empty.`;
     case 'penaltyServed':

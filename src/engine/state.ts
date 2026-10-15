@@ -59,6 +59,13 @@ export interface TeamState {
   physicalDiscard: Uid[];
   /** Players in the penalty box (public). */
   penaltyBox: PenaltyEntry[];
+  /**
+   * Penalty risk (v0.17, public): attacks made recently. The next attack's penalty check needs both
+   * dice at 1 + this or lower. Goes up with each attack, down with each of the team's turns without one.
+   */
+  attackHeat: number;
+  /** The team has made a physical attack since its last turn ended. */
+  attackedSinceTurn?: boolean;
   hand: Uid[];
   /** Public. Newest card last. */
   discard: Uid[];

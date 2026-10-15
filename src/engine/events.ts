@@ -140,8 +140,11 @@ export type GameEvent =
   | { type: 'attackDeclared'; side: Side; card: CardView; attacker: FieldPos; target: FieldPos; flipped?: boolean }
   /** A physical attack won: the target dropped the ball. */
   | { type: 'ballDropped'; side: Side; pos: Pos }
-  /** The attacker's final die was 1, so they rolled the penalty die: another 1 and the referee calls a penalty. */
-  | { type: 'penaltyCheck'; side: Side; pos: Pos; roll: number; called: boolean }
+  /**
+   * The attacker's final die was at or under the penalty risk level (1 at first), so they rolled the
+   * penalty die: at or under the level again and the referee calls a penalty.
+   */
+  | { type: 'penaltyCheck'; side: Side; pos: Pos; roll: number; called: boolean; level: number; attackerRoll: number }
   /** A penalty (v0.17): the player goes to the penalty box for this many turns, and their spot is empty. */
   | { type: 'penalized'; side: Side; pos: FieldPos; card: CardView; turns: number }
   /** A penalty is over: the player is back in their spot. */

@@ -83,6 +83,8 @@ export interface PlayerView {
     physicalRemaining: CardDef[];
     /** Players in the penalty box (public): where they'll come back, and turns left. */
     penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
+    /** The penalty risk level for this team's next physical attack (both dice at this or lower). */
+    penaltyLevel: number;
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -97,6 +99,7 @@ export interface PlayerView {
     physicalDiscard: CardView[];
     physicalRemaining: CardDef[];
     penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
+    penaltyLevel: number;
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -129,6 +132,7 @@ function physicalOf(s: GameState, team: GameState['teams'][Side], showRemaining:
     physicalDiscard: team.physicalDiscard.map((uid) => cardView(s, uid)),
     physicalRemaining: showRemaining ? team.physical.map((uid) => s.cards[uid]!).sort((a, b) => a.id.localeCompare(b.id)) : [],
     penaltyBox: team.penaltyBox.map((e) => ({ card: cardView(s, e.uid), pos: e.pos, turnsLeft: e.turnsLeft })),
+    penaltyLevel: s.config.penaltyEscalation ? Math.min(1 + team.attackHeat, s.config.contactDie) : 1,
   };
 }
 

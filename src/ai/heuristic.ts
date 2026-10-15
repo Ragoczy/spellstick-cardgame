@@ -78,8 +78,11 @@ const SENT_OFF_WORTH = 0.15;
 const FOUL_CARD_COST = 0.03;
 /** Rough worth of keeping a physical attack card in hand. */
 const PHYSICAL_CARD_VALUE = 0.03;
-/** Rough worth (as a loss) of each turn a player spends in the penalty box, their spot empty. */
-const PENALTY_TURN_WORTH = 0.05;
+/**
+ * Rough worth (as a loss) of each turn a player spends in the penalty box, their spot empty: worst
+ * on defense, where nobody can intercept or tackle the forward in that lane.
+ */
+const PENALTY_TURN_WORTH: Record<Area, number> = { defense: 0.15, midfield: 0.08, forward: 0.05 };
 /** Worth of substituting out a Shaken player, who comes back standing. */
 const SHAKEN_SUB_WORTH = 0.015;
 
@@ -724,8 +727,10 @@ class Thinker {
       hurt = chance * this.injuryWorth(target, true);
     }
     const selfRisk = ability?.effect === 'self_check' ? this.knockdownChance('mine', attacker) * this.ownHurtWorth() * this.unit() : 0;
+    // The penalty check needs both dice at the team's penalty risk level or lower.
+    const level = this.view.mine.penaltyLevel;
     const die = this.config.contestDie || 6;
-    const penaltyRisk = (1 / die) * (1 / this.config.contactDie) * this.config.penaltyTurns[def.tier] * PENALTY_TURN_WORTH * this.unit();
+    const penaltyRisk = Math.min(1, level / die) * Math.min(1, level / this.config.contactDie) * this.config.penaltyTurns[def.tier] * PENALTY_TURN_WORTH[attacker.area] * this.unit();
     return p * (ballGain + hurt) - selfRisk - penaltyRisk - PHYSICAL_CARD_VALUE * this.unit();
   }
 

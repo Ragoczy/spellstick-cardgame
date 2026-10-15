@@ -166,6 +166,7 @@ export function scenario(options: ScenarioOptions = {}): GameState {
       physical: (spec.physical ?? []).map(add).reverse(), // physical[0] is drawn first
       physicalDiscard: [],
       penaltyBox: [],
+      attackHeat: 0,
     };
   }
 

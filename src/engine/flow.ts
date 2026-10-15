@@ -117,6 +117,9 @@ function endTurn(s: GameState, ev: GameEvent[]): void {
   // Shaken players stand up at the end of their team's next turn, and penalties count down.
   standUp(s, finished, ev);
   servePenalties(s, finished, ev);
+  // A turn without a physical attack cools the team's penalty risk.
+  if (!team.attackedSinceTurn) team.attackHeat = Math.max(0, team.attackHeat - 1);
+  delete team.attackedSinceTurn;
 
   if (s.endgame.finalTurnFor === finished) {
     // Full time: the last turn after a deck ran out is over.

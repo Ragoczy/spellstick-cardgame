@@ -331,5 +331,6 @@ function regroup(s: GameState, side: Side, discard: string[], ev: GameEvent[]): 
 function draw(s: GameState, side: Side, pile: Pile, ev: GameEvent[]): void {
   if (handIsFull(s, side)) discardTopOfPile(s, side, pile, ev);
   else drawCards(s, side, 1, 'turn', ev, pile);
-  s.pending = { kind: 'action', side };
+  // On to the action, through the same checks as any turn (a goalie with nobody to clear to).
+  continueGame(s, ev);
 }

@@ -461,15 +461,23 @@ function applyAttack(s: GameState, contest: Contest, attackerWins: boolean, ev: 
 }
 
 /**
- * The penalty check: if the attacker's final die is a 1, they roll the penalty die (never
- * rerolled). Another 1 and the referee calls a penalty: the attacker goes to the penalty box.
+ * The penalty check: if the attacker's final die is at or under the penalty risk level (1 at
+ * first), they roll the penalty die (never rerolled). At or under the level again and the referee
+ * calls a penalty: the attacker goes to the penalty box.
  */
 function penaltyCheck(s: GameState, contest: Contest, def: PhysicalCardDef, worst: HurtResult, ev: GameEvent[]): void {
   const a = contest.attacker;
-  if (a.roll !== 1 || !isFieldPos(a.pos) || !slotAt(s, a.side, a.pos)) return;
+  const team = s.teams[a.side];
+  // Escalating penalties: the level is 1 plus the team's recent attacks; this attack then adds one.
+  const level = s.config.penaltyEscalation ? Math.min(1 + team.attackHeat, s.config.contactDie) : 1;
+  if (s.config.penaltyEscalation) {
+    team.attackHeat = Math.min(team.attackHeat + 1, s.config.contactDie - 1);
+    team.attackedSinceTurn = true;
+  }
+  if (!a.roll || a.roll > level || !isFieldPos(a.pos) || !slotAt(s, a.side, a.pos)) return;
   const roll = penaltyRoll(s);
-  const called = roll === 1;
-  ev.push({ type: 'penaltyCheck', side: a.side, pos: a.pos, roll, called });
+  const called = roll <= level;
+  ev.push({ type: 'penaltyCheck', side: a.side, pos: a.pos, roll, called, level, attackerRoll: a.roll });
   if (!called) return;
   const byResult = s.config.penaltyTurnsByResult;
   const turns = s.config.penaltyLength === 'card'

@@ -54,7 +54,7 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   [injuryDeck, rng] = shuffle(Object.keys(injuryCards), rng);
 
   const empty = (): TeamState => ({
-    players: [], spells: [], physical: [], physicalDiscard: [], penaltyBox: [], hand: [], discard: [], knockedOut: [], goalie: null, lineup: emptyLineup(config.lanes),
+    players: [], spells: [], physical: [], physicalDiscard: [], penaltyBox: [], attackHeat: 0, hand: [], discard: [], knockedOut: [], goalie: null, lineup: emptyLineup(config.lanes),
   });
   const state: GameState = {
     config,
@@ -148,6 +148,7 @@ function dealTeams(s: GameState, decks: Record<Side, CardDef[]>, teamIds: Record
       physical: uids.filter((uid) => s.cards[uid]!.kind === 'physical'),
       physicalDiscard: [],
       penaltyBox: [],
+      attackHeat: 0,
       hand: goalies,
       discard: [],
       knockedOut: [],

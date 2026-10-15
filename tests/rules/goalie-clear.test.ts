@@ -12,6 +12,15 @@ describe.each(LANE_COUNTS)('goalie clears (%i lanes)', (lanes) => {
   const longPass = () => actionSpell('Long Pass', { effect: 'long_pass', params: {} });
   const scry = () => actionSpell('Scrying Bowl', { effect: 'scry', params: {} });
 
+  it('checks for a clear after the Draw step too: with no defenders (both penalized), the ball goes to a faceoff', () => {
+    const s = scenario({ lanes, step: 'draw', ball: { side: 'A', pos: GOAL_POS } });
+    for (let lane = 0; lane < lanes; lane++) s.teams.A.lineup.defense[lane] = null;
+    const { state, events } = play(s, { type: 'draw', side: 'A', pile: 'players' });
+    expect(eventsOfType(events, 'goalieCantClear')).toHaveLength(1);
+    expect(state.pending).toEqual({ kind: 'faceoffLane', side: 'B' });
+    expect(legalActions(state, 'B').length).toBeGreaterThan(0);
+  });
+
   it('only lets you pass the ball out: no regroup, and no spell that keeps it in goal', () => {
     const s = scenario({ lanes, ball: { side: 'A', pos: GOAL_POS }, A: { hand: [scry()] } });
     const legal = legalActions(s, 'A');

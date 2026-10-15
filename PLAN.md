@@ -473,6 +473,7 @@ real injuries 2.87, 0.17 penalties; turns 50.7 and spells cast 13.5 now miss. Se
 *Trial (Paul, 2026-10-15): blind physical draw, physical cards flipped from the pile instead of
 held in hand (`physicalDraw: 'blind'`, off by default). Results and the attack-limit what-if:
 `reports/sim-2026-10-15-v17c2-blind.md`. Waiting for Paul's call.*
+*Escalating penalties (Paul, 2026-10-15) adopted: see `reports/sim-2026-10-15-v17c2-escalation-hand.md`.*
 - Engine: `config.ts` (`physicalAttacks`, `physicalPileSize`, `physicalSetupDraw`,
   `physicalFaceoffDraw`, `affinityAttackBonus`, `tierModifiers`, `penaltyLength`,
   `powerPlayReturn`, `penaltyNoSubstitution`), `cards.ts` (a `physical` card kind with tier,

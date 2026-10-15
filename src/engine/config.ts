@@ -185,6 +185,13 @@ export interface GameConfig {
   penaltyTurns: Record<PhysicalTier, number>;
   /** With penaltyLength 'result': turns for no hurt (or only Shaken), Injured, and Knocked out or carried off. */
   penaltyTurnsByResult: { none: number; injured: number; out: number };
+  /**
+   * Escalating penalties (Paul, 2026-10-15): each team has a penalty risk level, starting at 1. An
+   * attack is penalized when the attacker's die and the penalty die both show the level or lower.
+   * Each attack raises the level by 1 (after its check), up to the die size; each of the team's
+   * turns without one lowers it by 1, never below 1. false: always level 1 (a 1, then a 1).
+   */
+  penaltyEscalation: boolean;
   /** If the other team scores, a team's penalized players all come back at once. */
   powerPlayReturn: boolean;
   /** Nobody can be substituted into a penalized player's spot. */
@@ -249,6 +256,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   penaltyLength: 'card',
   penaltyTurns: { minor: 1, major: 2, brutal: 3 },
   penaltyTurnsByResult: { none: 1, injured: 2, out: 3 },
+  penaltyEscalation: true,
   powerPlayReturn: true,
   penaltyNoSubstitution: true,
   injuries: [

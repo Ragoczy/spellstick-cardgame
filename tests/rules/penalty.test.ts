@@ -144,6 +144,52 @@ describe.each(LANE_COUNTS)('the penalty box (%i lanes)', (lanes) => {
     expect(after.teams.A.penaltyBox).toEqual([]);
   });
 
+  describe('escalating risk', () => {
+    it('a second attack in a row is penalized on both dice 2 or lower', () => {
+      const base = setup(shirtPull());
+      base.teams.A.attackHeat = 1; // one attack recently
+      expect(viewFor(base, 'B').opponent.penaltyLevel).toBe(2);
+      const s = rigDice(base, 3, ([a, , p]) => a === 2 && p === 2);
+      const { events } = attack(s);
+      expect(eventsOfType(events, 'penaltyCheck')).toEqual([expect.objectContaining({ level: 2, attackerRoll: 2, roll: 2, called: true })]);
+    });
+
+    it('...but at level 1 a 2 is safe', () => {
+      const s = rigDice(setup(shirtPull()), 3, ([a]) => a === 2);
+      expect(eventsOfType(attack(s).events, 'penaltyCheck')).toHaveLength(0);
+    });
+
+    it('each attack raises the level by one, after its own check', () => {
+      const s = rigDice(setup(shirtPull()), 2, ([a]) => a !== 1);
+      const { state } = attack(s);
+      expect(state.teams.A.attackHeat).toBe(1);
+    });
+
+    it("each of the team's turns without an attack lowers it by one, never below level 1", () => {
+      const s = scenario({ lanes, ball: { side: 'A', pos: mid(0) } });
+      s.teams.A.attackHeat = 2;
+      let { state } = play(s, { type: 'regroup', side: 'A', discard: [] });
+      expect(state.teams.A.attackHeat).toBe(1);
+      state = { ...state, activeSide: 'A', pending: { kind: 'action', side: 'A' }, actionsLeft: 1 };
+      ({ state } = play(state, { type: 'regroup', side: 'A', discard: [] }));
+      ({ state } = play({ ...state, activeSide: 'A', pending: { kind: 'action', side: 'A' }, actionsLeft: 1 }, { type: 'regroup', side: 'A', discard: [] }));
+      expect(state.teams.A.attackHeat).toBe(0);
+    });
+
+    it('a turn with an attack keeps the level up', () => {
+      const s = rigDice(setup(shirtPull()), 2, ([a]) => a !== 1);
+      const { state } = attack(s); // A's only action: the turn ends
+      expect(state.teams.A.attackHeat).toBe(1);
+    });
+
+    it('with escalation off, the check is always a 1 and a 1', () => {
+      const base = setup(shirtPull(), { config: { penaltyEscalation: false } });
+      base.teams.A.attackHeat = 3;
+      const s = rigDice(base, 3, ([a]) => a === 2);
+      expect(eventsOfType(attack(s).events, 'penaltyCheck')).toHaveLength(0);
+    });
+  });
+
   it('power play: if the other team scores, every penalized player comes back at once', () => {
     const s = scenario({
       lanes, active: 'B', ball: { side: 'B', pos: fwd(0) },

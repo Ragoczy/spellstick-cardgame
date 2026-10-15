@@ -223,8 +223,11 @@ describe.skipIf(!haveDb)('online matches', () => {
         const hidden = [...Object.values(team.lineup).flat().filter((s) => s && !s.revealed).map((s) => s!.uid), ...team.hand]
           .map((uid) => state.cards[uid]!.id);
         const visible = new Set([team.goalie, ...Object.values(team.lineup).flat()].filter((s) => s?.revealed).map((s) => state.cards[s!.uid]!.id));
+        // A card id in both decks (both spell sets have Snare, for example) proves nothing: the
+        // other player may be seeing their own copy. Only ids unique to my deck can leak.
+        const theirIds = new Set(Object.entries(state.cards).filter(([uid]) => uid.startsWith(other)).map(([, def]) => def.id));
         const sent = JSON.stringify(theirs);
-        for (const cardId of hidden) if (!visible.has(cardId)) expect(sent).not.toContain(`"${cardId}"`);
+        for (const cardId of hidden) if (!visible.has(cardId) && !theirIds.has(cardId)) expect(sent).not.toContain(`"${cardId}"`);
       }
 
       const agent = agents[side] ?? (agents[side] = heuristicAgent(side === 'A' ? 11 : 22, view.config));

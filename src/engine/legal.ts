@@ -156,6 +156,11 @@ export function legalActions(s: GameState, side: Side): Action[] {
 function attacks(s: GameState, side: Side, hand: Uid[]): Action[] {
   if (!s.config.physicalAttacks) return [];
   const result: Action[] = [];
+  if (s.config.physicalDraw === 'blind') {
+    // A blind attack: no card chosen, always at the opposing player in your spot.
+    for (const attacker of allFieldPositions(s.config.lanes)) result.push({ type: 'attack', side, attacker, target: opposite(attacker) });
+    return result;
+  }
   for (const card of hand) {
     if (defOf(s, card).kind !== 'physical') continue;
     for (const attacker of allFieldPositions(s.config.lanes)) {

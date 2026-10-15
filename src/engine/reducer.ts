@@ -96,7 +96,7 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   drawCards(s, side, s.config.setupSpells, 'setup', ev, 'spells');
   if (s.config.physicalAttacks) {
     [team.physical, s.rng] = shuffle(team.physical, s.rng);
-    drawCards(s, side, s.config.physicalSetupDraw, 'setup', ev, 'physical');
+    if (s.config.physicalDraw === 'hand') drawCards(s, side, s.config.physicalSetupDraw, 'setup', ev, 'physical');
   }
 
   s.pending = side === 'A' ? { kind: 'chooseGoalie', side: 'B' } : { kind: 'placeLineup', side: 'A' };

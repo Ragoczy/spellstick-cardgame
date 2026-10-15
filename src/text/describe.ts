@@ -104,7 +104,7 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is hurt. Severity roll ${e.roll}: ${result}.`;
     }
     case 'attackDeclared':
-      return `${names[e.side]}'s player at ${posLabel(e.attacker)} attacks ${posLabel(e.target)} with ${e.card.def.name}!`;
+      return `${names[e.side]}'s player at ${posLabel(e.attacker)} attacks ${posLabel(e.target)} with ${e.card.def.name}${e.flipped ? ' (flipped from the Physical pile)' : ''}!`;
     case 'ballDropped':
       return `${names[e.side]}'s player at ${posLabel(e.pos)} drops the ball.`;
     case 'penaltyCheck':

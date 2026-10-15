@@ -235,7 +235,9 @@ class Thinker {
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
       case 'foul': return this.scoreFoul(action.card);
-      case 'attack': return this.currentValue() + this.attackGain(this.handCard(action.card) as PhysicalCardDef, action.attacker, action.target);
+      case 'attack': return this.currentValue() + (action.card === undefined
+        ? this.blindAttackGain(action.attacker, action.target)
+        : this.attackGain(this.handCard(action.card) as PhysicalCardDef, action.attacker, action.target));
       case 'physicalReaction': {
         const pending = this.view.pending;
         if (action.card === null || pending.kind !== 'physicalReaction') return 0;
@@ -725,6 +727,19 @@ class Thinker {
     const die = this.config.contestDie || 6;
     const penaltyRisk = (1 / die) * (1 / this.config.contactDie) * this.config.penaltyTurns[def.tier] * PENALTY_TURN_WORTH * this.unit();
     return p * (ballGain + hurt) - selfRisk - penaltyRisk - PHYSICAL_CARD_VALUE * this.unit();
+  }
+
+  /**
+   * A blind attack (config.physicalDraw 'blind'): the card is the unseen top of my Physical pile,
+   * so it's worth the average over the cards still in it (after a reshuffle, the discards).
+   */
+  private blindAttackGain(attacker: FieldPos, target: FieldPos): number {
+    const remaining = this.view.mine.physicalRemaining.length
+      ? this.view.mine.physicalRemaining
+      : this.view.mine.physicalDiscard.map((c) => c.def);
+    const cards = remaining.filter((d): d is PhysicalCardDef => d.kind === 'physical');
+    if (!cards.length) return -1;
+    return cards.reduce((sum, def) => sum + this.attackGain(def, attacker, target), 0) / cards.length;
   }
 
   /** Whether a player has this Affinity: exactly, or their whole family. */

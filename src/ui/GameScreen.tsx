@@ -23,8 +23,11 @@ type Selection =
   | { kind: 'holder' }
   | { kind: 'cast'; card: string; caster?: Pos; first?: FieldPos }
   | { kind: 'substitute'; card: string }
-  /** A physical attack (v0.17): the card, then your attacker, then (with Hooking) the target. */
-  | { kind: 'attack'; card: string; attacker?: FieldPos }
+  /**
+   * A physical attack (v0.17): the card (none when cards are flipped blind from the pile), then
+   * your attacker, then (with Hooking) the target.
+   */
+  | { kind: 'attack'; card?: string; attacker?: FieldPos }
   | { kind: 'regroup'; picked: string[] };
 
 const NONE: Selection = { kind: 'none' };
@@ -83,7 +86,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     casts.filter((a) => a.card === card && (!caster || samePos(a.caster, caster)));
 
   const attacks = legal.filter((a): a is Extract<Action, { type: 'attack' }> => a.type === 'attack');
-  const attacksFor = (card: string, attacker?: Pos) =>
+  const attacksFor = (card: string | undefined, attacker?: Pos) =>
     attacks.filter((a) => a.card === card && (!attacker || samePos(a.attacker, attacker)));
 
   /** Glamour Ball: the opposing spot the computer will think the ball went to. */
@@ -467,7 +470,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   function actionPrompt() {
     const left = view.actionsLeft;
     const spellHelp = castable.length
-      ? ` To cast a spell or make a physical attack, tap a glowing card in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be played now`}).`
+      ? ` To ${view.config.physicalDraw === 'blind' ? 'cast a spell' : 'cast a spell or make a physical attack'}, tap a glowing card in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be played now`}).`
       : '';
     let help = `Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.${spellHelp}`;
     // Goalie clears: the only choice is how to pass it out.
@@ -495,9 +498,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     if (selection.kind === 'attack') {
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const stat = def?.kind === 'physical' && def.uses === 'muscle' ? 'Defense' : 'Speed';
-      help = !selection.attacker
-        ? `Choose who attacks with ${def?.name}: their ${stat} against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. Roll a 1, then another 1, and the referee sends your player to the penalty box.`
-        : 'Now tap the opposing player to attack.';
+      help = !selection.card
+        ? 'Choose who attacks the opposing player in their spot. You flip the top card of your Physical pile, and that\'s the move: usually their Speed against the target\'s Speed, both roll. If you win, the target drops the ball and may be hurt. Roll a 1, then another 1, and the referee sends your player to the penalty box.'
+        : !selection.attacker
+          ? `Choose who attacks with ${def?.name}: their ${stat} against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. Roll a 1, then another 1, and the referee sends your player to the penalty box.`
+          : 'Now tap the opposing player to attack.';
     }
     if (selection.kind === 'regroup') {
       help = view.config.regroupMax === 1
@@ -510,6 +515,9 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <div className="buttons">
           {shoot ? <button type="button" className="primary" onClick={() => act(shoot)}>Shoot!{shootLabel}</button> : null}
           {tackle ? <button type="button" onClick={() => act(tackle)}>Tackle{tackleLabel}</button> : null}
+          {view.config.physicalDraw === 'blind' && attacksFor(undefined).length && selection.kind === 'none' ? (
+            <button type="button" onClick={() => setSelection({ kind: 'attack' })}>Physical attack ({view.mine.physicalLeft || view.mine.physicalDiscard.length} cards)</button>
+          ) : null}
           {!canRegroup ? null : selection.kind === 'regroup' ? (
             <button type="button" onClick={() => act({ type: 'regroup', side: me, discard: selection.picked })}>
               {selection.picked.length ? `Discard ${selection.picked.length} and draw` : 'Do nothing'}

@@ -211,6 +211,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return { text: `${e.cause}! ${where} (${e.card.def.name}) is hurt. Severity roll ${e.roll}: ${result}`, tone: isMe(e.side) ? 'bad' : 'good' };
     }
     case 'attackDeclared':
+      if (e.flipped) return info(`${who(e.side)} ${verb(e.side, 'flip', 'flips')} ${e.card.def.name} from ${whose(e.side)} Physical pile: ${at(e.side, e.attacker)} goes after ${at(otherSide(e.side), e.target)}!`);
       return info(`${who(e.side)} ${verb(e.side, 'play', 'plays')} ${e.card.def.name}: ${at(e.side, e.attacker)} attacks ${at(otherSide(e.side), e.target)}!`);
     case 'ballDropped':
       return { text: `${capitalize(at(e.side, e.pos))} drops the ball.`, tone: isMe(e.side) ? 'bad' : 'good' };

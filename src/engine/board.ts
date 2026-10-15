@@ -205,6 +205,19 @@ export function drawCards(s: GameState, side: Side, count: number, reason: DrawR
 }
 
 /**
+ * Takes the top card of a side's Physical pile, face down (config.physicalDraw 'blind'): shuffling
+ * its discards into a new pile first if it's empty. null if there are no physical cards at all.
+ */
+export function topPhysical(s: GameState, side: Side): Uid | null {
+  const team = s.teams[side];
+  if (team.physical.length === 0 && team.physicalDiscard.length > 0 && !s.config.physicalAttackLimit) {
+    [team.physical, s.rng] = shuffle(team.physicalDiscard, s.rng);
+    team.physicalDiscard = [];
+  }
+  return team.physical.pop() ?? null;
+}
+
+/**
  * Draws from the Physical pile (v0.17). When it runs out, its discards are shuffled into a new
  * pile. It never switches to another pile, and it isn't part of the game clock.
  */

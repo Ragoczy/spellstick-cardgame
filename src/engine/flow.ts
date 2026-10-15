@@ -103,7 +103,7 @@ function askForAction(s: GameState, side: Side, ev: GameEvent[]): void {
  */
 function askForFaceoff(s: GameState, ev: GameEvent[]): void {
   if (s.config.knockdowns) returnRolls(s, ev);
-  if (s.config.physicalAttacks) {
+  if (s.config.physicalAttacks && s.config.physicalDraw === 'hand') {
     for (const side of SIDES) drawCards(s, side, s.config.physicalFaceoffDraw, 'faceoff', ev, 'physical');
   }
   s.pending = { kind: 'faceoffLane', side: s.faceoffChooser };

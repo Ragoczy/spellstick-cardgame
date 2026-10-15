@@ -470,6 +470,9 @@ spot stays empty; the ball is picked up; the foul still takes effect) and
 **Phase c2: physical attacks and the penalty box.** *(Done 2026-10-15: 5.70 hurts a game,
 real injuries 2.87, 0.17 penalties; turns 50.7 and spells cast 13.5 now miss. See
 `reports/sim-2026-10-15-v17c2.md`.)*
+*Trial (Paul, 2026-10-15): blind physical draw, physical cards flipped from the pile instead of
+held in hand (`physicalDraw: 'blind'`, off by default). Results and the attack-limit what-if:
+`reports/sim-2026-10-15-v17c2-blind.md`. Waiting for Paul's call.*
 - Engine: `config.ts` (`physicalAttacks`, `physicalPileSize`, `physicalSetupDraw`,
   `physicalFaceoffDraw`, `affinityAttackBonus`, `tierModifiers`, `penaltyLength`,
   `powerPlayReturn`, `penaltyNoSubstitution`), `cards.ts` (a `physical` card kind with tier,

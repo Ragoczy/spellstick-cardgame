@@ -20,7 +20,9 @@
 // player who has used up their casting limit.
 
 import { affinityFor, spellFizzles } from './affinity';
-import { cardView, castsLeft, countCast, defOf, drawCards, hasReactionSpell, injuryOf, isFoulSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
+import {
+  cardView, castsLeft, countCast, defOf, drawCards, hasReactionSpell, injuryOf, isFoulSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt, topPhysical,
+} from './board';
 import { familyOf, type PhysicalCardDef, type PlayerCardDef, type SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, isFieldPos, opposite, otherSide, samePos, type FieldPos, type Side } from './field';
@@ -380,10 +382,13 @@ function hasAffinity(player: PlayerCardDef, affinity: string): boolean {
  * against the target's Speed. It's a contest like any other: rolled, with rerolls and reaction
  * spells, but no fouls. Ties go to the target.
  */
-export function startAttack(s: GameState, side: Side, card: Uid, attacker: FieldPos, target: FieldPos, ev: GameEvent[]): void {
+export function startAttack(s: GameState, side: Side, chosen: Uid | undefined, attacker: FieldPos, target: FieldPos, ev: GameEvent[]): void {
+  // Blind draw: the top card of the Physical pile is flipped and played.
+  const card = chosen ?? topPhysical(s, side)!;
   const def = defOf(s, card) as PhysicalCardDef;
-  moveHandToDiscard(s, side, card);
-  ev.push({ type: 'attackDeclared', side, card: cardView(s, card), attacker, target });
+  if (chosen) moveHandToDiscard(s, side, card);
+  else s.teams[side].physicalDiscard.push(card);
+  ev.push({ type: 'attackDeclared', side, card: cardView(s, card), attacker, target, ...(chosen ? {} : { flipped: true }) });
   const other = otherSide(side);
   startContest(s, {
     kind: 'attack',

@@ -35,8 +35,9 @@ export type Action =
   | { type: 'cast'; side: Side; card: Uid; caster: Pos; target: SpellTarget }
   | { type: 'substitute'; side: Side; pos: Pos; card: Uid }
   | { type: 'regroup'; side: Side; discard: Uid[] }
-  // Physical attack (v0.17): your player at `attacker` attacks the opposing player at `target`
-  | { type: 'attack'; side: Side; card: Uid; attacker: FieldPos; target: FieldPos }
+  // Physical attack (v0.17): your player at `attacker` attacks the opposing player at `target`,
+  // with a card from hand, or (config.physicalDraw 'blind') the top card of the Physical pile.
+  | { type: 'attack'; side: Side; card?: Uid; attacker: FieldPos; target: FieldPos }
   // A physical reaction card at the moment it names, or null for none
   | { type: 'physicalReaction'; side: Side; card: Uid | null }
   // During a contest, before the dice (v0.17): declare a foul (a dirty play), or null for none

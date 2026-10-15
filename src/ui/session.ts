@@ -12,6 +12,15 @@ import {
 } from '../engine';
 import type { Seat } from './seat';
 
+/**
+ * Rules being tried, switched on from the address bar for a game against the computer:
+ * ?physical=blind flips physical cards from the pile instead of holding them (2026-10-15).
+ */
+function trialRules(): { physicalDraw?: 'blind' } {
+  if (typeof window === 'undefined') return {};
+  return new URLSearchParams(window.location.search).get('physical') === 'blind' ? { physicalDraw: 'blind' } : {};
+}
+
 export interface SessionOptions {
   seed: number;
   cardSet: CardSet;
@@ -34,7 +43,7 @@ export class GameSession implements Seat {
   readonly openingEvents: GameEvent[];
 
   constructor(options: SessionOptions) {
-    const config = makeConfig({ lanes: options.lanes, draftPicks: options.draft ? DRAFT_PICKS : 0 });
+    const config = makeConfig({ lanes: options.lanes, draftPicks: options.draft ? DRAFT_PICKS : 0, ...trialRules() });
     const otherTeam = options.cardSet.teams.find((t) => t.id !== options.team)?.id ?? options.team;
     this.setup = { seed: options.seed, cardSet: options.cardSet, config, teams: { A: options.team, B: otherTeam } };
     const created = createGame(this.setup);

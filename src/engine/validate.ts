@@ -86,12 +86,32 @@ const DIRTY_PLAYS_FIRST = 'A dirty play is a foul: declare it before the dice, n
 const IN_THE_BOX = "That player is in the penalty box: nobody can come on in their spot until the penalty is over.";
 
 /**
+ * A blind attack (config.physicalDraw 'blind'): no card is chosen; the top of the Physical pile is
+ * flipped. Always at the opposing player in your spot, since nobody knows the card yet.
+ */
+function canAttackBlind(s: GameState, side: Side, card: string | undefined, attacker: FieldPos, target: FieldPos): string | null {
+  if (card !== undefined) return 'Physical cards are flipped from the top of your Physical pile, not played from hand.';
+  const team = s.teams[side];
+  const limit = s.config.physicalAttackLimit;
+  if (limit && (team.physicalDiscard.length >= limit || team.physical.length === 0)) return 'You have no physical attacks left this game.';
+  if (team.physical.length + team.physicalDiscard.length === 0) return 'You have no physical cards.';
+  if (!validField(s, attacker) || !slotAt(s, side, attacker)) return 'Choose one of your field players to attack.';
+  const busy = cantAct(s, side, attacker);
+  if (busy) return busy;
+  if (!s.config.attackWithBall && s.ball?.side === side && samePos(s.ball.pos, attacker)) return "A player holding the ball can't attack.";
+  if (!validField(s, target) || !samePos(target, opposite(attacker))) return 'Attack the opposing player in your spot.';
+  if (!slotAt(s, otherSide(side), target)) return 'There is nobody there to attack.';
+  return null;
+}
+
+/**
  * Whether a physical attack is allowed (v0.17): your standing field player (not holding the
  * ball) attacks the opposing player in their spot, or in an adjacent lane of that row with Hooking.
  */
-function canAttack(s: GameState, side: Side, card: string, attacker: FieldPos, target: FieldPos): string | null {
+function canAttack(s: GameState, side: Side, card: string | undefined, attacker: FieldPos, target: FieldPos): string | null {
   if (!s.config.physicalAttacks) return 'There are no physical attacks in this game.';
-  if (!inHand(s, side, card) || defOf(s, card).kind !== 'physical') return 'Attack with a physical card from your hand.';
+  if (s.config.physicalDraw === 'blind') return canAttackBlind(s, side, card, attacker, target);
+  if (!card || !inHand(s, side, card) || defOf(s, card).kind !== 'physical') return 'Attack with a physical card from your hand.';
   const def = defOf(s, card) as PhysicalCardDef;
   if (!validField(s, attacker) || !slotAt(s, side, attacker)) return 'Choose one of your field players to attack.';
   const busy = cantAct(s, side, attacker);
@@ -258,8 +278,8 @@ export function validateAction(s: GameState, action: Action): string | null {
       return canTackle(s, side);
 
     case 'attack': {
-      const def = defOf(s, action.card);
-      if (def.kind === 'physical' && def.ability && PHYSICAL_REACTIONS.has(def.ability.effect)) {
+      const def = action.card === undefined ? null : defOf(s, action.card);
+      if (def?.kind === 'physical' && def.ability && PHYSICAL_REACTIONS.has(def.ability.effect)) {
         return `${def.name} is a reaction: ${def.when ?? 'play it when it says'}`;
       }
       return canAttack(s, side, action.card, action.attacker, action.target);

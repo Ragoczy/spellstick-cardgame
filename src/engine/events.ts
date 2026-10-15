@@ -137,7 +137,7 @@ export type GameEvent =
    */
   | { type: 'sentOff'; side: Side; pos: Pos; card: CardView; roll: number }
   /** A physical attack (v0.17): `side`'s player at `attacker` plays this card against the opposing player at `target`. */
-  | { type: 'attackDeclared'; side: Side; card: CardView; attacker: FieldPos; target: FieldPos }
+  | { type: 'attackDeclared'; side: Side; card: CardView; attacker: FieldPos; target: FieldPos; flipped?: boolean }
   /** A physical attack won: the target dropped the ball. */
   | { type: 'ballDropped'; side: Side; pos: Pos }
   /** The attacker's final die was 1, so they rolled the penalty die: another 1 and the referee calls a penalty. */

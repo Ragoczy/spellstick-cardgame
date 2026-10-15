@@ -256,6 +256,72 @@ describe.each(LANE_COUNTS)('physical attacks (%i lanes)', (lanes) => {
     });
   });
 
+  describe("blind draw (config.physicalDraw 'blind', being tried)", () => {
+    const BLIND: Partial<GameConfig> = { physicalDraw: 'blind' };
+    /** B holds the ball at midfield; A's midfielder there attacks, flipping from this pile (pile[0] on top). */
+    function blind(pile: PhysicalCardDef[], extra: { ball?: GameState['ball']; config?: Partial<GameConfig> } = {}) {
+      return scenario({
+        lanes, config: { ...BLIND, ...extra.config }, ball: extra.ball === undefined ? { side: 'B', pos: mid(LAST) } : extra.ball,
+        A: { physical: pile, lineup: { midfield: { [LAST]: player('A mid', { speed: 5, defense: 1 }) } } },
+        B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 3, toughness: NEVER_HURT }) } } },
+      });
+    }
+    const flip = (s: GameState) => play(s, { type: 'attack', side: 'A', attacker: mid(LAST), target: mid(LAST) });
+
+    it('deals no physical cards into the hand, at setup or at faceoffs', () => {
+      const { state } = createGame({ seed: 3, cardSet: prototypeCards, config: { lanes, ...BLIND } });
+      let s = state;
+      for (let p = s.pending; p.kind !== 'action' && p.kind !== 'gameOver'; p = s.pending) s = play(s, legalActions(s, p.side)[0]!).state;
+      for (const side of ['A', 'B'] as const) {
+        expect(s.teams[side].hand.some((u) => s.cards[u]!.kind === 'physical')).toBe(false);
+        expect(s.teams[side].physical).toHaveLength(16);
+      }
+    });
+
+    it('an attack flips the top card of the Physical pile and plays it', () => {
+      const s = blind([physicalCard('Top Card', { bonus: 2 }), physicalCard('Next')]);
+      const { state, events } = flip(s);
+      expect(eventsOfType(events, 'attackDeclared')[0]).toMatchObject({ flipped: true, card: expect.objectContaining({ def: expect.objectContaining({ name: 'Top Card' }) }) });
+      expect(lastContest(events).attacker.total).toBe(7);
+      expect(state.teams.A.physicalDiscard).toEqual([uid(s, 'A', 'Top Card')]);
+      expect(state.teams.A.physical).toEqual([uid(s, 'A', 'Next')]);
+    });
+
+    it("ignores a flipped card's condition: Clothesline works on a player without the ball, Stamp on one standing", () => {
+      const clothesline = blind([physicalCard('Clothesline', { ability: { effect: 'needs_holder', params: {} } })], { ball: { side: 'B', pos: dfn(0) } });
+      expect(lastContest(flip(clothesline).events).kind).toBe('attack');
+      const stamp = blind([physicalCard('Stamp', { bonus: 3, ability: { effect: 'needs_shaken', params: {} } })]);
+      expect(lastContest(flip(stamp).events).attacker.total).toBe(8);
+    });
+
+    it('always attacks the opposing player in your spot, and never from hand', () => {
+      const s = blind([physicalCard('Hooking', { ability: { effect: 'reach', params: {} } })]);
+      expect(() => play(s, { type: 'attack', side: 'A', attacker: mid(LAST), target: fwd(LAST) })).toThrow(/in your spot/);
+      expect(legalActions(s, 'A').filter((a) => a.type === 'attack').every((a) => a.type === 'attack' && a.card === undefined)).toBe(true);
+    });
+
+    it('has no reactions: Late Hit and Elbow are plain attacks', () => {
+      const s = scenario({
+        lanes, config: BLIND, ball: { side: 'B', pos: mid(LAST) },
+        A: { physical: [physicalCard('Elbow', { ability: { effect: 'after_losing', params: {} } })], lineup: { midfield: { [LAST]: player('A mid', { defense: 0 }) } } },
+      });
+      const { state } = play(s, { type: 'tackle', side: 'A' });
+      expect(state.pending.kind).not.toBe('physicalReaction');
+    });
+
+    it("shows which cards are left in each pile (not their order); with cards in hand, not the opponent's", () => {
+      const s = blind([physicalCard('One'), physicalCard('Two')]);
+      expect(viewFor(s, 'B').opponent.physicalRemaining.map((d) => d.name).sort()).toEqual(['One', 'Two']);
+      const inHand = setup(physicalCard('Shove'));
+      expect(viewFor(inHand, 'B').opponent.physicalRemaining).toEqual([]);
+    });
+
+    it('with no physical cards left at all, there is no attack', () => {
+      const s = blind([]);
+      expect(legalActions(s, 'A').some((a) => a.type === 'attack')).toBe(false);
+    });
+  });
+
   describe('the Physical pile', () => {
     it('each side gets one of each physical card; it draws 2 at setup and 1 at each faceoff', () => {
       const { state } = createGame({ seed: 3, cardSet: prototypeCards, config: { lanes } });

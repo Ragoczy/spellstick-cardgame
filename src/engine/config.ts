@@ -156,7 +156,20 @@ export interface GameConfig {
   physicalAttacks: boolean;
   /** Cards in each team's Physical pile (one of each physical card, up to this many). */
   physicalPileSize: number;
-  /** Physical cards drawn at setup, and by each team at each faceoff. */
+  /**
+   * How physical cards are played. 'hand' (the plan): drawn into the hand (2 at setup, 1 at each
+   * faceoff) and chosen. 'blind' (Paul's idea, being tried 2026-10-15): never in the hand; an
+   * attack flips the top card of the face-down Physical pile, so the move is decided in the moment.
+   * A flipped card's own condition (only against the ball carrier, only against a Shaken player,
+   * one lane over) is ignored, and Late Hit and Elbow are plain attacks: there are no reactions.
+   */
+  physicalDraw: 'hand' | 'blind';
+  /**
+   * With 'blind': each team can flip this many physical cards a game, and the pile isn't
+   * reshuffled (0 = no limit, reshuffled when it runs out). A simulation what-if for now.
+   */
+  physicalAttackLimit: number;
+  /** Physical cards drawn at setup, and by each team at each faceoff ('hand' only). */
   physicalSetupDraw: number;
   physicalFaceoffDraw: number;
   /** Added to an attack when the attacker has the body Affinity printed on the card. */
@@ -225,6 +238,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   foulTiming: 'before',
   physicalAttacks: true,
   physicalPileSize: 16,
+  physicalDraw: 'hand',
+  physicalAttackLimit: 0,
   physicalSetupDraw: 2,
   physicalFaceoffDraw: 1,
   affinityAttackBonus: 1,

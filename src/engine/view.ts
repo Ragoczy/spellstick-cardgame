@@ -2,7 +2,7 @@
 // GameState. The opponent's face-down cards appear only as "unknown" (no id, no stats) unless
 // this player has scried them. The opponent's hand and both decks appear only as counts.
 
-import type { Area } from './cards';
+import type { Area, CardDef } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import { cardView, castsLeftIn, injuryOf } from './board';
 import type { CardView, GameEvent } from './events';
@@ -75,6 +75,12 @@ export interface PlayerView {
     /** Physical cards (v0.17): left in the pile, and played or discarded (face up). */
     physicalLeft: number;
     physicalDiscard: CardView[];
+    /**
+     * Which physical cards are still in the pile, in no particular order (every pile has one of
+     * each, and played cards are face up). The order stays hidden. The opponent's is only shown
+     * when cards are flipped blind: with cards in hand it would give away their hand.
+     */
+    physicalRemaining: CardDef[];
     /** Players in the penalty box (public): where they'll come back, and turns left. */
     penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
     goalie: SlotView;
@@ -89,6 +95,7 @@ export interface PlayerView {
     knockedOut: CardView[];
     physicalLeft: number;
     physicalDiscard: CardView[];
+    physicalRemaining: CardDef[];
     penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
@@ -116,10 +123,11 @@ function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
 }
 
 /** A team's Physical pile count, Physical discards, and penalty box (all public). */
-function physicalOf(s: GameState, team: GameState['teams'][Side]) {
+function physicalOf(s: GameState, team: GameState['teams'][Side], showRemaining: boolean) {
   return {
     physicalLeft: team.physical.length,
     physicalDiscard: team.physicalDiscard.map((uid) => cardView(s, uid)),
+    physicalRemaining: showRemaining ? team.physical.map((uid) => s.cards[uid]!).sort((a, b) => a.id.localeCompare(b.id)) : [],
     penaltyBox: team.penaltyBox.map((e) => ({ card: cardView(s, e.uid), pos: e.pos, turnsLeft: e.turnsLeft })),
   };
 }
@@ -171,7 +179,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       spellsLeft: my.spells.length,
       discard: my.discard.map((uid) => cardView(s, uid)),
       knockedOut: my.knockedOut.map((uid) => cardView(s, uid)),
-      ...physicalOf(s, my),
+      ...physicalOf(s, my, true),
       goalie: slotView(s, my.goalie, true),
       lineup: lineupView(s, me, true),
     },
@@ -182,7 +190,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       spellsLeft: their.spells.length,
       discard: their.discard.map((uid) => cardView(s, uid)),
       knockedOut: their.knockedOut.map((uid) => cardView(s, uid)),
-      ...physicalOf(s, their),
+      ...physicalOf(s, their, s.config.physicalDraw === 'blind'),
       goalie: slotView(s, their.goalie, false),
       lineup: lineupView(s, them, false),
     },

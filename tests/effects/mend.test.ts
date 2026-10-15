@@ -21,6 +21,20 @@ describe.each(LANE_COUNTS)('mend (%i lanes)', (lanes) => {
     expect(eventsOfType(events, 'mended')[0]).toMatchObject({ side: 'A', injury: { name: 'Singed hair' } });
   });
 
+  it('can bring one of your knocked-out players back to your hand (v0.17)', () => {
+    const s = scenario({ lanes, A: { hand: [mendSpell()], knockedOut: [player('Dazed')] } });
+    const dazed = uid(s, 'A', 'Dazed');
+    const { state, events } = play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Mend'), caster: mid(0), target: { kind: 'mendKnockedOut', card: dazed } });
+    expect(state.teams.A.knockedOut).toEqual([]);
+    expect(state.teams.A.hand).toContain(dazed);
+    expect(eventsOfType(events, 'broughtBack')[0]).toMatchObject({ side: 'A' });
+  });
+
+  it("can't bring back a player who isn't knocked out", () => {
+    const s = scenario({ lanes, A: { hand: [mendSpell(), player('Fine')] } });
+    expect(() => play(s, { type: 'cast', side: 'A', card: uid(s, 'A', 'Mend'), caster: mid(0), target: { kind: 'mendKnockedOut', card: uid(s, 'A', 'Fine') } })).toThrow(IllegalActionError);
+  });
+
   it('can mend a player in your hand', () => {
     const s = scenario({ lanes, A: { hand: [mendSpell(), player('Resting')] } });
     injure(s, uid(s, 'A', 'Resting'));

@@ -286,13 +286,15 @@ describe.each(LANE_COUNTS)('contact (%i lanes)', (lanes) => {
 });
 
 describe('Toughness on the cards', () => {
-  it('every field player has the Toughness of their type: Stoppers and Anchors 5, Playmakers and All-rounders 4, Runners and Strikers 3', () => {
+  it('every field player has the Toughness of their type: Stoppers and Anchors 5, Playmakers and All-rounders 4, Runners and Strikers 3 (1 less if quick but fragile)', () => {
     const byRole = makeConfig().toughnessByRole as Record<string, number>;
     const pool = prototypeCards.cards.filter((c) => c.kind === 'field' && c.team === 'pool');
     expect(pool.length).toBeGreaterThan(0);
     for (const card of pool) {
       if (card.kind !== 'field') continue;
-      expect(card.toughness, card.name).toBe(byRole[card.role!]);
+      // Quick but fragile players (v0.17) are 1 below their type.
+      const fragile = card.ability?.effect === 'bonus' && card.ability.params.when === 'evade' ? 1 : 0;
+      expect(card.toughness, card.name).toBe(byRole[card.role!]! - fragile);
     }
   });
 

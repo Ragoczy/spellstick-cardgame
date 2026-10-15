@@ -125,6 +125,8 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
     case 'slotEmptied':
       return `${names[e.side]} has nobody to replace them: ${posLabel(e.pos)} is empty.`;
+    case 'broughtBack':
+      return `${names[e.side]} mends knocked-out ${e.card.def.name}, back in the hand.`;
     case 'mended':
       return `${names[e.side]} mends ${e.card.def.name} (${e.injury.name}).`;
     case 'diceRolled':

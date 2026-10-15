@@ -58,6 +58,7 @@ function spellTargets(s: GameState, side: Side, effect: string): SpellTarget[] {
       return [
         ...playerPositions(s).map((pos): SpellTarget => ({ kind: 'mendField', pos })),
         ...s.teams[side].hand.map((card): SpellTarget => ({ kind: 'mendHand', card })),
+        ...s.teams[side].knockedOut.map((card): SpellTarget => ({ kind: 'mendKnockedOut', card })),
       ];
     default:
       return [{ kind: 'none' }];

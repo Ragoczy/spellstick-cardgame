@@ -18,8 +18,10 @@ export type SpellTarget =
   | { kind: 'hit' }
   /** mend: one of your injured players on the field... */
   | { kind: 'mendField'; pos: Pos }
-  /** ...or in your hand. */
-  | { kind: 'mendHand'; card: Uid };
+  /** ...or in your hand, */
+  | { kind: 'mendHand'; card: Uid }
+  /** ...or (v0.17) one of your knocked-out players, brought back to your hand. */
+  | { kind: 'mendKnockedOut'; card: Uid };
 
 export type Action =
   // Draft: pick a player from the face-up pool

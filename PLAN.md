@@ -503,7 +503,8 @@ Hit, and Elbow are plain attacks under blind draw. Report:
   is empty and can't be substituted; a goal brings everyone back), and the `dice.test.ts`
   addition for the penalty die.
 
-**Phase d: healing, ward, and abilities.** `cards.ts` (the `ward` reaction; the `hits_harder`
+**Phase d: healing, ward, and abilities.** *(Done 2026-10-15: Shaken share met, spells cast 14.7,
+real injuries 3.24. See `reports/sim-2026-10-15-v17d.md`.)* `cards.ts` (the `ward` reaction; the `hits_harder`
 and `hard_to_hurt` abilities), `contest.ts` and `injuries.ts`, `reducer.ts` and `legal.ts` (Mend
 targets knocked-out players), the computer (values Ward, Mend on knocked-out players, and
 abilities), the library and team decks in `cards.prototype.json`, MAGIC.md, `spellHelp.ts`.

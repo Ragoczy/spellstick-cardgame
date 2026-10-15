@@ -239,6 +239,8 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return info(`${who(e.side)} ${verb(e.side, 'fill', 'fills')} ${at(e.side, e.pos)} spot with a new player, face down.`);
     case 'slotEmptied':
       return { text: `Nobody can replace ${at(e.side, e.pos)}: the spot is empty and counts as 0 until it's filled.`, tone: isMe(e.side) ? 'bad' : 'good' };
+    case 'broughtBack':
+      return info(`${who(e.side)} ${verb(e.side, 'mend', 'mends')} ${e.card.def.name}, who was knocked out: back in ${whose(e.side)} hand.`);
     case 'mended':
       return info(`${who(e.side)} ${verb(e.side, 'mend', 'mends')} ${e.card.def.name}: no more ${e.injury.name.toLowerCase()}.`);
     case 'diceRolled': {

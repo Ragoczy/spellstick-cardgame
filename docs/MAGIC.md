@@ -112,7 +112,7 @@ How they were made (Claude):
 | Fog (water) | Fog Bank | Action | Decoy pass | — |
 | Ice | Ice Wall | Reaction | Shield | A |
 | Earth | Earth Crush | Action | Hit, strength 4 | B×2 |
-| Stone (earth) | Stone Skin | Reaction | Shield | — |
+| Stone (earth) | Stone Skin | Reaction | Ward | A |
 | Gravity (earth) | Heavy Ground | Action | Steal +2 | A, B |
 | Air | Light as Air | Reaction | Boost +3, only dodging a tackle | — |
 | Wind (air) | Tailwind | Action | Long pass | A |
@@ -139,13 +139,13 @@ How they were made (Claude):
 | Berserking (body) | Red Mist | Reaction | Dirty play | A |
 | Empowerment (body) | Empower | Reaction | Boost +2 | — |
 | Curse | Jinx | Reaction | Dirty play | B |
-| Hexing (curse) | Hex | Reaction | Shield | — |
+| Hexing (curse) | Hex | Reaction | Shield | B |
 | Ill luck (curse) | Bad Luck | Reaction | Shield | — |
 | Evil eye (curse) | Evil Eye | Reaction | Shield | — |
 | Elf-shot (curse) | Elf-shot | Action | Hit, strength 4 | B |
 | Weakening (curse) | Wither | Reaction | Shield | B |
 | Pain (curse) | Sting | Reaction | Dirty play | — |
-| Warding | Ward | Reaction | Shield | B |
+| Warding | Ward | Reaction | Ward | B |
 | Alarms (warding) | Alarm Ward | Action | Scry | — |
 | Binding | Snare | Action | Steal +2 | A, B |
 | Paralysis (binding) | Freeze in Place | Reaction | Shield | — |
@@ -160,10 +160,10 @@ How they were made (Claude):
 | Summoning (translocation) | Summon | Action | Draw 2 | B |
 | Divination | Divine | Action | Scry | — |
 | Precognition (divination) | Precognition | Action | Draw 2 | A |
-| Scrying (divination) | Scrying Bowl | Action | Scry | A |
+| Scrying (divination) | Scrying Bowl | Action | Scry | — |
 | Far-sight (divination) | Far Sight | Action | Scry | — |
 | Second sight (divination) | Second Sight | Action | Scry | — |
-| True sight (divination) | True Sight | Action | Scry | B |
+| True sight (divination) | True Sight | Action | Scry | — |
 | Danger-sense (divination) | Danger Sense | Reaction | Boost +3, only dodging a tackle | — |
 | Mind-reading (mind) | Read Their Mind | Action | Scry | — |
 | Telepathy (mind) | Silent Call | Action | Swap | — |
@@ -179,8 +179,10 @@ How they were made (Claude):
 | Trickery (illusion) | Trick Pass | Action | Decoy pass | — |
 
 **Team decks.** Each team keeps the old decks' mix of effects (1 boost, 2 shields, 1 dirty play,
-1 scry, 1 mirror images, 1 long pass, 1 decoy pass, 1 long shot, 2 steals, 1 recall, 1 mend,
-3 hits), so balance stays comparable, with magic picked to suit the families players have.
+1 mirror images, 1 long pass, 1 decoy pass, 1 long shot, 2 steals, 1 recall, 1 mend, 3 hits), so
+balance stays comparable, with magic picked to suit the families players have. Since v0.17 each
+deck's scry is replaced by a ward (Team A: Stone Skin for Scrying Bowl; Team B: its Ward becomes a
+ward, and Hex replaces True Sight to keep two shields).
 Team A leans to Body, Fire, Ice, and Time; Team B to Curse, Warding, Force, and Earth. Both use
 the only two steals (Heavy Ground and Snare). Online spell sets are these two lists.
 

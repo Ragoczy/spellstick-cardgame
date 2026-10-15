@@ -487,7 +487,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const effect = def?.kind === 'spell' ? def.ability.effect : '';
       const targetHelp = effect === 'hit' ? 'Now tap the opposing player in that spot to hit them.'
-        : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
+        : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand, or bring back a knocked-out player with a button below.'
         : effect === 'decoy_pass' ? `Now tap the teammate to pass to. ${opp.Name} will think it went to another lane, so it can't be intercepted.`
         : 'Now choose the target.';
       help = !selection.caster
@@ -522,6 +522,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           {view.config.physicalDraw === 'blind' && attacksFor(undefined).length && selection.kind === 'none' ? (
             <button type="button" onClick={() => setSelection({ kind: 'attack' })}>Physical attack (penalty risk {view.mine.penaltyLevel})</button>
           ) : null}
+          {selection.kind === 'cast' && selection.caster ? castsFor(selection.card, selection.caster).flatMap((a) => (a.target.kind === 'mendKnockedOut' ? [a] : [])).map((a) => {
+            const name = a.target.kind === 'mendKnockedOut' ? view.mine.knockedOut.find((c) => c.uid === (a.target as { card: string }).card)?.def.name : '';
+            return <button type="button" key={JSON.stringify(a.target)} onClick={() => act(a)}>Bring back {name}</button>;
+          }) : null}
           {!canRegroup ? null : selection.kind === 'regroup' ? (
             <button type="button" onClick={() => act({ type: 'regroup', side: me, discard: selection.picked })}>
               {selection.picked.length ? `Discard ${selection.picked.length} and draw` : 'Do nothing'}

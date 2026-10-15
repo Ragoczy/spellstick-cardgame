@@ -362,7 +362,11 @@ export function validateAction(s: GameState, action: Action): string | null {
             if (!inHand(s, side, target.card) || !isInjured(s, target.card)) return 'Choose one of your injured players.';
             return null;
           }
-          return 'Choose one of your injured players.';
+          if (target.kind === 'mendKnockedOut') {
+            if (!s.teams[side].knockedOut.includes(target.card)) return 'Choose one of your knocked-out players.';
+            return null;
+          }
+          return 'Choose one of your injured or knocked-out players.';
         }
       }
       return null;

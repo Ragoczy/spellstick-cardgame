@@ -453,7 +453,9 @@ A player is hurt at most once in a contest (a hit first, then a dirty play, then
 **Goalies are never hurt:** they can't be tackled or hit, and a dirty play against a goalie does
 nothing.
 
-**Severity.** A hurt player's owner rolls a die ⚙:
+**Severity.** A hurt player's owner rolls a die ⚙ (Heavy hands on the player doing the hurting adds
+1, Sturdy on the player being hurt takes 1 off, and a Ward makes it only Shaken: see "Effect
+vocabulary"):
 
 | Roll | Result |
 | --- | --- |
@@ -541,6 +543,18 @@ engine together. "Numeric" effects are adjusted by affinity.
   intercepting.
 - `draw_on_win` — `{ count }`. When this player wins a contest (faceoffs included), its owner
   draws `count`.
+- `hits_harder` — `{ amount }` (v0.17, **Heavy hands**). Anyone this player hurts (with a tackle, a
+  hit, a dirty play, or a physical attack) adds `amount` to their severity roll.
+- `hard_to_hurt` — `{ amount }` (v0.17, **Sturdy**). When this player is hurt, their severity roll
+  is `amount` lower.
+
+**Quick but fragile** (v0.17) isn't a new effect: it's a `bonus` of +2 Speed when evading (a tackle
+or a physical attack), on a card printed with Toughness 1 below its type.
+
+Who has which (v0.17): about 8 named players each, picked with a fixed seed from field players whose
+Resonants fit (`scripts/assign-abilities.ts`). Heavy hands: Strength, Berserking, Force, Shattering,
+Earth, Explosion. Sturdy: Healing, Endurance, Stone, Ice. Quick but fragile: Air, Speed, Agility,
+Danger-sense.
 
 **Reaction spells**
 
@@ -557,6 +571,9 @@ engine together. "Numeric" effects are adjusted by affinity.
 - `dirty_play` — `{}`, non-numeric. A foul: declared before the dice in any contest (see "Fouls and
   the referee"). If your side wins, the opposing player in that contest is hurt (unless it's the
   goalie). If the dice match, the referee sends your player off.
+- `ward` — `{}`, non-numeric (v0.17). If your player is hurt in this contest (a knockdown, a hit, a
+  dirty play, or a physical attack), they're only Shaken: no severity roll. It doesn't change the
+  contest itself.
 
 **Action spells**
 
@@ -579,7 +596,8 @@ engine together. "Numeric" effects are adjusted by affinity.
   spells as usual. If the hit lands, the target is injured. If the target has mirror images, roll
   for them first (see `mirror_images`).
 - `mend` — `{}`, non-numeric. Remove the injury from one of your players, on the field or in your
-  hand. The injury card goes back to the injury deck.
+  hand (the injury card goes back to the injury deck), **or** (v0.17) bring one of your knocked-out
+  players back to your hand, injury card and all.
 - `decoy_pass` — `{}`, non-numeric. Your ball holder makes a Pass (the usual targets), but your
   opponent thinks it went to another lane of the receiver's row (with 2 lanes, the other lane;
   with more, you choose). Their player in that lane is revealed instead. There is no contest:
@@ -604,6 +622,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase d — Healing, Ward, and player abilities, from the v0.17 plan Paul approved (decisions 3, 4, 5). **Mend** can also bring a knocked-out player back to the hand. **Ward** (new reaction effect): if your player is hurt in this contest, they're only Shaken; **Ward** and **Stone Skin** become wards (Team A swaps Scrying Bowl for Stone Skin; Team B swaps True Sight for Hex). New player abilities **Heavy hands** (+1 severity for anyone they hurt) and **Sturdy** (−1 severity when hurt), and **Quick but fragile** (+2 Speed when evading, Toughness 1 lower), 8 players each by their Resonants. Claude: Heavy hands counts physical attacks too; a Ward cast by the attacker also covers a Spearing self-roll; the two wards are marked Uncommon until phase f measures them. Result (`reports/sim-2026-10-15-v17d.md`): the Shaken share reaches 50.8% and spells cast rise to 14.7 (the computer plays its Ward), but real injuries fall from 3.44 to 3.24.
 
 - v0.17 (in progress), phase c2 — **Blind physical draw is the rule** (Paul): physical cards stay face down in the Physical pile, never in the hand; an attack chooses the attacker and target, then flips the top card. **Each team can make 8 physical attacks a game** (the pile isn't reshuffled). With escalating penalties, Paul accepts about one penalty a game for now (the target becomes 0.1–1.2). Claude: since nobody chooses the card, Hooking, Clothesline, Stamp, Late Hit, and Elbow lose their special rules and are printed as plain attacks with their numbers (they could get new rules that work face down later); there are no physical reactions. Report: `reports/sim-2026-10-15-v17c2-blind-limit8-escalation.md`.
 

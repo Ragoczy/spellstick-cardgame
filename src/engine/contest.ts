@@ -28,7 +28,7 @@ import type { Breakdown, GameEvent } from './events';
 import { GOAL, isFieldPos, opposite, otherSide, samePos, type FieldPos, type Side } from './field';
 import { continueGame, recordPenalty, scoreGoal } from './flow';
 import {
-  hurtPlayer, injurePlayer, isShaken, knockDown, penalize, penaltyRoll, sendOff, shake, type HurtResult,
+  abilitySeverity, hurtPlayer, injurePlayer, isShaken, knockDown, penalize, penaltyRoll, sendOff, shake, type HurtOptions, type HurtResult,
 } from './injuries';
 import { randomInt } from './rng';
 import { scoreSide } from './score';
@@ -311,9 +311,24 @@ function applyHurts(s: GameState, contest: Contest, attackerWins: boolean, ev: G
     return;
   }
   // A player is hurt at most once per contest: a hit first, then a dirty play, then a knockdown.
-  if (hitLands) hurtPlayer(s, contest.defender.side, contest.defender.pos, 'hit', hitName, ev);
-  else if (dirty) hurtPlayer(s, loser.side, loser.pos, 'dirty_play', dirty, ev);
-  else if (contest.kind === 'tackle' && attackerWins) knockDown(s, contest.defender.side, contest.defender.pos, 'Tackle', ev);
+  // Heavy hands, Sturdy, and Ward change how badly.
+  if (hitLands) hurtPlayer(s, contest.defender.side, contest.defender.pos, 'hit', hitName, ev, hurtOptions(s, contest.attacker, contest.defender));
+  else if (dirty) hurtPlayer(s, loser.side, loser.pos, 'dirty_play', dirty, ev, hurtOptions(s, winner, loser));
+  else if (contest.kind === 'tackle' && attackerWins) {
+    knockDown(s, contest.defender.side, contest.defender.pos, 'Tackle', ev, hurtOptions(s, contest.attacker, contest.defender));
+  }
+}
+
+/**
+ * How a hurt in this contest is changed (v0.17): the hurter's Heavy hands and the victim's Sturdy
+ * shift the severity roll, and the victim's Ward makes it only Shaken.
+ */
+function hurtOptions(s: GameState, hurter: ContestSide | null, victim: ContestSide, extra: HurtOptions = {}): HurtOptions {
+  return {
+    ...extra,
+    severity: (extra.severity ?? 0) + abilitySeverity(s, hurter, victim),
+    onlyShaken: activeSpell(s, victim, 'ward'),
+  };
 }
 
 function giveBall(s: GameState, side: Side, pos: ContestSide['pos'], ev: GameEvent[]): void {
@@ -447,16 +462,16 @@ function applyAttack(s: GameState, contest: Contest, attackerWins: boolean, ev: 
   if (attackerWins) {
     if (effect === 'only_shaken') worst = shake(s, defender.side, defender.pos, 'attack', def.name, ev);
     else if (def.toughness !== null) {
-      worst = knockDown(s, defender.side, defender.pos, def.name, ev, {
+      worst = knockDown(s, defender.side, defender.pos, def.name, ev, hurtOptions(s, attacker, defender, {
         source: 'attack',
         toughness: def.toughness + enduranceBonus(s, defender),
         severity: def.severity ?? 0,
         shakenAnyway: effect === 'shaken_anyway',
         shakenIsInjured: effect === 'shaken_is_injured',
-      });
+      }));
     }
   }
-  if (effect === 'self_check') knockDown(s, attacker.side, attacker.pos, def.name, ev, { source: 'attack' });
+  if (effect === 'self_check') knockDown(s, attacker.side, attacker.pos, def.name, ev, hurtOptions(s, null, attacker, { source: 'attack' }));
   penaltyCheck(s, contest, def, worst, ev);
 }
 

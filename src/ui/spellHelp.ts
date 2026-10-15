@@ -18,7 +18,7 @@ const NEEDS: Record<string, string> = {
   long_shot: 'One of your midfielders needs to have the ball.',
   long_pass: 'Your team needs to have the ball.',
   decoy_pass: 'Your team needs to have the ball.',
-  mend: 'One of your players needs to be injured (on the field or in your hand).',
+  mend: 'One of your players needs to be injured (on the field or in your hand), or knocked out.',
   mirror_images: 'It needs a field player without images who can still cast.',
   hit: 'The caster hits the opposing player in their own spot, so it needs a field player with an opponent facing them.',
   scry: 'There needs to be a face-down opposing card to look at.',

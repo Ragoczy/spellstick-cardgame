@@ -31,12 +31,20 @@ export type Area = 'defense' | 'midfield' | 'forward';
 
 export type PlayerAbility =
   | { effect: 'bonus'; params: { stat: StatName; amount: number; when?: StatUse; row?: Area } }
-  | { effect: 'draw_on_win'; params: { count: number } };
+  | { effect: 'draw_on_win'; params: { count: number } }
+  /** Heavy hands (v0.17): +amount to the severity roll of anyone this player hurts. */
+  | { effect: 'hits_harder'; params: { amount: number } }
+  /** Sturdy (v0.17): −amount to the severity roll when this player is hurt. */
+  | { effect: 'hard_to_hurt'; params: { amount: number } };
+
+const PLAYER_EFFECTS = ['bonus', 'draw_on_win', 'hits_harder', 'hard_to_hurt'];
 
 export type ReactionEffect =
   | { effect: 'boost'; params: { amount: number; when?: StatUse } }
   | { effect: 'shield'; params: Record<string, never> }
-  | { effect: 'dirty_play'; params: Record<string, never> };
+  | { effect: 'dirty_play'; params: Record<string, never> }
+  /** Ward (v0.17): if your player is hurt in this contest, they're only Shaken. */
+  | { effect: 'ward'; params: Record<string, never> };
 
 export type ActionEffect =
   | { effect: 'scry'; params: Record<string, never> }
@@ -240,7 +248,7 @@ export interface CardSet {
 const STATS: StatName[] = ['speed', 'shot', 'defense', 'faceoff', 'save'];
 const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff', 'resist', 'attack'];
 const AREAS: Area[] = ['defense', 'midfield', 'forward'];
-const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play'];
+const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play', 'ward'];
 const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall', 'hit', 'mend', 'decoy_pass', 'mirror_images'];
 
 export class CardDataError extends Error {}
@@ -272,6 +280,10 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
     case 'recall':
       needInt(params, 'count', where);
       break;
+    case 'hits_harder':
+    case 'hard_to_hurt':
+      needInt(params, 'amount', where);
+      break;
     case 'boost':
       needInt(params, 'amount', where);
       if (params.when !== undefined && !USES.includes(params.when as StatUse)) fail(where, 'boost "when" is not valid');
@@ -286,6 +298,7 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
       needInt(params, 'strength', where);
       break;
     case 'dirty_play':
+    case 'ward':
     case 'mend':
     case 'shield':
     case 'scry':
@@ -368,7 +381,7 @@ export function loadCardSet(json: unknown): CardSet {
         checkResonants(card, families, where);
         for (const stat of ['speed', 'shot', 'defense', 'faceoff', 'toughness']) needInt(card, stat, where);
         if (ability) {
-          if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
+          if (!PLAYER_EFFECTS.includes(ability.effect as string)) fail(where, `players can only have ${PLAYER_EFFECTS.join(', ')} abilities`);
           checkParams(ability, where);
         }
         break;
@@ -376,7 +389,7 @@ export function loadCardSet(json: unknown): CardSet {
         checkResonants(card, families, where);
         needInt(card, 'save', where);
         if (ability) {
-          if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
+          if (!PLAYER_EFFECTS.includes(ability.effect as string)) fail(where, `players can only have ${PLAYER_EFFECTS.join(', ')} abilities`);
           checkParams(ability, where);
         }
         break;

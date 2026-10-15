@@ -108,7 +108,7 @@
       "required": ["effect", "params"],
       "properties": {
         "effect": {
-          "enum": ["bonus", "draw_on_win", "boost", "shield", "dirty_play", "scry", "swap",
+          "enum": ["bonus", "draw_on_win", "hits_harder", "hard_to_hurt", "boost", "shield", "dirty_play", "ward", "scry", "swap",
                    "long_pass", "long_shot", "steal", "recall", "hit", "mend",
                    "decoy_pass", "mirror_images",
                    "vs_holder", "reach", "needs_holder", "needs_shaken", "only_shaken", "shaken_anyway",
@@ -153,11 +153,11 @@
           "then": { "properties": { "params": {
             "type": "object", "required": ["penalty"], "additionalProperties": false,
             "properties": { "penalty": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["vs_holder", "pile_on"] } } },
+        { "if": { "properties": { "effect": { "enum": ["vs_holder", "pile_on", "hits_harder", "hard_to_hurt"] } } },
           "then": { "properties": { "params": {
             "type": "object", "required": ["amount"], "additionalProperties": false,
             "properties": { "amount": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "scry", "swap", "long_pass", "mend", "decoy_pass", "mirror_images",
+        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "ward", "scry", "swap", "long_pass", "mend", "decoy_pass", "mirror_images",
                                                        "reach", "needs_holder", "needs_shaken", "only_shaken", "shaken_anyway", "shaken_is_injured",
                                                        "self_check", "after_pass_or_shot", "after_losing"] } } },
           "then": { "properties": { "params": {

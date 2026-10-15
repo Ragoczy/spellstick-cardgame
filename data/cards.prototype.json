@@ -35,7 +35,7 @@
         "sp-ice-wall",
         "sp-slow",
         "sp-red-mist",
-        "sp-scrying-bowl",
+        "sp-stone-skin",
         "sp-glamour-self",
         "sp-tailwind",
         "sp-glamour-ball",
@@ -59,7 +59,7 @@
         "sp-wither",
         "sp-ward",
         "sp-jinx",
-        "sp-true-sight",
+        "sp-hex",
         "sp-hall-of-mirrors",
         "sp-float-pass",
         "sp-misdirection",
@@ -138,7 +138,14 @@
       "shot": 3,
       "defense": 2,
       "faceoff": 5,
-      "toughness": 3
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-004",
@@ -158,7 +165,14 @@
       "shot": 3,
       "defense": 2,
       "faceoff": 5,
-      "toughness": 3
+      "toughness": 3,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-005",
@@ -183,7 +197,14 @@
       "shot": 3,
       "defense": 2,
       "faceoff": 5,
-      "toughness": 3
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-006",
@@ -253,7 +274,16 @@
       "shot": 3,
       "defense": 3,
       "faceoff": 4,
-      "toughness": 3
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-009",
@@ -353,7 +383,14 @@
       "shot": 3,
       "defense": 2,
       "faceoff": 4,
-      "toughness": 3
+      "toughness": 3,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-013",
@@ -378,7 +415,16 @@
       "shot": 3,
       "defense": 3,
       "faceoff": 4,
-      "toughness": 3
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-014",
@@ -598,7 +644,16 @@
       "shot": 6,
       "defense": 2,
       "faceoff": 2,
-      "toughness": 3
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-023",
@@ -693,7 +748,14 @@
       "shot": 5,
       "defense": 2,
       "faceoff": 2,
-      "toughness": 3
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-027",
@@ -908,7 +970,14 @@
       "shot": 3,
       "defense": 3,
       "faceoff": 6,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-036",
@@ -1038,7 +1107,16 @@
       "shot": 3,
       "defense": 4,
       "faceoff": 4,
-      "toughness": 4
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-041",
@@ -1158,7 +1236,16 @@
       "shot": 4,
       "defense": 5,
       "faceoff": 4,
-      "toughness": 4
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-046",
@@ -1183,7 +1270,16 @@
       "shot": 3,
       "defense": 5,
       "faceoff": 4,
-      "toughness": 4
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-047",
@@ -1278,7 +1374,14 @@
       "shot": 3,
       "defense": 3,
       "faceoff": 4,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-051",
@@ -1298,7 +1401,14 @@
       "shot": 3,
       "defense": 4,
       "faceoff": 4,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-052",
@@ -1323,7 +1433,14 @@
       "shot": 4,
       "defense": 3,
       "faceoff": 3,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-053",
@@ -1373,7 +1490,14 @@
       "shot": 3,
       "defense": 4,
       "faceoff": 3,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-055",
@@ -1398,7 +1522,14 @@
       "shot": 3,
       "defense": 3,
       "faceoff": 3,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-056",
@@ -1423,7 +1554,14 @@
       "shot": 3,
       "defense": 4,
       "faceoff": 3,
-      "toughness": 4
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-057",
@@ -1543,7 +1681,16 @@
       "shot": 2,
       "defense": 6,
       "faceoff": 3,
-      "toughness": 5
+      "toughness": 4,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-062",
@@ -1618,7 +1765,16 @@
       "shot": 3,
       "defense": 4,
       "faceoff": 3,
-      "toughness": 5
+      "toughness": 4,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-065",
@@ -1733,7 +1889,14 @@
       "shot": 2,
       "defense": 3,
       "faceoff": 3,
-      "toughness": 5
+      "toughness": 5,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-070",
@@ -1828,7 +1991,14 @@
       "shot": 2,
       "defense": 6,
       "faceoff": 3,
-      "toughness": 5
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-074",
@@ -2063,7 +2233,14 @@
       "shot": 2,
       "defense": 4,
       "faceoff": 2,
-      "toughness": 5
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-084",
@@ -2113,7 +2290,14 @@
       "shot": 2,
       "defense": 4,
       "faceoff": 2,
-      "toughness": 5
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-086",
@@ -2567,12 +2751,12 @@
       "name": "Stone Skin",
       "spellType": "reaction",
       "magic": "earth.stone",
-      "tier": "legendary",
+      "tier": "uncommon",
       "ability": {
-        "effect": "shield",
+        "effect": "ward",
         "params": {}
       },
-      "text": "The opposing player's stat is 2 less in this contest."
+      "text": "If your player is hurt in this contest, they're only Shaken."
     },
     {
       "id": "sp-heavy-ground",
@@ -3069,12 +3253,12 @@
       "name": "Ward",
       "spellType": "reaction",
       "magic": "warding",
-      "tier": "legendary",
+      "tier": "uncommon",
       "ability": {
-        "effect": "shield",
+        "effect": "ward",
         "params": {}
       },
-      "text": "The opposing player's stat is 2 less in this contest."
+      "text": "If your player is hurt in this contest, they're only Shaken."
     },
     {
       "id": "sp-alarm-ward",

@@ -11,7 +11,7 @@ import { callDice, playFoul, playPhysicalReaction, playReaction, startAttack, st
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
-import { completeForcedSub, mend } from './injuries';
+import { bringBack, completeForcedSub, mend } from './injuries';
 import { randomInt, shuffle } from './rng';
 import { finishDraft } from './setup';
 import type { ContestSide, GameState, Modifier, Pile } from './state';
@@ -290,6 +290,7 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
     case 'mend': {
       if (target.kind === 'mendField') mend(s, side, slotAt(s, side, target.pos)!.uid, ev);
       else if (target.kind === 'mendHand') mend(s, side, target.card, ev);
+      else if (target.kind === 'mendKnockedOut') bringBack(s, side, target.card, ev);
       else break;
       continueGame(s, ev);
       return;

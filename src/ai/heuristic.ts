@@ -76,6 +76,8 @@ const TOUGHNESS_GUESS: Record<Area, number> = { defense: 4.5, midfield: 4, forwa
 const SENT_OFF_WORTH = 0.15;
 /** What playing a dirty play as a foul costs in cards: little, since a dirty play has no other use. */
 const FOUL_CARD_COST = 0.03;
+/** What playing a Ward costs in cards: little, since a Ward has no other use. */
+const WARD_CARD_COST = 0.01;
 /** Rough worth of keeping a physical attack card in hand. */
 const PHYSICAL_CARD_VALUE = 0.03;
 /**
@@ -615,6 +617,11 @@ class Thinker {
           onField = true;
         } else if (target.kind === 'mendHand') {
           card = this.view.mine.hand.find((c) => c.uid === target.card);
+        } else if (target.kind === 'mendKnockedOut') {
+          // Bringing a knocked-out player back: one more player to bring on.
+          const back = this.view.mine.knockedOut.find((c) => c.uid === target.card);
+          if (!back || back.def.kind !== 'field') return -1;
+          return base + unit * (0.03 + 0.015 * Math.max(0, bestFit(back.def) - 3)) - cost;
         }
         if (!card?.injury) return -1;
         const def = card.def as PlayerCardDef;
@@ -827,7 +834,24 @@ class Thinker {
     if (contest.kind === 'tackle' && role === 'defender' && this.config.knockdowns) {
       importance += this.knockdownChance('mine', me.pos) * this.ownHurtWorth();
     }
+    // Ward (v0.17): worth the chance my player is hurt here, times how much worse than Shaken that is.
+    if (mySpell?.ability.effect === 'ward') {
+      if (!mySpellWorks) return -1;
+      const saved = this.hurtRisk(contest, role, pWin, theyDirty) * Math.max(0, this.ownHurtWorth() - SHAKEN_WORTH) * this.unit();
+      return importance * pWin + saved - WARD_CARD_COST * this.unit();
+    }
     return importance * pWin - cost;
+  }
+
+  /** Chance my player in this contest is hurt: they lose a hit, a tackle (as the holder), or an attack, or lose to a dirty play. */
+  private hurtRisk(contest: Contest, role: ContestRole, pWin: number, theyDirty: boolean): number {
+    const lose = 1 - pWin;
+    if (theyDirty) return lose;
+    if (role !== 'defender') return 0;
+    const me = contest.defender;
+    if (contest.kind === 'hit') return lose;
+    if (contest.kind === 'tackle' || contest.kind === 'attack') return lose * this.knockdownChance('mine', me.pos, contest.kind === 'attack' ? -1 : 0);
+    return 0;
   }
 
   private playedSpell(uid: string | null, affinity?: Affinity, fizzled?: boolean): { def: SpellCardDef; affinity: Affinity } | null {
@@ -875,7 +899,7 @@ class Thinker {
   private cardValue(def: CardDef): number {
     if (def.kind === 'physical') return PHYSICAL_CARD_VALUE;
     if (def.kind === 'spell') {
-      if (def.ability.effect === 'mend' && this.hasInjuredPlayer()) return 0.08;
+      if (def.ability.effect === 'mend' && (this.hasInjuredPlayer() || this.view.mine.knockedOut.length > 0)) return 0.08;
       return SPELL_VALUE[def.ability.effect] ?? 0.05;
     }
     if (def.kind === 'goalie') {

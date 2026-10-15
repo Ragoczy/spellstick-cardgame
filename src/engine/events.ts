@@ -158,5 +158,7 @@ export type GameEvent =
   /** Nobody could replace a carried-off player: the spot is empty. */
   | { type: 'slotEmptied'; side: Side; pos: Pos }
   | { type: 'mended'; side: Side; card: CardView; injury: InjuryDef }
+  /** Mend (v0.17): a knocked-out player is brought back to their owner's hand. */
+  | { type: 'broughtBack'; side: Side; card: CardView }
   | { type: 'penalty'; side: Side; scored: boolean; goals: Record<Side, number>; taken: Record<Side, number> }
   | { type: 'gameOver'; result: GameResult };

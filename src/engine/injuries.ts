@@ -109,6 +109,22 @@ export interface HurtOptions {
   shakenAnyway?: boolean;
   /** A Shaken result counts as Injured (Kneecap). */
   shakenIsInjured?: boolean;
+  /** Ward (v0.17): if hurt, they're only Shaken (no severity roll). */
+  onlyShaken?: boolean;
+}
+
+/**
+ * The severity modifier from players' abilities (v0.17): Heavy hands on the player doing the
+ * hurting, and Sturdy on the player being hurt.
+ */
+export function abilitySeverity(s: GameState, hurter: { side: Side; pos: Pos } | null, victim: { side: Side; pos: Pos }): number {
+  const abilityAt = (side: Side, pos: Pos) => {
+    const slot = slotAt(s, side, pos);
+    return slot ? (defOf(s, slot.uid) as PlayerCardDef).ability : undefined;
+  };
+  const heavy = hurter ? abilityAt(hurter.side, hurter.pos) : undefined;
+  const sturdy = abilityAt(victim.side, victim.pos);
+  return (heavy?.effect === 'hits_harder' ? heavy.params.amount : 0) - (sturdy?.effect === 'hard_to_hurt' ? sturdy.params.amount : 0);
 }
 
 /** How a hurt turned out, or null if the player wasn't hurt. */
@@ -143,6 +159,7 @@ export function hurtPlayer(s: GameState, side: Side, pos: Pos, source: InjurySou
     return slot && pos.area !== 'goal' ? (already ? 'carriedOff' : 'injured') : null;
   }
   if (!slot || pos.area === 'goal') return null;
+  if (options.onlyShaken) return shake(s, side, pos, source, cause, ev);
   const roll = contactRoll(s) + (options.severity ?? 0);
   const { shaken, injured } = s.config.severity;
   let result: Severity = roll <= shaken ? 'shaken' : roll <= injured ? 'injured' : 'knockedOut';
@@ -303,6 +320,14 @@ export function completeForcedSub(s: GameState, card: Uid, ev: GameEvent[]): voi
   setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false });
   s.forcedSub = null;
   ev.push({ type: 'forcedSub', side, pos, toHand: injured ? cardView(s, injured.uid) : null });
+}
+
+/** Mend (v0.17): brings one of your knocked-out players back to your hand, injury card and all. */
+export function bringBack(s: GameState, side: Side, uid: Uid, ev: GameEvent[]): void {
+  const team = s.teams[side];
+  team.knockedOut = team.knockedOut.filter((u) => u !== uid);
+  team.hand.push(uid);
+  ev.push({ type: 'broughtBack', side, card: cardView(s, uid) });
 }
 
 /** Mend: removes a player's injury and shuffles it back into the injury deck. */

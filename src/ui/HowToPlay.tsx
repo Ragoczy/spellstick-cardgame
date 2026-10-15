@@ -24,6 +24,7 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
         <li><b>Goalies</b> have Save.</li>
         <li>Players have 1–3 <b>Resonants</b>, feelings or sensations like Anger or Vigor. Each has an <b>Affinity</b>, the kind of magic it's good at (the colored dots): a whole family like Fire, or one specialty in a family, like Glamour in Illusion.</li>
         <li><b>Spells</b> have a kind of magic too. Cast by a player with an Affinity in the spell's family, number effects get +1. If the Affinity is exactly the spell's specialty, they get +2.</li>
+        <li>Some players have an <b>ability</b>, printed on the card: <i>Heavy hands</i> (anyone they hurt is hurt worse), <i>Sturdy</i> (hurt less badly), or <i>Quick but fragile</i> (+2 Speed when dodging, but easier to hurt).</li>
         <li>A named player's <b>cost</b> is the number in the top left corner. A team you build online can cost at most the team cap, so nobody can field all the stars.</li>
         <li>Casting is tiring. A player on the field can cast <b>one spell per Resonant</b> (each cast empties a dot). Then they need a rest: substitute them out to your hand, and they come back fresh.</li>
       </ul>
@@ -31,7 +32,7 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <h3>Your turn</h3>
       <ol>
         <li>Draw a card: choose a <b>player</b> or a <b>spell</b> (your deck is two piles). If your hand is already full (7 cards), you don't draw: the top card of the pile you choose goes to your discard pile instead.
-          <br />Or, instead of drawing, <b>substitute</b>: bring a player on from your hand, face down. The player you take off goes back to your hand to rest. The new player can't pass, shoot, tackle, or cast until your next turn.</li>
+          <br />Or, instead of drawing, <b>substitute</b>: bring a player on from your hand, face down. The player you take off goes back to your hand to rest. The new player can't pass, shoot, tackle, cast, or make a physical attack this turn.</li>
         <li>Take <b>one action</b>.</li>
         <li>If you have more than 7 cards, discard down to 7.</li>
       </ol>
@@ -42,17 +43,18 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
           <br /><b>Catch and shoot:</b> a forward who catches a pass can't be tackled until your next turn, so they get their chance to shoot.
           <br /><b>Goalie clears:</b> when your goalie has the ball, your action must be a pass out to a defender. No sitting on the ball.</li>
         <li><b>Shoot:</b> a forward with the ball. Shot against the goalie's Save. Ties go to the goalie. Goalies are tough: about 1 shot in 3 goes in, more with a good shooter or a spell.</li>
-        <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Goalies can't be tackled.</li>
-        <li><b>Physical attack:</b> one of your players without the ball takes a cheap shot at the opposing player in their spot. See below.</li>
+        <li><b>Tackle:</b> your player facing their ball carrier. Your Defense against their Speed. Ties go to the ball carrier. Win, and you take the ball and <b>knock them down</b> (see "Getting hurt"). Goalies can't be tackled.</li>
+        <li><b>Physical attack:</b> tap your <b>Physical pile</b> (beside your hand), then choose one of your players without the ball. They take a cheap shot at the opposing player in their spot. See "Physical attacks" below.</li>
         <li><b>Cast</b> an action spell, choosing which of your players casts it (they're revealed).</li>
         <li><b>Regroup:</b> discard 1 card and draw a new one of the same kind (or do nothing).</li>
       </ul>
 
       <h3>Contests</h3>
       <p>
-        Both players are revealed. Before the dice, either side may declare a <b>foul</b> (a dirty play, see below).
-        Then <b>both roll a die</b> and add it, and either side may spend a <b>reroll</b> (see below). Then the
-        attacker may play one <b>reaction spell</b>, and the defender may answer with one. Highest value wins.
+        Both players are revealed. Before the dice, the attacker and then the defender may declare a <b>foul</b> (a
+        dirty play, see below). Then <b>both roll a die</b> and add it, and either side may spend a <b>reroll</b> (see
+        below). Then the attacker may play one <b>reaction spell</b>, and the defender may answer with one. A side that
+        fouled has already used its reaction spell. Highest value wins.
       </p>
 
       <h3>Playing spells</h3>
@@ -74,14 +76,14 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <h3>Getting hurt</h3>
       <p>Spellstick is rough. Field players get hurt four ways (goalies never do):</p>
       <ul>
-        <li><b>Knocked down:</b> a player who loses the ball to a tackle rolls a die. At or under their Toughness, they're fine. Over it, they're hurt.</li>
+        <li><b>Knocked down:</b> a player who loses a tackle or a physical attack rolls a die. At or under their Toughness, they're fine. Over it, they're hurt.</li>
         <li><b>Hit:</b> a hit spell attacks the opposing player in your caster's spot, the spell's strength against their Defense. If it lands, they're hurt.</li>
         <li><b>Dirty play:</b> a reaction spell you declare <b>before the dice</b>. If your side wins, the player you beat is hurt. But if the two dice match, the referee saw it, and your player is <b>sent off</b> for the game, with nobody to replace them until you substitute.</li>
         <li><b>A bad miss:</b> a tackler who loses by 3 or more is Shaken.</li>
       </ul>
       <p>A hurt player's owner rolls a die to see how bad it is:</p>
       <ul>
-        <li><b>1–3, Shaken:</b> the card turns sideways. They can't pass, shoot, tackle, or cast, and get −2 in contests, until the end of their team's next turn.</li>
+        <li><b>1–3, Shaken:</b> the card turns sideways. They can't pass, shoot, tackle, attack, or cast, and get −2 in contests, until the end of their team's next turn. They can still catch a pass, defend, and take a faceoff, and they keep the ball if they have it. Substituting them out also gets them up.</li>
         <li><b>4–5, Injured:</b> they get a face-up <b>injury card</b> that lowers a stat (for example, Singed hair: −1 Speed).</li>
         <li><b>6, Knocked out:</b> they leave the field. At each faceoff, roll for them: on 4–6 they're back in your hand.</li>
       </ul>
@@ -95,17 +97,20 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <h3>Physical attacks and the penalty box</h3>
       <p>
         Each team has a face-down <b>Physical pile</b> of 16 cheap shots (Tripping, Slashing, Kneecap, and more) and can
-        make <b>8 physical attacks</b> a game. Choose your attacker and the opposing player in their spot, then flip the
-        top card: the player decides the move in the moment. It's your Speed (or Defense, for a Muscle card) against their
-        Speed, with the card's bonus. If you win, they drop the ball (if they have it) and are knocked down, often with the card making
-        it worse.
+        make <b>8 physical attacks</b> a game. The pile isn't part of your hand or the game clock; you can see how many
+        attacks each team has left. On your turn, tap your pile, then choose an attacker: on the field, not Shaken, not
+        just come on, and not holding the ball. They go after the opposing player in their spot. Flip the top card:
+        the player decides the move in the moment. It's your Speed (or Defense, for a Muscle card) against their Speed,
+        both rolled, with the card's bonus; ties go to the target. If you win, they drop the ball (if they have it) and
+        are knocked down, often with the card making it worse. A player with the card's body Affinity (like Strength)
+        gets +1. There are no fouls in an attack: it's already one.
       </p>
       <p>
         The referee is watching. Your team's <b>penalty risk</b> starts at 1. If your die in the attack shows the risk
         or lower, roll the penalty die too: if that also shows the risk or lower, it's a <b>penalty</b>. Your player
-        sits in the box for 1 to 3 turns, and nobody can take their spot. The risk goes up by 1 with each attack you
-        make, and down by 1 each turn you don't. If the other team scores while you're in the box, your players come
-        straight back.
+        sits in the box for 1 to 3 turns, depending on the card. Their spot is empty meanwhile, counts as 0, and
+        nobody can be substituted into it. The risk goes up by 1 with each attack you make, and down by 1 each turn
+        you don't. If the other team scores while you're in the box, your players come straight back.
       </p>
 
       <h3>Faceoffs and goals</h3>
@@ -117,7 +122,7 @@ export function HowToPlay({ onBack, reporter }: { onBack: () => void; reporter: 
       <h3>Winning</h3>
       <p>
         The decks are the game clock. When a player has no cards left in either pile, they finish that turn, the other player takes one
-        last turn, and it's <b>full time</b>: more goals wins. A team that reaches 3 goals wins straight away.
+        last turn, and it's <b>full time</b>: more goals wins. At full time, Shaken players stand up and penalties end. A team that reaches 3 goals wins straight away.
         If it's tied at full time, there's a <b>penalty shootout</b>: teams take turns shooting with players who
         haven't shot yet (penalty shots get +3), three each, then one each until someone misses. If a team runs out of shooters, it's a draw.
       </p>

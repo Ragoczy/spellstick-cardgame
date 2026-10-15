@@ -84,7 +84,10 @@ type sets the printed Toughness; otherwise it's just a label and changes nothing
 **Spell cards** have a kind of magic, a family or a specialization (or none, for neutral spells),
 and are either:
 - **Reaction spells**, played during a contest.
-- **Physical card effects** (v0.17; see "Physical attacks" for the cards)
+- **Physical card effects** (v0.17; see "Physical attacks" for the cards). `reach`, `needs_holder`,
+`needs_shaken`, `after_pass_or_shot`, and `after_losing` only matter if physical cards are held in
+hand and chosen (config.physicalDraw 'hand', a simulation what-if); with blind draw, the rule, no
+card uses them.
 
 - `vs_holder` — `{ amount }`. +`amount` to the attack if the target holds the ball.
 - `reach` — `{}`. May attack the opposing player one lane over in the same row.
@@ -356,16 +359,16 @@ affinity rules, the casting limit, Recall, and anything that counters spells don
 and they don't count as spells cast.
 
 **The Physical pile.** Each team has its own Physical pile: one of each of the 16 physical cards ⚙,
-shuffled at setup. Draw 2 ⚙ at setup and 1 ⚙ at each faceoff (after the knocked-out return rolls,
-before the lane is chosen). Physical cards go in your hand with your other cards and count toward
-the hand limit. When the pile runs out, shuffle its discards to make a new one. It isn't part of
-the game clock.
+shuffled at setup and kept **face down**. Physical cards never go in your hand, so they don't count
+toward the hand limit, and the pile isn't part of the game clock. **Each team can make 8 physical
+attacks a game** ⚙: the pile isn't reshuffled.
 
-**Making an attack** (your action). One of your standing field players plays a physical card
-against the opposing player in their spot. Standing means on the field, not Shaken, and not just
-come on. A player holding the ball can't attack ⚙. Goalies can't attack or be attacked. It's a
-contest, rolled like every contest, with rerolls and reaction spells, but no fouls (it's already
-one):
+**Making an attack** (your action). Choose one of your standing field players to attack the
+opposing player in their spot, then **flip the top card of your Physical pile**: that's the move.
+Nobody chooses the card: the player on the field decides it in the moment. Standing means on the
+field, not Shaken, and not just come on. A player holding the ball can't attack ⚙. Goalies can't
+attack or be attacked. It's a contest, rolled like every contest, with rerolls and reaction spells,
+but no fouls (it's already one):
 
 - **Attacker:** Speed + die + the card's bonus. *Muscle* cards use Defense instead of Speed. +1 ⚙ if
   the attacker has the body Affinity printed on the card (or the whole Body family).
@@ -384,12 +387,8 @@ one):
 | Major | −1 | as normal | 2 turns ⚙ |
 | Brutal | −1 | +1 | 3 turns ⚙ |
 
-**Reaction cards** are played at the moment they name, instead of as your action: **Late Hit**, after
-the opposing player in your spot passes or shoots (once that resolves), and **Elbow**, when your
-player loses a contest to the opposing player in their spot (that result stands, then you attack).
-Your player must be standing and not holding the ball, and your side must not have played a
-reaction spell in that contest. Not after a physical attack (no chains), and not while a forced
-substitution is waiting.
+Since the card is flipped after the target is chosen, a card never has a condition on who it can
+be played against.
 
 **The cards:**
 
@@ -397,19 +396,19 @@ substitution is waiting.
 | --- | --- | --- | --- | --- | --- |
 | Shirt Pull | Minor | Speed +1 | Agility | —, — | No knockdown: the target only drops the ball. |
 | Tripping | Minor | Speed | Speed | ±0, ±0 | +2 if the target holds the ball (`vs_holder`). |
-| Hooking | Minor | Speed | Speed | ±0, ±0 | May attack the opposing player one lane over in the same row (`reach`). |
+| Hooking | Minor | Speed | Speed | ±0, ±0 | |
 | Atomic Wedgie | Minor | Muscle | Strength | —, — | No Toughness roll: if you win, the target is Shaken, never worse (`only_shaken`). |
 | Slashing | Major | Speed +1 | Berserking | −1, ±0 | |
 | Cross-check | Major | Muscle | Strength | −1, ±0 | |
-| Clothesline | Major | Muscle | Strength | −1, +1 | Only against the ball carrier (`needs_holder`). |
+| Clothesline | Major | Muscle | Strength | −1, +1 | |
 | Gouge | Major | Speed | Agility | −1, ±0 | Passing the Toughness roll still leaves the target Shaken (`shaken_anyway`). |
 | Slew-foot | Major | Speed | Agility | −2, ±0 | |
-| Late Hit | Major | Speed | Berserking | −1, ±0 | Reaction: after the opposing player in your spot passes or shoots (`after_pass_or_shot`). |
-| Elbow | Major | Speed +1 | Berserking | −1, ±0 | Reaction: when your player loses a contest to the opposing player in their spot (`after_losing`). |
+| Late Hit | Major | Speed | Berserking | −1, ±0 | |
+| Elbow | Major | Speed +1 | Berserking | −1, ±0 | |
 | Kneecap | Brutal | Muscle | Strength | −2, +1 | If hurt, Shaken counts as Injured (`shaken_is_injured`). |
 | Spearing | Brutal | Speed +2 | Berserking | −1, +1 | Your player makes a Toughness roll too, win or lose (`self_check`). |
 | Chop Block | Brutal | Speed | Speed | −2, +1 | |
-| Stamp | Brutal | Muscle +3 | Strength | −1, +1 | Only against a Shaken target (`needs_shaken`). |
+| Stamp | Brutal | Muscle +3 | Strength | −1, +1 | |
 | Pile-on | Brutal | Muscle | Berserking | −1, +1 | +1 for each of your standing players one lane over in the same row (`pile_on`). |
 
 ## The penalty box
@@ -422,7 +421,7 @@ that's a 1 and then a 1: 1 in 36. Rerolling your die above the risk avoids the c
 The risk **goes up by 1 with each physical attack** your team makes (after that attack's check),
 and **down by 1 at the end of each of your turns without one**, never below 1 ⚙. So a second attack
 in a row needs both dice at 2 or lower (1 in 9), a third at 3 or lower (1 in 4), and so on: the
-referee watches a team that keeps fouling. Late Hit and Elbow count too.
+referee watches a team that keeps fouling.
 
 The attack still resolves as normal, then:
 
@@ -605,6 +604,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase c2 — **Blind physical draw is the rule** (Paul): physical cards stay face down in the Physical pile, never in the hand; an attack chooses the attacker and target, then flips the top card. **Each team can make 8 physical attacks a game** (the pile isn't reshuffled). With escalating penalties, Paul accepts about one penalty a game for now (the target becomes 0.1–1.2). Claude: since nobody chooses the card, Hooking, Clothesline, Stamp, Late Hit, and Elbow lose their special rules and are printed as plain attacks with their numbers (they could get new rules that work face down later); there are no physical reactions. Report: `reports/sim-2026-10-15-v17c2-blind-limit8-escalation.md`.
 
 - v0.17 (in progress), phase c2 — Escalating penalties (Paul): each team's penalty risk starts at 1 and goes up by 1 with each physical attack and down by 1 with each of its turns without one; a penalty is called when the attacker's die and the penalty die both show the risk or lower. Claude: the attack's own check uses the risk before it goes up, so a team's first attack is the old 1-and-1; the risk tops out at 6 (a sixth attack in a row is always penalized); attacks on the other team's turn (Late Hit, Elbow) count. Also tried, not adopted yet: blind physical draw (`reports/sim-2026-10-15-v17c2-blind.md`). Result (`reports/sim-2026-10-15-v17c2-escalation-hand.md`): with cards in hand, penalties 0.17 → 0.27 a game and little else changes; with blind draw it adds penalties more than it stops attacks. Claude also fixed the Draw step skipping the goalie-clears check (a goalie with both defenders in the penalty box froze the game).
 

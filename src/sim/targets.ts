@@ -44,7 +44,8 @@ export const TARGETS: Metric[] = [
     bottom: (t) => (t.firstSerious && t.winner ? 1 : 0),
     percent: true, target: { text: 'at most 60%', high: 0.6 },
   },
-  { label: 'Penalties per game', top: (t) => t.penalties, target: { text: '0.1–0.5', low: 0.1, high: 0.5 } },
+  // Paul (2026-10-15): about one penalty a game is fine for now, with blind draw and escalating risk.
+  { label: 'Penalties per game', top: (t) => t.penalties, target: { text: '0.1–1.2', low: 0.1, high: 1.2 } },
   {
     label: 'Unanswered Shield scores (before the dice, over every shot)',
     top: (t) => t.shieldChanceSum, bottom: (t) => t.shieldShots, percent: true, target: { text: 'under 75%', high: 0.75 },

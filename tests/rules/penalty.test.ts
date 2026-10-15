@@ -34,15 +34,15 @@ const shirtPull = (overrides: Partial<PhysicalCardDef> = {}) => physicalCard('Sh
 describe.each(LANE_COUNTS)('the penalty box (%i lanes)', (lanes) => {
   const LAST = lanes - 1;
 
-  /** A's strong midfielder attacks B's ball carrier in the last lane. */
+  /** A's strong midfielder attacks B's ball carrier in the last lane, flipping `card` from the Physical pile. */
   function setup(card: PhysicalCardDef, extra: { config?: Partial<GameConfig>; dice?: number; aHand?: ReturnType<typeof player>[] } = {}) {
     return scenario({
       lanes, config: { ...ROLLED, ...extra.config }, dice: extra.dice, ball: { side: 'B', pos: mid(LAST) },
-      A: { hand: [card, ...(extra.aHand ?? [])], lineup: { midfield: { [LAST]: player('A mid', { speed: 9 }) } } },
+      A: { physical: [card], hand: extra.aHand ?? [], lineup: { midfield: { [LAST]: player('A mid', { speed: 9 }) } } },
       B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 0, toughness: 10 }) } } },
     });
   }
-  const attack = (s: GameState) => play(s, { type: 'attack', side: 'A', card: uid(s, 'A', 'Shirt Pull'), attacker: mid(LAST), target: mid(LAST) });
+  const attack = (s: GameState) => play(s, { type: 'attack', side: 'A', attacker: mid(LAST), target: mid(LAST) });
 
   it('a 1, then another 1 on the penalty die: the referee calls a penalty, and the spot is empty', () => {
     const s = rigDice(setup(shirtPull()), 3, ([a, , p]) => a === 1 && p === 1);
@@ -72,7 +72,7 @@ describe.each(LANE_COUNTS)('the penalty box (%i lanes)', (lanes) => {
   it('rerolling a 1 away avoids the check, and the penalty die is never rerolled', () => {
     const s = rigDice(setup(shirtPull(), { dice: 1 }), 3, ([a, , r]) => a === 1 && r !== 1);
     const { state, events } = play(s,
-      { type: 'attack', side: 'A', card: uid(s, 'A', 'Shirt Pull'), attacker: mid(LAST), target: mid(LAST) },
+      { type: 'attack', side: 'A', attacker: mid(LAST), target: mid(LAST) },
       { type: 'callDice', side: 'A', roll: true },
       { type: 'callDice', side: 'B', roll: false });
     expect(eventsOfType(events, 'rerolled')).toHaveLength(1);
@@ -91,7 +91,7 @@ describe.each(LANE_COUNTS)('the penalty box (%i lanes)', (lanes) => {
     const card = physicalCard('Shirt Pull', { toughness: 0, severity: 0 });
     const base = scenario({
       lanes, config: { ...ROLLED, penaltyLength: 'result' }, ball: { side: 'B', pos: mid(LAST) },
-      A: { hand: [card], lineup: { midfield: { [LAST]: player('A mid', { speed: 9 }) } } },
+      A: { physical: [card], lineup: { midfield: { [LAST]: player('A mid', { speed: 9 }) } } },
       B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 0, toughness: -10 }) } } },
     });
     // Attacker 1, defender, Toughness roll, severity roll (always Injured in scenarios), penalty die 1.
@@ -105,7 +105,7 @@ describe.each(LANE_COUNTS)('the penalty box (%i lanes)', (lanes) => {
     const spearing = physicalCard('Shirt Pull', { toughness: null, severity: null, ability: { effect: 'self_check', params: {} } });
     const base = scenario({
       lanes, config: ROLLED, ball: { side: 'B', pos: mid(LAST) },
-      A: { hand: [spearing, player('Sub')], lineup: { midfield: { [LAST]: player('A mid', { speed: 9, toughness: -10 }) } } },
+      A: { physical: [spearing], hand: [player('Sub')], lineup: { midfield: { [LAST]: player('A mid', { speed: 9, toughness: -10 }) } } },
       B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 0 }) } } },
     });
     // Attacker 1, defender, the attacker's own Toughness roll, severity (always Injured here), penalty die 1.

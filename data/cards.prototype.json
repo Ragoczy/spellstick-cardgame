@@ -3574,11 +3574,7 @@
       "affinity": "body.speed",
       "toughness": 0,
       "severity": 0,
-      "ability": {
-        "effect": "reach",
-        "params": {}
-      },
-      "text": "You may attack the opposing player in the next lane of the same row instead.",
+      "text": "",
       "from": "Hockey"
     },
     {
@@ -3638,11 +3634,7 @@
       "affinity": "body.strength",
       "toughness": -1,
       "severity": 1,
-      "ability": {
-        "effect": "needs_holder",
-        "params": {}
-      },
-      "text": "Only against the ball carrier.",
+      "text": "",
       "from": "Football and wrestling"
     },
     {
@@ -3688,12 +3680,7 @@
       "affinity": "body.berserking",
       "toughness": -1,
       "severity": 0,
-      "ability": {
-        "effect": "after_pass_or_shot",
-        "params": {}
-      },
-      "when": "After the opposing player in this spot passes or shoots.",
-      "text": "No ball to drop: it can only hurt.",
+      "text": "",
       "from": "Football and rugby"
     },
     {
@@ -3707,12 +3694,7 @@
       "affinity": "body.berserking",
       "toughness": -1,
       "severity": 0,
-      "ability": {
-        "effect": "after_losing",
-        "params": {}
-      },
-      "when": "When the opposing player in this spot beats yours in a contest.",
-      "text": "That result stands. Then attack.",
+      "text": "",
       "from": "Soccer and basketball"
     },
     {
@@ -3776,11 +3758,7 @@
       "affinity": "body.strength",
       "toughness": -1,
       "severity": 1,
-      "ability": {
-        "effect": "needs_shaken",
-        "params": {}
-      },
-      "text": "Only against a Shaken target.",
+      "text": "",
       "from": "Rugby"
     },
     {

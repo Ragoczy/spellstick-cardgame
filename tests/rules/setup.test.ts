@@ -51,13 +51,13 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(s.teams.A.spells.every((u) => s.cards[u]!.kind === 'spell')).toBe(true);
   });
 
-  it(`draws ${spots} + 2 players, 3 spells, and 2 physical cards`, () => {
+  it(`draws ${spots} + 2 players and 3 spells (physical cards stay in their pile)`, () => {
     for (let seed = 1; seed <= 10; seed++) {
       const s = chooseFirstGoalie(createGame({ seed, cardSet: prototypeCards, config: { lanes } }).state);
       const hand = s.teams.A.hand.map((u) => s.cards[u]!.kind);
-      expect(hand).toHaveLength(spots + 7);
+      expect(hand).toHaveLength(spots + 5);
       expect(hand.filter((k) => k === 'spell')).toHaveLength(3);
-      expect(hand.filter((k) => k === 'physical')).toHaveLength(2);
+      expect(hand.filter((k) => k === 'physical')).toHaveLength(0);
       // At most one of the players drawn is the spare goalie, so every spot can be filled.
       expect(hand.filter((k) => k === 'field').length).toBeGreaterThanOrEqual(spots);
     }
@@ -73,8 +73,7 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
       expect(slots).toHaveLength(spots);
       expect(slots.every((slot) => slot && !slot.revealed)).toBe(true);
     }
-    // The opening faceoff follows, and each team draws a physical card for it.
-    expect(s.teams.A.hand.length).toBe(handBefore - spots + s.config.physicalFaceoffDraw);
+    expect(s.teams.A.hand.length).toBe(handBefore - spots);
   });
 
   it("rejects placing a spell, or placing into a filled spot", () => {

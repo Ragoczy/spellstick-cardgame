@@ -399,7 +399,7 @@ swap on each seed):
 | 10% cost gap 55–65% | As above. |
 | Spells cast ≥ v0.16 | Casts per game, compared with 15.7. |
 | Real injuries ≥ 3.5 a game (v0.16: 2.77) | Injured + Knocked out + carried off, both teams, with a 95% interval. This is the target that answers "too few injuries"; Shaken doesn't count toward it. |
-| Penalties are rare: 0.1–0.5 a game | Penalties per game, with turns spent in the box and power-play returns. Also reported: physical attacks per game, win rate, and ball drops. |
+| Penalties: 0.1–1.2 a game (Paul 2026-10-15; was 0.1–0.5) | Penalties per game, with turns spent in the box and power-play returns. Also reported: physical attacks per game, win rate, and ball drops. |
 | Unanswered capped Shield under 75% | Exact chance before the dice: for the 5-vs-6 example, and averaged over every shot in the simulation. |
 | 30–50 turns; goals within ±25% | Per game, with a 95% interval. |
 
@@ -474,6 +474,10 @@ real injuries 2.87, 0.17 penalties; turns 50.7 and spells cast 13.5 now miss. Se
 held in hand (`physicalDraw: 'blind'`, off by default). Results and the attack-limit what-if:
 `reports/sim-2026-10-15-v17c2-blind.md`. Waiting for Paul's call.*
 *Escalating penalties (Paul, 2026-10-15) adopted: see `reports/sim-2026-10-15-v17c2-escalation-hand.md`.*
+*Paul's call (2026-10-15): blind draw with 8 attacks per team is the rule, with escalating penalties;
+about one penalty a game is acceptable for now (target 0.1–1.2). Hooking, Clothesline, Stamp, Late
+Hit, and Elbow are plain attacks under blind draw. Report:
+`reports/sim-2026-10-15-v17c2-blind-limit8-escalation.md`.*
 - Engine: `config.ts` (`physicalAttacks`, `physicalPileSize`, `physicalSetupDraw`,
   `physicalFaceoffDraw`, `affinityAttackBonus`, `tierModifiers`, `penaltyLength`,
   `powerPlayReturn`, `penaltyNoSubstitution`), `cards.ts` (a `physical` card kind with tier,

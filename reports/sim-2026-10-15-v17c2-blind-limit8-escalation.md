@@ -1,3 +1,9 @@
+# The rule: blind physical draw, 8 attacks per team, escalating penalties
+
+Paul's call (2026-10-15). Against phase c2 as first built (cards in hand), same 5,000 seeds. Real injuries 2.87 -> 3.45 (target 3.5, just short), goals 2.04 -> 1.87 (floor 1.84, just above), penalties 0.94 a game (accepted; target now 0.1-1.2), spells cast 12.3 and turns 51.8 still miss. Since this run, Hooking, Clothesline, Stamp, Late Hit, and Elbow are printed as plain attacks; under blind draw they already played that way, so the numbers don't change.
+
+---
+
 # Comparison: Blind draw, 8 per team, escalating penalties, 2026-10-15
 
 Made by `npm run sim-compare`: 5000 computer-vs-computer games per run (seed block 1), 2 lanes, card set 0.16-prototype. Took 209 s on 8 workers.

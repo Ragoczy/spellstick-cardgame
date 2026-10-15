@@ -106,6 +106,24 @@ export function savedSetup(setup: GameSetup): GameSetup {
   if (result.config && !('goalieMustClear' in result.config)) {
     result = { ...result, config: { ...result.config, goalieMustClear: false } };
   }
+  if (result.config && !('shieldEffect' in result.config)) {
+    result = { ...result, config: { ...result.config, shieldEffect: 'zero' } };
+  }
+  if (result.config && !('knockdowns' in result.config)) {
+    result = { ...result, config: { ...result.config, knockdowns: false } };
+  }
+  if (result.config && !('foulTiming' in result.config)) {
+    result = { ...result, config: { ...result.config, foulTiming: 'reaction' } };
+  }
+  if (result.config && !('physicalAttacks' in result.config)) {
+    result = { ...result, config: { ...result.config, physicalAttacks: false } };
+  }
+  if (result.config && !('forcedSubShaken' in result.config)) {
+    result = { ...result, config: { ...result.config, forcedSubShaken: false } };
+  }
+  if (result.config && !('rosterCap' in result.config)) {
+    result = { ...result, config: { ...result.config, rosterCap: 0 } };
+  }
   const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
   if (old.elements && !old.families) {
     const { elements, ...rest } = result.cardSet as unknown as { elements: string[] } & Record<string, unknown>;

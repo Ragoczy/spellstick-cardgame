@@ -2,27 +2,28 @@
 // GameState. The opponent's face-down cards appear only as "unknown" (no id, no stats) unless
 // this player has scried them. The opponent's hand and both decks appear only as counts.
 
-import type { Area } from './cards';
+import type { Area, CardDef } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import { cardView, castsLeftIn, injuryOf } from './board';
 import type { CardView, GameEvent } from './events';
-import { AREAS, otherSide, type Pos, type Side } from './field';
+import { AREAS, otherSide, type FieldPos, type Pos, type Side } from './field';
 import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
 
 export type SlotView =
   | { state: 'empty' }
   /** An opponent's face-down card you haven't seen. */
-  | { state: 'unknown'; injury?: InjuryDef }
+  | { state: 'unknown'; injury?: InjuryDef; shaken?: boolean }
   /**
    * Your own face-down card (scried = your opponent has seen it), or an opponent's card you scried.
    * castsLeft: spells this player can still cast before they need a rest (left out when there is no limit).
    */
-  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number; cameOn?: boolean }
+  | { state: 'faceDown'; card: CardView; scried: boolean; castsLeft?: number; cameOn?: boolean; shaken?: boolean }
   /**
    * images: the player has mirror images around them (public). castsLeft is public too.
    * cameOn: substituted on at this turn's Draw step, so can't act yet (public: the substitution was).
+   * shaken: the card is turned sideways (v0.17, public).
    */
-  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number; cameOn?: boolean };
+  | { state: 'revealed'; card: CardView; images?: boolean; castsLeft?: number; cameOn?: boolean; shaken?: boolean };
 
 export interface PlayerView {
   me: Side;
@@ -69,6 +70,21 @@ export interface PlayerView {
     playersLeft: number;
     spellsLeft: number;
     discard: CardView[];
+    /** Knocked-out players, face up beside the mat (v0.17). */
+    knockedOut: CardView[];
+    /** Physical cards (v0.17): left in the pile, and played or discarded (face up). */
+    physicalLeft: number;
+    physicalDiscard: CardView[];
+    /**
+     * Which physical cards are still in the pile, in no particular order (every pile has one of
+     * each, and played cards are face up). The order stays hidden. The opponent's is only shown
+     * when cards are flipped blind: with cards in hand it would give away their hand.
+     */
+    physicalRemaining: CardDef[];
+    /** Players in the penalty box (public): where they'll come back, and turns left. */
+    penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
+    /** The penalty risk level for this team's next physical attack (both dice at this or lower). */
+    penaltyLevel: number;
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -78,6 +94,12 @@ export interface PlayerView {
     playersLeft: number;
     spellsLeft: number;
     discard: CardView[];
+    knockedOut: CardView[];
+    physicalLeft: number;
+    physicalDiscard: CardView[];
+    physicalRemaining: CardDef[];
+    penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
+    penaltyLevel: number;
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -88,8 +110,8 @@ function castsLeftOf(s: GameState, slot: Slot): { castsLeft?: number } {
   return s.config.castsPerResonant > 0 ? { castsLeft: castsLeftIn(s, slot) } : {};
 }
 
-function cameOnOf(slot: Slot): { cameOn?: boolean } {
-  return slot.cameOn ? { cameOn: true } : {};
+function cameOnOf(slot: Slot): { cameOn?: boolean; shaken?: boolean } {
+  return { ...(slot.cameOn ? { cameOn: true } : {}), ...(slot.shakenUntil !== undefined ? { shaken: true } : {}) };
 }
 
 function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
@@ -98,9 +120,20 @@ function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
     return { state: 'revealed', card: cardView(s, slot.uid), ...(slot.images ? { images: true } : {}), ...castsLeftOf(s, slot), ...cameOnOf(slot) };
   }
   if (mine || slot.scried) return { state: 'faceDown', card: cardView(s, slot.uid), scried: slot.scried, ...castsLeftOf(s, slot), ...cameOnOf(slot) };
-  // Injury cards are face up, so an injury shows even on a player you can't see.
+  // Injury cards are face up, so an injury shows even on a player you can't see. So does a sideways card.
   const injury = injuryOf(s, slot.uid);
-  return injury ? { state: 'unknown', injury } : { state: 'unknown' };
+  return { state: 'unknown', ...(injury ? { injury } : {}), ...(slot.shakenUntil !== undefined ? { shaken: true } : {}) };
+}
+
+/** A team's Physical pile count, Physical discards, and penalty box (all public). */
+function physicalOf(s: GameState, team: GameState['teams'][Side], showRemaining: boolean) {
+  return {
+    physicalLeft: team.physical.length,
+    physicalDiscard: team.physicalDiscard.map((uid) => cardView(s, uid)),
+    physicalRemaining: showRemaining ? team.physical.map((uid) => s.cards[uid]!).sort((a, b) => a.id.localeCompare(b.id)) : [],
+    penaltyBox: team.penaltyBox.map((e) => ({ card: cardView(s, e.uid), pos: e.pos, turnsLeft: e.turnsLeft })),
+    penaltyLevel: s.config.penaltyEscalation ? Math.min(1 + team.attackHeat, s.config.contactDie) : 1,
+  };
 }
 
 function lineupView(s: GameState, side: Side, mine: boolean): Record<Area, SlotView[]> {
@@ -149,6 +182,8 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       playersLeft: my.players.length,
       spellsLeft: my.spells.length,
       discard: my.discard.map((uid) => cardView(s, uid)),
+      knockedOut: my.knockedOut.map((uid) => cardView(s, uid)),
+      ...physicalOf(s, my, true),
       goalie: slotView(s, my.goalie, true),
       lineup: lineupView(s, me, true),
     },
@@ -158,6 +193,8 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       playersLeft: their.players.length,
       spellsLeft: their.spells.length,
       discard: their.discard.map((uid) => cardView(s, uid)),
+      knockedOut: their.knockedOut.map((uid) => cardView(s, uid)),
+      ...physicalOf(s, their, s.config.physicalDraw === 'blind'),
       goalie: slotView(s, their.goalie, false),
       lineup: lineupView(s, them, false),
     },

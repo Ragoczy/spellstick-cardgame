@@ -1,7 +1,7 @@
 // Creating a new game (RULES.md "Setup"), including the optional draft (RULES.md "Draft") and
 // decks a team brings itself (RULES.md "Constructed").
 
-import { buildDeck, deckProblems, playerPool, type CardDef, type CardSet, type PlayerCardDef } from './cards';
+import { buildDeck, deckProblems, PHYSICAL_TEAM, playerPool, type CardDef, type CardSet, type PlayerCardDef } from './cards';
 import { makeConfig, type GameConfig, type InjuryDef } from './config';
 import type { GameEvent } from './events';
 import { AREAS, SIDES, type Side } from './field';
@@ -53,7 +53,9 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   let injuryDeck: string[];
   [injuryDeck, rng] = shuffle(Object.keys(injuryCards), rng);
 
-  const empty = (): TeamState => ({ players: [], spells: [], hand: [], discard: [], goalie: null, lineup: emptyLineup(config.lanes) });
+  const empty = (): TeamState => ({
+    players: [], spells: [], physical: [], physicalDiscard: [], penaltyBox: [], attackHeat: 0, hand: [], discard: [], knockedOut: [], goalie: null, lineup: emptyLineup(config.lanes),
+  });
   const state: GameState = {
     config,
     families: [...setup.cardSet.families],
@@ -80,12 +82,18 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     pending: { kind: 'chooseGoalie', side: 'A' },
     result: null,
   };
-  const teamCards = { A: buildDeck(setup.cardSet, teamIds.A, config), B: buildDeck(setup.cardSet, teamIds.B, config) };
+  const teamCards = {
+    A: [...buildDeck(setup.cardSet, teamIds.A, config), ...physicalPile(setup.cardSet, config, teamIds.A)],
+    B: [...buildDeck(setup.cardSet, teamIds.B, config), ...physicalPile(setup.cardSet, config, teamIds.B)],
+  };
 
   if (setup.decks) {
     if (config.draftPicks > 0) throw new SetupError('A game with its own decks has no draft.');
     const decks = setup.decks;
-    dealTeams(state, { A: constructedDeck(setup.cardSet, decks.A, config, teamIds.A), B: constructedDeck(setup.cardSet, decks.B, config, teamIds.B) }, teamIds);
+    dealTeams(state, {
+      A: [...constructedDeck(setup.cardSet, decks.A, config, teamIds.A), ...physicalPile(setup.cardSet, config, teamIds.A)],
+      B: [...constructedDeck(setup.cardSet, decks.B, config, teamIds.B), ...physicalPile(setup.cardSet, config, teamIds.B)],
+    }, teamIds);
   } else if (config.draftPicks > 0) {
     startDraft(state, setup.cardSet, teamIds, teamCards);
   } else {
@@ -96,6 +104,18 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     dealTeams(state, { A: [...teamCards.A, ...dealt.A], B: [...teamCards.B, ...dealt.B] }, teamIds);
   }
   return { state, events: [{ type: 'gameStarted', firstSide }] };
+}
+
+/**
+ * A team's Physical pile (v0.17): one of each physical card in the card set (up to the pile size),
+ * playing in the team's color. None with the old rules.
+ */
+function physicalPile(cardSet: CardSet, config: GameConfig, teamId: string): CardDef[] {
+  if (!config.physicalAttacks) return [];
+  return cardSet.cards
+    .filter((c) => c.kind === 'physical' && c.team === PHYSICAL_TEAM)
+    .slice(0, config.physicalPileSize)
+    .map((c) => ({ ...c, team: teamId }));
 }
 
 /** A deck a team brings (Constructed), checked, with every card playing for the team. */
@@ -125,8 +145,13 @@ function dealTeams(s: GameState, decks: Record<Side, CardDef[]>, teamIds: Record
     s.teams[side] = {
       players: uids.filter((uid) => s.cards[uid]!.kind === 'field'),
       spells: uids.filter((uid) => s.cards[uid]!.kind === 'spell'),
+      physical: uids.filter((uid) => s.cards[uid]!.kind === 'physical'),
+      physicalDiscard: [],
+      penaltyBox: [],
+      attackHeat: 0,
       hand: goalies,
       discard: [],
+      knockedOut: [],
       goalie: null,
       lineup: emptyLineup(s.config.lanes),
     };

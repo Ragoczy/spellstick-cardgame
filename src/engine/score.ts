@@ -15,6 +15,8 @@ export interface SideScoreInput {
   player: PlayerCardDef | null;
   /** The player's injury, if any. */
   injury?: InjuryDef | null;
+  /** The player is Shaken (v0.17): config.shakenPenalty off every skill. */
+  shaken?: boolean;
   /** Which stat, what it's used for, where the player is, and any action-spell modifiers. */
   side: Pick<ContestSide, 'stat' | 'use' | 'pos' | 'modifiers' | 'power' | 'roll'>;
   /** This side's reaction spell, if one was played and didn't fail. */
@@ -42,23 +44,42 @@ export function bonusFor(player: PlayerCardDef, side: SideScoreInput['side']): n
   return amount;
 }
 
+/** What a Shield leaves of a player's value (or a hit's strength), by config.shieldEffect. */
+export function shieldedValue(value: number, config: GameConfig): number {
+  switch (config.shieldEffect) {
+    case 'zero':
+      return 0;
+    case 'half':
+      return Math.ceil(value / 2);
+    case 'minus':
+      return Math.max(0, value - config.shieldAmount);
+  }
+}
+
 export function scoreSide(input: SideScoreInput, config: GameConfig): SideScore {
   const { player, side, spell, shielded } = input;
   // An empty spot counts as 0.
   if (!player) return { base: 0, parts: [], total: 0, shielded, printed: 0 };
-  // Shield: this player's stat (or a hit's strength) counts as 0 and their abilities are ignored.
-  // Spells still count.
-  const base = shielded ? 0 : side.power ? side.power.value : statOf(player, side.stat);
+  // The old Shield (before v0.17): this player's stat (or a hit's strength) counts as 0 and their
+  // abilities and injuries are ignored. Spells still count.
+  const zeroed = shielded && config.shieldEffect === 'zero';
+  const base = zeroed ? 0 : side.power ? side.power.value : statOf(player, side.stat);
   const parts: BreakdownPart[] = [];
 
   // A hit's strength isn't a player stat, so abilities and injuries don't change it.
-  if (!shielded && !side.power) {
+  if (!zeroed && !side.power) {
     const bonus = bonusFor(player, side);
     if (bonus !== 0) parts.push({ label: 'Ability', amount: bonus });
     const penalty = injuryPenalty(input.injury, player, side.stat);
     if (penalty !== 0) parts.push({ label: input.injury!.name, amount: -penalty });
+    if (input.shaken && config.shakenPenalty) parts.push({ label: 'Shaken', amount: -config.shakenPenalty });
   }
   const printed = Math.max(0, base + parts.reduce((sum, p) => sum + p.amount, 0));
+  // Shield (v0.17): the value worked out so far is cut down. Dice and spells are added after.
+  if (shielded && !zeroed) {
+    const cut = printed - shieldedValue(printed, config);
+    if (cut !== 0) parts.push({ label: 'Shield', amount: -cut });
+  }
   if (side.roll) parts.push({ label: 'Roll', amount: side.roll });
 
   if (spell && spell.def.ability.effect === 'boost' && reactionFits(spell.def, side)) {

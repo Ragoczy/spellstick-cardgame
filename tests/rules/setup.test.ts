@@ -45,17 +45,19 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     const s = applyAction(state, { type: 'chooseGoalie', side: 'A', card: chosen! }).state;
     expect(s.teams.A.goalie).toEqual({ uid: chosen, revealed: false, scried: false });
     expect([...s.teams.A.players, ...s.teams.A.hand]).toContain(other);
-    expect(s.teams.A.players.length + s.teams.A.spells.length + s.teams.A.hand.length).toBe(39);
-    expect(s.teams.A.players.every((u) => s.cards[u]!.kind !== 'spell')).toBe(true);
+    // 40 cards less the goalie in goal, plus the 16-card Physical pile.
+    expect(s.teams.A.players.length + s.teams.A.spells.length + s.teams.A.physical.length + s.teams.A.hand.length).toBe(39 + 16);
+    expect(s.teams.A.players.every((u) => s.cards[u]!.kind === 'field' || s.cards[u]!.kind === 'goalie')).toBe(true);
     expect(s.teams.A.spells.every((u) => s.cards[u]!.kind === 'spell')).toBe(true);
   });
 
-  it(`draws ${spots} + 2 players and 2 spells`, () => {
+  it(`draws ${spots} + 2 players and 3 spells (physical cards stay in their pile)`, () => {
     for (let seed = 1; seed <= 10; seed++) {
       const s = chooseFirstGoalie(createGame({ seed, cardSet: prototypeCards, config: { lanes } }).state);
       const hand = s.teams.A.hand.map((u) => s.cards[u]!.kind);
-      expect(hand).toHaveLength(spots + 4);
-      expect(hand.filter((k) => k === 'spell')).toHaveLength(2);
+      expect(hand).toHaveLength(spots + 5);
+      expect(hand.filter((k) => k === 'spell')).toHaveLength(3);
+      expect(hand.filter((k) => k === 'physical')).toHaveLength(0);
       // At most one of the players drawn is the spare goalie, so every spot can be filled.
       expect(hand.filter((k) => k === 'field').length).toBeGreaterThanOrEqual(spots);
     }
@@ -100,10 +102,9 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(s.pending).toEqual({ kind: 'faceoffLane', side: second });
     expect(s.ball).toBeNull();
     s = applyAction(s, { type: 'faceoffLane', side: second, lane: lanes - 1 }).state;
-    while (s.pending.kind === 'reaction' || s.pending.kind === 'callDice') {
-      s = applyAction(s, s.pending.kind === 'reaction'
-        ? { type: 'react', side: s.pending.side, card: null }
-        : { type: 'callDice', side: s.pending.side, roll: false }).state;
+    // Nobody fouls, rerolls, or plays a spell.
+    for (let p = s.pending; p.kind === 'foul' || p.kind === 'reaction' || p.kind === 'callDice'; p = s.pending) {
+      s = applyAction(s, p.kind === 'callDice' ? { type: 'callDice', side: p.side, roll: false } : { type: p.kind === 'foul' ? 'foul' : 'react', side: p.side, card: null }).state;
     }
     expect(s.turn).toBe(1);
     // Turn 1 starts with the draw step: both piles have cards, so the player chooses.
@@ -114,7 +115,7 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
 
 describe('dealing players from the shared pool', () => {
   const playerIds = (state: GameState, side: 'A' | 'B') =>
-    Object.entries(state.cards).filter(([uid, def]) => uid.startsWith(side) && def.kind !== 'spell').map(([, def]) => def.id);
+    Object.entries(state.cards).filter(([uid, def]) => uid.startsWith(side) && (def.kind === 'field' || def.kind === 'goalie')).map(([, def]) => def.id);
 
   it('deals each side different players, the same way for the same seed', () => {
     const a = createGame({ seed: 7, cardSet: prototypeCards }).state;

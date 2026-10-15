@@ -577,3 +577,13 @@ button.cf:hover .cf-card { transform: translateY(-3px); }
 .card-preview .card-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 24px; }
 .card-preview figure { margin: 0; }
 .card-preview figcaption { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+/*
+ * Shaken (v0.17). The physical card turns sideways; on screen a fully sideways tile is too small to
+ * read, so it tips over a little, fades, and says "Shaken".
+ */
+.card.shaken { transform: rotate(-5deg); filter: saturate(0.55); border-style: dashed; }
+.card-role .shaken-tag { color: #b0451f; font-weight: 700; }
+.piles.knocked-out { color: #b0451f; }
+.card-preview .tile-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.card-preview .tile-spot { width: 150px; padding: 6px; border: 1px dashed var(--field-line); border-radius: 8px; }

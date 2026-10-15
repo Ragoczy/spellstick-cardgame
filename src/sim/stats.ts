@@ -2,10 +2,185 @@
 // all-seeing observer; it never feeds anything back into play.
 
 import type { GameRecord } from '../ai/runGame';
-import type { Area, CardDef } from '../engine/cards';
+import type { Area, CardDef, PlayerCardDef } from '../engine/cards';
+import type { GameConfig } from '../engine/config';
 import type { InjurySource } from '../engine/events';
-import type { Side } from '../engine/field';
+import { GOAL, type Side } from '../engine/field';
+import { scoreSide } from '../engine/score';
 import type { Affinity, ContestKind, EndReason } from '../engine/state';
+
+/**
+ * One game's numbers, kept per game so every average can get a confidence interval
+ * (src/sim/confidence.ts) and two runs on the same seeds can be compared seed by seed.
+ *
+ * Counters for rules that don't exist yet (Shaken, knocked out, sent off, penalties) stay 0
+ * until the phase that adds the rule counts its events here. That's also the true v0.16 value.
+ */
+export interface GameTally {
+  seed: number;
+  /** null for a draw. */
+  winner: Side | null;
+  firstSide: Side;
+  turns: number;
+  goals: number;
+  shots: number;
+  shotGoals: number;
+  /** Every spell played, including ones that fizzled. */
+  spellsCast: number;
+  tackles: number;
+  tacklesWon: number;
+  hits: number;
+  hitsLanded: number;
+  /** Tackles that knocked a player down (v0.17), and how many of those failed the Toughness check. */
+  knockdowns: number;
+  knockdownHurts: number;
+  /** Every time a player was hurt, whatever the result (Shaken, Injured, Knocked out, carried off). */
+  hurts: number;
+  hurtsBySource: Record<InjurySource, number>;
+  /** Hurt, but only Shaken (v0.17). */
+  shaken: number;
+  /** Drew an injury card (or would have, if the injury deck was empty). Not carried off. */
+  injured: number;
+  /** Knocked out of the game for now (v0.17). */
+  knockedOut: number;
+  /** Injured a second time and carried off. */
+  carriedOff: number;
+  /** Dirty plays cast. */
+  fouls: number;
+  /** Fouls the referee caught (v0.17). */
+  foulsCaught: number;
+  /** Players sent off for the game (v0.17). */
+  sentOff: number;
+  /** Penalties called on physical attacks (v0.17), and the turns they gave in the penalty box. */
+  penalties: number;
+  boxTurns: number;
+  /** Times a power play brought a team's penalized players back. */
+  powerPlays: number;
+  /** Physical attacks (v0.17), how many won, and how many made the target drop the ball. */
+  attacks: number;
+  attacksWon: number;
+  ballDrops: number;
+  /** The side that suffered the game's first carry-off or knockout, if any. */
+  firstSerious: Side | null;
+  /** Shots at a goalie, and the sum of each one's chance to score against an unanswered Shield. */
+  shieldShots: number;
+  shieldChanceSum: number;
+}
+
+/**
+ * The chance that a side worth `attacker` beats a side worth `defender` when both add one die of
+ * this size, with ties going to the defender. This is the chance before the dice are rolled.
+ */
+export function winChance(attacker: number, defender: number, die: number): number {
+  let wins = 0;
+  for (let a = 1; a <= die; a++) for (let d = 1; d <= die; d++) if (attacker + a > defender + d) wins += 1;
+  return wins / (die * die);
+}
+
+/**
+ * The chance this shot would score if the shooter shielded the goalie and nobody answered: the
+ * shooter's printed Shot against the goalie's Save after the Shield, both before dice and spells.
+ * It uses the engine's own scoring, so it follows whatever the Shield rule is.
+ */
+export function unansweredShieldChance(shooterPrinted: number, goalie: PlayerCardDef, config: GameConfig): number {
+  const shielded = scoreSide({
+    player: goalie,
+    side: { stat: 'save', use: 'save', pos: GOAL, modifiers: [] },
+    spell: null,
+    shielded: true,
+  }, config);
+  // With no dice, spells, or modifiers, the total is the goalie's Save after the Shield.
+  return winChance(shooterPrinted, shielded.total, config.contestDie || config.shotDie);
+}
+
+/** Reads one finished game into a GameTally. */
+export function tallyGame(record: GameRecord): GameTally {
+  const s = record.final;
+  const t: GameTally = {
+    seed: record.setup.seed,
+    winner: s.result?.winner ?? null,
+    firstSide: s.firstSide,
+    turns: s.turn,
+    goals: s.score.A + s.score.B,
+    shots: 0, shotGoals: 0, spellsCast: 0, tackles: 0, tacklesWon: 0, hits: 0, hitsLanded: 0,
+    knockdowns: 0, knockdownHurts: 0, hurts: 0, hurtsBySource: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
+    shaken: 0, injured: 0, knockedOut: 0, carriedOff: 0,
+    fouls: 0, foulsCaught: 0, sentOff: 0, penalties: 0, boxTurns: 0, powerPlays: 0, attacks: 0, attacksWon: 0, ballDrops: 0,
+    firstSerious: null, shieldShots: 0, shieldChanceSum: 0,
+  };
+  for (const e of record.events) {
+    switch (e.type) {
+      case 'spellCast':
+        t.spellsCast += 1;
+        if (e.card.def.kind === 'spell' && e.card.def.ability.effect === 'dirty_play') t.fouls += 1;
+        break;
+      case 'injured':
+        t.hurts += 1;
+        t.hurtsBySource[e.source] += 1;
+        if (e.carriedOff) {
+          t.carriedOff += 1;
+          t.firstSerious ??= e.side;
+        } else t.injured += 1;
+        break;
+      case 'sentOff':
+        t.sentOff += 1;
+        t.foulsCaught += 1;
+        break;
+      case 'penalized':
+        t.penalties += 1;
+        t.boxTurns += e.turns;
+        break;
+      case 'powerPlayReturn':
+        t.powerPlays += 1;
+        break;
+      case 'ballDropped':
+        t.ballDrops += 1;
+        break;
+      case 'knockedDown':
+        t.knockdowns += 1;
+        if (e.hurt) t.knockdownHurts += 1;
+        break;
+      case 'hurt':
+        // An injury is counted by the 'injured' event that follows it.
+        if (e.result === 'injured') break;
+        t.hurts += 1;
+        t.hurtsBySource[e.source] += 1;
+        if (e.result === 'shaken') t.shaken += 1;
+        else {
+          t.knockedOut += 1;
+          t.firstSerious ??= e.side;
+        }
+        break;
+      case 'contestResolved': {
+        const won = e.winnerRole === 'attacker' ? 1 : 0;
+        if (e.kind === 'shot') {
+          t.shots += 1;
+          t.shotGoals += won;
+          if (e.defender.card && e.defender.card.def.kind === 'goalie') {
+            t.shieldShots += 1;
+            t.shieldChanceSum += unansweredShieldChance(e.attacker.printed, e.defender.card.def, s.config);
+          }
+        }
+        if (e.kind === 'tackle') {
+          t.tackles += 1;
+          t.tacklesWon += won;
+        }
+        if (e.kind === 'hit') {
+          t.hits += 1;
+          t.hitsLanded += won;
+        }
+        if (e.kind === 'attack') {
+          t.attacks += 1;
+          t.attacksWon += won;
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+  return t;
+}
 
 export interface CardStats {
   id: string;
@@ -53,9 +228,13 @@ export class SimStats {
     shot: { count: 0, attackerWins: 0 },
     penalty: { count: 0, attackerWins: 0 },
     hit: { count: 0, attackerWins: 0 },
+    attack: { count: 0, attackerWins: 0 },
   };
   /** Injuries suffered, by the injured team and by what caused them (carry-offs included). */
-  injuries: Record<Side, Record<InjurySource, number>> = { A: { hit: 0, dirty_play: 0 }, B: { hit: 0, dirty_play: 0 } };
+  injuries: Record<Side, Record<InjurySource, number>> = {
+    A: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
+    B: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
+  };
   carriedOff = 0;
   /** Goals (and shootout penalties) scored into an empty goal. */
   emptyGoalGoals = 0;
@@ -88,11 +267,13 @@ export class SimStats {
   };
   affinity: Record<Affinity, AffinityStats> = { specialist: zeroAffinity(), match: zeroAffinity(), neutral: zeroAffinity(), opposed: zeroAffinity() };
   cards = new Map<string, CardStats>();
+  /** Each game's numbers, in the order played. */
+  tallies: GameTally[] = [];
 
   constructor(allCards: CardDef[]) {
     for (const def of allCards) {
       if (def.promo) continue;
-      const role = def.kind === 'spell' ? undefined : def.role;
+      const role = def.kind === 'field' || def.kind === 'goalie' ? def.role : undefined;
       this.cards.set(def.id, {
         id: def.id, name: def.name, team: def.team, kind: def.kind, role,
         played: 0, inContest: 0, contestWins: 0, deckGames: 0, deckWins: 0, draftedGames: 0, draftedWins: 0,
@@ -104,6 +285,7 @@ export class SimStats {
     const result = record.final.result!;
     const first = record.final.firstSide;
     this.games += 1;
+    this.tallies.push(tallyGame(record));
     this.turns.push(record.final.turn);
     this.reasons[result.reason] += 1;
     this.goals += record.final.score.A + record.final.score.B;

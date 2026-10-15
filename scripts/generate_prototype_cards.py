@@ -63,7 +63,7 @@ ABILITIES = [
 # Spells shared by both teams: (effect, spellType, params, copies-by-element, rules text)
 SPELLS = [
     ("boost",     "reaction", {"amount": 2},  [None], "+2 to your side in this contest."),
-    ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat counts as 0 in this contest."),
+    ("shield",    "reaction", {},             ["earth", "water"], "The opposing player's stat is 2 less in this contest."),
     ("scry",      "action",   {},             ["water"], "Look at one of your opponent's face-down cards."),
     ("mirror_images", "action", {},           ["air"], "The caster gets two images. Each tackle or hit on them rolls a die first: on 1-4 it goes for an image and misses; on 5-6 it finds the real one and the images vanish."),
     ("long_pass", "action",   {},             ["air"], "Pass, skipping one row forward."),
@@ -71,12 +71,12 @@ SPELLS = [
     ("long_shot", "action",   {"penalty": 2}, ["fire"], "A midfielder holding the ball may shoot, with -2 Shot."),
     ("steal",     "action",   {"amount": 2},  ["fire", "earth"], "Tackle with +2."),
     ("recall",    "action",   {"count": 2},   [None], "Draw 2 cards."),
-    ("dirty_play", "reaction", {},            [None], "If your side wins this contest, the opposing player is injured."),
+    ("dirty_play", "reaction", {},            [None], "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."),
     ("mend",      "action",   {},             ["water"], "Remove the injury from one of your players, on the field or in your hand."),
 ]
 
 # Hits, chosen to fit each team's main elements: (element, name)
-HIT_TEXT = "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+HIT_TEXT = "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're hurt. (Not the goalie.)"
 HITS = {
     "A": [("fire", "Flambé"), ("fire", "Flambé"), ("air", "Thunderclap")],
     "B": [("water", "Water Spear"), ("water", "Water Spear"), ("earth", "Earth Crush")],

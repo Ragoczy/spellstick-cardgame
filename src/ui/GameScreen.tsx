@@ -23,6 +23,11 @@ type Selection =
   | { kind: 'holder' }
   | { kind: 'cast'; card: string; caster?: Pos; first?: FieldPos }
   | { kind: 'substitute'; card: string }
+  /**
+   * A physical attack (v0.17): the card (none when cards are flipped blind from the pile), then
+   * your attacker, then (with Hooking) the target.
+   */
+  | { kind: 'attack'; card?: string; attacker?: FieldPos }
   | { kind: 'regroup'; picked: string[] };
 
 const NONE: Selection = { kind: 'none' };
@@ -80,6 +85,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const castsFor = (card: string, caster?: Pos) =>
     casts.filter((a) => a.card === card && (!caster || samePos(a.caster, caster)));
 
+  const attacks = legal.filter((a): a is Extract<Action, { type: 'attack' }> => a.type === 'attack');
+  const attacksFor = (card: string | undefined, attacker?: Pos) =>
+    attacks.filter((a) => a.card === card && (!attacker || samePos(a.attacker, attacker)));
+
   /** Glamour Ball: the opposing spot the computer will think the ball went to. */
   const decoySpot = (t: Extract<SpellTarget, { kind: 'decoyPass' }>): FieldPos => opposite({ area: t.to.area, lane: t.decoyLane });
 
@@ -119,6 +128,12 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         break;
       case 'holder':
         for (const p of passes) map.set(posKey(me, p.to), 'target');
+        break;
+      case 'attack':
+        for (const a of attacksFor(selection.card, selection.attacker)) {
+          if (selection.attacker) map.set(posKey(them, a.target), 'target');
+          else map.set(posKey(me, a.attacker), 'target');
+        }
         break;
       case 'cast':
         if (!selection.caster) {
@@ -176,6 +191,18 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       if (pass) return act(pass);
       return setSelection(NONE);
     }
+    if (selection.kind === 'attack') {
+      if (!selection.attacker) {
+        if (side !== me) return;
+        const options = attacksFor(selection.card, pos);
+        if (options.length === 1) return act(options[0]!);
+        if (options.length) setSelection({ ...selection, attacker: pos as FieldPos });
+        return;
+      }
+      const chosen = attacksFor(selection.card, selection.attacker).find((a) => side === them && samePos(a.target, pos));
+      if (chosen) act(chosen);
+      return;
+    }
     if (selection.kind === 'cast') {
       if (!selection.caster) {
         if (side !== me) return;
@@ -221,6 +248,16 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       if (react) act(react);
       return;
     }
+    if (pending.kind === 'foul') {
+      const foul = legal.find((a) => a.type === 'foul' && a.card === uid);
+      if (foul) act(foul);
+      return;
+    }
+    if (pending.kind === 'physicalReaction') {
+      const reply = legal.find((a) => a.type === 'physicalReaction' && a.card === uid);
+      if (reply) act(reply);
+      return;
+    }
     if (pending.kind === 'discard') {
       const discard = legal.find((a) => a.type === 'discard' && a.card === uid);
       if (discard) act(discard);
@@ -243,18 +280,21 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       return setSelection({ kind: 'regroup', picked });
     }
     if (castsFor(uid).length) return setSelection({ kind: 'cast', card: uid });
+    if (attacksFor(uid).length) return setSelection({ kind: 'attack', card: uid });
     if (subs.some((a) => a.card === uid)) return setSelection({ kind: 'substitute', card: uid });
     setSelection(NONE);
   };
 
   /** A spell that can be played in the current decision (cast as your action, or as a reaction). */
   function canPlayNow(uid: string): boolean {
-    if (pending.kind === 'action') return castsFor(uid).length > 0;
+    if (pending.kind === 'action') return castsFor(uid).length > 0 || attacksFor(uid).length > 0;
     if (pending.kind === 'reaction') return legal.some((a) => a.type === 'react' && a.card === uid);
+    if (pending.kind === 'foul') return legal.some((a) => a.type === 'foul' && a.card === uid);
+    if (pending.kind === 'physicalReaction') return legal.some((a) => a.type === 'physicalReaction' && a.card === uid);
     return false;
   }
-  const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction');
-  const castable = view.mine.hand.filter((c) => c.def.kind === 'spell' && pending.kind === 'action' && canPlayNow(c.uid));
+  const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction' || pending.kind === 'foul' || pending.kind === 'physicalReaction');
+  const castable = view.mine.hand.filter((c) => (c.def.kind === 'spell' || c.def.kind === 'physical') && pending.kind === 'action' && canPlayNow(c.uid));
 
   // ---- Setup screens ----
 
@@ -344,6 +384,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         );
       case 'reaction':
         return <ReactionPrompt view={view} opp={opp} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
+      case 'foul':
+        return <FoulPrompt view={view} legal={legal} onFoul={(uid) => act(legal.find((a) => a.type === 'foul' && a.card === uid)!)} />;
+      case 'physicalReaction':
+        return <PhysicalReactionPrompt view={view} legal={legal} opp={opp} onPlay={(uid) => act(legal.find((a) => a.type === 'physicalReaction' && a.card === uid)!)} />;
       case 'callDice':
         return <DicePrompt view={view} onChoose={(roll) => act({ type: 'callDice', side: me, roll })} />;
       case 'draw':
@@ -419,14 +463,15 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const tackleChance = tackleMatchup && tackleMatchup.theirs !== null && view.config.contestDie
     ? chanceWithDice(tackleMatchup.mine, tackleMatchup.theirs, false, view.config.contestDie)
     : null;
+  const riskNote = view.config.tackleRiskMargin ? `; lose by ${view.config.tackleRiskMargin} or more and your tackler is Shaken` : '';
   const tackleLabel = !theirHolder ? ''
-    : tackleChance !== null ? ` (your Defense ${tackleMatchup!.mine} vs their Speed ${tackleMatchup!.theirs}, both roll: about ${Math.round(tackleChance * 100)}% to win)${imagesNote}`
+    : tackleChance !== null ? ` (your Defense ${tackleMatchup!.mine} vs their Speed ${tackleMatchup!.theirs}, both roll: about ${Math.round(tackleChance * 100)}% to win${riskNote})${imagesNote}`
     : versus(tackleMatchup, 'Defense', 'Speed') + imagesNote;
 
   function actionPrompt() {
     const left = view.actionsLeft;
     const spellHelp = castable.length
-      ? ` To cast a spell, tap a glowing spell in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be cast now`}).`
+      ? ` To ${view.config.physicalDraw === 'blind' ? 'cast a spell' : 'cast a spell or make a physical attack'}, tap a glowing card in your hand (${castable.length === 1 ? castable[0]!.def.name : `${castable.length} can be played now`}).`
       : '';
     let help = `Tap your ball carrier (glowing) to pass, or tap a card in your hand to play it.${spellHelp}`;
     // Goalie clears: the only choice is how to pass it out.
@@ -443,7 +488,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
       const effect = def?.kind === 'spell' ? def.ability.effect : '';
       const targetHelp = effect === 'hit' ? 'Now tap the opposing player in that spot to hit them.'
-        : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand.'
+        : effect === 'mend' ? 'Now tap the injured player to mend, on the field or in your hand, or bring back a knocked-out player with a button below.'
         : effect === 'decoy_pass' ? `Now tap the teammate to pass to. ${opp.Name} will think it went to another lane, so it can't be intercepted.`
         : 'Now choose the target.';
       help = !selection.caster
@@ -451,6 +496,19 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         : selection.first ? (effect === 'decoy_pass' ? `Now tap the spot where ${opp.name} will think the ball went.` : 'Now tap the second player to swap.') : targetHelp;
     }
     if (selection.kind === 'substitute') help = 'Tap the player (or empty spot) to fill. The new player comes in face down.';
+    if (selection.kind === 'attack') {
+      const def = view.mine.hand.find((c) => c.uid === selection.card)?.def;
+      const stat = def?.kind === 'physical' && def.uses === 'muscle' ? 'Defense' : 'Speed';
+      const level = view.mine.penaltyLevel;
+      const risk = level === 1
+        ? 'Roll a 1, then another 1 on the penalty die, and the referee sends your player to the penalty box.'
+        : `Penalty risk ${level}: if your die and the penalty die both show ${level} or lower, the referee sends your player to the penalty box. Each attack raises the risk; each turn without one lowers it.`;
+      help = !selection.card
+        ? `Choose who attacks the opposing player in their spot. You flip the top card of your Physical pile, and that's the move: usually their Speed against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. ${risk}`
+        : !selection.attacker
+          ? `Choose who attacks with ${def?.name}: their ${stat} against the target's Speed, both roll. If you win, the target drops the ball and may be hurt. ${risk}`
+          : 'Now tap the opposing player to attack.';
+    }
     if (selection.kind === 'regroup') {
       help = view.config.regroupMax === 1
         ? 'Tap a card to discard, then confirm. You draw a new one.'
@@ -462,6 +520,13 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <div className="buttons">
           {shoot ? <button type="button" className="primary" onClick={() => act(shoot)}>Shoot!{shootLabel}</button> : null}
           {tackle ? <button type="button" onClick={() => act(tackle)}>Tackle{tackleLabel}</button> : null}
+          {view.config.physicalDraw === 'blind' && attacksFor(undefined).length && selection.kind === 'none' ? (
+            <button type="button" onClick={() => setSelection({ kind: 'attack' })}>Physical attack (penalty risk {view.mine.penaltyLevel})</button>
+          ) : null}
+          {selection.kind === 'cast' && selection.caster ? castsFor(selection.card, selection.caster).flatMap((a) => (a.target.kind === 'mendKnockedOut' ? [a] : [])).map((a) => {
+            const name = a.target.kind === 'mendKnockedOut' ? view.mine.knockedOut.find((c) => c.uid === (a.target as { card: string }).card)?.def.name : '';
+            return <button type="button" key={JSON.stringify(a.target)} onClick={() => act(a)}>Bring back {name}</button>;
+          }) : null}
           {!canRegroup ? null : selection.kind === 'regroup' ? (
             <button type="button" onClick={() => act({ type: 'regroup', side: me, discard: selection.picked })}>
               {selection.picked.length ? `Discard ${selection.picked.length} and draw` : 'Do nothing'}
@@ -483,13 +548,14 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       def={c.def}
       injury={c.injury}
       selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'foul' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
       dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
       onClick={() => onHandCard(c.uid, c.def, c.injury)}
     />
   );
-  const myPlayers = view.mine.hand.filter((c) => c.def.kind !== 'spell');
+  const myPlayers = view.mine.hand.filter((c) => c.def.kind === 'field' || c.def.kind === 'goalie');
   const mySpells = view.mine.hand.filter((c) => c.def.kind === 'spell');
+  const myPhysical = view.mine.hand.filter((c) => c.def.kind === 'physical');
 
   const selectedKey = selection.kind === 'holder' && myBall ? posKey(me, myBall)
     : selection.kind === 'cast' && selection.caster ? posKey(me, selection.caster) : null;
@@ -531,7 +597,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
               <div className="inspector" onClick={() => setInspected(null)}>
                 <CardFace def={inspected.def} injury={inspected.injury} />
                 <div className="inspector-text">
-                  {inspected.def.kind !== 'spell' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {magicLabel(r.affinity)} Affinity</div>) : null}
+                  {inspected.def.kind === 'field' || inspected.def.kind === 'goalie' ? inspected.def.resonants.map((r) => <div key={r.name}>{r.name} Resonant · {magicLabel(r.affinity)} Affinity</div>) : null}
                   {inspected.injury ? <div className="injury-text">Injured: {inspected.injury.name} ({injuryEffect(inspected.injury, inspected.def)}) until mended.</div> : null}
                   {inspected.def.flavor ? <div className="flavor">{inspected.def.flavor}</div> : null}
                 </div>
@@ -539,11 +605,14 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
             ) : null}
           </div>
 
-          {/* Your hand: full cards, players first, then spells. Beside the field on wide screens, below it on narrow ones. */}
+          {/* Your hand: full cards, players first, then spells, then physical cards. Beside the field on wide screens, below it on narrow ones. */}
           <section className="my-hand" aria-label="Your hand">
             <div className="hand-label">
               <strong>Your hand</strong>
-              <span>{myPlayers.length} {myPlayers.length === 1 ? 'player' : 'players'}, {mySpells.length} {mySpells.length === 1 ? 'spell' : 'spells'}</span>
+              <span>
+                {myPlayers.length} {myPlayers.length === 1 ? 'player' : 'players'}, {mySpells.length} {mySpells.length === 1 ? 'spell' : 'spells'}
+                {myPhysical.length ? `, ${myPhysical.length} physical` : ''}
+              </span>
               <span><span className="action">Action</span> spells: on your turn, as your action</span>
               <span><span className="reaction">Reaction</span> spells: when a contest starts</span>
             </div>
@@ -551,6 +620,8 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
               {myPlayers.map(handCard)}
               {myPlayers.length && mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
               {mySpells.map(handCard)}
+              {myPhysical.length && myPlayers.length + mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
+              {myPhysical.map(handCard)}
               {view.mine.hand.length === 0 ? <span className="empty-hand">No cards in hand.</span> : null}
             </div>
           </section>
@@ -566,6 +637,16 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
           <div className="piles">
             Your discard pile: {view.mine.discard.length} · Their discard pile: {view.opponent.discard.length}
           </div>
+          {view.mine.penaltyBox.length + view.opponent.penaltyBox.length > 0 ? (
+            <div className="piles knocked-out" title="A penalized player sits out, and their spot stays empty until the penalty is over (or the other team scores).">
+              Penalty box: {penaltyList(view.mine.penaltyBox, 'yours')} · {penaltyList(view.opponent.penaltyBox, 'theirs')}
+            </div>
+          ) : null}
+          {view.mine.knockedOut.length + view.opponent.knockedOut.length > 0 ? (
+            <div className="piles knocked-out" title="Knocked-out players sit beside the mat. At each faceoff each one rolls: 4 or more and they go back to the hand.">
+              Knocked out: {knockedOutList(view.mine.knockedOut, 'yours')} · {knockedOutList(view.opponent.knockedOut, 'theirs')}
+            </div>
+          ) : null}
         </div>
 
         {game.announcement ? <AnnouncementView a={game.announcement} opp={opp} onClose={game.dismissAnnouncement} /> : null}
@@ -631,6 +712,53 @@ function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: Opponent
       </div>
     </div>
   );
+}
+
+/** Before the dice (v0.17): declare a foul with a dirty play, or not. */
+function FoulPrompt({ view, legal, onFoul }: { view: PlayerView; legal: import('../engine').Action[]; onFoul: (uid: string | null) => void }) {
+  const fouls = legal.flatMap((a) => (a.type === 'foul' && a.card ? [view.mine.hand.find((c) => c.uid === a.card)!] : []));
+  const pending = view.pending;
+  const casterPos = pending.kind === 'foul' ? pending.contest[pending.role].pos : null;
+  return (
+    <div className="prompt">
+      <strong>Foul? Decide before the dice.</strong> If your side wins this contest, a dirty play hurts their player.
+      But if the two dice match (1 in 6), the referee sends your {casterPos ? posName(casterPos, view.lanes) : 'player'} off for the game.
+      A foul also uses up your reaction spell for this contest.
+      <div className="buttons">
+        {fouls.map((c) => <button type="button" key={c.uid} onClick={() => onFoul(c.uid)}>Foul: {c.def.name}</button>)}
+        <button type="button" className="primary" onClick={() => onFoul(null)}>Play it clean</button>
+      </div>
+    </div>
+  );
+}
+
+/** A physical reaction card can be played now (v0.17): Late Hit or Elbow. */
+function PhysicalReactionPrompt({ view, legal, opp, onPlay }: { view: PlayerView; legal: Action[]; opp: OpponentWords; onPlay: (uid: string | null) => void }) {
+  const pending = view.pending;
+  if (pending.kind !== 'physicalReaction') return null;
+  const cards = legal.flatMap((a) => (a.type === 'physicalReaction' && a.card ? [view.mine.hand.find((c) => c.uid === a.card)!] : []));
+  const why = pending.trigger === 'after_pass_or_shot'
+    ? `${opp.Name}'s ${posName(pending.target, view.lanes)} just passed or shot.`
+    : `Your ${posName(pending.attacker, view.lanes)} just lost to ${opp.owner} ${posName(pending.target, view.lanes)}. That result stands.`;
+  return (
+    <div className="prompt">
+      <strong>Physical reaction?</strong> {why} Your {posName(pending.attacker, view.lanes)} can attack them now (both roll; a 1 then another 1 means a penalty).
+      <div className="buttons">
+        {cards.map((c) => <button type="button" key={c.uid} onClick={() => onPlay(c.uid)}>{c.def.name}</button>)}
+        <button type="button" className="primary" onClick={() => onPlay(null)}>Let it go</button>
+      </div>
+    </div>
+  );
+}
+
+/** "none yours" or "yours: Ann Lee (2 turns)". */
+function penaltyList(box: PlayerView['mine']['penaltyBox'], whose: string): string {
+  return box.length ? `${whose}: ${box.map((e) => `${e.card.def.name} (${e.turnsLeft} turn${e.turnsLeft === 1 ? '' : 's'})`).join(', ')}` : `none ${whose}`;
+}
+
+/** "none yours" or "yours: Ann Lee, Bo Park". */
+function knockedOutList(cards: import('../engine').CardView[], whose: string): string {
+  return cards.length ? `${whose}: ${cards.map((c) => c.def.name).join(', ')}` : `none ${whose}`;
 }
 
 function duelCard(card: import('../engine').CardView | null) {

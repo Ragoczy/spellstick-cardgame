@@ -38,16 +38,16 @@
         "required": ["id", "team", "kind", "name"],
         "properties": {
           "id": { "type": "string", "description": "Also the art filename stem in assets/cards/." },
-          "team": { "type": "string", "description": "A team id, \"pool\" for player cards in the shared pool (each game deals both sides their goalies and field players at random from it), or \"library\" for spells in the spell library (teams pick them with their \"spells\" list)." },
-          "kind": { "enum": ["field", "goalie", "spell"] },
+          "team": { "type": "string", "description": "A team id, \"pool\" for player cards in the shared pool (each game deals both sides their goalies and field players at random from it), or \"library\" for spells in the spell library (teams pick them with their \"spells\" list), or \"physical\" for physical attack cards (every team's Physical pile has one of each)." },
+          "kind": { "enum": ["field", "goalie", "spell", "physical"] },
           "name": { "type": "string" },
           "role": {
             "description": "Player cards: the card's type, which says what it is good at. Any field player can still play any position.",
             "enum": ["runner", "striker", "playmaker", "allrounder", "anchor", "stopper", "goalie"]
           },
-          "bonusPoints": {
-            "description": "Named players: extra skill points added to the type's base stats when the card was made.",
-            "type": "integer", "minimum": 0, "maximum": 4
+          "cost": {
+            "description": "Named players (v0.17): what the player counts against a team's cap. Made by npm run price-players from measured values; don't edit by hand.",
+            "type": "integer", "minimum": 1
           },
           "resonants": {
             "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity: a whole family (\"fire\") or one specialization in it (\"fire.explosion\").",
@@ -67,9 +67,16 @@
           "shot": { "type": "integer", "minimum": 0, "maximum": 6 },
           "defense": { "type": "integer", "minimum": 0, "maximum": 6 },
           "faceoff": { "type": "integer", "minimum": 0, "maximum": 6 },
+          "toughness": { "type": ["integer", "null"], "description": "Field players (v0.17): knocked down, the player is fine on a roll at or below this, hurt above it. Physical cards: the modifier to the target's Toughness roll, or null for no Toughness roll." },
+          "severity": { "type": ["integer", "null"], "description": "Physical cards: the modifier to the severity roll, or null for no severity roll." },
+          "uses": { "enum": ["speed", "muscle"], "description": "Physical cards: speed attacks with the attacker's Speed, muscle with their Defense." },
+          "bonus": { "type": "integer", "description": "Physical cards: added to the attack." },
+          "affinity": { "type": "string", "pattern": "^[a-z-]+([.][a-z-]+)?$", "description": "Physical cards: the body Affinity that gives the attacker +1." },
+          "from": { "type": "string", "description": "Physical cards: the sport the foul comes from (printed)." },
+          "when": { "type": "string", "description": "Physical reaction cards: when you play it (printed)." },
           "save": { "type": "integer", "minimum": 0, "maximum": 8 },
           "spellType": { "enum": ["reaction", "action"] },
-          "tier": { "enum": ["legendary", "rare", "uncommon", "common"], "description": "Spells: power tier, named like a card rarity, strongest first. Measured by npm run spell-tiers (docs/MAGIC.md). Changes nothing in play." },
+          "tier": { "enum": ["legendary", "rare", "uncommon", "common", "minor", "major", "brutal"], "description": "Spells: power tier, named like a card rarity, strongest first (legendary to common). Measured by npm run spell-tiers (docs/MAGIC.md). Changes nothing in play. Physical cards: penalty tier (minor, major, brutal), which sets the penalty length." },
           "magic": { "type": ["string", "null"], "pattern": "^[a-z-]+([.][a-z-]+)?$", "description": "The spell's kind of magic: a family (\"fire\") or a specialization (\"illusion.glamour\"), or null for neutral." },
           "ability": { "$ref": "#/$defs/ability" },
           "text": { "type": "string", "description": "Rules text printed on the card." },
@@ -81,7 +88,11 @@
         },
         "allOf": [
           { "if": { "properties": { "kind": { "const": "field" } } },
-            "then": { "required": ["resonants", "speed", "shot", "defense", "faceoff"] } },
+            "then": { "required": ["resonants", "speed", "shot", "defense", "faceoff", "toughness"],
+                      "properties": { "toughness": { "type": "integer", "minimum": 1, "maximum": 6 } } } },
+          { "if": { "properties": { "kind": { "const": "physical" } } },
+            "then": { "required": ["tier", "uses", "bonus", "affinity", "toughness", "severity", "from"],
+                      "properties": { "tier": { "enum": ["minor", "major", "brutal"] }, "team": { "const": "physical" } } } },
           { "if": { "properties": { "kind": { "const": "goalie" } } },
             "then": { "required": ["resonants", "save"] } },
           { "if": { "properties": { "kind": { "const": "spell" } } },
@@ -97,9 +108,11 @@
       "required": ["effect", "params"],
       "properties": {
         "effect": {
-          "enum": ["bonus", "draw_on_win", "boost", "shield", "dirty_play", "scry", "swap",
+          "enum": ["bonus", "draw_on_win", "hits_harder", "hard_to_hurt", "boost", "shield", "dirty_play", "ward", "scry", "swap",
                    "long_pass", "long_shot", "steal", "recall", "hit", "mend",
-                   "decoy_pass", "mirror_images"]
+                   "decoy_pass", "mirror_images",
+                   "vs_holder", "reach", "needs_holder", "needs_shaken", "only_shaken", "shaken_anyway",
+                   "shaken_is_injured", "self_check", "pile_on", "after_pass_or_shot", "after_losing"]
         },
         "params": { "type": "object" }
       },
@@ -110,7 +123,7 @@
             "properties": {
               "stat": { "enum": ["speed", "shot", "defense", "faceoff", "save"] },
               "amount": { "type": "integer" },
-              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist"] },
+              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist", "attack"] },
               "row": { "enum": ["defense", "midfield", "forward"] }
             } } } } },
         { "if": { "properties": { "effect": { "const": "draw_on_win" } } },
@@ -122,7 +135,7 @@
             "type": "object", "required": ["amount"], "additionalProperties": false,
             "properties": {
               "amount": { "$ref": "#/$defs/count" },
-              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist"] }
+              "when": { "enum": ["receive", "intercept", "tackle", "evade", "shoot", "save", "faceoff", "resist", "attack"] }
             } } } } },
         { "if": { "properties": { "effect": { "const": "steal" } } },
           "then": { "properties": { "params": {
@@ -140,7 +153,13 @@
           "then": { "properties": { "params": {
             "type": "object", "required": ["penalty"], "additionalProperties": false,
             "properties": { "penalty": { "$ref": "#/$defs/count" } } } } } },
-        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "scry", "swap", "long_pass", "mend", "decoy_pass", "mirror_images"] } } },
+        { "if": { "properties": { "effect": { "enum": ["vs_holder", "pile_on", "hits_harder", "hard_to_hurt"] } } },
+          "then": { "properties": { "params": {
+            "type": "object", "required": ["amount"], "additionalProperties": false,
+            "properties": { "amount": { "$ref": "#/$defs/count" } } } } } },
+        { "if": { "properties": { "effect": { "enum": ["shield", "dirty_play", "ward", "scry", "swap", "long_pass", "mend", "decoy_pass", "mirror_images",
+                                                       "reach", "needs_holder", "needs_shaken", "only_shaken", "shaken_anyway", "shaken_is_injured",
+                                                       "self_check", "after_pass_or_shot", "after_losing"] } } },
           "then": { "properties": { "params": {
             "type": "object", "maxProperties": 0 } } } }
       ]

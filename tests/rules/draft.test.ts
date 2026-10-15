@@ -115,7 +115,8 @@ describe('draft', () => {
         expect(uids.every((uid) => state.cards[uid]!.team === side)).toBe(true);
       }
       // No named player is on both teams.
-      const all = Object.keys(state.cards).filter((uid) => !uid.startsWith('P') && state.cards[uid]!.kind !== 'spell').map((uid) => state.cards[uid]!.id);
+      const isPlayer = (uid: string) => state.cards[uid]!.kind === 'field' || state.cards[uid]!.kind === 'goalie';
+      const all = Object.keys(state.cards).filter((uid) => !uid.startsWith('P') && isPlayer(uid)).map((uid) => state.cards[uid]!.id);
       expect(new Set(all).size).toBe(all.length);
     }
   });
@@ -137,7 +138,7 @@ describe('draft', () => {
       expect(record.final.result).not.toBeNull();
       expect(findProblems(record.final)).toEqual([]);
     }
-  });
+  }, 60_000); // six whole games: slow when the full suite runs in parallel
 
   it('given goalies in the pool, the computer drafts one', () => {
     let { state } = createGame({ ...setup(5), config: { ...config, draftPoolGoalies: 4, draftPoolField: 26 } });

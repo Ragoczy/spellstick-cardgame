@@ -12,10 +12,19 @@
 // - Casters are chosen to match the spell's magic, preferring players already face up.
 // - Hits go after strong revealed players and the ball carrier (goalies can't be hit).
 // - Dirty plays go into contests it expects to win. Mend goes on players it values.
+// - Since v0.17, a hurt is worth its chance of each severity (Shaken, Injured, Knocked out), and a
+//   tackle also counts the chance of knocking the holder down, from their Toughness (a guess by
+//   row for a face-down player, whose card it can't see). Shaken players count as weaker.
+// - Fouls (v0.17) are declared before the dice: worth it when the chance of winning times the hurt
+//   beats the 1-in-6 risk of the referee sending its player off. Rerolls break or chase doubles.
+// - Physical attacks (v0.17) are worth the chance of winning times the ball (if the target has it)
+//   and the hurt, less the small chance of a penalty and the card. Late Hit and Elbow the same way.
 
 import { adjustAmount, adjustPenalty, affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
-import { NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
+import {
+  familyOf, NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PhysicalCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse,
+} from '../engine/cards';
 import type { GameConfig, InjuryDef, InjuryStat } from '../engine/config';
 import { DEFAULT_CONFIG } from '../engine/config';
 import type { CardView } from '../engine/events';
@@ -53,6 +62,31 @@ const SPELL_VALUE: Record<string, number> = {
 const INJURY_WORTH = 0.06;
 /** Rough worth of carrying off an opposing player who is already injured. */
 const CARRY_OFF_WORTH = 0.12;
+/** Rough worth of making an opposing player Shaken: they sit out a turn and are weaker meanwhile. */
+const SHAKEN_WORTH = 0.04;
+/**
+ * Rough worth of knocking out an opposing player: off the field until a return roll, about as
+ * bad as a carry-off. With the default severity table (half Shaken, a third Injured, a sixth
+ * Knocked out) an average hurt is then worth what an injury was before v0.17.
+ */
+const KNOCKOUT_WORTH = 0.12;
+/** A guess at an unseen player's Toughness, by row (Stoppers and Anchors usually play deep). */
+const TOUGHNESS_GUESS: Record<Area, number> = { defense: 4.5, midfield: 4, forward: 3.5 };
+/** Rough worth (as a loss) of a player sent off for the game: like a carry-off, with the spot empty until a substitute. */
+const SENT_OFF_WORTH = 0.15;
+/** What playing a dirty play as a foul costs in cards: little, since a dirty play has no other use. */
+const FOUL_CARD_COST = 0.03;
+/** What playing a Ward costs in cards: little, since a Ward has no other use. */
+const WARD_CARD_COST = 0.01;
+/** Rough worth of keeping a physical attack card in hand. */
+const PHYSICAL_CARD_VALUE = 0.03;
+/**
+ * Rough worth (as a loss) of each turn a player spends in the penalty box, their spot empty: worst
+ * on defense, where nobody can intercept or tackle the forward in that lane.
+ */
+const PENALTY_TURN_WORTH: Record<Area, number> = { defense: 0.15, midfield: 0.08, forward: 0.05 };
+/** Worth of substituting out a Shaken player, who comes back standing. */
+const SHAKEN_SUB_WORTH = 0.015;
 
 /**
  * Rough worth of mirror images that last until found: protection from later tackles (players
@@ -103,6 +137,12 @@ function visibleInjury(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): 
 
 function isFaceDown(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
   return slotOf(view, owner, pos).state !== 'revealed';
+}
+
+/** Whether the player at a spot is Shaken (public: the card is sideways). */
+function isShakenAt(view: PlayerView, owner: 'mine' | 'opponent', pos: Pos): boolean {
+  const slot = slotOf(view, owner, pos);
+  return slot.state !== 'empty' && !!slot.shaken;
 }
 
 /** Whether the player at a spot has mirror images (public). */
@@ -199,6 +239,15 @@ class Thinker {
       case 'chooseGoalie': return this.scoreGoalie(action.card);
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
+      case 'foul': return this.scoreFoul(action.card);
+      case 'attack': return this.currentValue() + (action.card === undefined
+        ? this.blindAttackGain(action.attacker, action.target)
+        : this.attackGain(this.handCard(action.card) as PhysicalCardDef, action.attacker, action.target));
+      case 'physicalReaction': {
+        const pending = this.view.pending;
+        if (action.card === null || pending.kind !== 'physicalReaction') return 0;
+        return this.attackGain(this.handCard(action.card) as PhysicalCardDef, pending.attacker, pending.target);
+      }
       case 'react': return this.scoreReaction(action.card);
       case 'callDice': return action.roll ? this.scoreDice() : 0;
       case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
@@ -265,20 +314,22 @@ class Thinker {
     const card = knownCard(this.view, 'mine', pos);
     if (!card) return 0;
     const player = card.def as PlayerCardDef;
-    return scoreSide({ player, injury: card.injury, side: { stat, use, pos, modifiers }, spell: null, shielded: false }, this.config).total;
+    const shaken = isShakenAt(this.view, 'mine', pos);
+    return scoreSide({ player, injury: card.injury, shaken, side: { stat, use, pos, modifiers }, spell: null, shielded: false }, this.config).total;
   }
 
   private theirValue(pos: Pos, stat: StatName, use: StatUse): number {
     const slot = slotOf(this.view, 'opponent', pos);
     if (slot.state === 'empty') return 0;
     const card = knownCard(this.view, 'opponent', pos);
+    const shaken = isShakenAt(this.view, 'opponent', pos);
     if (card) {
       const player = card.def as PlayerCardDef;
-      return scoreSide({ player, injury: card.injury, side: { stat, use, pos, modifiers: [] }, spell: null, shielded: false }, this.config).total;
+      return scoreSide({ player, injury: card.injury, shaken, side: { stat, use, pos, modifiers: [] }, spell: null, shielded: false }, this.config).total;
     }
-    // Unknown player: a guess for the position, minus any injury showing.
+    // Unknown player: a guess for the position, minus any injury showing (and Shaken, if sideways).
     const injury = visibleInjury(this.view, 'opponent', pos);
-    const penalty = injury && stat !== 'save' ? injury.penalty[stat as InjuryStat] ?? 0 : 0;
+    const penalty = (injury && stat !== 'save' ? injury.penalty[stat as InjuryStat] ?? 0 : 0) + (shaken ? this.config.shakenPenalty : 0);
     return Math.max(0, this.guessUnknown(pos, stat) - penalty);
   }
 
@@ -420,14 +471,40 @@ class Thinker {
   private tackleValue(modifiers: Modifier[]): number {
     const holder = this.view.ball!.pos as FieldPos;
     const tackler = opposite(holder);
-    const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler, 'tackle');
-    const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
+    const assist = this.assistFor(tackler);
+    const mine = this.myValue(tackler, 'defense', 'tackle', [...modifiers, ...assist]) + 0.6 * this.bestBoost(tackler, 'tackle');
+    const theirs = this.theirValue(holder, 'speed', 'evade');
+    const p = this.chance(mine, theirs, false);
+    // Tackle risk (optional): losing badly leaves my tackler Shaken.
+    const risk = this.config.tackleRiskMargin ? this.loseByChance(mine, theirs, this.config.tackleRiskMargin) * SHAKEN_WORTH * this.unit() : 0;
     const lost = -this.ladder()[holder.area];
-    const tackled = p * this.afterGaining(tackler) + (1 - p) * lost;
+    // Since v0.17 a won tackle also knocks the holder down (who no longer has the ball by then).
+    const knockdown = this.config.knockdowns ? this.knockdownChance('opponent', holder) * this.injuryWorth(holder, true) : 0;
+    const tackled = p * (this.afterGaining(tackler) + knockdown) + (1 - p) * lost - risk;
     // Against mirror images, the tackle usually goes for an image and changes nothing.
     if (!hasImages(this.view, 'opponent', holder)) return tackled;
     const real = this.findsRealPlayer();
     return real * tackled + (1 - real) * lost;
+  }
+
+  /** Tackle assist (optional): my standing teammates one lane over in the tackler's row. */
+  private assistFor(tackler: FieldPos): Modifier[] {
+    if (!this.config.tackleAssist) return [];
+    const helpers = [tackler.lane - 1, tackler.lane + 1].filter((lane) => {
+      if (lane < 0 || lane >= this.view.lanes) return false;
+      const slot = slotOf(this.view, 'mine', { area: tackler.area, lane });
+      return slot.state !== 'empty' && !slot.shaken;
+    }).length;
+    return helpers ? [{ label: 'Assist', amount: helpers * this.config.tackleAssist }] : [];
+  }
+
+  /** Chance that a side worth `mine` loses to one worth `theirs` by `margin` or more, both rolling. */
+  private loseByChance(mine: number, theirs: number, margin: number): number {
+    const die = this.config.contestDie;
+    if (!die) return theirs - mine >= margin ? 1 : 0;
+    let n = 0;
+    for (let a = 1; a <= die; a++) for (let b = 1; b <= die; b++) if (theirs + b - (mine + a) >= margin) n += 1;
+    return n / (die * die);
   }
 
   /** Chance that a tackle or hit on a player with mirror images finds the real one. */
@@ -443,7 +520,7 @@ class Thinker {
     // Filling an empty spot (a player was carried off) is well worth an action.
     if (!outgoing) return (pos.area === 'goal' ? incoming.kind === 'goalie' : incoming.kind === 'field') ? 0.15 - incomingInjured : -1;
     // Taking off an injured player is worth more.
-    const outgoingInjured = visibleInjury(this.view, 'mine', pos) ? 0.03 : 0;
+    const outgoingInjured = (visibleInjury(this.view, 'mine', pos) ? 0.03 : 0) + (isShakenAt(this.view, 'mine', pos) ? SHAKEN_SUB_WORTH : 0);
     const hidesRevealed = isFaceDown(this.view, 'mine', pos) ? 0 : 0.01;
     // A player who has cast all the spells they can recharges by resting in hand.
     const outgoingSlot = slotOf(this.view, 'mine', pos);
@@ -456,17 +533,58 @@ class Thinker {
     return 0.03 * (fit(incoming, pos.area) - fit(outgoing, pos.area)) + hidesRevealed + recharges + outgoingInjured - incomingInjured - 0.02;
   }
 
-  /** How much injuring the opposing player at `pos` is worth. */
-  private injuryWorth(pos: Pos): number {
+  /**
+   * How much hurting the opposing player at `pos` is worth. Before v0.17 every hurt is an injury;
+   * since then it's the chance of each severity times its worth. ignoreBall: they won't have the
+   * ball by then (a won tackle has already taken it).
+   */
+  private injuryWorth(pos: Pos, ignoreBall = false): number {
     const slot = slotOf(this.view, 'opponent', pos);
-    if (slot.state === 'empty' || pos.area === 'goal') return 0; // goalies can't be injured
-    if (visibleInjury(this.view, 'opponent', pos)) return CARRY_OFF_WORTH * this.unit();
-    let worth = INJURY_WORTH;
+    if (slot.state === 'empty' || pos.area === 'goal') return 0; // goalies can't be hurt
     const ball = this.view.ball;
-    if (ball && ball.side !== this.me && samePos(ball.pos, pos)) worth += 0.05; // the ball carrier
+    const carrier = !ignoreBall && !!ball && ball.side !== this.me && samePos(ball.pos, pos) ? 0.05 : 0;
     const player = knownPlayer(this.view, 'opponent', pos);
-    if (player?.kind === 'field') worth += 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4);
-    return worth * this.unit();
+    const star = player?.kind === 'field' ? 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4) : 0;
+    const sub = this.subShaken();
+    const injury = (visibleInjury(this.view, 'opponent', pos) ? CARRY_OFF_WORTH : INJURY_WORTH + carrier + star) + sub;
+    if (!this.config.knockdowns) return injury * this.unit();
+    // A Shaken carrier keeps the ball; a knocked-out one loses it (like an injury).
+    const odds = this.severityOdds();
+    return (odds.shaken * (SHAKEN_WORTH + star) + odds.injured * injury + odds.knockedOut * Math.max(KNOCKOUT_WORTH + carrier + star + sub, injury)) * this.unit();
+  }
+
+  /** What a forced substitute coming on Shaken adds to a player leaving the field (config.forcedSubShaken). */
+  private subShaken(): number {
+    return this.config.forcedSubShaken ? SHAKEN_WORTH : 0;
+  }
+
+  /** The chance of each severity (v0.17), from the severity table. */
+  private severityOdds(): { shaken: number; injured: number; knockedOut: number } {
+    const die = this.config.contactDie;
+    const shaken = Math.min(1, this.config.severity.shaken / die);
+    const injured = Math.min(1 - shaken, Math.max(0, this.config.severity.injured - this.config.severity.shaken) / die);
+    return { shaken, injured, knockedOut: 1 - shaken - injured };
+  }
+
+  /** Rough worth (as a loss) of one of my players being hurt, on the same scale as INJURY_WORTH. */
+  private ownHurtWorth(): number {
+    const sub = this.subShaken();
+    if (!this.config.knockdowns) return INJURY_WORTH + sub;
+    const odds = this.severityOdds();
+    return odds.shaken * SHAKEN_WORTH + odds.injured * (INJURY_WORTH + sub) + odds.knockedOut * (KNOCKOUT_WORTH + sub);
+  }
+
+  /**
+   * Chance that a knocked-down player at `pos` is hurt: a roll above their Toughness (plus
+   * `modifier`, from a physical card). A face-down opponent's Toughness can't be seen, so it's
+   * guessed by row.
+   */
+  private knockdownChance(owner: 'mine' | 'opponent', pos: Pos, modifier = 0): number {
+    if (!isFieldPos(pos)) return 0;
+    const player = knownPlayer(this.view, owner, pos);
+    const toughness = (player?.kind === 'field' ? player.toughness : TOUGHNESS_GUESS[pos.area]) + modifier;
+    const die = this.config.contactDie;
+    return Math.min(1, Math.max(0, die - toughness) / die);
   }
 
   private castValue(action: Extract<Action, { type: 'cast' }>): number {
@@ -530,6 +648,11 @@ class Thinker {
           onField = true;
         } else if (target.kind === 'mendHand') {
           card = this.view.mine.hand.find((c) => c.uid === target.card);
+        } else if (target.kind === 'mendKnockedOut') {
+          // Bringing a knocked-out player back: one more player to bring on.
+          const back = this.view.mine.knockedOut.find((c) => c.uid === target.card);
+          if (!back || back.def.kind !== 'field') return -1;
+          return base + unit * (0.03 + 0.015 * Math.max(0, bestFit(back.def) - 3)) - cost;
         }
         if (!card?.injury) return -1;
         const def = card.def as PlayerCardDef;
@@ -561,10 +684,10 @@ class Thinker {
     const them = contest[other];
     const myCard = knownCard(this.view, 'mine', me.pos)!;
     const theirCard = knownCard(this.view, 'opponent', them.pos);
-    const total = (card: CardView | null, side: typeof me) =>
-      scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, side, spell: null, shielded: false }, this.config).total;
-    const mine = total(myCard, me);
-    const theirs = total(theirCard, them);
+    const total = (card: CardView | null, side: typeof me, owner: 'mine' | 'opponent') =>
+      scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, shaken: isShakenAt(this.view, owner, side.pos), side, spell: null, shielded: false }, this.config).total;
+    const mine = total(myCard, me, 'mine');
+    const theirs = total(theirCard, them, 'opponent');
     const iWinTies = contest.tiesGoTo === role;
     // Rerolling: the dice are already showing, so only spells are still unknown.
     const reroll = this.config.diceTokens === 'reroll';
@@ -579,7 +702,118 @@ class Thinker {
     // Rolls are scarce: worth more as the pile runs down.
     const left = this.view.diceLeft[this.me];
     const rollValue = (left > this.config.diceBudget / 2 ? 0.05 : 0.1) * this.unit();
-    return this.importance(contest, role) * (withDice - now) - rollValue;
+    return this.importance(contest, role) * (withDice - now) - rollValue + this.refereeGain(me, them, die);
+  }
+
+  /**
+   * The referee (v0.17): rerolling my die changes whether the dice match. Worth it to break a
+   * double when I fouled, or to chase one when they did.
+   */
+  private refereeGain(me: Contest['attacker'], them: Contest['attacker'], die: number): number {
+    if (this.config.foulTiming !== 'before' || this.config.diceTokens !== 'reroll' || !me.roll || !them.roll) return 0;
+    const iFouled = this.isFoul(me.spell?.uid);
+    const theyFouled = this.isFoul(them.spell?.uid);
+    if (!iFouled && !theyFouled) return 0;
+    const doublesNow = me.roll === them.roll ? 1 : 0;
+    const stake = (theyFouled ? SENT_OFF_WORTH : 0) - (iFouled ? SENT_OFF_WORTH : 0);
+    return (1 / die - doublesNow) * stake * this.unit();
+  }
+
+  /** Whether a spell played in this contest was a dirty play (it's on a discard pile by now). */
+  private isFoul(uid: string | undefined): boolean {
+    if (!uid) return false;
+    const card = [...this.view.mine.discard, ...this.view.opponent.discard].find((c) => c.uid === uid);
+    return card?.def.kind === 'spell' && card.def.ability.effect === 'dirty_play';
+  }
+
+  // ---- Physical attacks (v0.17) ----
+
+  /**
+   * What a physical attack is worth, beyond what I have now: if it wins, the target drops the ball
+   * (if they have it) and may be hurt. Less the chance of a penalty (a 1 on my die, then another 1)
+   * and the card itself. Spearing risks my own player too.
+   */
+  private attackGain(def: PhysicalCardDef, attacker: FieldPos, target: FieldPos): number {
+    const attackerCard = knownPlayer(this.view, 'mine', attacker);
+    const targetCard = knownPlayer(this.view, 'opponent', target);
+    if (!attackerCard) return -1;
+    const mods: Modifier[] = def.bonus ? [{ label: def.name, amount: def.bonus }] : [];
+    if (this.hasAffinity(attackerCard, def.affinity)) mods.push({ label: 'Affinity', amount: this.config.affinityAttackBonus });
+    const ball = this.view.ball;
+    const theyHoldIt = !!ball && ball.side !== this.me && samePos(ball.pos, target);
+    const ability = def.ability;
+    if (ability?.effect === 'vs_holder' && theyHoldIt) mods.push({ label: 'Has the ball', amount: ability.params.amount });
+    if (ability?.effect === 'pile_on') {
+      const helpers = [attacker.lane - 1, attacker.lane + 1].filter((lane) => {
+        if (lane < 0 || lane >= this.view.lanes) return false;
+        const slot = slotOf(this.view, 'mine', { area: attacker.area, lane });
+        return slot.state !== 'empty' && !slot.shaken;
+      }).length;
+      if (helpers) mods.push({ label: 'Pile-on', amount: helpers * ability.params.amount });
+    }
+    const stat: StatName = def.uses === 'muscle' ? 'defense' : 'speed';
+    const mine = this.myValue(attacker, stat, 'attack', mods) + 0.6 * this.bestBoost(attacker, 'attack');
+    const dodge = targetCard && this.hasAffinity(targetCard, this.config.physicalDodge.affinity) ? this.config.physicalDodge.amount : 0;
+    const p = this.chance(mine, this.theirValue(target, 'speed', 'evade') + dodge, false);
+
+    const ballGain = theyHoldIt ? this.afterGaining(attacker) - this.currentValue() : 0;
+    let hurt = 0;
+    if (ability?.effect === 'only_shaken') hurt = SHAKEN_WORTH * this.unit();
+    else if (def.toughness !== null) {
+      const endurance = targetCard && this.hasAffinity(targetCard, this.config.physicalEndurance.affinity) ? this.config.physicalEndurance.amount : 0;
+      const chance = ability?.effect === 'shaken_anyway' ? 1 : this.knockdownChance('opponent', target, def.toughness + endurance);
+      hurt = chance * this.injuryWorth(target, true);
+    }
+    const selfRisk = ability?.effect === 'self_check' ? this.knockdownChance('mine', attacker) * this.ownHurtWorth() * this.unit() : 0;
+    // The penalty check needs both dice at the team's penalty risk level or lower.
+    const level = this.view.mine.penaltyLevel;
+    const die = this.config.contestDie || 6;
+    const penaltyRisk = Math.min(1, level / die) * Math.min(1, level / this.config.contactDie) * this.config.penaltyTurns[def.tier] * PENALTY_TURN_WORTH[attacker.area] * this.unit();
+    return p * (ballGain + hurt) - selfRisk - penaltyRisk - PHYSICAL_CARD_VALUE * this.unit();
+  }
+
+  /**
+   * A blind attack (config.physicalDraw 'blind'): the card is the unseen top of my Physical pile,
+   * so it's worth the average over the cards still in it (after a reshuffle, the discards).
+   */
+  private blindAttackGain(attacker: FieldPos, target: FieldPos): number {
+    const remaining = this.view.mine.physicalRemaining.length
+      ? this.view.mine.physicalRemaining
+      : this.view.mine.physicalDiscard.map((c) => c.def);
+    const cards = remaining.filter((d): d is PhysicalCardDef => d.kind === 'physical');
+    if (!cards.length) return -1;
+    return cards.reduce((sum, def) => sum + this.attackGain(def, attacker, target), 0) / cards.length;
+  }
+
+  /** Whether a player has this Affinity: exactly, or their whole family. */
+  private hasAffinity(player: PlayerCardDef, affinity: string): boolean {
+    return player.resonants.some((r) => r.affinity === affinity || r.affinity === familyOf(affinity));
+  }
+
+  // ---- Fouls (v0.17) ----
+
+  /**
+   * Declaring a foul before the dice: if my side wins, their player is hurt; if the dice match,
+   * the referee sends mine off. It also uses up my reaction spell for this contest.
+   */
+  private scoreFoul(uid: string | null): number {
+    const pending = this.view.pending;
+    if (uid === null || pending.kind !== 'foul') return 0;
+    const { contest, role } = pending;
+    const me = contest[role];
+    const them = contest[role === 'attacker' ? 'defender' : 'attacker'];
+    const myCard = knownCard(this.view, 'mine', me.pos);
+    if (!myCard) return -1;
+    const spell = this.handCard(uid) as SpellCardDef;
+    if (this.affinity(myCard.def as PlayerCardDef, spell) === 'opposed') return -1; // it would fail
+    const theirCard = knownCard(this.view, 'opponent', them.pos);
+    const total = (card: CardView | null, side: typeof me, owner: 'mine' | 'opponent') =>
+      scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, shaken: isShakenAt(this.view, owner, side.pos), side, spell: null, shielded: false }, this.config).total;
+    const pWin = this.chance(total(myCard, me, 'mine'), total(theirCard, them, 'opponent'), contest.tiesGoTo === role);
+    // An empty spot doesn't roll, so there can be no doubles.
+    const die = this.config.contestDie || this.config.shotDie;
+    const caught = theirCard && die ? 1 / die : 0;
+    return pWin * this.injuryWorth(them.pos) - caught * SENT_OFF_WORTH * this.unit() - FOUL_CARD_COST * this.unit();
   }
 
   // ---- Reactions ----
@@ -605,10 +839,12 @@ class Thinker {
     const iShield = mySpellWorks && mySpell.ability.effect === 'shield';
 
     const myTotal = scoreSide({
-      player: myPlayer, injury: myCard.injury, side: me, shielded: theyShieldMe,
+      player: myPlayer, injury: myCard.injury, shaken: isShakenAt(this.view, 'mine', me.pos), side: me, shielded: theyShieldMe,
       spell: mySpellWorks ? { def: mySpell, affinity: myAffinity } : null,
     }, this.config).total;
-    const theirTotal = scoreSide({ player: theirPlayer, injury: theirCard?.injury, side: them, spell: theirSpell, shielded: !!iShield }, this.config).total;
+    const theirTotal = scoreSide({
+      player: theirPlayer, injury: theirCard?.injury, shaken: isShakenAt(this.view, 'opponent', them.pos), side: them, spell: theirSpell, shielded: !!iShield,
+    }, this.config).total;
 
     const iWinTies = contest.tiesGoTo === role;
     // The defender reacts last, so knows the outcome. The attacker has to allow for a reply
@@ -623,10 +859,30 @@ class Thinker {
     // Winning also injures their player if I play a dirty play; losing injures mine if they did.
     const iDirty = mySpellWorks && mySpell.ability.effect === 'dirty_play';
     if (iDirty) importance += this.injuryWorth(them.pos);
-    if (theyDirty) importance += INJURY_WORTH;
-    // In a hit, the defender losing means an injury.
-    if (contest.kind === 'hit' && role === 'defender') importance += INJURY_WORTH;
+    if (theyDirty) importance += this.ownHurtWorth();
+    // In a hit, the defender losing means a hurt; in a tackle (v0.17), a knockdown.
+    if (contest.kind === 'hit' && role === 'defender') importance += this.ownHurtWorth();
+    if (contest.kind === 'tackle' && role === 'defender' && this.config.knockdowns) {
+      importance += this.knockdownChance('mine', me.pos) * this.ownHurtWorth();
+    }
+    // Ward (v0.17): worth the chance my player is hurt here, times how much worse than Shaken that is.
+    if (mySpell?.ability.effect === 'ward') {
+      if (!mySpellWorks) return -1;
+      const saved = this.hurtRisk(contest, role, pWin, theyDirty) * Math.max(0, this.ownHurtWorth() - SHAKEN_WORTH) * this.unit();
+      return importance * pWin + saved - WARD_CARD_COST * this.unit();
+    }
     return importance * pWin - cost;
+  }
+
+  /** Chance my player in this contest is hurt: they lose a hit, a tackle (as the holder), or an attack, or lose to a dirty play. */
+  private hurtRisk(contest: Contest, role: ContestRole, pWin: number, theyDirty: boolean): number {
+    const lose = 1 - pWin;
+    if (theyDirty) return lose;
+    if (role !== 'defender') return 0;
+    const me = contest.defender;
+    if (contest.kind === 'hit') return lose;
+    if (contest.kind === 'tackle' || contest.kind === 'attack') return lose * this.knockdownChance('mine', me.pos, contest.kind === 'attack' ? -1 : 0);
+    return 0;
   }
 
   private playedSpell(uid: string | null, affinity?: Affinity, fizzled?: boolean): { def: SpellCardDef; affinity: Affinity } | null {
@@ -649,6 +905,7 @@ class Thinker {
       case 'penalty': return 1;
       case 'hit': return role === 'attacker' ? this.injuryWorth(contest.defender.pos) / this.unit() : 0.05;
       case 'faceoff': return 0.5;
+      case 'attack': return 0.35;
       case 'pass':
         if (attackerArea === 'forward') return role === 'attacker' ? 0.6 : 0.7;
         if (attackerArea === 'defense') return role === 'attacker' ? 0.3 : 0.5;
@@ -671,8 +928,9 @@ class Thinker {
   }
 
   private cardValue(def: CardDef): number {
+    if (def.kind === 'physical') return PHYSICAL_CARD_VALUE;
     if (def.kind === 'spell') {
-      if (def.ability.effect === 'mend' && this.hasInjuredPlayer()) return 0.08;
+      if (def.ability.effect === 'mend' && (this.hasInjuredPlayer() || this.view.mine.knockedOut.length > 0)) return 0.08;
       return SPELL_VALUE[def.ability.effect] ?? 0.05;
     }
     if (def.kind === 'goalie') {

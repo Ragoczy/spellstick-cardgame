@@ -32,16 +32,17 @@ describe('card data', () => {
     expect(pool.filter((c) => c.kind === 'field').length).toBeGreaterThanOrEqual(2 * config.deckFieldPlayers);
   });
 
-  it('deals each side a 40-card deck: 2 goalies, 22 field players, 16 spells', () => {
+  it('deals each side a 40-card deck (2 goalies, 22 field players, 16 spells) and a 16-card Physical pile', () => {
     const config = makeConfig();
     for (const seed of [1, 2, 3]) {
       const { state } = createGame({ seed, cardSet: prototypeCards });
       for (const side of ['A', 'B']) {
         const deck = Object.entries(state.cards).filter(([uid]) => uid.startsWith(side)).map(([, def]) => def);
-        expect(deck).toHaveLength(config.deckSize);
+        expect(deck).toHaveLength(config.deckSize + config.physicalPileSize);
         expect(deck.filter((c) => c.kind === 'goalie')).toHaveLength(config.deckGoalies);
         expect(deck.filter((c) => c.kind === 'field')).toHaveLength(config.deckFieldPlayers);
         expect(deck.filter((c) => c.kind === 'spell')).toHaveLength(16);
+        expect(deck.filter((c) => c.kind === 'physical')).toHaveLength(config.physicalPileSize);
       }
     }
   });
@@ -58,7 +59,7 @@ describe('card data', () => {
   it('gives every field player a Faceoff stat and 1 to 3 Resonants', () => {
     for (const card of prototypeCards.cards) {
       if (card.kind === 'field') expect(Number.isInteger(card.faceoff)).toBe(true);
-      if (card.kind !== 'spell') expect(card.resonants.length).toBeGreaterThanOrEqual(1);
+      if (card.kind === 'field' || card.kind === 'goalie') expect(card.resonants.length).toBeGreaterThanOrEqual(1);
     }
   });
 

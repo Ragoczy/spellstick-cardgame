@@ -2,7 +2,9 @@
 // if it's fine. legalActions() uses this too, so there is one source of truth for legality.
 
 import type { Action } from './actions';
-import { castsLeft, defOf, isActionSpell, isReactionSpell, justCameOn, slotAt } from './board';
+import { castsLeft, defOf, isActionSpell, isFoulSpell, isReactionSpell, justCameOn, slotAt } from './board';
+import { inPenaltyBox, isShaken } from './injuries';
+import { PHYSICAL_REACTIONS, type PhysicalCardDef } from './cards';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 import { reactionFits, type SpellCardDef } from './cards';
@@ -26,7 +28,8 @@ function holds(s: GameState, side: Side): boolean {
 
 function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to pass.';
-  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
+  const passer = cantAct(s, side, s.ball!.pos);
+  if (passer) return passer;
   if (!validField(s, to)) return 'That is not a spot on the field.';
   const targets = passTargets(s.ball!.pos, s.config.lanes, longPass);
   if (!targets.some((t) => samePos(t, to))) return "You can't pass there.";
@@ -36,7 +39,8 @@ function canPass(s: GameState, side: Side, to: FieldPos, longPass: boolean): str
 
 function canShoot(s: GameState, side: Side, from: 'forward' | 'midfield'): string | null {
   if (!holds(s, side)) return 'Your team needs the ball to shoot.';
-  if (justCameOn(s, side, s.ball!.pos)) return JUST_CAME_ON;
+  const shooter = cantAct(s, side, s.ball!.pos);
+  if (shooter) return shooter;
   if (s.ball!.pos.area !== from) return from === 'forward' ? 'Only a forward holding the ball can shoot.' : 'A long shot needs a midfielder holding the ball.';
   return null;
 }
@@ -46,8 +50,7 @@ function canTackle(s: GameState, side: Side): string | null {
   if (s.ball.pos.area === 'goal') return "Goalies can't be tackled.";
   if (s.ballProtected) return "That player just caught a pass and can't be tackled until their next turn.";
   if (!slotAt(s, side, opposite(s.ball.pos))) return 'You have nobody in that spot to tackle with.';
-  if (justCameOn(s, side, opposite(s.ball.pos))) return JUST_CAME_ON;
-  return null;
+  return cantAct(s, side, opposite(s.ball.pos));
 }
 
 /** A lane can be chosen for a faceoff unless both midfielders are missing (and some lane has one). */
@@ -78,6 +81,60 @@ const GOALIE_CLEARING = "Your goalie has the ball and must clear it this turn, s
 
 const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
 const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
+const SHAKEN = "That player is Shaken, so they can't pass, shoot, tackle, or cast until they stand up.";
+const DIRTY_PLAYS_FIRST = 'A dirty play is a foul: declare it before the dice, not after.';
+const IN_THE_BOX = "That player is in the penalty box: nobody can come on in their spot until the penalty is over.";
+
+/**
+ * A blind attack (config.physicalDraw 'blind'): no card is chosen; the top of the Physical pile is
+ * flipped. Always at the opposing player in your spot, since nobody knows the card yet.
+ */
+function canAttackBlind(s: GameState, side: Side, card: string | undefined, attacker: FieldPos, target: FieldPos): string | null {
+  if (card !== undefined) return 'Physical cards are flipped from the top of your Physical pile, not played from hand.';
+  const team = s.teams[side];
+  const limit = s.config.physicalAttackLimit;
+  if (limit && (team.physicalDiscard.length >= limit || team.physical.length === 0)) return 'You have no physical attacks left this game.';
+  if (team.physical.length + team.physicalDiscard.length === 0) return 'You have no physical cards.';
+  if (!validField(s, attacker) || !slotAt(s, side, attacker)) return 'Choose one of your field players to attack.';
+  const busy = cantAct(s, side, attacker);
+  if (busy) return busy;
+  if (!s.config.attackWithBall && s.ball?.side === side && samePos(s.ball.pos, attacker)) return "A player holding the ball can't attack.";
+  if (!validField(s, target) || !samePos(target, opposite(attacker))) return 'Attack the opposing player in your spot.';
+  if (!slotAt(s, otherSide(side), target)) return 'There is nobody there to attack.';
+  return null;
+}
+
+/**
+ * Whether a physical attack is allowed (v0.17): your standing field player (not holding the
+ * ball) attacks the opposing player in their spot, or in an adjacent lane of that row with Hooking.
+ */
+function canAttack(s: GameState, side: Side, card: string | undefined, attacker: FieldPos, target: FieldPos): string | null {
+  if (!s.config.physicalAttacks) return 'There are no physical attacks in this game.';
+  if (s.config.physicalDraw === 'blind') return canAttackBlind(s, side, card, attacker, target);
+  if (!card || !inHand(s, side, card) || defOf(s, card).kind !== 'physical') return 'Attack with a physical card from your hand.';
+  const def = defOf(s, card) as PhysicalCardDef;
+  if (!validField(s, attacker) || !slotAt(s, side, attacker)) return 'Choose one of your field players to attack.';
+  const busy = cantAct(s, side, attacker);
+  if (busy) return busy;
+  if (!s.config.attackWithBall && s.ball?.side === side && samePos(s.ball.pos, attacker)) return "A player holding the ball can't attack.";
+  if (!validField(s, target)) return 'Attack an opposing field player.';
+  const facing = opposite(attacker);
+  const reach = def.ability?.effect === 'reach' && target.area === facing.area && Math.abs(target.lane - facing.lane) === 1;
+  if (!samePos(target, facing) && !reach) return def.ability?.effect === 'reach'
+    ? 'Attack the opposing player in your spot, or one lane over in that row.'
+    : 'Attack the opposing player in your spot.';
+  if (!slotAt(s, otherSide(side), target)) return 'There is nobody there to attack.';
+  if (def.ability?.effect === 'needs_holder' && !(s.ball?.side === otherSide(side) && samePos(s.ball.pos, target))) return `${def.name} only works against the ball carrier.`;
+  if (def.ability?.effect === 'needs_shaken' && !isShaken(s, otherSide(side), target)) return `${def.name} only works against a Shaken player.`;
+  return null;
+}
+
+/** Why the player in a spot can't pass, shoot, tackle, or cast right now, or null if they can. */
+function cantAct(s: GameState, side: Side, pos: Pos): string | null {
+  if (justCameOn(s, side, pos)) return JUST_CAME_ON;
+  if (isShaken(s, side, pos)) return SHAKEN;
+  return null;
+}
 
 /** Whether a card (on the field or in hand) is one of your injured players. */
 function isInjured(s: GameState, uid: string | undefined): boolean {
@@ -129,14 +186,31 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'physicalReaction': {
+      if (p.kind !== 'physicalReaction') return "It isn't time for a physical reaction.";
+      if (action.card === null) return null;
+      if (!inHand(s, side, action.card)) return 'Play a physical card from your hand.';
+      const def = defOf(s, action.card);
+      if (def.kind !== 'physical' || def.ability?.effect !== p.trigger) return "That card can't be played now.";
+      return null;
+    }
+
+    case 'foul': {
+      if (p.kind !== 'foul') return "It isn't time to declare a foul.";
+      if (action.card === null) return null;
+      if (!inHand(s, side, action.card) || !isFoulSpell(defOf(s, action.card))) return 'Declare a foul with a dirty play from your hand.';
+      if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
+      return cantAct(s, side, p.contest[p.role].pos);
+    }
+
     case 'react': {
       if (p.kind !== 'reaction') return 'There is no contest to react to.';
       if (action.card === null) return null;
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
+      if (s.config.foulTiming === 'before' && isFoulSpell(defOf(s, action.card))) return DIRTY_PLAYS_FIRST;
       if (!reactionFits(defOf(s, action.card) as SpellCardDef, p.contest[p.role])) return `${defOf(s, action.card).name} doesn't work in this contest.`;
       if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
-      if (justCameOn(s, side, p.contest[p.role].pos)) return JUST_CAME_ON;
-      return null;
+      return cantAct(s, side, p.contest[p.role].pos);
     }
 
     case 'shootoutPick': {
@@ -169,6 +243,7 @@ export function validateAction(s: GameState, action: Action): string | null {
         return 'Replace a goalie with a goalie, or a field player with a field player.';
       }
       if (action.pos.area === 'goal' && mustClear(s, side)) return GOALIE_CLEARING;
+      if (s.config.penaltyNoSubstitution && inPenaltyBox(s, side, action.pos)) return IN_THE_BOX;
       return null;
     }
 
@@ -202,6 +277,14 @@ export function validateAction(s: GameState, action: Action): string | null {
     case 'tackle':
       return canTackle(s, side);
 
+    case 'attack': {
+      const def = action.card === undefined ? null : defOf(s, action.card);
+      if (def?.kind === 'physical' && def.ability && PHYSICAL_REACTIONS.has(def.ability.effect)) {
+        return `${def.name} is a reaction: ${def.when ?? 'play it when it says'}`;
+      }
+      return canAttack(s, side, action.card, action.attacker, action.target);
+    }
+
 
     case 'regroup': {
       if (action.discard.length > s.config.regroupMax) return `You can discard up to ${s.config.regroupMax} cards.`;
@@ -216,7 +299,8 @@ export function validateAction(s: GameState, action: Action): string | null {
       if (!isActionSpell(spell)) return isReactionSpell(spell) ? 'Reaction spells can only be played during a contest.' : 'That card is not a spell.';
       if (!validPos(s, action.caster) || !slotAt(s, side, action.caster)) return 'Choose one of your players to cast the spell.';
       if (castsLeft(s, side, action.caster) <= 0) return NEEDS_REST;
-      if (justCameOn(s, side, action.caster)) return JUST_CAME_ON;
+      const caster = cantAct(s, side, action.caster);
+      if (caster) return caster;
       const target = action.target;
 
       switch (spell.ability.effect) {
@@ -278,7 +362,11 @@ export function validateAction(s: GameState, action: Action): string | null {
             if (!inHand(s, side, target.card) || !isInjured(s, target.card)) return 'Choose one of your injured players.';
             return null;
           }
-          return 'Choose one of your injured players.';
+          if (target.kind === 'mendKnockedOut') {
+            if (!s.teams[side].knockedOut.includes(target.card)) return 'Choose one of your knocked-out players.';
+            return null;
+          }
+          return 'Choose one of your injured or knocked-out players.';
         }
       }
       return null;

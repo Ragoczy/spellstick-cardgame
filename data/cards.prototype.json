@@ -1,5 +1,5 @@
 {
-  "version": "0.16-prototype",
+  "version": "0.17-prototype",
   "families": [
     "air",
     "binding",
@@ -35,7 +35,7 @@
         "sp-ice-wall",
         "sp-slow",
         "sp-red-mist",
-        "sp-scrying-bowl",
+        "sp-stone-skin",
         "sp-glamour-self",
         "sp-tailwind",
         "sp-glamour-ball",
@@ -59,7 +59,7 @@
         "sp-wither",
         "sp-ward",
         "sp-jinx",
-        "sp-true-sight",
+        "sp-hex",
         "sp-hall-of-mirrors",
         "sp-float-pass",
         "sp-misdirection",
@@ -81,7 +81,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Josephine Carrington",
-      "bonusPoints": 4,
+      "cost": 15,
       "resonants": [
         {
           "id": "emo.panic",
@@ -92,7 +92,8 @@
       "speed": 5,
       "shot": 5,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-002",
@@ -100,7 +101,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Anastasia Stanhope-Ainsworth",
-      "bonusPoints": 4,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -111,7 +112,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 3
     },
     {
       "id": "pl-003",
@@ -119,7 +121,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Charlotte Stanhope-Ainsworth",
-      "bonusPoints": 3,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.triumph",
@@ -135,7 +137,15 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-004",
@@ -143,7 +153,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Theodora Radcliffe",
-      "bonusPoints": 3,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -154,7 +164,15 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-005",
@@ -162,7 +180,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Sibyl Prescott-Langley",
-      "bonusPoints": 3,
+      "cost": 14,
       "resonants": [
         {
           "id": "phy.alertness",
@@ -178,7 +196,15 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-006",
@@ -186,7 +212,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Margaret Ashford",
-      "bonusPoints": 2,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.euphoria",
@@ -202,7 +228,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-007",
@@ -210,7 +237,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Edith Radcliffe-Sinclair",
-      "bonusPoints": 2,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.feebleness",
@@ -221,7 +248,8 @@
       "speed": 6,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-008",
@@ -229,7 +257,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Arabella Ashford-Pemberton",
-      "bonusPoints": 2,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -245,7 +273,17 @@
       "speed": 5,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-009",
@@ -253,7 +291,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Eloise Harrow",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.smallness",
@@ -269,7 +307,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-010",
@@ -277,7 +316,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Ivy Danforth",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.lust",
@@ -293,7 +332,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-011",
@@ -301,7 +341,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Marguerite Thornton",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.longing",
@@ -317,7 +357,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 2,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 3
     },
     {
       "id": "pl-012",
@@ -325,7 +366,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Olga Hollis",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.aching",
@@ -341,7 +382,15 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-013",
@@ -349,7 +398,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Priscilla Sterling",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -365,7 +414,17 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-014",
@@ -373,7 +432,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Louisa Everly",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.dignity",
@@ -389,7 +448,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-015",
@@ -397,7 +457,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Clara Coventry",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.heat",
@@ -413,7 +473,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 2,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3
     },
     {
       "id": "pl-016",
@@ -421,7 +482,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Harriet Wentworth-Hadley",
-      "bonusPoints": 4,
+      "cost": 15,
       "resonants": [
         {
           "id": "phy.cold",
@@ -437,7 +498,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-017",
@@ -445,7 +507,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Sigrid Everly",
-      "bonusPoints": 4,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.malice",
@@ -461,7 +523,8 @@
       "speed": 5,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-018",
@@ -469,7 +532,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Hilda Hollis",
-      "bonusPoints": 3,
+      "cost": 14,
       "resonants": [
         {
           "id": "phy.blood-hunger",
@@ -480,7 +543,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-019",
@@ -488,7 +552,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Amelia Bancroft-Talbot",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -504,7 +568,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-020",
@@ -512,7 +577,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Beatrice Merriweather",
-      "bonusPoints": 3,
+      "cost": 15,
       "resonants": [
         {
           "id": "phy.climax",
@@ -528,7 +593,8 @@
       "speed": 4,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-021",
@@ -536,7 +602,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Agatha Hollis-Sterling",
-      "bonusPoints": 2,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -552,7 +618,8 @@
       "speed": 4,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-022",
@@ -560,7 +627,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Irene Thayer",
-      "bonusPoints": 2,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.grace",
@@ -576,7 +643,17 @@
       "speed": 3,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 2,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-023",
@@ -584,7 +661,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Geraldine Wentworth-Hadley",
-      "bonusPoints": 2,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.alertness",
@@ -595,7 +672,8 @@
       "speed": 3,
       "shot": 6,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-024",
@@ -603,7 +681,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Juliet Thayer",
-      "bonusPoints": 2,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.ease",
@@ -619,7 +697,8 @@
       "speed": 4,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-025",
@@ -627,7 +706,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Minerva Danforth",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -643,7 +722,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-026",
@@ -651,7 +731,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Eliza Talbot",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.fever",
@@ -667,7 +747,15 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-027",
@@ -675,7 +763,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Bridget Galloway",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.awe",
@@ -691,7 +779,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-028",
@@ -699,7 +788,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Maude Merriweather",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.aversion",
@@ -720,7 +809,8 @@
       "speed": 3,
       "shot": 5,
       "defense": 2,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-029",
@@ -728,7 +818,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Gertrude Galloway",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.lust",
@@ -739,7 +829,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 3,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 3
     },
     {
       "id": "pl-030",
@@ -747,7 +838,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Rosalind Hadley",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.pity",
@@ -758,7 +849,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 2,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 3
     },
     {
       "id": "pl-031",
@@ -766,7 +858,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Viola Radcliffe",
-      "bonusPoints": 4,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.weakness",
@@ -782,7 +874,8 @@
       "speed": 5,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-032",
@@ -790,7 +883,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Celeste Sterling",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.balance",
@@ -806,7 +899,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-033",
@@ -814,7 +908,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Ottilie Langley",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -825,7 +919,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 4
     },
     {
       "id": "pl-034",
@@ -833,7 +928,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Cordelia Ellery",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.joy",
@@ -849,7 +944,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-035",
@@ -857,7 +953,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Tatiana Sterling",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.hostility",
@@ -873,7 +969,15 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 6
+      "faceoff": 6,
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-036",
@@ -881,7 +985,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Dorothea Langley",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -897,7 +1001,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-037",
@@ -905,7 +1010,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Lillian Holloway",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.joy",
@@ -921,7 +1026,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-038",
@@ -929,7 +1035,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Rowena Bancroft",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.resolve",
@@ -945,7 +1051,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-039",
@@ -953,7 +1060,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Marianne Coventry",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.anger",
@@ -974,7 +1081,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-040",
@@ -982,7 +1090,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Bernadette Ellery",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.lucidity",
@@ -998,7 +1106,17 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-041",
@@ -1006,7 +1124,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Genevieve Fenwick",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.contempt",
@@ -1022,7 +1140,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-042",
@@ -1030,7 +1149,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Imogen Prescott",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.care",
@@ -1046,7 +1165,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-043",
@@ -1054,7 +1174,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Marjorie Bancroft-Talbot",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -1065,7 +1185,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 5
+      "faceoff": 5,
+      "toughness": 4
     },
     {
       "id": "pl-044",
@@ -1073,7 +1194,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Florence Langley",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.embarrassment",
@@ -1089,7 +1210,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-045",
@@ -1097,7 +1219,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Valentina Hadley",
-      "bonusPoints": 4,
+      "cost": 13,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1113,7 +1235,17 @@
       "speed": 3,
       "shot": 4,
       "defense": 5,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-046",
@@ -1121,7 +1253,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Matilda Thornton",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1137,7 +1269,17 @@
       "speed": 3,
       "shot": 3,
       "defense": 5,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 3,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-047",
@@ -1145,7 +1287,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Evangeline Fenwick",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.stillness",
@@ -1156,7 +1298,8 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-048",
@@ -1164,7 +1307,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Nadia Harrow",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1180,7 +1323,8 @@
       "speed": 3,
       "shot": 4,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-049",
@@ -1188,7 +1332,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Adelaide Lockwood",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -1204,7 +1348,8 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-050",
@@ -1212,7 +1357,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Georgiana Whitcombe",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -1228,7 +1373,15 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-051",
@@ -1236,7 +1389,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Gwendolyn Thornton",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.giddiness",
@@ -1247,7 +1400,15 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-052",
@@ -1255,7 +1416,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Blanche Bancroft",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.contentment",
@@ -1271,7 +1432,15 @@
       "speed": 4,
       "shot": 4,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-053",
@@ -1279,7 +1448,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Odette Prescott",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.malice",
@@ -1295,7 +1464,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-054",
@@ -1303,7 +1473,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Eleanor Sinclair",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.pain",
@@ -1319,7 +1489,15 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-055",
@@ -1327,7 +1505,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Mabel Holloway",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.apathy",
@@ -1343,7 +1521,15 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-056",
@@ -1351,7 +1537,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Esme Hollis-Sterling",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.heat",
@@ -1367,7 +1553,15 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-057",
@@ -1375,7 +1569,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Alice Prescott",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.disappointment",
@@ -1391,7 +1585,8 @@
       "speed": 4,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4
     },
     {
       "id": "pl-058",
@@ -1399,7 +1594,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Isabella Carrington",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.disappointment",
@@ -1415,7 +1610,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 4
     },
     {
       "id": "pl-059",
@@ -1423,7 +1619,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Augusta Blair",
-      "bonusPoints": 4,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -1439,7 +1635,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-060",
@@ -1447,7 +1644,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Eugenia Carrington-Blair",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.heft",
@@ -1458,7 +1655,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-061",
@@ -1466,7 +1664,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Camille Whitcombe",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.letting-go",
@@ -1482,7 +1680,17 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-062",
@@ -1490,7 +1698,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Estelle Talbot",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.tiredness",
@@ -1506,7 +1714,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-063",
@@ -1514,7 +1723,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Lavinia Talbot",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.romance",
@@ -1530,7 +1739,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-064",
@@ -1538,7 +1748,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Clementine Wentworth",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.lucidity",
@@ -1554,7 +1764,17 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 4,
+      "ability": {
+        "effect": "bonus",
+        "params": {
+          "stat": "speed",
+          "amount": 2,
+          "when": "evade"
+        }
+      },
+      "text": "Quick but fragile: +2 Speed when dodging a tackle or physical attack. Toughness 1 lower."
     },
     {
       "id": "pl-065",
@@ -1562,7 +1782,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Elsa Prescott-Langley",
-      "bonusPoints": 2,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.lightness",
@@ -1573,7 +1793,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-066",
@@ -1581,7 +1802,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Freya Carrington",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -1597,7 +1818,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-067",
@@ -1605,7 +1827,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Frances Holloway",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.exposure",
@@ -1621,7 +1843,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-068",
@@ -1629,7 +1852,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Seraphina Ashford",
-      "bonusPoints": 1,
+      "cost": 6,
       "resonants": [
         {
           "id": "phy.tiredness",
@@ -1640,7 +1863,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-069",
@@ -1648,7 +1872,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Sabine Ellery",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.sweating",
@@ -1664,7 +1888,15 @@
       "speed": 4,
       "shot": 2,
       "defense": 3,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5,
+      "ability": {
+        "effect": "hits_harder",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Heavy hands: anyone this player hurts rolls 1 higher for how badly."
     },
     {
       "id": "pl-070",
@@ -1672,7 +1904,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Lucinda Stanhope",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -1688,7 +1920,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-071",
@@ -1696,7 +1929,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Madeleine Sinclair",
-      "bonusPoints": 1,
+      "cost": 6,
       "resonants": [
         {
           "id": "emo.determination",
@@ -1707,7 +1940,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 3,
-      "faceoff": 4
+      "faceoff": 4,
+      "toughness": 5
     },
     {
       "id": "pl-072",
@@ -1715,7 +1949,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Helena Bancroft",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.heat",
@@ -1731,7 +1965,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-073",
@@ -1739,7 +1974,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Ophelia Merriweather",
-      "bonusPoints": 4,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.sorrow",
@@ -1755,7 +1990,15 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-074",
@@ -1763,7 +2006,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Caroline Hollis",
-      "bonusPoints": 3,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.care",
@@ -1779,7 +2022,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 3
+      "faceoff": 3,
+      "toughness": 5
     },
     {
       "id": "pl-075",
@@ -1787,7 +2031,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Millicent Ainsworth",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.shame",
@@ -1803,7 +2047,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 6,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-076",
@@ -1811,7 +2056,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Henrietta Lockwood-Marlowe",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.playfulness",
@@ -1827,7 +2072,8 @@
       "speed": 4,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-077",
@@ -1835,7 +2081,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Wilhelmina Ashford",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -1846,7 +2092,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-078",
@@ -1854,7 +2101,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Penelope Whitcombe-Thornton",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1865,7 +2112,8 @@
       "speed": 4,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-079",
@@ -1873,7 +2121,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Rosamund Danforth",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.spinning",
@@ -1884,7 +2132,8 @@
       "speed": 3,
       "shot": 3,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-080",
@@ -1892,7 +2141,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Victoria Pemberton",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.tenacity",
@@ -1908,7 +2157,8 @@
       "speed": 5,
       "shot": 2,
       "defense": 3,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-081",
@@ -1916,7 +2166,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Emmeline Whitcombe-Thornton",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.whirling",
@@ -1932,7 +2182,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 5,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-082",
@@ -1940,7 +2191,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Cecilia Lockwood",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.frostbite",
@@ -1956,7 +2207,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-083",
@@ -1964,7 +2216,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Sophia Coventry",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.care",
@@ -1980,7 +2232,15 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-084",
@@ -1988,7 +2248,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Agnes Pemberton",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.apathy",
@@ -2004,7 +2264,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-085",
@@ -2012,7 +2273,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Greta Blair",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.joy",
@@ -2028,7 +2289,15 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5,
+      "ability": {
+        "effect": "hard_to_hurt",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "Sturdy: when hurt, this player rolls 1 lower for how badly."
     },
     {
       "id": "pl-086",
@@ -2036,7 +2305,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Isadora Ainsworth",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.numbness",
@@ -2057,7 +2326,8 @@
       "speed": 3,
       "shot": 2,
       "defense": 4,
-      "faceoff": 2
+      "faceoff": 2,
+      "toughness": 5
     },
     {
       "id": "pl-087",
@@ -2065,7 +2335,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Antoinette Whitcombe",
-      "bonusPoints": 4,
+      "cost": 22,
       "resonants": [
         {
           "id": "emo.shame",
@@ -2086,7 +2356,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Leonora Ainsworth",
-      "bonusPoints": 4,
+      "cost": 22,
       "resonants": [
         {
           "id": "phy.fullness",
@@ -2102,7 +2372,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Astrid Blair",
-      "bonusPoints": 3,
+      "cost": 23,
       "resonants": [
         {
           "id": "emo.derision",
@@ -2128,7 +2398,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Sylvia Ashford-Pemberton",
-      "bonusPoints": 3,
+      "cost": 22,
       "resonants": [
         {
           "id": "emo.weariness",
@@ -2149,7 +2419,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Adeline Marlowe",
-      "bonusPoints": 2,
+      "cost": 5,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -2170,7 +2440,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Daphne Wentworth",
-      "bonusPoints": 2,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.fear",
@@ -2191,7 +2461,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Ingrid Marlowe",
-      "bonusPoints": 2,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.exuberance",
@@ -2207,7 +2477,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Constance Wentworth",
-      "bonusPoints": 2,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.anger",
@@ -2228,7 +2498,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Ursula Radcliffe-Sinclair",
-      "bonusPoints": 2,
+      "cost": 5,
       "resonants": [
         {
           "id": "phy.famishment",
@@ -2249,7 +2519,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Philippa Hadley",
-      "bonusPoints": 1,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.numbness",
@@ -2270,7 +2540,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Annabel Pemberton",
-      "bonusPoints": 1,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.horror",
@@ -2286,7 +2556,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Felicity Lockwood-Marlowe",
-      "bonusPoints": 1,
+      "cost": 5,
       "resonants": [
         {
           "id": "phy.repletion",
@@ -2312,7 +2582,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Lydia Carrington-Blair",
-      "bonusPoints": 1,
+      "cost": 5,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -2333,7 +2603,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Katarina Stanhope",
-      "bonusPoints": 1,
+      "cost": 5,
       "resonants": [
         {
           "id": "emo.abandonment",
@@ -2363,6 +2633,7 @@
       "shot": 4,
       "defense": 3,
       "faceoff": 4,
+      "toughness": 4,
       "promo": true,
       "placeholder": true,
       "flavor": "Paul to choose the character, stats, and ability. Not part of the 40-card decks."
@@ -2381,7 +2652,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-blast-shot",
@@ -2413,7 +2684,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-mist-veil",
@@ -2427,7 +2698,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-fog-bank",
@@ -2436,7 +2707,7 @@
       "name": "Fog Bank",
       "spellType": "action",
       "magic": "water.fog",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -2455,7 +2726,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-earth-crush",
@@ -2471,7 +2742,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-stone-skin",
@@ -2480,12 +2751,12 @@
       "name": "Stone Skin",
       "spellType": "reaction",
       "magic": "earth.stone",
-      "tier": "legendary",
+      "tier": "common",
       "ability": {
-        "effect": "shield",
+        "effect": "ward",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "If your player is hurt in this contest, they're only Shaken."
     },
     {
       "id": "sp-heavy-ground",
@@ -2494,7 +2765,7 @@
       "name": "Heavy Ground",
       "spellType": "action",
       "magic": "earth.gravity",
-      "tier": "rare",
+      "tier": "uncommon",
       "ability": {
         "effect": "steal",
         "params": {
@@ -2541,7 +2812,7 @@
       "name": "Leap",
       "spellType": "reaction",
       "magic": "air.flight",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "boost",
         "params": {
@@ -2565,7 +2836,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-bolt",
@@ -2581,7 +2852,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-jolt",
@@ -2590,12 +2861,12 @@
       "name": "Jolt",
       "spellType": "reaction",
       "magic": "lightning.shock",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-thunderclap",
@@ -2611,7 +2882,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-dazzle",
@@ -2625,7 +2896,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-blinding-flash",
@@ -2639,7 +2910,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-shadow-double",
@@ -2648,7 +2919,7 @@
       "name": "Shadow Double",
       "spellType": "action",
       "magic": "shadow",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}
@@ -2662,7 +2933,7 @@
       "name": "Cloak of Night",
       "spellType": "action",
       "magic": "shadow.darkness",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -2751,7 +3022,7 @@
       "name": "Brute Strength",
       "spellType": "reaction",
       "magic": "body.strength",
-      "tier": "rare",
+      "tier": "common",
       "ability": {
         "effect": "boost",
         "params": {
@@ -2784,7 +3055,7 @@
       "name": "Burst of Speed",
       "spellType": "reaction",
       "magic": "body.speed",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "boost",
         "params": {
@@ -2818,7 +3089,7 @@
       "name": "Low Stance",
       "spellType": "reaction",
       "magic": "body.balance",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "boost",
         "params": {
@@ -2852,12 +3123,12 @@
       "name": "Red Mist",
       "spellType": "reaction",
       "magic": "body.berserking",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-empower",
@@ -2882,12 +3153,12 @@
       "name": "Jinx",
       "spellType": "reaction",
       "magic": "curse",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-hex",
@@ -2901,7 +3172,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-bad-luck",
@@ -2915,7 +3186,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-evil-eye",
@@ -2929,7 +3200,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-elf-shot",
@@ -2945,7 +3216,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-wither",
@@ -2959,7 +3230,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-sting",
@@ -2968,12 +3239,12 @@
       "name": "Sting",
       "spellType": "reaction",
       "magic": "curse.pain",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-ward",
@@ -2982,12 +3253,12 @@
       "name": "Ward",
       "spellType": "reaction",
       "magic": "warding",
-      "tier": "legendary",
+      "tier": "common",
       "ability": {
-        "effect": "shield",
+        "effect": "ward",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "If your player is hurt in this contest, they're only Shaken."
     },
     {
       "id": "sp-alarm-ward",
@@ -3010,7 +3281,7 @@
       "name": "Snare",
       "spellType": "action",
       "magic": "binding",
-      "tier": "rare",
+      "tier": "uncommon",
       "ability": {
         "effect": "steal",
         "params": {
@@ -3031,7 +3302,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-force-shot",
@@ -3063,7 +3334,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-turn-aside",
@@ -3103,7 +3374,7 @@
       "name": "Quicken",
       "spellType": "reaction",
       "magic": "time.haste",
-      "tier": "uncommon",
+      "tier": "rare",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3125,7 +3396,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-blink",
@@ -3162,7 +3433,7 @@
       "name": "Summon",
       "spellType": "action",
       "magic": "translocation.summoning",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "recall",
         "params": {
@@ -3192,7 +3463,7 @@
       "name": "Precognition",
       "spellType": "action",
       "magic": "divination.precognition",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "recall",
         "params": {
@@ -3314,7 +3585,7 @@
         "effect": "shield",
         "params": {}
       },
-      "text": "The opposing player's stat counts as 0 in this contest."
+      "text": "The opposing player's stat is 2 less in this contest."
     },
     {
       "id": "sp-befuddle",
@@ -3323,7 +3594,7 @@
       "name": "Befuddle",
       "spellType": "action",
       "magic": "enchantment.confusion",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3351,7 +3622,7 @@
       "name": "Glamour Ball",
       "spellType": "action",
       "magic": "illusion.glamour",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3365,7 +3636,7 @@
       "name": "Glamour Self",
       "spellType": "action",
       "magic": "illusion.glamour",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}
@@ -3379,7 +3650,7 @@
       "name": "Unseen Pass",
       "spellType": "action",
       "magic": "illusion.invisibility",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3407,7 +3678,7 @@
       "name": "Hall of Mirrors",
       "spellType": "action",
       "magic": "illusion.mirrors",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}
@@ -3421,7 +3692,7 @@
       "name": "Misdirection",
       "spellType": "action",
       "magic": "illusion.misdirection",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3435,12 +3706,264 @@
       "name": "Trick Pass",
       "spellType": "action",
       "magic": "illusion.trickery",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
       },
       "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "ph-shirt-pull",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Shirt Pull",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.agility",
+      "toughness": null,
+      "severity": null,
+      "text": "No knockdown: the target only drops the ball.",
+      "from": "Soccer"
+    },
+    {
+      "id": "ph-tripping",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Tripping",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": 0,
+      "severity": 0,
+      "ability": {
+        "effect": "vs_holder",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 more if the target holds the ball.",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-hooking",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Hooking",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": 0,
+      "severity": 0,
+      "text": "",
+      "from": "Hockey"
+    },
+    {
+      "id": "ph-atomic-wedgie",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Atomic Wedgie",
+      "tier": "minor",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": null,
+      "severity": null,
+      "ability": {
+        "effect": "only_shaken",
+        "params": {}
+      },
+      "text": "No Toughness roll: if you win, the target is Shaken, never worse.",
+      "from": "Made up"
+    },
+    {
+      "id": "ph-slashing",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Slashing",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-cross-check",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Cross-check",
+      "tier": "major",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-clothesline",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Clothesline",
+      "tier": "major",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 1,
+      "text": "",
+      "from": "Football and wrestling"
+    },
+    {
+      "id": "ph-gouge",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Gouge",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.agility",
+      "toughness": -1,
+      "severity": 0,
+      "ability": {
+        "effect": "shaken_anyway",
+        "params": {}
+      },
+      "text": "If the target passes their Toughness roll, they're Shaken anyway.",
+      "from": "Rugby"
+    },
+    {
+      "id": "ph-slew-foot",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Slew-foot",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.agility",
+      "toughness": -2,
+      "severity": 0,
+      "text": "",
+      "from": "Hockey"
+    },
+    {
+      "id": "ph-late-hit",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Late Hit",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Football and rugby"
+    },
+    {
+      "id": "ph-elbow",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Elbow",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Soccer and basketball"
+    },
+    {
+      "id": "ph-kneecap",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Kneecap",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -2,
+      "severity": 1,
+      "ability": {
+        "effect": "shaken_is_injured",
+        "params": {}
+      },
+      "text": "If the target is hurt, Shaken counts as Injured.",
+      "from": "Made up"
+    },
+    {
+      "id": "ph-spearing",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Spearing",
+      "tier": "brutal",
+      "uses": "speed",
+      "bonus": 2,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "self_check",
+        "params": {}
+      },
+      "text": "Your player makes a Toughness roll too, win or lose.",
+      "from": "Lacrosse, hockey, and football"
+    },
+    {
+      "id": "ph-chop-block",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Chop Block",
+      "tier": "brutal",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": -2,
+      "severity": 1,
+      "text": "",
+      "from": "Football"
+    },
+    {
+      "id": "ph-stamp",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Stamp",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 3,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 1,
+      "text": "",
+      "from": "Rugby"
+    },
+    {
+      "id": "ph-pile-on",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Pile-on",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "pile_on",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "+1 for each of your standing players in the next lane of the same row.",
+      "from": "Rugby"
     }
   ]
 }

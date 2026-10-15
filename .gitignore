@@ -9,3 +9,6 @@ dist-server/
 
 # Written by the deploy workflow for the Docker build (see vite.config.ts)
 recent-changes.txt
+
+# Simulation scratch files (worker shards, logs, last raw results)
+reports/.*

@@ -7,11 +7,11 @@ import {
   cardView, countCast, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand,
 } from './board';
 import type { ActionSpellDef } from './cards';
-import { callDice, playReaction, startContest } from './contest';
+import { callDice, playFoul, playPhysicalReaction, playReaction, startAttack, startContest } from './contest';
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
-import { completeForcedSub, mend } from './injuries';
+import { bringBack, completeForcedSub, mend } from './injuries';
 import { randomInt, shuffle } from './rng';
 import { finishDraft } from './setup';
 import type { ContestSide, GameState, Modifier, Pile } from './state';
@@ -39,6 +39,9 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'cast': cast(s, action, ev); break;
     case 'substitute': substitute(s, action, ev); break;
     case 'regroup': regroup(s, side, action.discard, ev); break;
+    case 'foul': playFoul(s, action.card, ev); break;
+    case 'attack': startAttack(s, side, action.card, action.attacker, action.target, ev); break;
+    case 'physicalReaction': playPhysicalReaction(s, action.card, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
     case 'callDice': callDice(s, action.roll, ev); break;
     case 'shootoutPick': penalty(s, side, action.pos, ev); break;
@@ -91,6 +94,10 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   const spots = 3 * s.config.lanes;
   drawCards(s, side, spots + s.config.setupExtraPlayers, 'setup', ev, 'players');
   drawCards(s, side, s.config.setupSpells, 'setup', ev, 'spells');
+  if (s.config.physicalAttacks) {
+    [team.physical, s.rng] = shuffle(team.physical, s.rng);
+    if (s.config.physicalDraw === 'hand') drawCards(s, side, s.config.physicalSetupDraw, 'setup', ev, 'physical');
+  }
 
   s.pending = side === 'A' ? { kind: 'chooseGoalie', side: 'B' } : { kind: 'placeLineup', side: 'A' };
 }
@@ -128,6 +135,7 @@ function pass(s: GameState, side: Side, to: FieldPos, ev: GameEvent[]): void {
     attacker: { side, pos: to, stat: 'speed', use: 'receive', spell: null, modifiers },
     defender: { side: otherSide(side), pos: opposite(to), stat: 'defense', use: 'intercept', spell: null, modifiers: [] },
     tiesGoTo: s.config.passTiesGoTo,
+    passer: s.ball!.pos,
   }, ev);
 }
 
@@ -142,7 +150,9 @@ function shoot(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[])
 
 function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]): void {
   const holderPos = s.ball!.pos as FieldPos;
-  const attacker: ContestSide = { side, pos: opposite(holderPos), stat: 'defense', use: 'tackle', spell: null, modifiers };
+  const tacklerPos = opposite(holderPos);
+  const assist = tackleAssist(s, side, tacklerPos);
+  const attacker: ContestSide = { side, pos: tacklerPos, stat: 'defense', use: 'tackle', spell: null, modifiers: [...modifiers, ...assist] };
   const defender: ContestSide = { side: otherSide(side), pos: holderPos, stat: 'speed', use: 'evade', spell: null, modifiers: [] };
   // The tackler is revealed by going for the holder, even if they only find an image.
   reveal(s, side, attacker.pos, ev);
@@ -151,6 +161,20 @@ function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]
     return;
   }
   startContest(s, { kind: 'tackle', attacker, defender, tiesGoTo: 'defender' }, ev);
+}
+
+/**
+ * Tackle assist (config.tackleAssist, optional): + for each of the tackler's standing teammates
+ * (on the field, not Shaken) in an adjacent lane of the same row.
+ */
+function tackleAssist(s: GameState, side: Side, tackler: FieldPos): Modifier[] {
+  if (!s.config.tackleAssist) return [];
+  const helpers = [tackler.lane - 1, tackler.lane + 1].filter((lane) => {
+    if (lane < 0 || lane >= s.config.lanes) return false;
+    const slot = slotAt(s, side, { area: tackler.area, lane });
+    return !!slot && slot.shakenUntil === undefined;
+  }).length;
+  return helpers ? [{ label: 'Assist', amount: helpers * s.config.tackleAssist }] : [];
 }
 
 /**
@@ -282,6 +306,7 @@ function cast(s: GameState, action: Extract<Action, { type: 'cast' }>, ev: GameE
     case 'mend': {
       if (target.kind === 'mendField') mend(s, side, slotAt(s, side, target.pos)!.uid, ev);
       else if (target.kind === 'mendHand') mend(s, side, target.card, ev);
+      else if (target.kind === 'mendKnockedOut') bringBack(s, side, target.card, ev);
       else break;
       continueGame(s, ev);
       return;
@@ -323,5 +348,6 @@ function regroup(s: GameState, side: Side, discard: string[], ev: GameEvent[]): 
 function draw(s: GameState, side: Side, pile: Pile, ev: GameEvent[]): void {
   if (handIsFull(s, side)) discardTopOfPile(s, side, pile, ev);
   else drawCards(s, side, 1, 'turn', ev, pile);
-  s.pending = { kind: 'action', side };
+  // On to the action, through the same checks as any turn (a goalie with nobody to clear to).
+  continueGame(s, ev);
 }

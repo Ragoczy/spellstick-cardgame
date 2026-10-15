@@ -45,19 +45,19 @@ export async function loadPlayerCards(db: pg.Pool, cardSet: CardSet = prototypeC
       const { given, surname } = splitName(p.name);
       const field = p.kind === 'field' ? p : null;
       const result = await client.query(
-        `insert into player_cards (id, given_name_id, surname_id, kind, role, speed, shot, defense, faceoff, save, bonus_points, resonants, card_set_version)
-         select $1, g.id, s.id, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+        `insert into player_cards (id, given_name_id, surname_id, kind, role, speed, shot, defense, faceoff, save, toughness, cost, ability, resonants, card_set_version)
+         select $1, g.id, s.id, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
            from given_names g, surnames s where g.name = $2 and s.name = $3
          on conflict (id) do update set
            given_name_id = excluded.given_name_id, surname_id = excluded.surname_id, kind = excluded.kind, role = excluded.role,
            speed = excluded.speed, shot = excluded.shot, defense = excluded.defense, faceoff = excluded.faceoff, save = excluded.save,
-           bonus_points = excluded.bonus_points, resonants = excluded.resonants, card_set_version = excluded.card_set_version,
+           toughness = excluded.toughness, cost = excluded.cost, ability = excluded.ability, resonants = excluded.resonants, card_set_version = excluded.card_set_version,
            updated_at = now()`,
         [
           p.id, given, surname, p.kind, p.role ?? (p.kind === 'goalie' ? 'goalie' : 'allrounder'),
           field?.speed ?? null, field?.shot ?? null, field?.defense ?? null, field?.faceoff ?? null,
           p.kind === 'goalie' ? p.save : null,
-          p.bonusPoints ?? 0, JSON.stringify(p.resonants), cardSet.version,
+          field?.toughness ?? null, p.cost ?? 0, p.ability ? JSON.stringify(p.ability) : null, JSON.stringify(p.resonants), cardSet.version,
         ],
       );
       if (result.rowCount !== 1) throw new Error(`Player ${p.id} (${p.name}): the given name or surname isn't in data/names.json.`);

@@ -20,8 +20,13 @@
     "sim": "tsx scripts/sim.ts",
     "generate-players": "tsx scripts/generate-players.ts",
     "assign-resonants": "tsx scripts/assign-resonants.ts",
+    "assign-abilities": "tsx scripts/assign-abilities.ts",
     "spell-library-sim": "tsx scripts/spell-library-sim.ts",
     "spell-tiers": "tsx scripts/spell-tiers.ts",
+    "measure-value": "tsx scripts/measure-value.ts",
+    "price-players": "tsx scripts/price-players.ts",
+    "roster-targets": "tsx scripts/roster-targets.ts",
+    "sim-compare": "tsx scripts/sim-compare.ts",
     "generate-art": "tsx scripts/generate-art.ts"
   },
   "dependencies": {

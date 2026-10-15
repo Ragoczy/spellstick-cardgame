@@ -38,7 +38,7 @@ describe('magic data', () => {
 
   it('only uses real families and specializations on cards', () => {
     for (const card of prototypeCards.cards) {
-      const ids = card.kind === 'spell' ? (card.magic ? [card.magic] : []) : card.resonants.map((r) => r.affinity);
+      const ids = card.kind === 'spell' ? (card.magic ? [card.magic] : []) : card.kind === 'physical' ? [card.affinity] : card.resonants.map((r) => r.affinity);
       for (const id of ids) expect(id.includes('.') ? specIds.has(id) : familyIds.has(id), `${card.id}: ${id}`).toBe(true);
     }
   });

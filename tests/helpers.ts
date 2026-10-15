@@ -3,7 +3,7 @@
 
 import type { Action } from '../src/engine/actions';
 import type {
-  ActionEffect, Area, CardDef, FieldCardDef, GoalieCardDef, PlayerAbility, ReactionEffect, SpellCardDef,
+  ActionEffect, Area, CardDef, FieldCardDef, GoalieCardDef, PhysicalCardDef, PlayerAbility, ReactionEffect, SpellCardDef,
 } from '../src/engine/cards';
 import { makeConfig, type GameConfig, type InjuryDef } from '../src/engine/config';
 import type { GameEvent } from '../src/engine/events';
@@ -23,13 +23,14 @@ const nextId = () => `t-${++counter}`;
 
 export function player(
   name: string,
-  stats: Partial<{ speed: number; shot: number; defense: number; faceoff: number }> = {},
+  stats: Partial<{ speed: number; shot: number; defense: number; faceoff: number; toughness: number }> = {},
   options: { affinities?: string[]; ability?: PlayerAbility } = {},
 ): FieldCardDef {
   return {
     id: nextId(), team: 'T', kind: 'field', name,
     resonants: (options.affinities ?? ['earth']).map((affinity) => ({ name: `${affinity} resonant`, affinity })),
     speed: stats.speed ?? 3, shot: stats.shot ?? 3, defense: stats.defense ?? 3, faceoff: stats.faceoff ?? 3,
+    toughness: stats.toughness ?? 4,
     ...(options.ability ? { ability: options.ability } : {}),
   };
 }
@@ -51,6 +52,14 @@ export function actionSpell(name: string, ability: ActionEffect, magic: string |
   return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'action', magic, ability };
 }
 
+/** A physical attack card (v0.17): a Minor Speed attack with no bonus, unless changed. */
+export function physicalCard(name: string, overrides: Partial<PhysicalCardDef> = {}): PhysicalCardDef {
+  return {
+    id: nextId(), team: 'T', kind: 'physical', name, tier: 'minor', uses: 'speed', bonus: 0, affinity: 'body.speed',
+    toughness: 0, severity: 0, from: 'Test', text: '', ...overrides,
+  };
+}
+
 export const boost = (name: string, amount = 2, magic: string | null = null) =>
   reaction(name, { effect: 'boost', params: { amount } }, magic);
 export const shield = (name: string, magic: string | null = null) =>
@@ -66,6 +75,10 @@ export interface SideSpec {
   /** deck[0] is drawn first. Defaults to 10 filler players. */
   deck?: CardDef[];
   discard?: CardDef[];
+  /** Knocked-out players beside the mat (v0.17). */
+  knockedOut?: FieldCardDef[];
+  /** The Physical pile (v0.17), physical[0] drawn first. Empty unless given. */
+  physical?: CardDef[];
 }
 
 export interface ScenarioOptions {
@@ -94,6 +107,12 @@ function diceFor(options: ScenarioOptions): Record<Side, number> {
 /** Scenario contests are decided by printed numbers unless a test turns these back on. */
 export const PLAIN_CONTESTS: Partial<GameConfig> = { passBonus: 0, contestDie: 0, shotDie: 0, penaltyBonus: 0 };
 
+/**
+ * Scenarios make every hurt an injury (the severity roll always lands on Injured), so injury
+ * tests stay exact. Tests of Shaken and knocked-out players set config.severity themselves.
+ */
+export const ALWAYS_INJURED: Partial<GameConfig> = { severity: { shaken: 0, injured: 6 } };
+
 /** The injury deck in a fixed, unshuffled order: the first injury in config is drawn last. */
 export function injuryDeckFor(config: GameConfig): { injuryDeck: string[]; injuryCards: Record<string, InjuryDef> } {
   const injuryCards: Record<string, InjuryDef> = {};
@@ -108,7 +127,7 @@ export function injuryDeckFor(config: GameConfig): { injuryDeck: string[]; injur
 export function scenario(options: ScenarioOptions = {}): GameState {
   // Plain contests unless the test asks otherwise: no pass bonus, no dice, no penalty bonus, so
   // printed numbers decide. Those rules have their own tests (pass, dice, shoot, and endgame).
-  const config = makeConfig({ ...PLAIN_CONTESTS, ...options.config, lanes: options.lanes ?? options.config?.lanes ?? 2 });
+  const config = makeConfig({ ...PLAIN_CONTESTS, ...ALWAYS_INJURED, ...options.config, lanes: options.lanes ?? options.config?.lanes ?? 2 });
   const cards: Record<Uid, CardDef> = {};
   const teams = {} as Record<Side, TeamState>;
   const active = options.active ?? 'A';
@@ -143,6 +162,11 @@ export function scenario(options: ScenarioOptions = {}): GameState {
       players: pile('players'), // top of each pile is the end of the list
       spells: pile('spells'),
       discard: (spec.discard ?? []).map(add),
+      knockedOut: (spec.knockedOut ?? []).map(add),
+      physical: (spec.physical ?? []).map(add).reverse(), // physical[0] is drawn first
+      physicalDiscard: [],
+      penaltyBox: [],
+      attackHeat: 0,
     };
   }
 

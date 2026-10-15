@@ -169,6 +169,7 @@ function TeamEditor({ team, cards, onDone, onCancel }: {
   const cardIds = onTeam.map((c) => c.cardId);
   const goalies = onTeam.filter((c) => defOf(c)?.kind === 'goalie').length;
   const field = onTeam.length - goalies;
+  const cost = onTeam.reduce((sum, c) => sum + (defOf(c)?.cost ?? 0), 0);
   const problems = teamProblems(prototypeCards, config, cardIds, spellSet);
 
   /** Why a card can't join the team right now (null if it can). */
@@ -225,6 +226,7 @@ function TeamEditor({ team, cards, onDone, onCancel }: {
       </p>
 
       <h3>On the team: {goalies} of {config.deckGoalies} goalies, {field} of {config.deckFieldPlayers} field players</h3>
+      {config.rosterCap > 0 ? <p className={cost > config.rosterCap ? 'team-problem' : 'small'}>Cost {cost} of {config.rosterCap} (each card's cost is the number in its top left corner).</p> : null}
       <p className="small">Tap a card to take it off the team.</p>
       <div className="choice-row owned-cards">
         {onTeam.length ? onTeam.map((c) => <OwnedCardView key={c.instanceId} card={c} onClick={() => toggle(c)} />) : <span className="small">Nobody yet.</span>}

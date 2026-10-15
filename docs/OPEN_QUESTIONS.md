@@ -21,9 +21,10 @@ None of these block M1 or M2.
   - Narrow boosts (+3, but only for one use of a stat, such as receiving a pass) are Claude's
     addition, to keep the many Body, Air, and Time spells from being the same card.
   - Injuries are at 1.7 a game, under the 2–4 target. Raise hit strength from 3 to 4?
-  - Power tiers (`docs/MAGIC.md`): shields are far stronger than anything else, and hits,
-    mends, long shots, scrying, and swaps barely help the computer. Soften shields (−3 instead of
-    0) and strengthen the weak effects? Claude can test any change in the simulator first.
+  - Power tiers (`docs/MAGIC.md`): shields were far stronger than anything else (v0.17 softens
+    them: the stat is 2 less instead of 0), and hits, mends, long shots, scrying, and swaps
+    barely help the computer. Strengthen the weak effects? Claude can test any change in the
+    simulator first.
 - Do the positions have canon names (attack, middie, defense, goalie, or something else)?
 
 ## Rules details to confirm

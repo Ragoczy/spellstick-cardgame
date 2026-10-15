@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-15",
+  "games": 5000,
+  "physicalGames": 1000,
+  "items": [
+    {
+      "key": "toughness",
+      "label": "−1 Toughness",
+      "seeds": 5000,
+      "edge": -0.874999999999998,
+      "low": -1.5862888733645886,
+      "high": -0.16371112663540743,
+      "cards": 22,
+      "points": -1,
+      "perPoint": 0.03977272727272718,
+      "perPointLow": 0.007441414847063974,
+      "perPointHigh": 0.0721040396983904
+    },
+    {
+      "key": "heavy",
+      "label": "Heavy hands (every field player)",
+      "seeds": 5000,
+      "edge": -1.429999999999998,
+      "low": -2.2043171803925787,
+      "high": -0.6556828196074171,
+      "cards": 22,
+      "points": 1,
+      "perPoint": -0.0649999999999999,
+      "perPointLow": -0.10019623547238994,
+      "perPointHigh": -0.02980376452760987
+    },
+    {
+      "key": "sturdy",
+      "label": "Sturdy (every field player)",
+      "seeds": 5000,
+      "edge": -1.4950000000000019,
+      "low": -2.280493364425873,
+      "high": -0.7095066355741309,
+      "cards": 22,
+      "points": 1,
+      "perPoint": -0.06795454545454555,
+      "perPointLow": -0.10365878929208514,
+      "perPointHigh": -0.03225030161700595
+    }
+  ]
+}

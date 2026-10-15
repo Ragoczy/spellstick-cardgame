@@ -18,8 +18,10 @@ export type SpellTarget =
   | { kind: 'hit' }
   /** mend: one of your injured players on the field... */
   | { kind: 'mendField'; pos: Pos }
-  /** ...or in your hand. */
-  | { kind: 'mendHand'; card: Uid };
+  /** ...or in your hand, */
+  | { kind: 'mendHand'; card: Uid }
+  /** ...or (v0.17) one of your knocked-out players, brought back to your hand. */
+  | { kind: 'mendKnockedOut'; card: Uid };
 
 export type Action =
   // Draft: pick a player from the face-up pool
@@ -35,6 +37,13 @@ export type Action =
   | { type: 'cast'; side: Side; card: Uid; caster: Pos; target: SpellTarget }
   | { type: 'substitute'; side: Side; pos: Pos; card: Uid }
   | { type: 'regroup'; side: Side; discard: Uid[] }
+  // Physical attack (v0.17): your player at `attacker` attacks the opposing player at `target`,
+  // with a card from hand, or (config.physicalDraw 'blind') the top card of the Physical pile.
+  | { type: 'attack'; side: Side; card?: Uid; attacker: FieldPos; target: FieldPos }
+  // A physical reaction card at the moment it names, or null for none
+  | { type: 'physicalReaction'; side: Side; card: Uid | null }
+  // During a contest, before the dice (v0.17): declare a foul (a dirty play), or null for none
+  | { type: 'foul'; side: Side; card: Uid | null }
   // During a contest: play a reaction spell, or null for none
   | { type: 'react'; side: Side; card: Uid | null }
   // During a contest: spend a roll token (reroll your die; with the old rule, call for dice), or not

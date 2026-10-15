@@ -18,6 +18,11 @@ export interface GameRecord {
 }
 
 export interface RunOptions {
+  /**
+   * Changes the new game before anyone acts, e.g. to give one side's players +1 Speed when
+   * measuring what a point of Speed is worth. Only simulations use it; the engine never does.
+   */
+  prepare?: (state: GameState) => void;
   /** Called once with the new game, before anyone acts. */
   onStart?: (state: GameState, events: GameEvent[]) => void;
   /** Called after every action, e.g. to check invariants in tests. */
@@ -28,6 +33,7 @@ export interface RunOptions {
 
 export function runGame(setup: GameSetup, agents: Record<Side, Agent>, options: RunOptions = {}): GameRecord {
   let { state, events } = createGame(setup);
+  options.prepare?.(state);
   const allEvents = [...events];
   const actions: Action[] = [];
   const maxActions = options.maxActions ?? 20000;

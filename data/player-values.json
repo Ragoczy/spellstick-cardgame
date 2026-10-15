@@ -1,0 +1,50 @@
+{
+  "measured": "reports/value-2026-10-15-v17g.md and reports/value-2026-10-15-v17g-by-type.md",
+  "perPoint": {
+    "speed": 0.6161363636363634,
+    "shot": 0.5159090909090911,
+    "defense": 0.47863636363636336,
+    "faceoff": 0.10431818181818193,
+    "toughness": 0.03977272727272718,
+    "save": 6.785000000000002,
+    "resonants": 0.06729166666666665
+  },
+  "byType": {
+    "attackers": {
+      "speed": 0.8376,
+      "shot": 0.8105606060606063,
+      "defense": 0.43533636363636363,
+      "faceoff": 0.11419090909090926
+    },
+    "middle": {
+      "speed": 0.5817499999999998,
+      "shot": 0.5175649350649352,
+      "defense": 0.480262987012987,
+      "faceoff": 0.1418896103896104
+    },
+    "defenders": {
+      "speed": 0.5189253246753245,
+      "shot": 0.37404545454545435,
+      "defense": 0.5268928571428568,
+      "faceoff": 0.07403896103896108
+    }
+  },
+  "typeWeight": 0.4,
+  "abilities": {
+    "hits_harder": 0,
+    "hard_to_hurt": 0,
+    "quick": 0.5434090909090912
+  },
+  "floor": {
+    "speed": 3,
+    "shot": 2,
+    "defense": 2,
+    "faceoff": 2,
+    "toughness": 2,
+    "save": 5,
+    "resonants": 1
+  },
+  "fieldBase": 3.973,
+  "goalieBase": 4.894,
+  "scale": 2.552
+}

@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 import type { CardDef, InjuryDef, PlayerRole } from '../engine';
-import { cardText, injuryEffect, magicColor, magicLabel } from './labels';
+import { capitalize, cardText, injuryEffect, magicColor, magicLabel } from './labels';
 import { spellWhen } from './spellHelp';
 import { roleLabel } from '../data/playerTypes';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
@@ -28,8 +28,9 @@ export const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
 function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
   const art = cardArt(def.id);
   if (!art) return null;
-  const edge = magicColor(def.kind === 'spell' ? def.magic : def.resonants[0]?.affinity ?? null);
-  const classes = ['tile-art', def.kind === 'spell' ? 'spell' : '', injured ? 'injured' : ''].filter(Boolean).join(' ');
+  const magic = def.kind === 'spell' ? def.magic : def.kind === 'physical' ? def.affinity : def.resonants[0]?.affinity ?? null;
+  const edge = magicColor(magic);
+  const classes = ['tile-art', def.kind === 'spell' || def.kind === 'physical' ? 'spell' : '', injured ? 'injured' : ''].filter(Boolean).join(' ');
   return <span className={classes} style={{ backgroundImage: `url(${art})`, borderColor: edge }} />;
 }
 
@@ -38,14 +39,14 @@ function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
  * their first Resonant's Affinity.
  */
 function Figure({ def, position, injured }: { def: CardDef; position?: FigurePosition; injured: boolean }) {
-  if (def.kind === 'spell' || cardArt(def.id)) return null;
+  if (def.kind === 'spell' || def.kind === 'physical' || cardArt(def.id)) return null;
   const pos = def.kind === 'goalie' ? 'goal' : position ?? (def.role ? TYPE_POSITION[def.role] : 'midfield');
   return <PlayerFigure position={pos} magic={def.resonants[0]?.affinity ?? null} injured={injured} />;
 }
 
 /** Resonant dots. On the field, a dot goes hollow for each Resonant's worth of spells cast. */
 function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: number; castsLeft?: number }) {
-  if (def.kind === 'spell') return null;
+  if (def.kind === 'spell' || def.kind === 'physical') return null;
   const title = castsLeft === undefined ? undefined
     : castsLeft === 0 ? 'No spells left. Substitute this player out to recharge.'
     : `${castsLeft} ${castsLeft === 1 ? 'spell' : 'spells'} left before this player needs a rest`;
@@ -61,6 +62,15 @@ function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: 
 
 function Stats({ def }: { def: CardDef }) {
   if (def.kind === 'goalie') return <div className="stats"><span>Save <b>{def.save}</b></span></div>;
+  if (def.kind === 'physical') {
+    // A physical attack card (v0.17): what it attacks with, and its penalty tier.
+    return (
+      <div className="stats spell-line">
+        <span>{def.uses === 'muscle' ? 'Def' : 'Spd'}{def.bonus ? ` +${def.bonus}` : ''}</span>
+        <span>{capitalize(def.tier)} foul</span>
+      </div>
+    );
+  }
   if (def.kind === 'field') {
     return (
       <div className="stats">
@@ -68,6 +78,7 @@ function Stats({ def }: { def: CardDef }) {
         <span>Sht <b>{def.shot}</b></span>
         <span>Def <b>{def.defense}</b></span>
         <span>Fo <b>{def.faceoff}</b></span>
+        {def.toughness !== undefined ? <span title="Toughness: knocked down, they're fine on a roll at or below this">Tgh <b>{def.toughness}</b></span> : null}
       </div>
     );
   }
@@ -100,6 +111,8 @@ export interface CardProps {
   usedDots?: number;
   /** On the field: substituted on this turn, so can't act yet. */
   cameOn?: boolean;
+  /** On the field: Shaken (v0.17), so the card is turned sideways. */
+  shaken?: boolean;
   hasBall?: boolean;
   /** Holds the ball after catching a pass at forward: can't be tackled until their next turn. */
   safe?: boolean;
@@ -113,23 +126,24 @@ export interface CardProps {
   onClick?: () => void;
 }
 
-export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, hasBall, safe, selected, dim, highlight, flip, showText, onClick }: CardProps) {
+export function Card({ def, injury, position, faceDown, scried, images, castsLeft, usedDots, cameOn, shaken, hasBall, safe, selected, dim, highlight, flip, showText, onClick }: CardProps) {
   const colors = useContext(TeamColors);
-  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
+  const classes = ['card', def.kind, faceDown ? 'face-down' : '', images ? 'has-images' : '', shaken ? 'shaken' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', flip ? 'flip' : '']
     .filter(Boolean)
     .join(' ');
   return (
     <button type="button" className={classes} onClick={onClick} style={{ borderTopColor: colors[def.team] ?? '#555' }}>
       <ArtStrip def={def} injured={Boolean(injury)} />
       <div className="card-name">
-        {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
+        {def.ability && (def.kind === 'field' || def.kind === 'goalie') ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}
       </div>
       <Figure def={def} position={position} injured={Boolean(injury)} />
-      {def.kind !== 'spell' && (def.role || cameOn) ? (
+      {(def.kind === 'field' || def.kind === 'goalie') && (def.role || cameOn || shaken) ? (
         <div className="card-role">
           {def.role ? roleLabel(def.role) : null}
           {cameOn ? <span className="just-on" title="Came on this turn: can't pass, shoot, tackle, or cast until the next turn">{def.role ? ' · ' : ''}just on</span> : null}
+          {shaken ? <span className="shaken-tag" title={SHAKEN_TITLE}>{def.role || cameOn ? ' · ' : ''}Shaken</span> : null}
         </div>
       ) : null}
       <Stats def={def} />
@@ -144,13 +158,16 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
   );
 }
 
+const SHAKEN_TITLE = "Shaken: can't pass, shoot, tackle, or cast, and weaker in contests, until the end of their team's next turn";
+
 const SAFE_TITLE = "Just caught a pass: can't be tackled until their team's next turn";
 
-export function CardBack({ team, hasBall, safe, highlight, onClick, label, injury }: { team: string; hasBall?: boolean; safe?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef }) {
+export function CardBack({ team, hasBall, safe, highlight, onClick, label, injury, shaken }: { team: string; hasBall?: boolean; safe?: boolean; highlight?: CardProps['highlight']; onClick?: () => void; label?: string; injury?: InjuryDef; shaken?: boolean }) {
   const colors = useContext(TeamColors);
   return (
-    <button type="button" className={`card back ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
+    <button type="button" className={`card back ${shaken ? 'shaken' : ''} ${highlight ? `hl-${highlight}` : ''}`} onClick={onClick} style={{ background: colors[team] ?? '#555' }}>
       <span className="back-mark">?</span>
+      {shaken ? <span className="back-label" title={SHAKEN_TITLE}>Shaken</span> : null}
       {label ? <span className="back-label">{label}</span> : null}
       {injury ? <span className="injury on-back" title={injury.name}>✚ {injury.name}</span> : null}
       {hasBall ? <span className="ball" aria-label="has the ball" title="Has the ball" /> : null}

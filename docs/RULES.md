@@ -1,4 +1,4 @@
-# Spellstick — rules v0.16
+# Spellstick — rules v0.17
 
 These rules are a starting point. Every number here is a tuning value expected to change after
 simulation and playtesting. Tuning values are marked with ⚙ and live in `src/engine/config.ts`.
@@ -65,19 +65,23 @@ slot, not the card: if the player in that slot changes (substitute, swap), the n
 - **Shot**: shooting.
 - **Defense**: intercepting passes and tackling.
 - **Faceoff**: winning faceoffs.
+- **Toughness**: how hard they are to hurt when knocked down (see "Contact"). It comes from the
+  player's type ⚙: Stoppers and Anchors 5, Playmakers and All-rounders 4, Runners and Strikers 3.
 - **Resonants**: 1 to 3 ⚙. A Resonant is a feeling or sensation (for example, Anger, Vigor, or
   Fatigue). Each has one **Affinity**: the kind of magic it's good at. That is either a whole
   magic family (Fire, Illusion, Body, ...) or one specialization in a family (Glamour, in
   Illusion). Where these come from: `docs/MAGIC.md`.
 - Optionally one ability (see "Effect vocabulary").
+- **Cost** (v0.17, named players): what the player counts against a team's cap when teams are
+  built (see "Constructed"). It's the number in the top left corner.
 
 Any field player can play any field position. Where you put them is the strategy.
 
 Each player card also has a **type** that says what it is good at: Runner (Speed), Striker
 (Shot), Playmaker (Faceoff), All-rounder (even), Anchor and Stopper (Defense), or Goalie. The
-type is just a label: it changes nothing in play.
+type sets the printed Toughness; otherwise it's just a label and changes nothing in play.
 
-**Goalie cards** have **Save** and 1 to 3 Resonants. They can only play in goal.
+**Goalie cards** have **Save**, 1 to 3 Resonants, and a cost. They can only play in goal.
 
 **Spell cards** have a kind of magic, a family or a specialization (or none, for neutral spells),
 and are either:
@@ -144,7 +148,7 @@ per Resonant** ⚙: a player with 2 Resonants can cast 2 spells, then no more.
    the team's 16 spells to make its deck, and play in the team's color for this game.
 1. Each player chooses one of their 2 goalies, places it **face down** in goal, and shuffles the
    other into their Players pile. Shuffle both piles.
-2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 2 ⚙
+2. Each player draws 8 cards ⚙ from their Players pile (the number of field slots plus 2) and 3 ⚙
    from their Spells pile. Place field players **face down**, one in each of your defense,
    midfield, and forward slots, and keep the rest as your hand. (At most one card drawn can be
    the spare goalie, so there are always enough field players.)
@@ -176,13 +180,16 @@ from the cards a player owns.
 1. A deck is 2 goalies ⚙, 22 field players ⚙, and 16 spells (whatever the 40-card deck ⚙ leaves).
 2. Each named player can be on a team only once. Spells can repeat.
 3. Add-on cards can only be used with the center-lane add-on.
-4. Every card plays in the team's color for this game. Setup goes on from step 1.
+4. The players' costs add up to at most the **team cap** of 239 ⚙ (v0.17), the cost of an average
+   team. Dealt and drafted games have no cap.
+5. Every card plays in the team's color for this game. Setup goes on from step 1.
 
 Nobody sees the other team's deck. There's no draft in a constructed game.
 
 ## Faceoff
 
-Used at the start and after every goal that doesn't end the game. The team that didn't take the
+Used at the start and after every goal that doesn't end the game. First, each team rolls for each
+of its knocked-out players (see "Contact"). Then the team that didn't take the
 last turn (at the start: the second player; after a goal: the team that was scored on) chooses a
 midfield lane. Both midfielders in that lane are revealed and contest using **Faceoff**.
 The chooser may play a reaction spell first, then the other side. Ties go to the chooser.
@@ -244,9 +251,13 @@ goalie.
 
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
-ball. If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
+ball and the holder is **knocked down** (see "Contact"). If you lose, nothing changes, unless you
+lose by 3 or more ⚙: then your tackler is **Shaken** (tackle risk; no Toughness roll). Goalies can't be tackled, and you need a player in that spot to tackle.
 You can't tackle a forward who has just caught a pass (see "Catch and shoot").
 If the holder has mirror images, roll for them first (see `mirror_images`).
+
+**Attack.** Play a physical card: one of your players attacks the opposing player in their spot
+(see "Physical attacks").
 
 ## Actions any time
 
@@ -274,22 +285,26 @@ allowed: the action does nothing.
 
 Every contest has an attacker (the side taking the action) and a defender.
 
-1. Reveal both players involved. **Both roll a six-sided die** ⚙ (see "Dice").
-2. **Rerolls:** the attacker may spend a roll token to reroll their own die. Then the defender may
-   (see "Dice").
-3. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
-   having seen it, may do the same. Each side plays at most one.
-4. Apply abilities, injuries, spells, and dice. A value can't go below 0.
-5. **The attacker wins only if their value is higher.** Ties go to the defender, except in
+1. Reveal both players involved.
+2. **Fouls:** the attacker may declare a dirty play, then the defender may (see "Fouls and the
+   referee"). A side that fouls has used its one reaction spell for this contest.
+3. **Both roll a six-sided die** ⚙ (see "Dice"). **Rerolls:** the attacker may spend a roll token to
+   reroll their own die. Then the defender may.
+4. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
+   having seen it, may do the same. Each side plays at most one, and a side that fouled plays none.
+5. Apply abilities, injuries, spells, and dice. A value can't go below 0.
+6. **The attacker wins only if their value is higher.** Ties go to the defender, except in
    passes (ties go to the receiver) and faceoffs (ties go to the chooser).
-6. **Injuries:** a hit that lands injures its target, and a dirty play injures the losing player
-   if its side won (see "Injuries").
+7. **The referee:** if the two dice show the same number, every side that fouled has its player
+   sent off (see "Fouls and the referee").
+8. **Hurts:** a hit that lands hurts its target, a dirty play hurts the losing player if its side
+   won, and a successful tackle knocks the holder down (see "Contact").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
-tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser acts first like an
+tackling team in a tackle, the hitting team in a hit, the attacking team in a physical attack. In a faceoff, the chooser acts first like an
 attacker and wins ties.
 
-An **empty spot** (a player was carried off and nobody replaced them) counts as 0 and can't play
+An **empty spot** (a player was carried off, knocked out, or sent off, and nobody replaced them) counts as 0 and can't play
 reaction spells, roll, or reroll. A player with no spells left (see "Casting limit") can't play reaction
 spells either.
 
@@ -307,12 +322,155 @@ many are left.
 - Each side can reroll at most once per contest. Reaction spells are played after the rerolls, so
   both players can see the dice before deciding.
 
+## Fouls and the referee
+
+A **dirty play** is a foul. It isn't played after the dice like other reaction spells: it's
+declared **before the dice**, by your player in the contest, when you don't yet know whether you'll
+win or get caught. The attacker decides first, then the defender. A side that fouls has used its
+one reaction spell for this contest.
+
+- If your side wins the contest, the dirty play hurts the losing player (see "Contact").
+- **The referee:** if the two dice show the same number, the referee saw it. Every side that
+  fouled has its player **sent off**. That's 1 in 6 before any rerolls. Doubles are judged on the
+  final dice, after rerolls, so you can spend a reroll to break a double you're on, and the other
+  side can reroll hoping to make one. A caught foul still takes effect if its side won.
+- **Sent off:** the player goes to your discard pile, out for the game. There's no free replacement:
+  the spot stays empty until you Substitute at a Draw step. If they held the ball, the opposing
+  player in that spot picks it up. A goalie can be sent off too, leaving an empty goal until you
+  substitute your spare goalie.
+
+## Physical attacks
+
+Physical attacks are cheap shots from real sports (lacrosse, hockey, football, rugby, soccer,
+basketball, wrestling), plus a few made up. They're cards, not spells: they aren't cast, so
+affinity rules, the casting limit, Recall, and anything that counters spells don't apply to them,
+and they don't count as spells cast.
+
+**The Physical pile.** Each team has its own Physical pile: one of each of the 16 physical cards ⚙,
+shuffled at setup and kept **face down**. Physical cards never go in your hand, so they don't count
+toward the hand limit, and the pile isn't part of the game clock. **Each team can make 8 physical
+attacks a game** ⚙: the pile isn't reshuffled.
+
+**Making an attack** (your action). Choose one of your standing field players to attack the
+opposing player in their spot, then **flip the top card of your Physical pile**: that's the move.
+Nobody chooses the card: the player on the field decides it in the moment. Standing means on the
+field, not Shaken, and not just come on. A player holding the ball can't attack ⚙. Goalies can't
+attack or be attacked. It's a contest, rolled like every contest, with rerolls and reaction spells,
+but no fouls (it's already one):
+
+- **Attacker:** Speed + die + the card's bonus. *Muscle* cards use Defense instead of Speed. +1 ⚙ if
+  the attacker has the body Affinity printed on the card (or the whole Body family).
+- **Target:** Speed + die. +1 ⚙ with a Danger-sense Affinity. Ties go to the target.
+- **If the attacker wins,** the target drops the ball (the attacker takes it, as with a tackle) and
+  is knocked down: a Toughness roll with the card's Toughness modifier (+1 Toughness ⚙ with an
+  Endurance Affinity). If hurt, the severity roll takes the card's severity modifier. A card with
+  no Toughness roll (—) doesn't knock anyone down.
+- **If the attacker loses,** nothing happens, apart from the penalty check (see "The penalty box").
+
+**Tiers.** Each card has a tier: the modifiers printed on it include its tier's.
+
+| Tier | Toughness roll | Severity roll | Penalty if caught |
+| --- | --- | --- | --- |
+| Minor | as normal | as normal | 1 turn ⚙ |
+| Major | −1 | as normal | 2 turns ⚙ |
+| Brutal | −1 | +1 | 3 turns ⚙ |
+
+Since the card is flipped after the target is chosen, a card never has a condition on who it can
+be played against.
+
+**The cards:**
+
+| Card | Tier | Attack | Affinity | Toughness, severity | Effect |
+| --- | --- | --- | --- | --- | --- |
+| Shirt Pull | Minor | Speed +1 | Agility | —, — | No knockdown: the target only drops the ball. |
+| Tripping | Minor | Speed | Speed | ±0, ±0 | +2 if the target holds the ball (`vs_holder`). |
+| Hooking | Minor | Speed | Speed | ±0, ±0 | |
+| Atomic Wedgie | Minor | Muscle | Strength | —, — | No Toughness roll: if you win, the target is Shaken, never worse (`only_shaken`). |
+| Slashing | Major | Speed +1 | Berserking | −1, ±0 | |
+| Cross-check | Major | Muscle | Strength | −1, ±0 | |
+| Clothesline | Major | Muscle | Strength | −1, +1 | |
+| Gouge | Major | Speed | Agility | −1, ±0 | Passing the Toughness roll still leaves the target Shaken (`shaken_anyway`). |
+| Slew-foot | Major | Speed | Agility | −2, ±0 | |
+| Late Hit | Major | Speed | Berserking | −1, ±0 | |
+| Elbow | Major | Speed +1 | Berserking | −1, ±0 | |
+| Kneecap | Brutal | Muscle | Strength | −2, +1 | If hurt, Shaken counts as Injured (`shaken_is_injured`). |
+| Spearing | Brutal | Speed +2 | Berserking | −1, +1 | Your player makes a Toughness roll too, win or lose (`self_check`). |
+| Chop Block | Brutal | Speed | Speed | −2, +1 | |
+| Stamp | Brutal | Muscle +3 | Strength | −1, +1 | |
+| Pile-on | Brutal | Muscle | Berserking | −1, +1 | +1 for each of your standing players one lane over in the same row (`pile_on`). |
+
+## The penalty box
+
+Each team has a **penalty risk**, starting at 1, kept face up. After the rerolls, if the attacker's
+die in a physical attack shows the penalty risk or lower, they roll the **penalty die** (never
+rerolled). If that also shows the penalty risk or lower, the referee calls a **penalty**. At risk 1
+that's a 1 and then a 1: 1 in 36. Rerolling your die above the risk avoids the check.
+
+The risk **goes up by 1 with each physical attack** your team makes (after that attack's check),
+and **down by 1 at the end of each of your turns without one**, never below 1 ⚙. So a second attack
+in a row needs both dice at 2 or lower (1 in 9), a third at 3 or lower (1 in 4), and so on: the
+referee watches a team that keeps fouling.
+
+The attack still resolves as normal, then:
+
+- The attacker goes to the **penalty box** beside the mat, face up, for their card's penalty: 1, 2,
+  or 3 turns ⚙ by tier. The count goes down at the end of each of their own team's turns, starting
+  with the next one. When it reaches 0, they come back to their spot.
+- Meanwhile **the spot is empty**: it counts as 0 and can't intercept, and nobody can tackle, hit,
+  or attack from there. **Nobody can be substituted into the spot** ⚙ (that's the difference from
+  being sent off). If they held the ball, the opposing player in that spot picks it up.
+- **Power play:** if the other team scores while they're in the box, all of that team's penalized
+  players come back at once, before the faceoff ⚙.
+- Every penalty ends at full time.
+
+A physical attack is the only foul punished this way. A dirty play, which is magic, is punished
+harder: the referee sends the player off for the game (see "Fouls and the referee").
+
+## Contact
+
+Spellstick is a rough sport. Players get hurt three ways:
+
+- **Knockdown.** A successful tackle (a Steal too) knocks the tackled player down. Their owner rolls
+  a die ⚙: **at or below their Toughness, they're fine; above it, they're hurt.** A tackle that
+  goes for a mirror image knocks nobody down.
+- **Hit.** A hit that lands hurts its target, with no Toughness roll: the hit already had to beat
+  their Defense.
+- **Dirty play.** A dirty play by the winning side hurts the losing player, with no Toughness roll.
+- **A bad miss.** A tackler who loses by 3 or more ⚙ is Shaken (no Toughness or severity roll).
+
+A player is hurt at most once in a contest (a hit first, then a dirty play, then a knockdown).
+**Goalies are never hurt:** they can't be tackled or hit, and a dirty play against a goalie does
+nothing.
+
+**Severity.** A hurt player's owner rolls a die ⚙ (Heavy hands on the player doing the hurting adds
+1, Sturdy on the player being hurt takes 1 off, and a Ward makes it only Shaken: see "Effect
+vocabulary"):
+
+| Roll | Result |
+| --- | --- |
+| 1–3 | **Shaken** |
+| 4–5 | **Injured** (see "Injuries") |
+| 6 | **Knocked out** |
+
+**Shaken.** Turn the card sideways (not face down: face down means hidden). A Shaken player can't
+pass, shoot, tackle, or cast (action or reaction spells), and gets −2 ⚙ to every skill in a
+contest. They can still catch a pass, defend, and take part in a faceoff, and if they hold the
+ball, they keep it. They stand up at the end of their team's next turn: a player hurt on the other
+team's turn sits out your coming turn, and one hurt on your own turn sits out the one after. They
+also stand up when substituted out, and at full time. Shaken again while Shaken: the count starts
+over.
+
+**Knocked out.** The player leaves the field and goes face up beside the mat, injury card and all.
+A forced substitution follows, as for a carry-off (see "Injuries"). If there's nobody to bring on,
+the spot is empty, and a ball they held goes to the opposing player in that spot. **At each
+faceoff,** before the lane is chosen, roll a die ⚙ for each of your knocked-out players: on 4–6
+they go back to your hand.
+
+Toughness, severity, and return rolls are never rerolled: roll tokens are only for contest dice.
+
 ## Injuries
 
-Spellstick is a rough sport. Hits and dirty plays injure players.
-
-- **Hitting the goalie isn't allowed.** Goalies can't be injured: Hit can't target them, and a
-  dirty play against a goalie does nothing. (Fouls and penalties will come later.)
+A player is **injured** when their severity roll comes up Injured (see "Contact").
 
 - **Injury cards** are face up, so everyone can see an injury, even on a face-down player. The
   deck ⚙ has 3 Singed hair (−1 Speed), 3 Broken finger (−2 Shot), 3 Twisted ankle (−2 Speed),
@@ -323,6 +481,8 @@ Spellstick is a rough sport. Hits and dirty plays injure players.
   straight away, face down. This is free and doesn't use an action, even during
   the other player's turn. The injured player goes to the owner's hand with the injury still
   attached. If they held the ball, the substitute holds it.
+- **The substitute comes on Shaken** ⚙ (v0.17), whatever forced the substitution: an injury, a
+  carry-off, or a knockout. So an injury costs a team more than being Shaken.
 - If the owner has nobody to bring on, the injured player stays in place, playing hurt.
 - An injured player can be substituted back in later. The injury stays until it's **mended**.
 - **Injuries don't stack:** a player who is already injured and gets injured again is **carried
@@ -374,6 +534,18 @@ engine together. "Numeric" effects are adjusted by affinity.
   intercepting.
 - `draw_on_win` — `{ count }`. When this player wins a contest (faceoffs included), its owner
   draws `count`.
+- `hits_harder` — `{ amount }` (v0.17, **Heavy hands**). Anyone this player hurts (with a tackle, a
+  hit, a dirty play, or a physical attack) adds `amount` to their severity roll.
+- `hard_to_hurt` — `{ amount }` (v0.17, **Sturdy**). When this player is hurt, their severity roll
+  is `amount` lower.
+
+**Quick but fragile** (v0.17) isn't a new effect: it's a `bonus` of +2 Speed when evading (a tackle
+or a physical attack), on a card printed with Toughness 1 below its type.
+
+Who has which (v0.17): about 8 named players each, picked with a fixed seed from field players whose
+Resonants fit (`scripts/assign-abilities.ts`). Heavy hands: Strength, Berserking, Force, Shattering,
+Earth, Explosion. Sturdy: Healing, Endurance, Stone, Ice. Quick but fragile: Air, Speed, Agility,
+Danger-sense.
 
 **Reaction spells**
 
@@ -382,11 +554,17 @@ engine together. "Numeric" effects are adjusted by affinity.
   when your player's stat is being used that way, for example only when receiving a pass. Such a
   boost is bigger (+3 on the current cards, instead of +2) to make up for it. A hit's attacker isn't resisting, so
   only the player being hit can play a `resist` boost.
-- `shield` — `{}`, non-numeric. The opposing player's stat (or a hit's strength) counts as 0 in
-  this contest, and their abilities and injuries are ignored. Their own spell still counts. If both
-  sides shield, both stats are 0.
-- `dirty_play` — `{}`, non-numeric. Play during any contest. If your side wins, the opposing player
-  in that contest is injured (unless it's the goalie).
+- `shield` — `{}`, non-numeric. The opposing player's value in this contest is **2 less** ⚙, but
+  not below 0. Work out their stat as usual first (abilities and injuries), or take the hit's
+  strength, then take 2 off. Dice and spells are added after, so their own spell still counts in
+  full. If both sides shield, both lose 2. (Before v0.17 a Shield made the value 0 and ignored
+  abilities and injuries; online matches started before then keep that rule.)
+- `dirty_play` — `{}`, non-numeric. A foul: declared before the dice in any contest (see "Fouls and
+  the referee"). If your side wins, the opposing player in that contest is hurt (unless it's the
+  goalie). If the dice match, the referee sends your player off.
+- `ward` — `{}`, non-numeric (v0.17). If your player is hurt in this contest (a knockdown, a hit, a
+  dirty play, or a physical attack), they're only Shaken: no severity roll. It doesn't change the
+  contest itself.
 
 **Action spells**
 
@@ -409,7 +587,8 @@ engine together. "Numeric" effects are adjusted by affinity.
   spells as usual. If the hit lands, the target is injured. If the target has mirror images, roll
   for them first (see `mirror_images`).
 - `mend` — `{}`, non-numeric. Remove the injury from one of your players, on the field or in your
-  hand. The injury card goes back to the injury deck.
+  hand (the injury card goes back to the injury deck), **or** (v0.17) bring one of your knocked-out
+  players back to your hand, injury card and all.
 - `decoy_pass` — `{}`, non-numeric. Your ball holder makes a Pass (the usual targets), but your
   opponent thinks it went to another lane of the receiver's row (with 2 lanes, the other lane;
   with more, you choose). Their player in that lane is revealed instead. There is no contest:
@@ -421,6 +600,23 @@ engine together. "Numeric" effects are adjusted by affinity.
   happens, except that the tackler is revealed and any spell they used is spent. On 5–6 they find
   the real player: the images vanish (discard the card) and the action goes ahead as normal. The
   images also vanish when the player leaves the field. A player can only have one set of images.
+
+**Physical card effects** (v0.17; see "Physical attacks" for the cards). `reach`, `needs_holder`,
+`needs_shaken`, `after_pass_or_shot`, and `after_losing` only matter if physical cards are held in
+hand and chosen (config.physicalDraw 'hand', a simulation what-if); with blind draw, the rule, no
+card uses them.
+
+- `vs_holder` — `{ amount }`. +`amount` to the attack if the target holds the ball.
+- `reach` — `{}`. May attack the opposing player one lane over in the same row.
+- `needs_holder` — `{}`. Only against the ball carrier.
+- `needs_shaken` — `{}`. Only against a Shaken target.
+- `only_shaken` — `{}`. No Toughness roll: if the attack wins, the target is Shaken, never worse.
+- `shaken_anyway` — `{}`. If the target passes their Toughness roll, they're Shaken anyway.
+- `shaken_is_injured` — `{}`. If the target is hurt, a Shaken result counts as Injured.
+- `self_check` — `{}`. The attacker makes a Toughness roll too, win or lose.
+- `pile_on` — `{ amount }`. +`amount` for each of your standing players one lane over in the same row.
+- `after_pass_or_shot` — `{}`. Reaction: play after the opposing player in your spot passes or shoots.
+- `after_losing` — `{}`. Reaction: play when your player loses a contest to the opposing player in their spot.
 
 ## Add-on: center lane
 
@@ -435,7 +631,7 @@ substituted or until their owner spends a turn resting them. Off by default ⚙.
 
 ## Change log
 
-- 2026-10-14 — Late Hit pulled from the spell library (Paul): it becomes a physical attack card in the v0.17 plan, so a spell with the same name would be confusing. The library has 72 spells. Neither team deck used it, so play is unchanged; the other dirty-play spells (Jolt, Red Mist, Jinx, Sting) remain.
+- v0.17 — More contact, and real injuries (Paul: too few injuries, and more injuries should mean real ones; the plan and Paul's decisions are in `PLAN.md`). **Shield** takes 2 off the other player's stat instead of making it 0. **Contact:** field players have **Toughness** by type (5, 4, or 3); a won tackle **knocks the holder down**, and a roll above their Toughness hurts them; every hurt rolls **severity**: 1–3 **Shaken** (card sideways: can't pass, shoot, tackle, or cast, −2 in contests, until the end of their team's next turn), 4–5 Injured, 6 **Knocked out** (beside the mat, back to the hand on 4–6 at a faceoff). A tackler who loses by 3 or more is Shaken (tackle risk; tackle assist was tried and not kept). A **forced substitute comes on Shaken** (Paul, after a trial), so an injury costs a team more than being Shaken. **Fouls:** a dirty play is declared before the dice, and if the final dice match, the referee sends the player off for the game. **Physical attacks:** each team has a face-down Physical pile of 16 cards and may make 8 attacks a game, flipping the top card (Paul: the player decides the move in the moment); Speed (or Defense for Muscle cards) against Speed, and a win knocks the target down with the card's modifiers. **The penalty box:** a team's penalty risk starts at 1, goes up 1 with each attack and down 1 with each turn without one (Paul); if the attacker's die and then the penalty die are both at or under it, the attacker sits out 1–3 turns by tier, the spot empty and not substituted, back at once if the other team scores. **Healing and abilities:** Mend also brings back a knocked-out player; **Ward** (new effect) makes a hurt only Shaken; new player abilities **Heavy hands**, **Sturdy**, and **Quick but fragile**. **Costs and the team cap:** every named player has a **cost** from measured values, with stats priced by type group, and a built team's players may cost at most **239**; bonus points are gone. Claude: a player is hurt at most once per contest; Heavy hands counts physical attacks; a Ward cast by the attacker also covers a Spearing self-roll; costs count from the pool's weakest values (the cheapest field player costs 6, the average 10); Heavy hands and Sturdy measured below 0, so they cost 0; prices use 40% of the by-type value and 60% of the all-player value, the blend that meets both roster targets. Results, 10,000 games (`reports/SIM_REPORT-v0.17.md`): 7.9 hurts a game (56% Shaken), real injuries 2.80 → 3.43 (Paul accepted about 3.3 against a 3.5 target), carried off and knocked out 1.33, spells cast 17.5, penalties 0.82, goals 2.40 → 1.82 (just under the 1.84 floor), Defense-heavy vs Striker-heavy at equal cost 51.4%, a 10% cost gap 61.4%. The per-phase entries are in git history. Online matches started before v0.17 keep v0.16 rules.
 
 - v0.16 — Balance (Paul: "I make a move, it's successful, but then the computer immediately trounces me with a tackle"). Simulation showed one point of printed stat decided almost every contest (a tackle one point stronger won 95% of the time, a tied one 18%), a forward who caught a pass lost the ball before shooting 45% of the time, and a 3-point gap in goalie Save won 4 games in 5. Paul chose three changes: **every contest is rolled** (both players roll a d6), so a one-point edge wins about 60% instead of 95%; **catch and shoot**, a forward who catches a pass can't be tackled until their next turn; and **goalies narrowed** to two Save levels. Claude: roll tokens become 3 rerolls of your own die (calling for dice means nothing when everything is rolled); rerolls work in shots too; Hit strength 3 → 4, since dice made hits miss more and injuries fell below target; goalie Save 5–6 rather than the 4–5 first tested, since livelier play pushed goals over 2 a game at Save 4–5. **Goalie clears** (Paul): a goalie holding the ball must pass it out on your next action, so a team can't sit on the ball in goal to run out the clock; if it has nobody to pass to, the ball goes to a faceoff that the other team chooses (Paul: in sports, freezing the ball means a faceoff in your own end; here faceoffs are always at midfield, which is Claude's simplest reading). Claude: a Long Pass or Decoy Pass counts as clearing; the goalie can't be substituted while it has the ball. With goalies clearing, games have about twice the passes and tackles, and about 2.4 goals; Paul kept goalies at Save 5–6 rather than Save 6–7 (1.8 goals, but only 1 shot in 4 scoring and longer games). Online matches started before this keep their old rules and cards.
 

@@ -18,12 +18,14 @@ const END_REASON: Record<EndReason, string> = {
   turn_cap: 'turn limit reached — this is a bug',
 };
 
-const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit' } as const;
+const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit', attack: 'Attack' } as const;
 
-/** "Speed 5 + Fire Boost 3 = 8", or "Defense 0 (shielded)". */
+/** "Speed 5 + Fire Boost 3 = 8", "Defense 6 − Shield 3 = 3", or "Defense 0 (shielded)". */
 export function describeValue(b: Breakdown): string {
   if (!b.card) return 'empty spot 0';
-  let text = `${b.baseLabel ?? STAT_LABEL[b.stat]} ${b.base}${b.shielded ? ' (shielded)' : ''}`;
+  // The Shield shows as its own part when it cut the value; otherwise just mark the player shielded.
+  const marked = b.shielded && !b.parts.some((p) => p.label === 'Shield');
+  let text = `${b.baseLabel ?? STAT_LABEL[b.stat]} ${b.base}${marked ? ' (shielded)' : ''}`;
   for (const part of b.parts) text += ` ${part.amount < 0 ? '−' : '+'} ${part.label} ${Math.abs(part.amount)}`;
   if (b.parts.length > 0) text += ` = ${b.total}`;
   return text;
@@ -94,10 +96,37 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'injured':
       if (e.carriedOff) return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} was already hurt and is carried off.`;
       return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is injured${e.injury ? `: ${e.injury.name}` : ' (no injury cards left)'}.`;
+    case 'knockedDown':
+      return `${names[e.side]}'s ${e.card.def.name} is knocked down. Toughness roll ${e.roll} against ${e.toughness}: ${e.hurt ? 'hurt' : 'no harm done'}.`;
+    case 'hurt': {
+      const result = e.result === 'shaken' ? 'Shaken until the end of their next turn' : e.result === 'injured' ? 'injured' : 'knocked out';
+      if (e.roll === undefined) return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is ${result}.`;
+      return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is hurt. Severity roll ${e.roll}: ${result}.`;
+    }
+    case 'attackDeclared':
+      return `${names[e.side]}'s player at ${posLabel(e.attacker)} attacks ${posLabel(e.target)} with ${e.card.def.name}${e.flipped ? ' (flipped from the Physical pile)' : ''}!`;
+    case 'ballDropped':
+      return `${names[e.side]}'s player at ${posLabel(e.pos)} drops the ball.`;
+    case 'penaltyCheck':
+      return `${names[e.side]}'s attacker rolled ${e.attackerRoll} (penalty risk ${e.level}), so the penalty die: ${e.roll}${e.called ? '. The referee calls a penalty!' : ', no penalty.'}`;
+    case 'penalized':
+      return `${names[e.side]}'s ${e.card.def.name} goes to the penalty box for ${e.turns} turn${e.turns === 1 ? '' : 's'}; ${posLabel(e.pos)} is empty.`;
+    case 'penaltyServed':
+      return `${names[e.side]}'s ${e.card.def.name} is back from the penalty box (${posLabel(e.pos)}).`;
+    case 'powerPlayReturn':
+      return `Power play over: ${names[e.side]}'s penalized players are back.`;
+    case 'sentOff':
+      return `The dice match (${e.roll} and ${e.roll}): the referee saw the foul! ${names[e.side]}'s ${e.card.def.name} is sent off for the game.`;
+    case 'stoodUp':
+      return `${names[e.side]}'s ${e.card.def.name} stands up.`;
+    case 'returnRoll':
+      return `${names[e.side]}'s knocked-out ${e.card.def.name} rolls ${e.roll}: ${e.returned ? 'back in the hand' : 'still out'}.`;
     case 'forcedSub':
-      return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
+      return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.shaken ? ', Shaken' : ''}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
     case 'slotEmptied':
       return `${names[e.side]} has nobody to replace them: ${posLabel(e.pos)} is empty.`;
+    case 'broughtBack':
+      return `${names[e.side]} mends knocked-out ${e.card.def.name}, back in the hand.`;
     case 'mended':
       return `${names[e.side]} mends ${e.card.def.name} (${e.injury.name}).`;
     case 'diceRolled':

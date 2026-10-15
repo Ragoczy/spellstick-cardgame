@@ -9,7 +9,7 @@ describe.each(LANE_COUNTS)('dirty_play (%i lanes)', (lanes) => {
 
   it('injures the opposing player in the contest if your side wins', () => {
     const s = scenario({ lanes, A: { hand: [redMist()], lineup: { forward: { [LAST]: player('A fwd', { speed: 5 }) } } } });
-    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
     expect(lastContest(events).winner).toBe('A');
     expect(eventsOfType(events, 'injured')[0]).toMatchObject({ side: 'B', pos: dfn(LAST), source: 'dirty_play', cause: 'Red Mist' });
     expect(Object.keys(state.injuries)).toHaveLength(1);
@@ -17,7 +17,7 @@ describe.each(LANE_COUNTS)('dirty_play (%i lanes)', (lanes) => {
 
   it("does nothing if your side loses", () => {
     const s = scenario({ lanes, A: { hand: [redMist()], lineup: { forward: { [LAST]: player('A fwd', { speed: 1 }) } } } });
-    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
     expect(lastContest(events).winner).toBe('B');
     expect(Object.keys(state.injuries)).toHaveLength(0);
   });
@@ -26,13 +26,13 @@ describe.each(LANE_COUNTS)('dirty_play (%i lanes)', (lanes) => {
     const s = scenario({ lanes, ball: null, B: { hand: [redMist()], lineup: { midfield: { 0: player('B mid', { faceoff: 6 }) } } } });
     s.pending = { kind: 'faceoffLane', side: 'A' };
     s.faceoffChooser = 'A';
-    const { events } = play(s, { type: 'faceoffLane', side: 'A', lane: 0 }, { type: 'react', side: 'B', card: uid(s, 'B', 'Red Mist') });
+    const { events } = play(s, { type: 'faceoffLane', side: 'A', lane: 0 }, { type: 'foul', side: 'B', card: uid(s, 'B', 'Red Mist') });
     expect(eventsOfType(events, 'injured')[0]).toMatchObject({ side: 'A', pos: mid(0) });
   });
 
   it('fails when the caster is opposed', () => {
     const s = scenario({ lanes, A: { hand: [redMist('water')], lineup: { forward: { [LAST]: player('A fwd', { speed: 5 }, { affinities: ['fire'] }) } } } });
-    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+    const { state, events } = play(s, { type: 'pass', side: 'A', to: fwd(LAST) }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
     expect(eventsOfType(events, 'spellCast')[0]?.fizzled).toBe(true);
     expect(Object.keys(state.injuries)).toHaveLength(0);
   });

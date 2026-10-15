@@ -6,7 +6,7 @@
 
 import type { Action, SpellTarget } from './actions';
 import { defOf, isActionSpell, isReactionSpell, playerPositions, slotAt } from './board';
-import { allFieldPositions, isFieldPos, otherSide, passTargets, type Side } from './field';
+import { allFieldPositions, isFieldPos, opposite, otherSide, passTargets, type Side } from './field';
 import type { GameState, Uid } from './state';
 import { validateAction } from './validate';
 
@@ -58,6 +58,7 @@ function spellTargets(s: GameState, side: Side, effect: string): SpellTarget[] {
       return [
         ...playerPositions(s).map((pos): SpellTarget => ({ kind: 'mendField', pos })),
         ...s.teams[side].hand.map((card): SpellTarget => ({ kind: 'mendHand', card })),
+        ...s.teams[side].knockedOut.map((card): SpellTarget => ({ kind: 'mendKnockedOut', card })),
       ];
     default:
       return [{ kind: 'none' }];
@@ -92,6 +93,16 @@ export function legalActions(s: GameState, side: Side): Action[] {
 
     case 'callDice':
       candidates.push({ type: 'callDice', side, roll: false }, { type: 'callDice', side, roll: true });
+      break;
+
+    case 'physicalReaction':
+      candidates.push({ type: 'physicalReaction', side, card: null });
+      for (const card of hand) if (defOf(s, card).kind === 'physical') candidates.push({ type: 'physicalReaction', side, card });
+      break;
+
+    case 'foul':
+      candidates.push({ type: 'foul', side, card: null });
+      for (const card of hand) if (isReactionSpell(defOf(s, card))) candidates.push({ type: 'foul', side, card });
       break;
 
     case 'reaction':
@@ -132,6 +143,7 @@ export function legalActions(s: GameState, side: Side): Action[] {
         }
       }
       if (s.config.substituteStep === 'action') candidates.push(...substitutions(s, side, hand));
+      candidates.push(...attacks(s, side, hand));
 
       for (const discard of subsets(hand, s.config.regroupMax)) candidates.push({ type: 'regroup', side, discard });
       break;
@@ -139,6 +151,28 @@ export function legalActions(s: GameState, side: Side): Action[] {
   }
 
   return candidates.filter((action) => validateAction(s, action) === null);
+}
+
+/** Every physical attack (v0.17): each physical card, from each of your field spots, at the opposing spot or one lane over. */
+function attacks(s: GameState, side: Side, hand: Uid[]): Action[] {
+  if (!s.config.physicalAttacks) return [];
+  const result: Action[] = [];
+  if (s.config.physicalDraw === 'blind') {
+    // A blind attack: no card chosen, always at the opposing player in your spot.
+    for (const attacker of allFieldPositions(s.config.lanes)) result.push({ type: 'attack', side, attacker, target: opposite(attacker) });
+    return result;
+  }
+  for (const card of hand) {
+    if (defOf(s, card).kind !== 'physical') continue;
+    for (const attacker of allFieldPositions(s.config.lanes)) {
+      const facing = opposite(attacker);
+      for (const lane of [facing.lane, facing.lane - 1, facing.lane + 1]) {
+        if (lane < 0 || lane >= s.config.lanes) continue;
+        result.push({ type: 'attack', side, card, attacker, target: { area: facing.area, lane } });
+      }
+    }
+  }
+  return result;
 }
 
 /** Every substitution: each player in hand into each spot of the same kind (filled or empty). */

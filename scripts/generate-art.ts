@@ -11,7 +11,7 @@
 //   OPENAI_IMAGE_QUALITY  low, medium (default), or high. Medium is about 6 US cents an image.
 //
 // The shared player pool, the spell library, and the draft physical attack cards
-// (data/physical.draft.json; prompts in scripts/physical-art.ts) get art. The canon promo card is left alone on purpose: how that
+// (prompts in scripts/physical-art.ts) get art. The canon promo card is left alone on purpose: how that
 // character looks is Paul's call. Cards that already have art are skipped unless --force is
 // given, so to replace one bad image, delete it (or use --only <id> --force) and run again.
 //
@@ -22,12 +22,11 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { familyOf, type CardDef, type PlayerRole } from '../src/engine/cards';
-import { physicalCards, type PhysicalCardDef } from '../src/data/physicalCards';
 import { physicalPromptFor } from './physical-art';
 import { spellPromptFor } from './spell-art';
 
-/** Every kind of card that gets art: players, spells, and the draft physical attack cards. */
-type ArtCard = CardDef | PhysicalCardDef;
+/** Every kind of card that gets art: players, spells, and physical attack cards. */
+type ArtCard = CardDef;
 
 const ART_DIR = 'assets/cards';
 /** Landscape, for the card's 4:3 art window (see .cf-art in styles.css); the sides get trimmed a little. */
@@ -195,7 +194,7 @@ async function main(): Promise<void> {
     if (c.kind === 'spell') return (!anyKindFlag || spellsOnly) && c.team === 'library';
     return (!anyKindFlag || playersOnly) && c.team === 'pool';
   };
-  const cards = [...cardSet.cards, ...physicalCards].filter(wanted);
+  const cards = cardSet.cards.filter(wanted);
   const have = existingArt();
   const todo = cards.filter((c) => force || !have.has(c.id)).slice(0, limit);
 

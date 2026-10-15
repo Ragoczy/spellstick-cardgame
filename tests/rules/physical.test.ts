@@ -1,0 +1,385 @@
+// RULES.md "Physical attacks" (v0.17): the Physical pile, the attack contest, and each physical
+// card's effect. The rule is blind draw: an attack flips the top card of the Physical pile. Tests
+// marked "cards in hand" cover the what-if where cards are drawn into the hand and chosen
+// (config.physicalDraw 'hand'), with Hooking's reach, card conditions, and reactions.
+//
+// Contests here aren't rolled (scenarios turn the dice off), so the cards' numbers decide. The
+// Toughness roll is forced with the target's Toughness: 10 is never hurt, −10 always is. Every
+// hurt is Injured unless a test changes the severity table.
+import { describe, expect, it } from 'vitest';
+import { prototypeCards } from '../../src/data/prototype';
+import { createGame } from '../../src/engine/setup';
+import type { PhysicalCardDef } from '../../src/engine/cards';
+import type { GameConfig } from '../../src/engine/config';
+import { legalActions } from '../../src/engine/legal';
+import { IllegalActionError } from '../../src/engine/reducer';
+import type { GameState } from '../../src/engine/state';
+import { viewFor } from '../../src/engine/view';
+import { findProblems } from '../../src/sim/invariants';
+import {
+  LANE_COUNTS, dfn, eventsOfType, fwd, lastContest, mid, physicalCard, play, player, reaction, scenario, uid,
+} from '../helpers';
+
+const SHAKEN: Partial<GameConfig> = { severity: { shaken: 6, injured: 6 } };
+const HAND = { physicalDraw: 'hand' as const };
+const NEVER_HURT = 10;
+const ALWAYS_HURT = -10;
+
+describe.each(LANE_COUNTS)('physical attacks (%i lanes)', (lanes) => {
+  const LAST = lanes - 1;
+
+  /**
+   * B holds the ball at its last-lane midfield (unless `ball` says otherwise); A's midfielder in
+   * that lane attacks with `card`: the top of the Physical pile, or (`hand`) a card in hand.
+   */
+  function setup(card: PhysicalCardDef, options: {
+    aSpeed?: number; aDefense?: number; aAffinities?: string[]; bSpeed?: number; bToughness?: number; bAffinities?: string[];
+    config?: Partial<GameConfig>; ball?: GameState['ball']; extraA?: Record<number, ReturnType<typeof player>>; hand?: boolean;
+  } = {}) {
+    return scenario({
+      lanes, config: { ...(options.hand ? HAND : {}), ...options.config },
+      ball: options.ball === undefined ? { side: 'B', pos: mid(LAST) } : options.ball,
+      A: {
+        ...(options.hand ? { hand: [card] } : { physical: [card] }),
+        lineup: { midfield: { [LAST]: player('A mid', { speed: options.aSpeed ?? 5, defense: options.aDefense ?? 1 }, { affinities: options.aAffinities }), ...options.extraA } },
+      },
+      B: { lineup: { midfield: { [LAST]: player('B mid', { speed: options.bSpeed ?? 3, toughness: options.bToughness ?? NEVER_HURT }, { affinities: options.bAffinities }) } } },
+    });
+  }
+  /** A attacks: flipping the top card (the rule), or with `name` from hand (cards in hand). */
+  const attack = (s: GameState, name: string, target = mid(LAST), attacker = mid(LAST)) =>
+    play(s, s.config.physicalDraw === 'blind'
+      ? { type: 'attack', side: 'A', attacker, target }
+      : { type: 'attack', side: 'A', card: uid(s, 'A', name), attacker, target });
+
+  describe('the attack', () => {
+    it("is the attacker's Speed against the target's Speed; if it wins, the target drops the ball to the attacker", () => {
+      const s = setup(physicalCard('Shove'));
+      const { state, events } = attack(s, 'Shove');
+      expect(eventsOfType(events, 'attackDeclared')[0]).toMatchObject({ side: 'A', attacker: mid(LAST), target: mid(LAST) });
+      const contest = lastContest(events);
+      expect(contest).toMatchObject({ kind: 'attack', winner: 'A' });
+      expect(contest.attacker).toMatchObject({ stat: 'speed', total: 5 });
+      expect(contest.defender).toMatchObject({ stat: 'speed', total: 3 });
+      expect(eventsOfType(events, 'ballDropped')).toEqual([expect.objectContaining({ side: 'B', pos: mid(LAST) })]);
+      expect(state.ball).toEqual({ side: 'A', pos: mid(LAST) });
+      expect(state.teams.A.physicalDiscard).toEqual([uid(s, 'A', 'Shove')]);
+      expect(findProblems(state)).toEqual([]);
+    });
+
+    it('then knocks the target down: a Toughness roll, with the card\'s modifier', () => {
+      const { events } = attack(setup(physicalCard('Slash', { tier: 'major', toughness: -1 }), { bToughness: 4 }), 'Slash');
+      expect(eventsOfType(events, 'knockedDown')[0]).toMatchObject({ side: 'B', toughness: 3 });
+    });
+
+    it('ties go to the target, and a lost attack does nothing', () => {
+      const { state, events } = attack(setup(physicalCard('Shove'), { aSpeed: 3, bSpeed: 3, bToughness: ALWAYS_HURT }), 'Shove');
+      expect(lastContest(events).winner).toBe('B');
+      expect(state.ball).toEqual({ side: 'B', pos: mid(LAST) });
+      expect(eventsOfType(events, 'knockedDown')).toHaveLength(0);
+    });
+
+    it('a muscle card attacks with Defense', () => {
+      const { events } = attack(setup(physicalCard('Shoulder', { uses: 'muscle' }), { aSpeed: 0, aDefense: 6 }), 'Shoulder');
+      expect(lastContest(events).attacker).toMatchObject({ stat: 'defense', total: 6 });
+    });
+
+    it('adds the card bonus, and +1 for the body Affinity on the card (exactly, or the whole body family)', () => {
+      const card = () => physicalCard('Slash', { bonus: 1, affinity: 'body.berserking' });
+      const exact = lastContest(attack(setup(card(), { aAffinities: ['body.berserking'] }), 'Slash').events).attacker;
+      expect(exact.parts).toEqual([{ label: 'Slash', amount: 1 }, { label: 'Affinity', amount: 1 }]);
+      expect(lastContest(attack(setup(card(), { aAffinities: ['body'] }), 'Slash').events).attacker.total).toBe(7);
+      expect(lastContest(attack(setup(card(), { aAffinities: ['body.speed'] }), 'Slash').events).attacker.total).toBe(6);
+    });
+
+    it('Danger-sense helps the target dodge, and Endurance helps their Toughness', () => {
+      const { events } = attack(setup(physicalCard('Shove'), { bToughness: 4, bAffinities: ['divination.danger-sense', 'body.endurance'] }), 'Shove');
+      expect(lastContest(events).defender.parts).toEqual([{ label: 'Dodge', amount: 1 }]);
+      expect(eventsOfType(events, 'knockedDown')[0]).toMatchObject({ toughness: 5 });
+    });
+
+    it('the severity roll takes the card\'s modifier: a Brutal card pushes Injured to Knocked out', () => {
+      const s = setup(physicalCard('Chop', { tier: 'brutal', toughness: -1, severity: 1 }), {
+        bToughness: ALWAYS_HURT, config: { severity: { shaken: 0, injured: 6 } },
+      });
+      // Severity rolls 1 to 6 are all Injured here; +1 makes a 6 a 7. Find a state where it rolls 6.
+      let found = false;
+      for (let rng = 1; rng < 500 && !found; rng++) {
+        const { events } = attack({ ...s, rng }, 'Chop');
+        const hurt = eventsOfType(events, 'hurt')[0];
+        if (hurt?.roll === 7) {
+          expect(hurt.result).toBe('knockedOut');
+          found = true;
+        }
+      }
+      expect(found).toBe(true);
+    });
+
+    it("can't be made by a player holding the ball or a Shaken player (and, cards in hand, not with a reaction card)", () => {
+      const holding = setup(physicalCard('Shove'), { ball: { side: 'A', pos: mid(LAST) } });
+      expect(() => attack(holding, 'Shove')).toThrow(/holding the ball/);
+      const shaken = setup(physicalCard('Shove'));
+      shaken.teams.A.lineup.midfield[LAST]!.shakenUntil = 3;
+      expect(() => attack(shaken, 'Shove')).toThrow(/Shaken/);
+      const late = setup(physicalCard('Late Hit', { ability: { effect: 'after_pass_or_shot', params: {} } }), { hand: true });
+      expect(() => attack(late, 'Late Hit')).toThrow(IllegalActionError);
+    });
+
+    it('only at the opposing player in your spot', () => {
+      const s = setup(physicalCard('Shove'));
+      expect(() => attack(s, 'Shove', fwd(LAST))).toThrow(/in your spot/);
+    });
+
+    it('has no fouls: a dirty play in hand is never asked for', () => {
+      const s = setup(physicalCard('Shove'));
+      s.teams.A.hand.push(...[reaction('Red Mist', { effect: 'dirty_play', params: {} })].map((def) => {
+        const id = `A${90}`;
+        s.cards[id] = { ...def, team: 'A' };
+        return id;
+      }));
+      const { events } = attack(s, 'Shove');
+      expect(eventsOfType(events, 'contestResolved')).toHaveLength(1);
+    });
+
+    it('cards in hand: are listed as legal actions for each physical card in hand', () => {
+      const s = setup(physicalCard('Shove'), { hand: true });
+      expect(legalActions(s, 'A')).toContainEqual({ type: 'attack', side: 'A', card: uid(s, 'A', 'Shove'), attacker: mid(LAST), target: mid(LAST) });
+    });
+  });
+
+  describe('the cards', () => {
+    it('Shirt Pull (no Toughness roll): the target only drops the ball', () => {
+      const { state, events } = attack(setup(physicalCard('Shirt Pull', { toughness: null, severity: null }), { bToughness: ALWAYS_HURT }), 'Shirt Pull');
+      expect(state.ball).toEqual({ side: 'A', pos: mid(LAST) });
+      expect(eventsOfType(events, 'knockedDown')).toHaveLength(0);
+    });
+
+    it('Tripping: +2 if the target holds the ball', () => {
+      const card = () => physicalCard('Tripping', { ability: { effect: 'vs_holder', params: { amount: 2 } } });
+      expect(lastContest(attack(setup(card()), 'Tripping').events).attacker.total).toBe(7);
+      const offBall = setup(card(), { ball: { side: 'B', pos: dfn(0) } });
+      expect(lastContest(attack(offBall, 'Tripping').events).attacker.total).toBe(5);
+    });
+
+    it('cards in hand: Hooking may attack the opposing player one lane over', () => {
+      if (lanes < 2) return;
+      const card = physicalCard('Hooking', { ability: { effect: 'reach', params: {} } });
+      const s = setup(card, { ball: { side: 'B', pos: mid(LAST - 1) }, hand: true });
+      const { events } = attack(s, 'Hooking', mid(LAST - 1));
+      expect(lastContest(events).defender.pos).toEqual(mid(LAST - 1));
+    });
+
+    it('Atomic Wedgie: no Toughness roll, the target is Shaken', () => {
+      const { state, events } = attack(setup(physicalCard('Atomic Wedgie', { toughness: null, severity: null, ability: { effect: 'only_shaken', params: {} } })), 'Atomic Wedgie');
+      expect(eventsOfType(events, 'knockedDown')).toHaveLength(0);
+      expect(eventsOfType(events, 'hurt')[0]).toMatchObject({ result: 'shaken', source: 'attack', cause: 'Atomic Wedgie' });
+      expect(state.teams.B.lineup.midfield[LAST]!.shakenUntil).toBeDefined();
+    });
+
+    it('cards in hand: Clothesline only against the ball carrier', () => {
+      const card = () => physicalCard('Clothesline', { ability: { effect: 'needs_holder', params: {} } });
+      expect(() => attack(setup(card(), { ball: { side: 'B', pos: dfn(0) }, hand: true }), 'Clothesline')).toThrow(/ball carrier/);
+      expect(() => attack(setup(card(), { hand: true }), 'Clothesline')).not.toThrow();
+    });
+
+    it('Gouge: passing the Toughness roll still leaves the target Shaken', () => {
+      const { events } = attack(setup(physicalCard('Gouge', { ability: { effect: 'shaken_anyway', params: {} } })), 'Gouge');
+      expect(eventsOfType(events, 'knockedDown')[0]).toMatchObject({ hurt: false });
+      expect(eventsOfType(events, 'hurt')[0]).toMatchObject({ result: 'shaken' });
+    });
+
+    it('Kneecap: Shaken counts as Injured', () => {
+      const card = physicalCard('Kneecap', { ability: { effect: 'shaken_is_injured', params: {} } });
+      const { events } = attack(setup(card, { bToughness: ALWAYS_HURT, config: SHAKEN }), 'Kneecap');
+      expect(eventsOfType(events, 'hurt')[0]).toMatchObject({ result: 'injured' });
+      expect(eventsOfType(events, 'injured')).toHaveLength(1);
+    });
+
+    it('Spearing: the attacker makes a Toughness roll too, win or lose', () => {
+      const card = physicalCard('Spearing', { ability: { effect: 'self_check', params: {} } });
+      const { events } = attack(setup(card, { aSpeed: 0 }), 'Spearing');
+      expect(lastContest(events).winner).toBe('B');
+      expect(eventsOfType(events, 'knockedDown')).toEqual([expect.objectContaining({ side: 'A', pos: mid(LAST) })]);
+    });
+
+    it('cards in hand: Stamp only against a Shaken target', () => {
+      const card = () => physicalCard('Stamp', { bonus: 3, ability: { effect: 'needs_shaken', params: {} } });
+      expect(() => attack(setup(card(), { hand: true }), 'Stamp')).toThrow(/Shaken/);
+      const s = setup(card());
+      s.teams.B.lineup.midfield[LAST]!.shakenUntil = 2;
+      expect(lastContest(attack(s, 'Stamp').events).attacker.total).toBe(8);
+    });
+
+    it('Pile-on: +1 for each standing teammate one lane over in the same row', () => {
+      if (lanes < 2) return;
+      const card = () => physicalCard('Pile-on', { ability: { effect: 'pile_on', params: { amount: 1 } } });
+      expect(lastContest(attack(setup(card()), 'Pile-on').events).attacker.parts).toEqual([{ label: 'Pile-on', amount: 1 }]);
+      const s = setup(card());
+      s.teams.A.lineup.midfield[LAST - 1]!.shakenUntil = 3; // a Shaken teammate doesn't help
+      expect(lastContest(attack(s, 'Pile-on').events).attacker.parts).toEqual([]);
+    });
+  });
+
+  describe('reaction cards (cards in hand)', () => {
+    const lateHit = () => physicalCard('Late Hit', { ability: { effect: 'after_pass_or_shot', params: {} } });
+    const elbow = () => physicalCard('Elbow', { bonus: 1, ability: { effect: 'after_losing', params: {} } });
+
+    it('Late Hit: after the opposing player in your spot passes, attack them', () => {
+      const s = scenario({
+        lanes, config: HAND, ball: { side: 'A', pos: mid(0) },
+        A: { lineup: { midfield: { 0: player('A passer', { speed: 2, toughness: NEVER_HURT }) }, forward: { 0: player('A fwd', { speed: 6 }) } } },
+        B: { hand: [lateHit()], lineup: { midfield: { 0: player('B mid', { speed: 5 }) } } },
+      });
+      const { state } = play(s, { type: 'pass', side: 'A', to: fwd(0) });
+      expect(state.pending).toEqual({ kind: 'physicalReaction', side: 'B', trigger: 'after_pass_or_shot', attacker: mid(0), target: mid(0) });
+      const { events } = play(state, { type: 'physicalReaction', side: 'B', card: uid(s, 'B', 'Late Hit') });
+      expect(lastContest(events)).toMatchObject({ kind: 'attack', winner: 'B' });
+      expect(eventsOfType(events, 'ballDropped')).toHaveLength(0); // the passer has no ball to drop
+    });
+
+    it('Elbow: when your player loses a contest to the opposing player in their spot, that result stands, then attack', () => {
+      const s = scenario({
+        // Tackle risk off: a tackler who loses badly would be Shaken, and couldn't elbow.
+        lanes, config: { ...HAND, tackleRiskMargin: 0 }, ball: { side: 'B', pos: mid(LAST) },
+        A: { hand: [elbow()], lineup: { midfield: { [LAST]: player('A mid', { defense: 0, speed: 6 }) } } },
+        B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 4, toughness: NEVER_HURT }) } } },
+      });
+      const { state } = play(s, { type: 'tackle', side: 'A' });
+      expect(state.ball).toEqual({ side: 'B', pos: mid(LAST) }); // the tackle failed, and that stands
+      expect(state.pending).toMatchObject({ kind: 'physicalReaction', side: 'A', trigger: 'after_losing' });
+      const { state: after, events } = play(state, { type: 'physicalReaction', side: 'A', card: uid(s, 'A', 'Elbow') });
+      expect(lastContest(events).attacker.parts).toEqual([{ label: 'Elbow', amount: 1 }]);
+      expect(after.ball).toEqual({ side: 'A', pos: mid(LAST) });
+    });
+
+    it('are only offered to a side that has one, and can be declined', () => {
+      const s = scenario({
+        // Tackle risk off: a tackler who loses badly would be Shaken, and couldn't elbow.
+        lanes, config: { ...HAND, tackleRiskMargin: 0 }, ball: { side: 'B', pos: mid(LAST) },
+        A: { hand: [elbow()], lineup: { midfield: { [LAST]: player('A mid', { defense: 0 }) } } },
+      });
+      const { state } = play(s, { type: 'tackle', side: 'A' }, { type: 'physicalReaction', side: 'A', card: null });
+      expect(state.pending.kind).not.toBe('physicalReaction');
+      expect(state.teams.A.hand).toContain(uid(s, 'A', 'Elbow'));
+    });
+  });
+
+  describe('blind draw (the rule)', () => {
+    const BLIND: Partial<GameConfig> = { physicalDraw: 'blind' };
+    /** B holds the ball at midfield; A's midfielder there attacks, flipping from this pile (pile[0] on top). */
+    function blind(pile: PhysicalCardDef[], extra: { ball?: GameState['ball']; config?: Partial<GameConfig> } = {}) {
+      return scenario({
+        lanes, config: { ...BLIND, ...extra.config }, ball: extra.ball === undefined ? { side: 'B', pos: mid(LAST) } : extra.ball,
+        A: { physical: pile, lineup: { midfield: { [LAST]: player('A mid', { speed: 5, defense: 1 }) } } },
+        B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 3, toughness: NEVER_HURT }) } } },
+      });
+    }
+    const flip = (s: GameState) => play(s, { type: 'attack', side: 'A', attacker: mid(LAST), target: mid(LAST) });
+
+    it('deals no physical cards into the hand, at setup or at faceoffs', () => {
+      const { state } = createGame({ seed: 3, cardSet: prototypeCards, config: { lanes, ...BLIND } });
+      let s = state;
+      for (let p = s.pending; p.kind !== 'action' && p.kind !== 'gameOver'; p = s.pending) s = play(s, legalActions(s, p.side)[0]!).state;
+      for (const side of ['A', 'B'] as const) {
+        expect(s.teams[side].hand.some((u) => s.cards[u]!.kind === 'physical')).toBe(false);
+        expect(s.teams[side].physical).toHaveLength(16);
+      }
+    });
+
+    it('an attack flips the top card of the Physical pile and plays it', () => {
+      const s = blind([physicalCard('Top Card', { bonus: 2 }), physicalCard('Next')]);
+      const { state, events } = flip(s);
+      expect(eventsOfType(events, 'attackDeclared')[0]).toMatchObject({ flipped: true, card: expect.objectContaining({ def: expect.objectContaining({ name: 'Top Card' }) }) });
+      expect(lastContest(events).attacker.total).toBe(7);
+      expect(state.teams.A.physicalDiscard).toEqual([uid(s, 'A', 'Top Card')]);
+      expect(state.teams.A.physical).toEqual([uid(s, 'A', 'Next')]);
+    });
+
+    it("ignores a flipped card's condition: Clothesline works on a player without the ball, Stamp on one standing", () => {
+      const clothesline = blind([physicalCard('Clothesline', { ability: { effect: 'needs_holder', params: {} } })], { ball: { side: 'B', pos: dfn(0) } });
+      expect(lastContest(flip(clothesline).events).kind).toBe('attack');
+      const stamp = blind([physicalCard('Stamp', { bonus: 3, ability: { effect: 'needs_shaken', params: {} } })]);
+      expect(lastContest(flip(stamp).events).attacker.total).toBe(8);
+    });
+
+    it('always attacks the opposing player in your spot, and never from hand', () => {
+      const s = blind([physicalCard('Hooking', { ability: { effect: 'reach', params: {} } })]);
+      expect(() => play(s, { type: 'attack', side: 'A', attacker: mid(LAST), target: fwd(LAST) })).toThrow(/in your spot/);
+      expect(legalActions(s, 'A').filter((a) => a.type === 'attack').every((a) => a.type === 'attack' && a.card === undefined)).toBe(true);
+    });
+
+    it('has no reactions: Late Hit and Elbow are plain attacks', () => {
+      const s = scenario({
+        lanes, config: BLIND, ball: { side: 'B', pos: mid(LAST) },
+        A: { physical: [physicalCard('Elbow', { ability: { effect: 'after_losing', params: {} } })], lineup: { midfield: { [LAST]: player('A mid', { defense: 0 }) } } },
+      });
+      const { state } = play(s, { type: 'tackle', side: 'A' });
+      expect(state.pending.kind).not.toBe('physicalReaction');
+    });
+
+    it("shows which cards are left in each pile (not their order); with cards in hand, not the opponent's", () => {
+      const s = blind([physicalCard('One'), physicalCard('Two')]);
+      expect(viewFor(s, 'B').opponent.physicalRemaining.map((d) => d.name).sort()).toEqual(['One', 'Two']);
+      const inHand = setup(physicalCard('Shove'), { hand: true });
+      expect(viewFor(inHand, 'B').opponent.physicalRemaining).toEqual([]);
+    });
+
+    it('each team can make 8 attacks a game: the pile is not reshuffled', () => {
+      const s = blind(Array.from({ length: 3 }, (_, i) => physicalCard(`Card ${i}`)));
+      expect(s.config.physicalAttackLimit).toBe(8);
+      // Eight cards already flipped this game.
+      for (let i = 0; i < 8; i++) {
+        const id = `A9${i}`;
+        s.cards[id] = { ...physicalCard(`Used ${i}`), team: 'A' };
+        s.teams.A.physicalDiscard.push(id);
+      }
+      expect(legalActions(s, 'A').some((a) => a.type === 'attack')).toBe(false);
+      expect(() => flip(s)).toThrow(/no physical attacks left/);
+    });
+
+    it('with no physical cards left at all, there is no attack', () => {
+      const s = blind([]);
+      expect(legalActions(s, 'A').some((a) => a.type === 'attack')).toBe(false);
+    });
+  });
+
+  describe('the Physical pile', () => {
+    it('each side gets one of each physical card (cards in hand: drawing 2 at setup and 1 at each faceoff)', () => {
+      const { state } = createGame({ seed: 3, cardSet: prototypeCards, config: { lanes } });
+      for (const side of ['A', 'B'] as const) {
+        const physical = Object.entries(state.cards).filter(([u, d]) => u.startsWith(side) && d.kind === 'physical');
+        expect(physical).toHaveLength(16);
+        expect(state.teams[side].physical).toHaveLength(16);
+      }
+      const s = scenario({
+        lanes, config: HAND, ball: { side: 'A', pos: fwd(0) }, A: { lineup: { forward: { 0: player('A fwd', { shot: 9 }) } }, physical: [physicalCard('P1')] },
+        B: { physical: [physicalCard('P2'), physicalCard('P3')] },
+      });
+      const { state: after } = play(s, { type: 'shoot', side: 'A' });
+      expect(after.pending.kind).toBe('faceoffLane');
+      expect(after.teams.A.hand).toContain(uid(s, 'A', 'P1'));
+      expect(after.teams.B.hand).toContain(uid(s, 'B', 'P2'));
+      expect(after.teams.B.physical).toEqual([uid(s, 'B', 'P3')]);
+    });
+
+    it('cards in hand: is shuffled again from its own discards when it runs out', () => {
+      const s = scenario({ lanes, config: HAND, ball: { side: 'A', pos: fwd(0) }, A: { lineup: { forward: { 0: player('A fwd', { shot: 9 }) } } } });
+      const used = physicalCard('Used');
+      s.cards.A95 = { ...used, team: 'A' };
+      s.teams.A.physicalDiscard = ['A95'];
+      const { state } = play(s, { type: 'shoot', side: 'A' });
+      expect(state.teams.A.hand).toContain('A95');
+      expect(state.teams.A.physicalDiscard).toEqual([]);
+    });
+
+    it('cards in hand: physical cards in hand are hidden from the opponent, like spells', () => {
+      const s = setup(physicalCard('Secret Shove'), { hand: true });
+      expect(JSON.stringify(viewFor(s, 'B'))).not.toContain('Secret Shove');
+    });
+
+    it('before v0.17, there are no physical cards', () => {
+      const { state } = createGame({ seed: 3, cardSet: prototypeCards, config: { lanes, physicalAttacks: false } });
+      expect(Object.values(state.cards).some((d) => d.kind === 'physical')).toBe(false);
+    });
+  });
+});

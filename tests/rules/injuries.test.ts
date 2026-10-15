@@ -49,7 +49,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
   it("can't happen to goalies: a dirty play that beats the goalie does nothing more", () => {
     const redMist = reaction('Red Mist', { effect: 'dirty_play', params: {} });
     const s = scenario({ lanes, ball: { side: 'A', pos: fwd(0) }, A: { hand: [redMist], lineup: { forward: { 0: player('A fwd', { shot: 6 }) } } } });
-    const { state, events } = play(s, { type: 'shoot', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+    const { state, events } = play(s, { type: 'shoot', side: 'A' }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
     expect(state.score.A).toBe(1);
     expect(eventsOfType(events, 'injured')).toHaveLength(0);
     expect(Object.keys(state.injuries)).toHaveLength(0);
@@ -70,7 +70,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     expect(() => applyAction(state, { type: 'regroup', side: 'A', discard: [] })).toThrow(IllegalActionError);
     const result = play(state, { type: 'forcedSub', side: 'B', card: uid(s, 'B', 'B sub') });
     state = result.state;
-    expect(state.teams.B.lineup.defense[LAST]).toEqual({ uid: uid(s, 'B', 'B sub'), revealed: false, scried: false });
+    expect(state.teams.B.lineup.defense[LAST]).toMatchObject({ uid: uid(s, 'B', 'B sub'), revealed: false, scried: false });
     expect(state.teams.B.hand).toContain(uid(s, 'B', 'B def'));
     expect(state.injuries[uid(s, 'B', 'B def')]).toBeDefined();
     // The substitute holds the ball, and it didn't cost anyone an action: it's still A's turn with one left.
@@ -78,6 +78,22 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
     expect(state.pending).toEqual({ kind: 'action', side: 'A' });
     expect(state.actionsLeft).toBe(1);
     expect(eventsOfType(result.events, 'forcedSub')[0]?.toHand?.def.name).toBe('B def');
+  });
+
+  it('bring the forced substitute on Shaken until the end of their next turn (v0.17)', () => {
+    const s = scenario({ lanes, actionsLeft: 2, ball: { side: 'B', pos: dfn(LAST) }, A: { hand: [hit()] }, B: { ...weakDefender(LAST), hand: [player('B sub')] } });
+    const hurt = hitDefender(s, LAST).state;
+    const result = play(hurt, { type: 'forcedSub', side: 'B', card: uid(s, 'B', 'B sub') });
+    const slot = result.state.teams.B.lineup.defense[LAST]!;
+    expect(slot.uid).toBe(uid(s, 'B', 'B sub'));
+    // It's A's turn, so B's sub stays Shaken through B's next turn.
+    expect(slot.shakenUntil).toBe(result.state.turn + 1);
+    expect(eventsOfType(result.events, 'forcedSub')[0]?.shaken).toBe(true);
+    expect(viewFor(result.state, 'A').opponent.lineup.defense[LAST]).toMatchObject({ shaken: true });
+    // With forcedSubShaken off (online matches started before v0.17), the substitute comes on standing.
+    const plain = scenario({ lanes, actionsLeft: 2, config: { forcedSubShaken: false }, ball: { side: 'B', pos: dfn(LAST) }, A: { hand: [hit()] }, B: { ...weakDefender(LAST), hand: [player('B sub')] } });
+    const standing = play(hitDefender(plain, LAST).state, { type: 'forcedSub', side: 'B', card: uid(plain, 'B', 'B sub') }).state;
+    expect(standing.teams.B.lineup.defense[LAST]!.shakenUntil).toBeUndefined();
   });
 
   it('leave the player in place, playing hurt, if there is no substitute in hand', () => {

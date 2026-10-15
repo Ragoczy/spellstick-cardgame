@@ -1,6 +1,8 @@
 // Every tuning number in the rules lives here (marked ⚙ in docs/RULES.md).
 // Balance changes should be one-line edits to DEFAULT_CONFIG.
 
+import type { PhysicalTier } from './cards';
+
 /** Stats an injury can lower. (Goalies can't be injured.) */
 export type InjuryStat = 'speed' | 'shot' | 'defense' | 'faceoff';
 
@@ -23,7 +25,7 @@ export interface GameConfig {
   handLimit: number;
   /** Setup: draw players for every field spot + this many more, from the Players pile. */
   setupExtraPlayers: number;
-  /** Setup: draw this many from the Spells pile. */
+  /** Setup: draw this many from the Spells pile (3 since v0.17, which shortened games by about a turn; 2 before). */
   setupSpells: number;
   /** Regroup: discard up to this many cards, then draw that many. */
   regroupMax: number;
@@ -41,6 +43,11 @@ export interface GameConfig {
   deckGoalies: number;
   /** Field players per deck. Decks dealt from the shared player pool get this many. */
   deckFieldPlayers: number;
+  /**
+   * Built teams (v0.17, RULES.md "Building a team"): the players' costs may add up to at most this.
+   * 0 = no cap (online matches started before v0.17).
+   */
+  rosterCap: number;
   /** Draft (RULES.md "Draft"): players each team picks from a face-up pool before the game. 0 = no draft, players are dealt. */
   draftPicks: number;
   /**
@@ -110,6 +117,110 @@ export interface GameConfig {
    * substituted out to recharge. 0 = no limit.
    */
   castsPerResonant: number;
+  /**
+   * What a Shield does to the opposing player's value (their stat after abilities and injuries,
+   * or a hit's strength). 'minus' (the rule since v0.17): it loses shieldAmount, but not below 0.
+   * 'half': it counts half, rounded up (a simulation what-if). 'zero' (the old rule): it counts as
+   * 0 and their abilities and injuries are ignored; online matches started before v0.17 keep it.
+   */
+  shieldEffect: 'minus' | 'half' | 'zero';
+  /** With shieldEffect 'minus': how much a Shield takes off. */
+  shieldAmount: number;
+  /**
+   * Contact (v0.17): a successful tackle knocks the tackled player down (a Toughness check), and
+   * every hurt rolls for severity: Shaken, Injured, or Knocked out. false (the old rule): only
+   * hits and dirty plays hurt, and every hurt is an injury; online matches started before v0.17
+   * keep it.
+   */
+  knockdowns: boolean;
+  /** The die for Toughness checks, severity rolls, and knocked-out return rolls. */
+  contactDie: number;
+  /**
+   * Toughness by player type, printed on each field player (scripts/generate-players.ts). A
+   * knocked-down player is fine on a roll at or below their Toughness, and hurt above it.
+   */
+  toughnessByRole: Record<'stopper' | 'anchor' | 'playmaker' | 'allrounder' | 'runner' | 'striker', number>;
+  /** Severity roll: up to `shaken` is Shaken, up to `injured` is Injured, anything higher Knocked out. */
+  severity: { shaken: number; injured: number };
+  /** Taken off every skill of a Shaken player in a contest. */
+  shakenPenalty: number;
+  /** At each faceoff, each knocked-out player goes back to their owner's hand on this roll or higher. */
+  knockedOutReturn: number;
+  /**
+   * When dirty plays are played. 'before' (the rule since v0.17): declared as a foul before the
+   * dice, and if the two contest dice match, the referee sends the fouler off for the game.
+   * 'reaction' (the old rule): an ordinary reaction spell, played after the dice, with no
+   * referee; online matches started before v0.17 keep it.
+   */
+  foulTiming: 'before' | 'reaction';
+  /**
+   * Physical attack cards (v0.17): each team has a Physical pile, and a player can attack the
+   * opposing player in their spot as an action. false (the old rule): no physical cards; online
+   * matches started before v0.17 keep it.
+   */
+  physicalAttacks: boolean;
+  /** Cards in each team's Physical pile (one of each physical card, up to this many). */
+  physicalPileSize: number;
+  /**
+   * How physical cards are played. 'blind' (the rule, Paul 2026-10-15): never in the hand; an attack
+   * flips the top card of the face-down Physical pile, so the move is decided by the player on the
+   * field in the moment. A flipped card's own condition (only against the ball carrier, only
+   * against a Shaken player, one lane over) is ignored, and there are no physical reactions.
+   * 'hand' (the first plan, a simulation what-if): drawn into the hand (2 at setup, 1 at each
+   * faceoff) and chosen, with Late Hit and Elbow as reactions.
+   */
+  physicalDraw: 'hand' | 'blind';
+  /**
+   * With 'blind': each team can flip this many physical cards a game, and the pile isn't
+   * reshuffled (0 = no limit, reshuffled when it runs out).
+   */
+  physicalAttackLimit: number;
+  /** Physical cards drawn at setup, and by each team at each faceoff ('hand' only). */
+  physicalSetupDraw: number;
+  physicalFaceoffDraw: number;
+  /** Added to an attack when the attacker has the body Affinity printed on the card. */
+  affinityAttackBonus: number;
+  /** A player holding the ball may make a physical attack. */
+  attackWithBall: boolean;
+  /** Against any physical attack: this Affinity adds to the target's Speed to dodge, */
+  physicalDodge: { affinity: string; amount: number };
+  /** and this one to their Toughness. */
+  physicalEndurance: { affinity: string; amount: number };
+  /** Turns in the penalty box, by the card's tier ('card'), or by what the attack did ('result'). */
+  penaltyLength: 'card' | 'result';
+  penaltyTurns: Record<PhysicalTier, number>;
+  /** With penaltyLength 'result': turns for no hurt (or only Shaken), Injured, and Knocked out or carried off. */
+  penaltyTurnsByResult: { none: number; injured: number; out: number };
+  /**
+   * Escalating penalties (Paul, 2026-10-15): each team has a penalty risk level, starting at 1. An
+   * attack is penalized when the attacker's die and the penalty die both show the level or lower.
+   * Each attack raises the level by 1 (after its check), up to the die size; each of the team's
+   * turns without one lowers it by 1, never below 1. false: always level 1 (a 1, then a 1).
+   */
+  penaltyEscalation: boolean;
+  /** If the other team scores, a team's penalized players all come back at once. */
+  powerPlayReturn: boolean;
+  /** Nobody can be substituted into a penalized player's spot. */
+  penaltyNoSubstitution: boolean;
+  /**
+   * A forced substitute (after an injury, a carry-off, or a knockout) comes on
+   * Shaken (v0.17, Paul 2026-10-15). Without it, an Injured player is swapped at once for a fresh
+   * one, which is often better for the team than being Shaken. Online matches started before
+   * v0.17 have it off.
+   */
+  forcedSubShaken: boolean;
+
+  /**
+   * Tackle assist (v0.17 phase e, tried and not kept: it cost goals): +this to a tackle for each of
+   * the tackler's standing teammates (on the field, not Shaken) in an adjacent lane of the same
+   * row. 0 = off. A simulation what-if.
+   */
+  tackleAssist: number;
+  /**
+   * Tackle risk (v0.17 phase e, the rule): a tackler who loses by this much or more is Shaken (no
+   * Toughness roll). 0 = off.
+   */
+  tackleRiskMargin: number;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -121,7 +232,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   goalsToWin: 3,
   handLimit: 7,
   setupExtraPlayers: 2,
-  setupSpells: 2,
+  setupSpells: 3,
   regroupMax: 1,
   affinityMatchBonus: 1,
   affinitySpecialistBonus: 2,
@@ -130,6 +241,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   deckSize: 40,
   deckGoalies: 2,
   deckFieldPlayers: 22,
+  rosterCap: 239,
   draftPicks: 0,
   draftPoolGoalies: 0,
   draftPoolField: 30,
@@ -148,6 +260,34 @@ export const DEFAULT_CONFIG: GameConfig = {
   goalieMustClear: true,
   mirrorImages: 2,
   castsPerResonant: 1,
+  shieldEffect: 'minus',
+  shieldAmount: 2,
+  knockdowns: true,
+  contactDie: 6,
+  toughnessByRole: { stopper: 5, anchor: 5, playmaker: 4, allrounder: 4, runner: 3, striker: 3 },
+  severity: { shaken: 3, injured: 5 },
+  shakenPenalty: 2,
+  knockedOutReturn: 4,
+  foulTiming: 'before',
+  physicalAttacks: true,
+  physicalPileSize: 16,
+  physicalDraw: 'blind',
+  physicalAttackLimit: 8,
+  physicalSetupDraw: 2,
+  physicalFaceoffDraw: 1,
+  affinityAttackBonus: 1,
+  attackWithBall: false,
+  physicalDodge: { affinity: 'divination.danger-sense', amount: 1 },
+  physicalEndurance: { affinity: 'body.endurance', amount: 1 },
+  penaltyLength: 'card',
+  penaltyTurns: { minor: 1, major: 2, brutal: 3 },
+  penaltyTurnsByResult: { none: 1, injured: 2, out: 3 },
+  penaltyEscalation: true,
+  tackleAssist: 0,
+  tackleRiskMargin: 3,
+  powerPlayReturn: true,
+  penaltyNoSubstitution: true,
+  forcedSubShaken: true,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

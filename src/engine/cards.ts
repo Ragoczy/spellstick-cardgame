@@ -24,19 +24,27 @@ export interface Resonant {
 
 export type StatName = 'speed' | 'shot' | 'defense' | 'faceoff' | 'save';
 /** What a stat is being used for in a contest. */
-export type StatUse = 'receive' | 'intercept' | 'tackle' | 'evade' | 'shoot' | 'save' | 'faceoff' | 'resist';
+export type StatUse = 'receive' | 'intercept' | 'tackle' | 'evade' | 'shoot' | 'save' | 'faceoff' | 'resist' | 'attack';
 export type Area = 'defense' | 'midfield' | 'forward';
 
 // ---- Effect vocabulary (docs/RULES.md, "Effect vocabulary") ----
 
 export type PlayerAbility =
   | { effect: 'bonus'; params: { stat: StatName; amount: number; when?: StatUse; row?: Area } }
-  | { effect: 'draw_on_win'; params: { count: number } };
+  | { effect: 'draw_on_win'; params: { count: number } }
+  /** Heavy hands (v0.17): +amount to the severity roll of anyone this player hurts. */
+  | { effect: 'hits_harder'; params: { amount: number } }
+  /** Sturdy (v0.17): −amount to the severity roll when this player is hurt. */
+  | { effect: 'hard_to_hurt'; params: { amount: number } };
+
+const PLAYER_EFFECTS = ['bonus', 'draw_on_win', 'hits_harder', 'hard_to_hurt'];
 
 export type ReactionEffect =
   | { effect: 'boost'; params: { amount: number; when?: StatUse } }
   | { effect: 'shield'; params: Record<string, never> }
-  | { effect: 'dirty_play'; params: Record<string, never> };
+  | { effect: 'dirty_play'; params: Record<string, never> }
+  /** Ward (v0.17): if your player is hurt in this contest, they're only Shaken. */
+  | { effect: 'ward'; params: Record<string, never> };
 
 export type ActionEffect =
   | { effect: 'scry'; params: Record<string, never> }
@@ -51,6 +59,42 @@ export type ActionEffect =
   | { effect: 'mirror_images'; params: Record<string, never> };
 
 export type SpellEffect = ReactionEffect | ActionEffect;
+
+/**
+ * Physical attack cards (v0.17, RULES.md "Physical attacks"): what a card does beyond the
+ * standard attack. A card has at most one.
+ */
+export type PhysicalEffect =
+  /** +amount to the attack if the target holds the ball (Tripping). */
+  | { effect: 'vs_holder'; params: { amount: number } }
+  /** May attack the opposing player in an adjacent lane of the same row instead (Hooking). */
+  | { effect: 'reach'; params: Record<string, never> }
+  /** Only against the ball carrier (Clothesline). */
+  | { effect: 'needs_holder'; params: Record<string, never> }
+  /** Only against a Shaken target (Stamp). */
+  | { effect: 'needs_shaken'; params: Record<string, never> }
+  /** No Toughness roll: if the attack wins, the target is Shaken, never worse (Atomic Wedgie). */
+  | { effect: 'only_shaken'; params: Record<string, never> }
+  /** If the target passes their Toughness roll, they're Shaken anyway (Gouge). */
+  | { effect: 'shaken_anyway'; params: Record<string, never> }
+  /** If the target is hurt, Shaken counts as Injured (Kneecap). */
+  | { effect: 'shaken_is_injured'; params: Record<string, never> }
+  /** The attacker makes a Toughness roll too, win or lose (Spearing). */
+  | { effect: 'self_check'; params: Record<string, never> }
+  /** +amount for each of your standing players in an adjacent lane of the same row (Pile-on). */
+  | { effect: 'pile_on'; params: { amount: number } }
+  /** Reaction: after the opposing player in this spot passes or shoots (Late Hit). */
+  | { effect: 'after_pass_or_shot'; params: Record<string, never> }
+  /** Reaction: when your player loses a contest to the opposing player in this spot (Elbow). */
+  | { effect: 'after_losing'; params: Record<string, never> };
+
+export const PHYSICAL_EFFECTS: PhysicalEffect['effect'][] = [
+  'vs_holder', 'reach', 'needs_holder', 'needs_shaken', 'only_shaken', 'shaken_anyway', 'shaken_is_injured',
+  'self_check', 'pile_on', 'after_pass_or_shot', 'after_losing',
+];
+
+/** Physical cards played as reactions, at the moment they name, instead of as an attack on your turn. */
+export const PHYSICAL_REACTIONS: ReadonlySet<string> = new Set(['after_pass_or_shot', 'after_losing']);
 
 /**
  * Whether a reaction spell can be played by this side of a contest. A boost with `when` only
@@ -78,6 +122,12 @@ export const POOL_TEAM = 'pool';
  */
 export const LIBRARY_TEAM = 'library';
 
+/**
+ * Physical attack cards (v0.17) belong to no team. Every team's Physical pile has one copy of each
+ * (RULES.md "Physical attacks").
+ */
+export const PHYSICAL_TEAM = 'physical';
+
 /** A player card's type. It only says what the card is good at: any field player can play any position. */
 export type PlayerRole = 'runner' | 'striker' | 'playmaker' | 'allrounder' | 'anchor' | 'stopper' | 'goalie';
 export const PLAYER_ROLES: PlayerRole[] = ['runner', 'striker', 'playmaker', 'allrounder', 'anchor', 'stopper', 'goalie'];
@@ -97,8 +147,11 @@ interface CardBase {
 interface PlayerBase extends CardBase {
   resonants: Resonant[];
   role?: PlayerRole;
-  /** Extra skill points the card was made with, on top of its type's base stats (named players only). */
-  bonusPoints?: number;
+  /**
+   * What the player counts against a team's cap (v0.17, RULES.md "Building a team"). Named players
+   * have one; the prototype's team cards don't, and count 0.
+   */
+  cost?: number;
   ability?: PlayerAbility;
 }
 
@@ -108,6 +161,11 @@ export interface FieldCardDef extends PlayerBase {
   shot: number;
   defense: number;
   faceoff: number;
+  /**
+   * Knocked down, this player is fine on a roll at or below this, and hurt above it (v0.17).
+   * Card sets saved by online matches before v0.17 don't have it; those matches never roll it.
+   */
+  toughness: number;
 }
 
 export interface GoalieCardDef extends PlayerBase {
@@ -142,7 +200,32 @@ export interface ActionSpellDef extends CardBase {
 
 export type SpellCardDef = ReactionSpellDef | ActionSpellDef;
 export type PlayerCardDef = FieldCardDef | GoalieCardDef;
-export type CardDef = FieldCardDef | GoalieCardDef | SpellCardDef;
+/** Penalty tiers of physical cards, from mildest: they set the Toughness and severity modifiers and the penalty length. */
+export type PhysicalTier = 'minor' | 'major' | 'brutal';
+export const PHYSICAL_TIERS: PhysicalTier[] = ['minor', 'major', 'brutal'];
+
+/** A physical attack card (v0.17). Not a spell: it isn't cast, so affinity rules and casting limits don't apply. */
+export interface PhysicalCardDef extends CardBase {
+  kind: 'physical';
+  tier: PhysicalTier;
+  /** 'speed' attacks with the attacker's Speed; 'muscle' with their Defense. */
+  uses: 'speed' | 'muscle';
+  /** Added to the attack. */
+  bonus: number;
+  /** The body Affinity printed on the card ("body.strength"): an attacker with it gets +1. */
+  affinity: string;
+  /** The target's Toughness roll modifier (tier and card together), or null: no Toughness roll. */
+  toughness: number | null;
+  /** The severity roll modifier (tier and card together), or null: no severity roll. */
+  severity: number | null;
+  ability?: PhysicalEffect;
+  /** Printed: the sport (or sports) the foul comes from. */
+  from: string;
+  /** Printed, for a reaction card: when you play it. */
+  when?: string;
+}
+
+export type CardDef = FieldCardDef | GoalieCardDef | SpellCardDef | PhysicalCardDef;
 
 export interface TeamDef {
   id: string;
@@ -166,9 +249,9 @@ export interface CardSet {
 // ---- Loader ----
 
 const STATS: StatName[] = ['speed', 'shot', 'defense', 'faceoff', 'save'];
-const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff', 'resist'];
+const USES: StatUse[] = ['receive', 'intercept', 'tackle', 'evade', 'shoot', 'save', 'faceoff', 'resist', 'attack'];
 const AREAS: Area[] = ['defense', 'midfield', 'forward'];
-const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play'];
+const REACTION_EFFECTS = ['boost', 'shield', 'dirty_play', 'ward'];
 const ACTION_EFFECTS = ['scry', 'swap', 'long_pass', 'long_shot', 'steal', 'recall', 'hit', 'mend', 'decoy_pass', 'mirror_images'];
 
 export class CardDataError extends Error {}
@@ -200,6 +283,10 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
     case 'recall':
       needInt(params, 'count', where);
       break;
+    case 'hits_harder':
+    case 'hard_to_hurt':
+      needInt(params, 'amount', where);
+      break;
     case 'boost':
       needInt(params, 'amount', where);
       if (params.when !== undefined && !USES.includes(params.when as StatUse)) fail(where, 'boost "when" is not valid');
@@ -214,6 +301,7 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
       needInt(params, 'strength', where);
       break;
     case 'dirty_play':
+    case 'ward':
     case 'mend':
     case 'shield':
     case 'scry':
@@ -225,6 +313,21 @@ function checkParams(ability: Record<string, unknown>, where: string): void {
     default:
       fail(where, `unknown effect "${String(effect)}"`);
   }
+}
+
+function checkPhysical(card: Record<string, unknown>, ability: Record<string, unknown> | undefined, families: string[], where: string): void {
+  if (!PHYSICAL_TIERS.includes(card.tier as PhysicalTier)) fail(where, `unknown tier "${String(card.tier)}"`);
+  if (card.uses !== 'speed' && card.uses !== 'muscle') fail(where, '"uses" must be speed or muscle');
+  needInt(card, 'bonus', where);
+  if (!isKnownMagic(card.affinity, families)) fail(where, `unknown affinity "${String(card.affinity)}"`);
+  for (const key of ['toughness', 'severity']) {
+    if (card[key] !== null && !Number.isInteger(card[key])) fail(where, `"${key}" must be a whole number or null`);
+  }
+  if (typeof card.from !== 'string') fail(where, 'needs "from"');
+  if (!ability) return;
+  if (!PHYSICAL_EFFECTS.includes(ability.effect as PhysicalEffect['effect'])) fail(where, `"${String(ability.effect)}" is not a physical effect`);
+  if (!isObject(ability.params)) fail(where, 'ability needs a "params" object');
+  if (ability.effect === 'vs_holder' || ability.effect === 'pile_on') needInt(ability.params, 'amount', where);
 }
 
 /** A family id ("fire") or a specialization id ("fire.explosion") in one of the card set's families. */
@@ -258,6 +361,7 @@ export function loadCardSet(json: unknown): CardSet {
   if (!Array.isArray(json.teams)) fail('card set', '"teams" must be a list');
   if (json.teams.some((t) => isObject(t) && t.id === POOL_TEAM)) fail('card set', `"${POOL_TEAM}" is reserved for the shared player pool`);
   if (json.teams.some((t) => isObject(t) && t.id === LIBRARY_TEAM)) fail('card set', `"${LIBRARY_TEAM}" is reserved for the spell library`);
+  if (json.teams.some((t) => isObject(t) && t.id === PHYSICAL_TEAM)) fail('card set', `"${PHYSICAL_TEAM}" is reserved for the physical cards`);
   if (!Array.isArray(json.cards)) fail('card set', '"cards" must be a list');
 
   const seen = new Set<string>();
@@ -269,6 +373,7 @@ export function loadCardSet(json: unknown): CardSet {
     if (typeof card.team !== 'string' || typeof card.name !== 'string') fail(where, 'needs "team" and "name"');
     if (card.team === POOL_TEAM && card.kind !== 'field' && card.kind !== 'goalie') fail(where, 'only player cards can be in the pool');
     if (card.team === LIBRARY_TEAM && card.kind !== 'spell') fail(where, 'only spells can be in the spell library');
+    if ((card.team === PHYSICAL_TEAM) !== (card.kind === 'physical')) fail(where, `physical cards, and only they, have team "${PHYSICAL_TEAM}"`);
     if (card.role !== undefined && !PLAYER_ROLES.includes(card.role as PlayerRole)) fail(where, `unknown role "${String(card.role)}"`);
     if ((card.role === 'goalie') !== (card.kind === 'goalie') && card.role !== undefined) fail(where, 'only goalies have the goalie role');
     if (card.ability !== undefined && !isObject(card.ability)) fail(where, '"ability" must be an object');
@@ -277,9 +382,9 @@ export function loadCardSet(json: unknown): CardSet {
     switch (card.kind) {
       case 'field':
         checkResonants(card, families, where);
-        for (const stat of ['speed', 'shot', 'defense', 'faceoff']) needInt(card, stat, where);
+        for (const stat of ['speed', 'shot', 'defense', 'faceoff', 'toughness']) needInt(card, stat, where);
         if (ability) {
-          if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
+          if (!PLAYER_EFFECTS.includes(ability.effect as string)) fail(where, `players can only have ${PLAYER_EFFECTS.join(', ')} abilities`);
           checkParams(ability, where);
         }
         break;
@@ -287,7 +392,7 @@ export function loadCardSet(json: unknown): CardSet {
         checkResonants(card, families, where);
         needInt(card, 'save', where);
         if (ability) {
-          if (ability.effect !== 'bonus' && ability.effect !== 'draw_on_win') fail(where, 'players can only have bonus or draw_on_win abilities');
+          if (!PLAYER_EFFECTS.includes(ability.effect as string)) fail(where, `players can only have ${PLAYER_EFFECTS.join(', ')} abilities`);
           checkParams(ability, where);
         }
         break;
@@ -301,6 +406,9 @@ export function loadCardSet(json: unknown): CardSet {
         checkParams(ability, where);
         break;
       }
+      case 'physical':
+        checkPhysical(card, ability, families, where);
+        break;
       default:
         fail(where, `unknown kind "${String(card.kind)}"`);
     }
@@ -322,6 +430,7 @@ export function loadCardSet(json: unknown): CardSet {
  * or more lanes.
  */
 export function buildDeck(cardSet: CardSet, teamId: string, config: GameConfig): CardDef[] {
+  if (teamId === PHYSICAL_TEAM) return [];
   const deck: CardDef[] = [];
   const leftOut = (card: CardDef) => card.promo || (card.addon && config.lanes < 3);
   for (const card of cardSet.cards) {
@@ -369,6 +478,8 @@ export function deckProblems(cardSet: CardSet, ids: readonly string[], config: G
     if (seen.has(card.id)) problems.push(`${card.name} is on the team twice.`);
     seen.add(card.id);
   }
+  const cost = cards.reduce((sum, c) => sum + (c.kind === 'field' || c.kind === 'goalie' ? (c.cost ?? 0) : 0), 0);
+  if (config.rosterCap > 0 && cost > config.rosterCap) problems.push(`The players cost ${cost}, over the team cap of ${config.rosterCap}.`);
   for (const card of cards) {
     if (card.addon && config.lanes < 3) problems.push(`${card.name} is only for the center-lane add-on.`);
   }
@@ -377,5 +488,5 @@ export function deckProblems(cardSet: CardSet, ids: readonly string[], config: G
 
 /** The shared player pool: player cards with team "pool", with the same copy, promo, and add-on rules as buildDeck. */
 export function playerPool(cardSet: CardSet, config: GameConfig): PlayerCardDef[] {
-  return buildDeck(cardSet, POOL_TEAM, config).filter((card): card is PlayerCardDef => card.kind !== 'spell');
+  return buildDeck(cardSet, POOL_TEAM, config).filter((card): card is PlayerCardDef => card.kind === 'field' || card.kind === 'goalie');
 }

@@ -1,0 +1,16 @@
+{
+  "games": 1000,
+  "control": 49.49,
+  "rows": [
+    {
+      "id": "sp-ward",
+      "edge": 3.26,
+      "castsPerGame": 3.008
+    },
+    {
+      "id": "sp-stone-skin",
+      "edge": 3.96,
+      "castsPerGame": 3.775
+    }
+  ]
+}

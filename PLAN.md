@@ -529,7 +529,7 @@ measured with forced substitutes coming on Shaken (now the rule); field players 
 lists `deckProblems`). Tests: `tests/players-data.test.ts` (every cost matches the formula; the
 starter set fits the cap) and `tests/rules/constructed.test.ts` (an over-cap deck is refused).
 
-**Wrap-up.** `docs/RULES.md` becomes v0.17 in the same format, with a change log entry from v0.16
+**Wrap-up.** *(Done 2026-10-15. See `reports/SIM_REPORT-v0.17.md`.)* `docs/RULES.md` becomes v0.17 in the same format, with a change log entry from v0.16
 and the Canon notes untouched. Also GAME_DESIGN.md (card layout shows Toughness and cost),
 `HowToPlay.tsx`, `RecentChanges.tsx`, `SIM_REPORT.md` (before and after for every target, every
 value measurement, and open problems), a 1,000-game smoke run with 3 lanes, and the 1,000-game

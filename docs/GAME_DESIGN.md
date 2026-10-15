@@ -47,6 +47,8 @@ Darkspace Press site as a fan game that promotes the physical set.
 - Two team decks (prototype: 40 cards each; final size decided after playtesting).
 - A folding field mat: five rows by two lanes, with a slot for each pair of opposing players.
 - A ball token and a score tracker.
+- Two Physical piles of 16 physical attack cards (v0.17), three dice, and a penalty risk marker
+  per team.
 - One rules sheet.
 - Collectible extras: a signed or numbered card, one or two Kickstarter-exclusive cards,
   and the canon player as a special promo card.
@@ -66,10 +68,13 @@ Swiss tournaments with draft and constructed formats. Full design and phases:
 
 - One layout for screen and print, shaped like a printed trading card (2.5" × 3.5"). The code is
   `src/ui/CardFace.tsx`; open the game with `?cards` to preview it.
-- Top to bottom: a name bar with magic pips (one per Resonant, or the spell's magic); a 4:3
-  art window; a type line (player type or spell type, with the position figure); a text box
-  (stats, the Resonants spelled out, what a spell does, flavor text); and a footer (card number,
-  plus the serial number of an owned copy online).
+- Top to bottom: a name bar with the player's cost in the top left corner (v0.17) and magic pips
+  (one per Resonant, or the spell's magic); a 4:3 art window; a type line (player type or spell
+  type, with the position figure); a text box (stats including Toughness, the Resonants spelled
+  out, what a spell does, flavor text); and a footer (card number, plus the serial number of an
+  owned copy online).
+- Physical attack cards (v0.17) use the same layout with their own frame: tier, attack stat,
+  body Affinity, and the Toughness and severity modifiers.
 - The frame color comes from the magic family: a player's first Resonant's Affinity, or the
   spell's magic. (Changed 2026-10-14 from elements; see `docs/MAGIC.md`.)
 - Art is landscape, cropped to 4:3: the player from about the knees up, face in the upper third.
@@ -100,6 +105,9 @@ Swiss tournaments with draft and constructed formats. Full design and phases:
 - **Complexity creep.** Positions, hidden lineups, and affinities are three ideas on top of a
   simple contest. Each one is light, but together they need to stay on one rules sheet. If
   playtesters struggle, cut affinity to a simple match bonus before cutting anything else.
+  *(Added 2026-10-15: v0.17 adds Toughness, Shaken, fouls and the referee, physical attacks, and
+  the penalty box, at Paul's request for more and rougher contact. That's the biggest addition to
+  the rules sheet so far, and the first thing to watch in playtesting.)*
 - **Playtesting can't be fully automated.** Simulations catch broken numbers. Only people can
   tell whether it's fun. Plan for a few real sessions with Discord volunteers.
 - **Online scope (added 2026-10-10).** Collections, a store, and trading make this a small

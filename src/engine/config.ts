@@ -203,7 +203,7 @@ export interface GameConfig {
   /** Nobody can be substituted into a penalized player's spot. */
   penaltyNoSubstitution: boolean;
   /**
-   * A forced substitute (after an injury, a carry-off, a knockout, or a sending off) comes on
+   * A forced substitute (after an injury, a carry-off, or a knockout) comes on
    * Shaken (v0.17, Paul 2026-10-15). Without it, an Injured player is swapped at once for a fresh
    * one, which is often better for the team than being Shaken. Online matches started before
    * v0.17 have it off.

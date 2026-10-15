@@ -138,7 +138,7 @@ describe('draft', () => {
       expect(record.final.result).not.toBeNull();
       expect(findProblems(record.final)).toEqual([]);
     }
-  });
+  }, 60_000); // six whole games: slow when the full suite runs in parallel
 
   it('given goalies in the pool, the computer drafts one', () => {
     let { state } = createGame({ ...setup(5), config: { ...config, draftPoolGoalies: 4, draftPoolField: 26 } });

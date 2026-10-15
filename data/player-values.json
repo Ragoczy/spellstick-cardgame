@@ -1,5 +1,5 @@
 {
-  "measured": "reports/value-2026-10-15.md",
+  "measured": "reports/value-2026-10-15.md and reports/value-2026-10-15-by-type.md",
   "perPoint": {
     "speed": 0.5752272727272729,
     "shot": 0.5588636363636363,
@@ -9,6 +9,27 @@
     "save": 6.612499999999999,
     "resonants": 0.07666666666666655
   },
+  "byType": {
+    "attackers": {
+      "speed": 0.8361893939393944,
+      "shot": 0.8714962121212123,
+      "defense": 0.458549242424242,
+      "faceoff": 0.1499242424242426
+    },
+    "middle": {
+      "speed": 0.5336769480519481,
+      "shot": 0.5677272727272727,
+      "defense": 0.5462012987012983,
+      "faceoff": 0.16435064935064944
+    },
+    "defenders": {
+      "speed": 0.49022321428571414,
+      "shot": 0.3429545454545454,
+      "defense": 0.6078043831168833,
+      "faceoff": 0.08093344155844154
+    }
+  },
+  "typeWeight": 0.5,
   "abilities": {
     "hits_harder": 0,
     "hard_to_hurt": 0,
@@ -23,7 +44,7 @@
     "save": 5,
     "resonants": 1
   },
-  "fieldBase": 3.213,
-  "goalieBase": 3.641,
-  "scale": 3.244
+  "fieldBase": 3.888,
+  "goalieBase": 5.281,
+  "scale": 2.407
 }

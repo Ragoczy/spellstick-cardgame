@@ -234,7 +234,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   deckSize: 40,
   deckGoalies: 2,
   deckFieldPlayers: 22,
-  rosterCap: 240,
+  rosterCap: 238,
   draftPicks: 0,
   draftPoolGoalies: 0,
   draftPoolField: 30,

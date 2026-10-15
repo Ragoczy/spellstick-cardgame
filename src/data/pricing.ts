@@ -5,7 +5,26 @@
 // data/player-values.json (the numbers below) and writes each player's cost into the card data.
 // The tests check that every cost in the card data still matches this formula.
 
-import type { FieldCardDef, GoalieCardDef, PlayerAbility, PlayerCardDef } from '../engine/cards';
+import type { FieldCardDef, GoalieCardDef, PlayerAbility, PlayerCardDef, PlayerRole } from '../engine/cards';
+
+/**
+ * Field player types grouped for pricing: a stat is worth a different amount on an attacker than
+ * on a defender (a team of defenders has Defense to spare). Groups of two types, not single types,
+ * so each measurement has about 7 cards in a team, enough to measure.
+ */
+export const TYPE_GROUPS = {
+  attackers: ['runner', 'striker'],
+  middle: ['playmaker', 'allrounder'],
+  defenders: ['anchor', 'stopper'],
+} as const satisfies Record<string, readonly PlayerRole[]>;
+export type TypeGroup = keyof typeof TYPE_GROUPS;
+export const FIELD_STATS = ['speed', 'shot', 'defense', 'faceoff'] as const;
+export type FieldStatName = (typeof FIELD_STATS)[number];
+
+export function typeGroup(role: PlayerRole | undefined): TypeGroup | null {
+  for (const [group, roles] of Object.entries(TYPE_GROUPS)) if ((roles as readonly string[]).includes(role ?? '')) return group as TypeGroup;
+  return null;
+}
 
 export type PricedPart = 'speed' | 'shot' | 'defense' | 'faceoff' | 'toughness' | 'save' | 'resonants';
 
@@ -17,6 +36,16 @@ export interface PlayerValues {
    * measured at less than 0 counts 0 here, so no card is cheaper for being better.
    */
   perPoint: Record<PricedPart, number>;
+  /**
+   * Speed, Shot, Defense, and Faceoff by type group (v0.17): what one more point adds on one card
+   * of that group. A field player without a group uses perPoint.
+   */
+  byType?: Record<TypeGroup, Record<FieldStatName, number>>;
+  /**
+   * How much of byType is the by-type measurement (1) and how much the all-player value (0). For
+   * the record: byType already holds the blended numbers.
+   */
+  typeWeight?: number;
   /** What each ability adds on one card (key: abilityKey). */
   abilities: Record<string, number>;
   /**
@@ -40,7 +69,11 @@ export function playerWorth(def: FieldCardDef | GoalieCardDef, values: PlayerVal
   const part = (name: PricedPart, have: number) => values.perPoint[name] * (have - values.floor[name]);
   let worth = part('resonants', def.resonants.length);
   if (def.kind === 'goalie') return worth + part('save', def.save);
-  worth += part('speed', def.speed) + part('shot', def.shot) + part('defense', def.defense) + part('faceoff', def.faceoff);
+  const group = typeGroup(def.role);
+  for (const stat of FIELD_STATS) {
+    const perPoint = group && values.byType ? values.byType[group][stat] : values.perPoint[stat];
+    worth += perPoint * (def[stat] - values.floor[stat]);
+  }
   worth += part('toughness', def.toughness);
   if (def.ability) worth += values.abilities[abilityKey(def.ability)] ?? 0;
   return worth;

@@ -180,7 +180,7 @@ from the cards a player owns.
 1. A deck is 2 goalies ⚙, 22 field players ⚙, and 16 spells (whatever the 40-card deck ⚙ leaves).
 2. Each named player can be on a team only once. Spells can repeat.
 3. Add-on cards can only be used with the center-lane add-on.
-4. The players' costs add up to at most the **team cap** of 240 ⚙ (v0.17), the cost of an average
+4. The players' costs add up to at most the **team cap** of 238 ⚙ (v0.17), the cost of an average
    team. Dealt and drafted games have no cap.
 5. Every card plays in the team's color for this game. Setup goes on from step 1.
 
@@ -628,6 +628,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase f, prices by type — Paul: price each stat by type. Speed, Shot, Defense, and Faceoff are now priced by type group (Runners and Strikers, Playmakers and All-rounders, Anchors and Stoppers), half from a by-type measurement and half from the all-player value. Pure by-type prices overshot (Defense-heavy teams 58.5%); half and half meets both roster targets: Defense-heavy vs Striker-heavy at equal cost 52.9% (target 45–55%), a 10% cost gap 61.5% (55–65%). The team cap is 238. Claude: in that matchup each team picks its own goalies and middle players, since with prices by type shared ones can't reach equal cost. Report: `reports/sim-2026-10-15-v17f.md`.
 
 - v0.17 (in progress), phase f — **Player costs and the team cap** (from the v0.17 plan). Every named player has a **cost**, from measured values (`reports/value-2026-10-15.md`): what one more point of Speed, Shot, Defense, Faceoff, Toughness, Save, a Resonant, or an ability adds in wins. A built team's players may cost at most the **team cap** of 240 (an average team); dealt and drafted games have no cap. Bonus points are gone from the card data. Claude: costs count from the pool's weakest values (the cheapest field player costs 6, the average player 10); Heavy hands and Sturdy measured below 0, so they count 0. The 10% cost gap scores 62% (target 55–65%), but Defense-heavy teams score 40.5% against Striker-heavy teams at equal cost (target 45–55%): see `reports/sim-2026-10-15-v17f.md`. Online matches started before this have no cap.
 

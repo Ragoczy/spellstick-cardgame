@@ -156,9 +156,11 @@ describe('Constructed roster pairs', () => {
       const second = roles(p.second);
       expect(first.filter((r) => r === 'stopper' || r === 'anchor')).toHaveLength(14);
       expect(second.filter((r) => r === 'striker' || r === 'runner')).toHaveLength(14);
-      // The goalies and middle players are shared.
-      expect(p.first.slice(0, 10)).toEqual(p.second.slice(0, 10));
-      expect(first.slice(2, 10).every((r) => r === 'playmaker' || r === 'allrounder')).toBe(true);
+      // Each picks its own goalies and middle players.
+      for (const side of [first, second]) {
+        expect(side.slice(0, 2).every((r) => r === 'goalie')).toBe(true);
+        expect(side.slice(2, 10).every((r) => r === 'playmaker' || r === 'allrounder')).toBe(true);
+      }
     }
   });
 

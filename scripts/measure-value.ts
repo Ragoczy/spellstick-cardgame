@@ -5,6 +5,7 @@
 //   npm run measure-value -- --games 1000 --workers 8
 //   npm run measure-value -- --only speed,save     (just some changes)
 //   npm run measure-value -- --physical            (also each physical card, 1,000 seeds each)
+//   npm run measure-value -- --by-type --name by-type   (each field stat on each type group only)
 //   npm run measure-value -- --from reports/value-2026-10-15.json   (rewrite the report only)
 //
 // The test: one team gets a change (for example +1 Speed on every field player in its deck) and
@@ -29,6 +30,7 @@ import { seedToState, randomInt } from '../src/engine/rng';
 import type { GameState } from '../src/engine/state';
 import { meanInterval } from '../src/sim/confidence';
 import { arg } from '../src/sim/configArgs';
+import { FIELD_STATS, TYPE_GROUPS, typeGroup } from '../src/data/pricing';
 import { drawAffinity, drawResonant, usefulSpecs, type ResonantData } from './resonant-draw';
 
 const config = makeConfig();
@@ -106,7 +108,24 @@ const physicalChanges: Change[] = physicalDefs.map((target) => ({
   apply: (d) => (d.kind === 'physical' && PHYSICAL_SWAPPED_OUT.includes(d.id) ? { ...target, team: d.team } : null),
 }));
 
-const allChanges = [...CHANGES.filter((c) => !only || only.includes(c.key)), ...(withPhysical ? physicalChanges : [])];
+/**
+ * +1 to one field stat on just one type group's players (for example Defense on Anchors and
+ * Stoppers). The edge is divided by that group's expected share of the 22 field players dealt.
+ */
+const fieldPool = prototypeCards.cards.filter((c): c is FieldCardDef => c.kind === 'field' && c.team === 'pool');
+const byTypeChanges: Change[] = Object.entries(TYPE_GROUPS).flatMap(([group, roles]) => {
+  const share = fieldPool.filter((c) => typeGroup(c.role) === group).length / fieldPool.length;
+  return FIELD_STATS.map((stat): Change => ({
+    key: `${stat}@${group}`, label: `+1 ${stat[0]!.toUpperCase()}${stat.slice(1)} on ${roles.join(' and ')} players`,
+    apply: field((d) => (typeGroup(d.role) === group ? { ...d, [stat]: d[stat] + 1 } : d)),
+    cards: FIELD * share, points: 1,
+  }));
+});
+const byType = process.argv.includes('--by-type');
+
+const allChanges = byType
+  ? byTypeChanges
+  : [...CHANGES.filter((c) => !only || only.includes(c.key)), ...(withPhysical ? physicalChanges : [])];
 
 // ---- Playing ----
 
@@ -187,7 +206,22 @@ function writeReport(saved: Saved): void {
   out.push('| Change | Edge (95% interval) | Cards that got it | Per point, per card (95% interval) |');
   out.push('| --- | --- | --- | --- |');
   for (const m of saved.items.filter((i) => !i.key.startsWith('ph:'))) {
+    if (m.key.includes('@')) continue;
     out.push(`| ${m.label} | ${f(m.edge, 1)} (${f(m.low, 1)} to ${f(m.high, 1)}) | ${m.cards} | ${f(m.perPoint, 3)} (${f(m.perPointLow, 3)} to ${f(m.perPointHigh, 3)}) |`);
+  }
+  const typed = saved.items.filter((i) => i.key.includes('@'));
+  if (typed.length) {
+    out.push('', '## By type group', '');
+    out.push(`+1 to one stat on just one type group's field players. The edge is divided by that group's expected count among the 22 field players dealt (about ${typed[0]!.cards.toFixed(1)}).`, '');
+    out.push('| Stat | Runners and Strikers | Playmakers and All-rounders | Anchors and Stoppers |', '| --- | --- | --- | --- |');
+    for (const stat of FIELD_STATS) {
+      const cell = (group: string) => {
+        const m = typed.find((i) => i.key === `${stat}@${group}`);
+        return m ? `${f(m.perPoint, 3)} (${f(m.perPointLow, 3)} to ${f(m.perPointHigh, 3)})` : '';
+      };
+      out.push(`| ${stat[0]!.toUpperCase()}${stat.slice(1)} | ${cell('attackers')} | ${cell('middle')} | ${cell('defenders')} |`);
+    }
+    out.push('', 'Per point, per card, with a 95% interval.');
   }
   const physical = saved.items.filter((i) => i.key.startsWith('ph:'));
   if (physical.length) {
@@ -196,7 +230,8 @@ function writeReport(saved: Saved): void {
     out.push('| Card | Edge (95% interval) |', '| --- | --- |');
     for (const m of [...physical].sort((a, b) => b.edge - a.edge)) out.push(`| ${m.label} | ${f(m.edge, 1)} (${f(m.low, 1)} to ${f(m.high, 1)}) |`);
   }
-  const path = `reports/value-${saved.date}`;
+  const name = arg('name');
+  const path = `reports/value-${saved.date}${name ? `-${name}` : ''}`;
   writeFileSync(`${path}.md`, `${out.join('\n')}\n`);
   writeFileSync(`${path}.json`, `${JSON.stringify(saved, null, 2)}\n`);
   console.log(`Report written to ${path}.md`);

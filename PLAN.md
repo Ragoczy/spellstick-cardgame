@@ -518,8 +518,9 @@ kept), `contest.ts`, the computer's tackle estimate, and tests for whichever are
 **Measurement (before pricing).** `scripts/measure-value.ts` (new) writes
 `reports/value-<date>.md` and `.json`.
 
-**Phase f: pricing.** *(Done 2026-10-15: field players cost 6 to 15, cap 240, starter set 218;
-10% cost gap 62% met, Defense-heavy 40.5% missed. See `reports/sim-2026-10-15-v17f.md`.)* `cards.ts` (`cost`; a cap check in `deckProblems`), `config.ts`
+**Phase f: pricing.** *(Done 2026-10-15: stats priced by type group, half and half with the
+all-player values; field players cost 6 to 15, cap 238, starter set 220; Defense-heavy 52.9% and
+10% cost gap 61.5%, both met. See `reports/sim-2026-10-15-v17f.md`.)* `cards.ts` (`cost`; a cap check in `deckProblems`), `config.ts`
 (`rosterCap`), `scripts/generate-players.ts` (rewritten as above), `cards.prototype.json`,
 `cards.schema.json`, `starter.json` (checked under the cap), `server/migrations/011_*.sql` (adds
 `toughness` and `cost` to the `player_cards` mirror; play itself reads the JSON),

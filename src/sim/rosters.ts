@@ -1,8 +1,12 @@
 // Builds pairs of Constructed decks for the pricing measurements (PLAN.md, Phase f):
 //
-// - Defense-heavy vs Striker-heavy at equal cost: both decks share 2 goalies and 8 middle players
-//   (Playmakers and All-rounders). The other 14 are Stoppers and Anchors on one side and Strikers
-//   and Runners on the other, with the deck totals within 1% of each other.
+// - Defense-heavy vs Striker-heavy at equal cost: each deck has 2 goalies, 8 middle players
+//   (Playmakers and All-rounders), and 14 Stoppers and Anchors on one side or Strikers and Runners
+//   on the other, with the deck totals within 1% of each other. Defenders cost less than attackers
+//   (v0.17 prices stats by type), so the Defense-heavy team spends what it saves on better goalies
+//   and middle players: the question is which build wins at the same total cost. (Sharing the
+//   goalies, as first planned, can't reach equal cost: the dearest defenders and middle players
+//   cost less than the cheapest attackers and middle players.)
 // - A cost gap: two random legal decks, one costing 10% (±1%) more than the other.
 //
 // Player costs don't exist yet (they come from the measurements), so the cost of a card is passed
@@ -68,44 +72,49 @@ const ids = (cards: readonly PlayerCardDef[], spells: readonly string[]) => [...
 
 /**
  * Pairs of decks at equal cost: `first` is Defense-heavy (Stoppers and Anchors), `second` is
- * Striker-heavy (Strikers and Runners). Totals match within `tolerance` of their average.
+ * Striker-heavy (Strikers and Runners). Each picks its own goalies and middle players. Totals
+ * match within `tolerance` of their average.
  */
 export function defenseVsStrikerPairs(
   cardSet: CardSet, config: GameConfig, cost: CostOf, spells: readonly string[], count: number, seed: number, tolerance = 0.01,
 ): RosterPair[] {
   const { goalies, ofRoles } = pool(cardSet, config);
   const middle = ofRoles(ROLES_MIDDLE);
-  const defensive = ofRoles(ROLES_DEFENSIVE);
-  const attacking = ofRoles(ROLES_ATTACKING);
   const middleCount = 8;
   const sideCount = config.deckFieldPlayers - middleCount;
   let rng = seedToState(seed);
+  /** One deck in three parts (goalies, middle, its style), each with the pool it may swap from. */
+  const deal = (style: readonly PlayerCardDef[]) => {
+    let g: GoalieCardDef[], m: FieldCardDef[], d: PlayerCardDef[];
+    [g, rng] = shuffle(goalies, rng);
+    [m, rng] = shuffle(middle, rng);
+    [d, rng] = shuffle(style, rng);
+    return [
+      { cards: g.slice(0, config.deckGoalies) as PlayerCardDef[], from: goalies as readonly PlayerCardDef[] },
+      { cards: m.slice(0, middleCount) as PlayerCardDef[], from: middle as readonly PlayerCardDef[] },
+      { cards: d.slice(0, sideCount), from: style },
+    ];
+  };
+  const deckTotal = (deck: ReturnType<typeof deal>) => deck.reduce((sum, part) => sum + total(part.cards, cost), 0);
   const pairs: RosterPair[] = [];
   for (let p = 0; p < count; p++) {
     let found: RosterPair | null = null;
     for (let attempt = 0; attempt < ATTEMPTS && !found; attempt++) {
-      let g: GoalieCardDef[], m: FieldCardDef[], d: FieldCardDef[], a: FieldCardDef[];
-      [g, rng] = shuffle(goalies, rng);
-      [m, rng] = shuffle(middle, rng);
-      [d, rng] = shuffle(defensive, rng);
-      [a, rng] = shuffle(attacking, rng);
-      const shared = [...g.slice(0, config.deckGoalies), ...m.slice(0, middleCount)];
-      const def: PlayerCardDef[] = d.slice(0, sideCount);
-      const att: PlayerCardDef[] = a.slice(0, sideCount);
-      // Tune one side's total toward the other's, then the other way, until they match. Both
-      // sides take turns because one group may be cheaper overall than the other.
-      const sharedCost = total(shared, cost);
-      const missAgainst = (other: PlayerCardDef[]) => {
-        const y = sharedCost + total(other, cost);
-        return (sum: number) => Math.abs(sharedCost + sum - y) / ((sharedCost + sum + y) / 2);
-      };
-      let miss = Infinity;
-      for (let round = 0; round < 4 && miss > tolerance; round++) {
-        miss = round % 2 === 0 ? tune(def, defensive, cost, missAgainst(att)) : tune(att, attacking, cost, missAgainst(def));
+      const def = deal(ofRoles(ROLES_DEFENSIVE));
+      const att = deal(ofRoles(ROLES_ATTACKING));
+      // Tune one part at a time toward the other deck's total, taking turns between the decks
+      // and their parts, until they match.
+      const missOf = () => Math.abs(deckTotal(def) - deckTotal(att)) / ((deckTotal(def) + deckTotal(att)) / 2);
+      for (let round = 0; round < 18 && missOf() > tolerance; round++) {
+        const [deck, other] = round % 2 === 0 ? [def, att] : [att, def];
+        const part = deck[Math.floor(round / 2) % deck.length]!;
+        const rest = deckTotal(deck) - total(part.cards, cost);
+        const target = deckTotal(other);
+        tune(part.cards, part.from, cost, (sum) => Math.abs(rest + sum - target) / ((rest + sum + target) / 2));
       }
-      if (miss > tolerance) continue;
-      const first = [...shared, ...def];
-      const second = [...shared, ...att];
+      if (missOf() > tolerance) continue;
+      const first = def.flatMap((part) => part.cards);
+      const second = att.flatMap((part) => part.cards);
       found = { first: ids(first, spells), second: ids(second, spells), firstCost: total(first, cost), secondCost: total(second, cost) };
     }
     if (!found) throw new Error(`Couldn't build a Defense-vs-Striker pair within ${tolerance * 100}% after ${ATTEMPTS} tries.`);

@@ -4,5 +4,5 @@ Made by `npm run roster-targets` (PLAN.md, Phase f). 20 team pairs per target, e
 
 | Target | Team | Score (95% interval) | Wanted | Average costs |
 | --- | --- | --- | --- | --- |
-| Defense-heavy vs Striker-heavy, equal cost | Defense-heavy team | 40.5% (39.6 to 41.4) ✗ | 45–55% | 241.9 vs 242.1 |
-| 10% cost gap | Dearer team | 62.0% (61.1 to 62.9) | 55–65% | 261.4 vs 237.6 |
+| Defense-heavy vs Striker-heavy, equal cost | Defense-heavy team | 52.9% (51.9 to 53.8) | 45–55% | 248.6 vs 248.9 |
+| 10% cost gap | Dearer team | 61.5% (60.6 to 62.5) | 55–65% | 264.8 vs 240.7 |

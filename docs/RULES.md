@@ -273,9 +273,10 @@ The replaced player goes back to your hand, injury and all, and recharges their 
 "Casting limit"). If they were face down, your opponent doesn't see who it was. If the replaced
 player held the ball, the substitute holds it. You can also fill an empty spot this way.
 
-The player who comes on **can't act this turn**: they can't pass, shoot, tackle, or cast a spell
-(action or reaction) until your turn ends. They can still receive a pass and defend, since those
-happen to them. Forced substitutions after an injury (see "Injuries") aren't limited this way.
+The player who comes on **can't act this turn**: they can't pass, shoot, tackle, make a physical
+attack, or cast a spell (action or reaction) until your turn ends. They can still receive a pass
+and defend, since those happen to them. A forced substitute after an injury or knockout (see
+"Injuries") isn't limited this way: they come on Shaken instead.
 
 **Regroup.** Discard up to 1 card ⚙, then draw a card from the same pile (a player for a
 player, a spell for a spell; from the other pile if that one is empty). Discarding none is
@@ -630,6 +631,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (wording) — Substitute: a player who just came on can't make a physical attack either (the engine already worked this way), and a forced substitute comes on Shaken instead of being free to act (matching "Injuries"). No change to play.
 
 - v0.17 — More contact, and real injuries (Paul: too few injuries, and more injuries should mean real ones; the plan and Paul's decisions are in `PLAN.md`). **Shield** takes 2 off the other player's stat instead of making it 0. **Contact:** field players have **Toughness** by type (5, 4, or 3); a won tackle **knocks the holder down**, and a roll above their Toughness hurts them; every hurt rolls **severity**: 1–3 **Shaken** (card sideways: can't pass, shoot, tackle, or cast, −2 in contests, until the end of their team's next turn), 4–5 Injured, 6 **Knocked out** (beside the mat, back to the hand on 4–6 at a faceoff). A tackler who loses by 3 or more is Shaken (tackle risk; tackle assist was tried and not kept). A **forced substitute comes on Shaken** (Paul, after a trial), so an injury costs a team more than being Shaken. **Fouls:** a dirty play is declared before the dice, and if the final dice match, the referee sends the player off for the game. **Physical attacks:** each team has a face-down Physical pile of 16 cards and may make 8 attacks a game, flipping the top card (Paul: the player decides the move in the moment); Speed (or Defense for Muscle cards) against Speed, and a win knocks the target down with the card's modifiers. **The penalty box:** a team's penalty risk starts at 1, goes up 1 with each attack and down 1 with each turn without one (Paul); if the attacker's die and then the penalty die are both at or under it, the attacker sits out 1–3 turns by tier, the spot empty and not substituted, back at once if the other team scores. **Healing and abilities:** Mend also brings back a knocked-out player; **Ward** (new effect) makes a hurt only Shaken; new player abilities **Heavy hands**, **Sturdy**, and **Quick but fragile**. **Costs and the team cap:** every named player has a **cost** from measured values, with stats priced by type group, and a built team's players may cost at most **239**; bonus points are gone. Claude: a player is hurt at most once per contest; Heavy hands counts physical attacks; a Ward cast by the attacker also covers a Spearing self-roll; costs count from the pool's weakest values (the cheapest field player costs 6, the average 10); Heavy hands and Sturdy measured below 0, so they cost 0; prices use 40% of the by-type value and 60% of the all-player value, the blend that meets both roster targets. Results, 10,000 games (`reports/SIM_REPORT-v0.17.md`): 7.9 hurts a game (56% Shaken), real injuries 2.80 → 3.43 (Paul accepted about 3.3 against a 3.5 target), carried off and knocked out 1.33, spells cast 17.5, penalties 0.82, goals 2.40 → 1.82 (just under the 1.84 floor), Defense-heavy vs Striker-heavy at equal cost 51.4%, a 10% cost gap 61.4%. The per-phase entries are in git history. Online matches started before v0.17 keep v0.16 rules.
 

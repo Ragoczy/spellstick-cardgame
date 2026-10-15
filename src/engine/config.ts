@@ -202,6 +202,12 @@ export interface GameConfig {
   powerPlayReturn: boolean;
   /** Nobody can be substituted into a penalized player's spot. */
   penaltyNoSubstitution: boolean;
+  /**
+   * A forced substitute (after an injury, a carry-off, a knockout, or a sending off) comes on
+   * Shaken (v0.17 trial, Paul 2026-10-15). Without it, an Injured player is swapped at once for a
+   * fresh one, which is often better for the team than being Shaken.
+   */
+  forcedSubShaken: boolean;
 
   /**
    * Tackle assist (v0.17 phase e, tried and not kept: it cost goals): +this to a tackle for each of
@@ -280,6 +286,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   tackleRiskMargin: 3,
   powerPlayReturn: true,
   penaltyNoSubstitution: true,
+  forcedSubShaken: false,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

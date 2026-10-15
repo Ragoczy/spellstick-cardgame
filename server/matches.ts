@@ -118,6 +118,9 @@ export function savedSetup(setup: GameSetup): GameSetup {
   if (result.config && !('physicalAttacks' in result.config)) {
     result = { ...result, config: { ...result.config, physicalAttacks: false } };
   }
+  if (result.config && !('forcedSubShaken' in result.config)) {
+    result = { ...result, config: { ...result.config, forcedSubShaken: false } };
+  }
   if (result.config && !('rosterCap' in result.config)) {
     result = { ...result, config: { ...result.config, rosterCap: 0 } };
   }

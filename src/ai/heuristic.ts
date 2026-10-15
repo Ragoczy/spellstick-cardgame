@@ -545,11 +545,17 @@ class Thinker {
     const carrier = !ignoreBall && !!ball && ball.side !== this.me && samePos(ball.pos, pos) ? 0.05 : 0;
     const player = knownPlayer(this.view, 'opponent', pos);
     const star = player?.kind === 'field' ? 0.015 * Math.max(0, Math.max(player.speed, player.shot, player.defense) - 4) : 0;
-    const injury = visibleInjury(this.view, 'opponent', pos) ? CARRY_OFF_WORTH : INJURY_WORTH + carrier + star;
+    const sub = this.subShaken();
+    const injury = (visibleInjury(this.view, 'opponent', pos) ? CARRY_OFF_WORTH : INJURY_WORTH + carrier + star) + sub;
     if (!this.config.knockdowns) return injury * this.unit();
     // A Shaken carrier keeps the ball; a knocked-out one loses it (like an injury).
     const odds = this.severityOdds();
-    return (odds.shaken * (SHAKEN_WORTH + star) + odds.injured * injury + odds.knockedOut * Math.max(KNOCKOUT_WORTH + carrier + star, injury)) * this.unit();
+    return (odds.shaken * (SHAKEN_WORTH + star) + odds.injured * injury + odds.knockedOut * Math.max(KNOCKOUT_WORTH + carrier + star + sub, injury)) * this.unit();
+  }
+
+  /** What a forced substitute coming on Shaken adds to a player leaving the field (config.forcedSubShaken). */
+  private subShaken(): number {
+    return this.config.forcedSubShaken ? SHAKEN_WORTH : 0;
   }
 
   /** The chance of each severity (v0.17), from the severity table. */
@@ -562,9 +568,10 @@ class Thinker {
 
   /** Rough worth (as a loss) of one of my players being hurt, on the same scale as INJURY_WORTH. */
   private ownHurtWorth(): number {
-    if (!this.config.knockdowns) return INJURY_WORTH;
+    const sub = this.subShaken();
+    if (!this.config.knockdowns) return INJURY_WORTH + sub;
     const odds = this.severityOdds();
-    return odds.shaken * SHAKEN_WORTH + odds.injured * INJURY_WORTH + odds.knockedOut * KNOCKOUT_WORTH;
+    return odds.shaken * SHAKEN_WORTH + odds.injured * (INJURY_WORTH + sub) + odds.knockedOut * (KNOCKOUT_WORTH + sub);
   }
 
   /**

@@ -481,6 +481,8 @@ A player is **injured** when their severity roll comes up Injured (see "Contact"
   straight away, face down. This is free and doesn't use an action, even during
   the other player's turn. The injured player goes to the owner's hand with the injury still
   attached. If they held the ball, the substitute holds it.
+- *Trial, off by default ⚙ (v0.17):* every forced substitute (after an injury, a carry-off, a
+  knockout, or a sending off) comes on **Shaken**.
 - If the owner has nobody to bring on, the injured player stays in place, playing hurt.
 - An injured player can be substituted back in later. The injury stays until it's **mended**.
 - **Injuries don't stack:** a player who is already injured and gets injured again is **carried
@@ -628,6 +630,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), trial — **Forced substitutes come on Shaken** (Paul: try it; off by default for now). Pricing found that being Shaken was worse than being Injured with a sub in hand, since an Injured player is swapped at once for a fresh one. With the trial on (5,000 games, `reports/sim-2026-10-15-v17g-subshaken.md`): spells cast 15.2 → 17.5 (target met), real injuries 3.28 → 3.42, goals 1.91 → 1.82 (just under the 1.84 floor), and wards go from no edge (−0.3) to +3.6. Heavy hands and Sturdy stay slightly below 0 and Toughness near 0, so the trial doesn't make them worth a cost.
 
 - v0.17 (in progress), phase f, prices by type — Paul: price each stat by type. Speed, Shot, Defense, and Faceoff are now priced by type group (Runners and Strikers, Playmakers and All-rounders, Anchors and Stoppers), half from a by-type measurement and half from the all-player value. Pure by-type prices overshot (Defense-heavy teams 58.5%); half and half meets both roster targets: Defense-heavy vs Striker-heavy at equal cost 52.9% (target 45–55%), a 10% cost gap 61.5% (55–65%). The team cap is 238. Claude: in that matchup each team picks its own goalies and middle players, since with prices by type shared ones can't reach equal cost. Report: `reports/sim-2026-10-15-v17f.md`.
 

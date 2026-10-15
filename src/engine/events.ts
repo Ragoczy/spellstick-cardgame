@@ -118,7 +118,8 @@ export type GameEvent =
       carriedOff: boolean;
     }
   /** A forced substitution: a new player comes on face down. `toHand` is the injured player going to hand. */
-  | { type: 'forcedSub'; side: Side; pos: Pos; toHand: CardView | null }
+  /** shaken: the substitute came on Shaken (config.forcedSubShaken). */
+  | { type: 'forcedSub'; side: Side; pos: Pos; toHand: CardView | null; shaken?: boolean }
   /**
    * A tackle knocked a player down (v0.17): they rolled against their Toughness, fine at or below
    * it, hurt above it.

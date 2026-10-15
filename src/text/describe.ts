@@ -122,7 +122,7 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
     case 'returnRoll':
       return `${names[e.side]}'s knocked-out ${e.card.def.name} rolls ${e.roll}: ${e.returned ? 'back in the hand' : 'still out'}.`;
     case 'forcedSub':
-      return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
+      return `${names[e.side]} brings on a substitute at ${posLabel(e.pos)}${e.shaken ? ', Shaken' : ''}${e.toHand ? `; ${e.toHand.def.name} goes to hand` : ''}.`;
     case 'slotEmptied':
       return `${names[e.side]} has nobody to replace them: ${posLabel(e.pos)} is empty.`;
     case 'broughtBack':

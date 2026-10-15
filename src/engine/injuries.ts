@@ -317,9 +317,11 @@ export function completeForcedSub(s: GameState, card: Uid, ev: GameEvent[]): voi
   const injured = pending.injured ? slotAt(s, side, pos) : null;
   if (injured) s.teams[side].hand.push(injured.uid);
   // The substitute comes in face down. If the injured player held the ball, the substitute does.
-  setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false });
+  // With forcedSubShaken they come on Shaken, so an injury costs more than being Shaken.
+  const shaken = s.config.forcedSubShaken;
+  setSlotAt(s, side, pos, { uid: card, revealed: false, scried: false, ...(shaken ? { shakenUntil: shakenUntil(s, side) } : {}) });
   s.forcedSub = null;
-  ev.push({ type: 'forcedSub', side, pos, toHand: injured ? cardView(s, injured.uid) : null });
+  ev.push({ type: 'forcedSub', side, pos, toHand: injured ? cardView(s, injured.uid) : null, shaken });
 }
 
 /** Mend (v0.17): brings one of your knocked-out players back to your hand, injury card and all. */

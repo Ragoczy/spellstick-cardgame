@@ -233,10 +233,10 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return { text: `${capitalize(whose(e.side))} knocked-out ${e.card.def.name} rolls ${e.roll}: ${e.returned ? `back in ${whose(e.side)} hand` : 'still out'}.`, tone: e.returned ? (isMe(e.side) ? 'good' : 'bad') : 'info' };
     case 'forcedSub':
       if (e.toHand) {
-        return info(`${who(e.side)} ${verb(e.side, 'bring', 'brings')} on a substitute for ${at(e.side, e.pos)}, face down. ` +
+        return info(`${who(e.side)} ${verb(e.side, 'bring', 'brings')} on a substitute for ${at(e.side, e.pos)}, face down${e.shaken ? ' and Shaken' : ''}. ` +
           `${e.toHand.def.name} goes to ${whose(e.side)} hand to recover.`);
       }
-      return info(`${who(e.side)} ${verb(e.side, 'fill', 'fills')} ${at(e.side, e.pos)} spot with a new player, face down.`);
+      return info(`${who(e.side)} ${verb(e.side, 'fill', 'fills')} ${at(e.side, e.pos)} spot with a new player, face down${e.shaken ? ' and Shaken' : ''}.`);
     case 'slotEmptied':
       return { text: `Nobody can replace ${at(e.side, e.pos)}: the spot is empty and counts as 0 until it's filled.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'broughtBack':

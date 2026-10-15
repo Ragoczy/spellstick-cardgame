@@ -6,6 +6,7 @@
 //   npm run measure-value -- --only speed,save     (just some changes)
 //   npm run measure-value -- --physical            (also each physical card, 1,000 seeds each)
 //   npm run measure-value -- --by-type --name by-type   (each field stat on each type group only)
+//   npm run measure-value -- --only heavy,sturdy --set forcedSubShaken=true --name sub-shaken   (a rule what-if)
 //   npm run measure-value -- --from reports/value-2026-10-15.json   (rewrite the report only)
 //
 // The test: one team gets a change (for example +1 Speed on every field player in its deck) and
@@ -29,11 +30,11 @@ import type { Side } from '../src/engine/field';
 import { seedToState, randomInt } from '../src/engine/rng';
 import type { GameState } from '../src/engine/state';
 import { meanInterval } from '../src/sim/confidence';
-import { arg } from '../src/sim/configArgs';
+import { arg, args, configOverrides } from '../src/sim/configArgs';
 import { FIELD_STATS, TYPE_GROUPS, typeGroup } from '../src/data/pricing';
 import { drawAffinity, drawResonant, usefulSpecs, type ResonantData } from './resonant-draw';
 
-const config = makeConfig();
+const config = makeConfig(configOverrides(args('set')));
 const games = Number(arg('games') ?? 5000);
 const physicalGames = Number(arg('physical-games') ?? 1000);
 const withPhysical = process.argv.includes('--physical');
@@ -202,6 +203,7 @@ function writeReport(saved: Saved): void {
   const f = (n: number, d = 2) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(d)}`;
   const out: string[] = [];
   out.push(`# What a card is worth, ${saved.date}`, '');
+  if (args('set').length) out.push(`Rule what-if: ${args('set').join(', ')}.`, '');
   out.push(`Made by \`npm run measure-value\` (PLAN.md, Phase f). For each change, one team gets it and plays an unchanged team; each of ${saved.games} seeds is played twice, with the changed team as A and then as B, so an unchanged team would score exactly 50%. **Edge** is how many more points in 100 games the changed team scores (a win is 1, a draw ½), with a 95% interval. **Per point, per card** spreads the edge over the cards that got the change: it's what one point of that stat on one card adds, and what a card's cost adds up.`, '');
   out.push('| Change | Edge (95% interval) | Cards that got it | Per point, per card (95% interval) |');
   out.push('| --- | --- | --- | --- |');

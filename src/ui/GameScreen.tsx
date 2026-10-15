@@ -556,6 +556,16 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const myPlayers = view.mine.hand.filter((c) => c.def.kind === 'field' || c.def.kind === 'goalie');
   const mySpells = view.mine.hand.filter((c) => c.def.kind === 'spell');
   const myPhysical = view.mine.hand.filter((c) => c.def.kind === 'physical');
+  // Blind draw (the v0.17 rule): physical cards stay in a face-down pile beside the hand.
+  const blindPhysical = view.config.physicalAttacks && view.config.physicalDraw === 'blind';
+  const canStartAttack = blindPhysical && myDecision && pending.kind === 'action' && selection.kind === 'none' && attacksFor(undefined).length > 0;
+  const onPhysicalPile = () => {
+    if (canStartAttack) return setSelection({ kind: 'attack' });
+    const left = attacksLeft(view.mine, view.config.physicalAttackLimit);
+    setNotice(left === 0
+      ? 'Your team has no physical attacks left this game.'
+      : `Your Physical pile: ${left} ${left === 1 ? 'attack' : 'attacks'} left this game. On your turn, tap it to attack with a player who is on the field, not Shaken, not just come on, and not holding the ball. You flip the top card, and that's the move.`);
+  };
 
   const selectedKey = selection.kind === 'holder' && myBall ? posKey(me, myBall)
     : selection.kind === 'cast' && selection.caster ? posKey(me, selection.caster) : null;
@@ -578,6 +588,12 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         <div className="opponent-hand">
           <span>{opp.Owner} hand</span>
           {Array.from({ length: view.opponent.handCount }, (_, i) => <CardBack key={i} team={teams[them]} />)}
+          {blindPhysical ? (
+            <span className="opponent-physical" title="Their face-down Physical pile: the attacks they have left this game, and their penalty risk.">
+              · Physical pile: {attacksLeft(view.opponent, view.config.physicalAttackLimit)} {attacksLeft(view.opponent, view.config.physicalAttackLimit) === 1 ? 'attack' : 'attacks'} left, penalty risk {view.opponent.penaltyLevel}
+              {lastFlipped(view.opponent) ? `, last flipped ${lastFlipped(view.opponent)!.def.name}` : ''}
+            </span>
+          ) : null}
         </div>
 
         <div className="table">
@@ -616,13 +632,30 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
               <span><span className="action">Action</span> spells: on your turn, as your action</span>
               <span><span className="reaction">Reaction</span> spells: when a contest starts</span>
             </div>
-            <div className="hand hand-strip">
-              {myPlayers.map(handCard)}
-              {myPlayers.length && mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
-              {mySpells.map(handCard)}
-              {myPhysical.length && myPlayers.length + mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
-              {myPhysical.map(handCard)}
-              {view.mine.hand.length === 0 ? <span className="empty-hand">No cards in hand.</span> : null}
+            <div className="hand-row">
+              <div className="hand hand-strip">
+                {myPlayers.map(handCard)}
+                {myPlayers.length && mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
+                {mySpells.map(handCard)}
+                {myPhysical.length && myPlayers.length + mySpells.length ? <span className="hand-divider" aria-hidden /> : null}
+                {myPhysical.map(handCard)}
+                {view.mine.hand.length === 0 ? <span className="empty-hand">No cards in hand.</span> : null}
+              </div>
+              {/* Blind draw: the face-down Physical pile, beside the hand so it's always in view. */}
+              {blindPhysical ? (
+                <button
+                  type="button"
+                  className={`physical-pile ${canStartAttack ? 'hl-target' : ''} ${attacksLeft(view.mine, view.config.physicalAttackLimit) === 0 ? 'dim' : ''}`}
+                  title="Your face-down Physical pile. On your turn, tap it to make a physical attack: you flip the top card."
+                  onClick={onPhysicalPile}
+                >
+                  <span className="pile-name">Physical pile</span>
+                  <span className="pile-count">{attacksLeft(view.mine, view.config.physicalAttackLimit)}</span>
+                  <span className="pile-sub">{attacksLeft(view.mine, view.config.physicalAttackLimit) === 1 ? 'attack' : 'attacks'} left</span>
+                  <span className="pile-sub">Penalty risk {view.mine.penaltyLevel}</span>
+                  {lastFlipped(view.mine) ? <span className="pile-last">Last: {lastFlipped(view.mine)!.def.name}</span> : null}
+                </button>
+              ) : null}
             </div>
           </section>
         </div>
@@ -761,6 +794,16 @@ function knockedOutList(cards: import('../engine').CardView[], whose: string): s
   return cards.length ? `${whose}: ${cards.map((c) => c.def.name).join(', ')}` : `none ${whose}`;
 }
 
+/** Physical attacks a team can still make this game (v0.17): the attack limit, or what's left in the pile. */
+function attacksLeft(team: { physicalLeft: number; physicalDiscard: unknown[] }, limit: number): number {
+  return Math.max(0, limit ? Math.min(limit - team.physicalDiscard.length, team.physicalLeft) : team.physicalLeft);
+}
+
+/** The physical card a team flipped most recently, if any. */
+function lastFlipped(team: { physicalDiscard: import('../engine').CardView[] }): import('../engine').CardView | null {
+  return team.physicalDiscard.at(-1) ?? null;
+}
+
 function duelCard(card: import('../engine').CardView | null) {
   return card ? <CardFace def={card.def} injury={card.injury} /> : <div className="card empty">Empty spot</div>;
 }
@@ -770,6 +813,12 @@ function AnnouncementView({ a, opp, onClose }: { a: Announcement; opp: OpponentW
     <div className={`announcement tone-${a.tone}`} role="dialog">
       <div className="announcement-card" onClick={onClose}>
         <h3>{a.title}</h3>
+        {a.physical ? (
+          <div className="flipped-physical">
+            <CardFace def={a.physical.card.def} />
+            <span className="flipped-caption">{a.physical.mine ? 'You flipped' : `${opp.Name} flipped`} {a.physical.card.def.name}</span>
+          </div>
+        ) : null}
         {a.contest ? (
           <div className="duel">
             <div>{duelCard(a.contest.theirs.card)}<span className="value">{a.contest.theirs.total}</span><span className="who">{opp.Name}</span></div>

@@ -1,0 +1,29 @@
+{
+  "measured": "reports/value-2026-10-15.md",
+  "perPoint": {
+    "speed": 0.5752272727272729,
+    "shot": 0.5588636363636363,
+    "defense": 0.5102272727272725,
+    "faceoff": 0.12068181818181802,
+    "toughness": 0.035909090909090995,
+    "save": 6.612499999999999,
+    "resonants": 0.07666666666666655
+  },
+  "abilities": {
+    "hits_harder": 0,
+    "hard_to_hurt": 0,
+    "quick": 0.4913636363636362
+  },
+  "floor": {
+    "speed": 3,
+    "shot": 2,
+    "defense": 2,
+    "faceoff": 2,
+    "toughness": 2,
+    "save": 5,
+    "resonants": 1
+  },
+  "fieldBase": 3.213,
+  "goalieBase": 3.641,
+  "scale": 3.244
+}

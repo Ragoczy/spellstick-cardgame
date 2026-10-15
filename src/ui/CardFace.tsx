@@ -133,10 +133,10 @@ export interface CardFaceProps {
   def: FaceDef;
   /**
    * Toughness to show instead of the card's own (v0.17). Field players show their own Toughness
-   * without it; card sets saved before v0.17 have none. Cost isn't in the card data yet, so for
-   * now only the design preview passes it.
+   * without it; card sets saved before v0.17 have none.
    */
   toughness?: number;
+  /** Cost to show instead of the card's own (the design preview). Named players show their own cost without it. */
   cost?: number;
   /** Width in pixels. The height follows from the 5:7 card shape. Leave it out to size the card in CSS. */
   width?: number;
@@ -152,9 +152,10 @@ export interface CardFaceProps {
   onClick?: () => void;
 }
 
-export function CardFace({ def, toughness: toughnessShown, cost, width, serial, injury, selected, dim, highlight, onClick }: CardFaceProps) {
+export function CardFace({ def, toughness: toughnessShown, cost: costShown, width, serial, injury, selected, dim, highlight, onClick }: CardFaceProps) {
   const art = cardArt(def.id);
   const toughness = toughnessShown ?? (def.kind === 'field' ? def.toughness : undefined);
+  const cost = costShown ?? (def.kind === 'field' || def.kind === 'goalie' ? def.cost : undefined);
   const classes = ['cf', def.kind === 'physical' ? 'physical' : '', selected ? 'selected' : '', dim ? 'dim' : '', highlight ? `hl-${highlight}` : '', injury ? 'injured' : '']
     .filter(Boolean)
     .join(' ');

@@ -52,7 +52,7 @@ describe.skipIf(!haveDb)('loading player cards into the database', () => {
     expect(`${row.given} ${row.surname}`).toBe(card.name);
     expect(row).toMatchObject({
       kind: 'field', role: card.role, speed: card.speed, shot: card.shot, defense: card.defense, faceoff: card.faceoff,
-      save: null, bonus_points: card.bonusPoints, resonants: card.resonants, card_set_version: prototypeCards.version,
+      save: null, toughness: card.toughness, cost: card.cost, ability: card.ability ?? null, resonants: card.resonants, card_set_version: prototypeCards.version,
     });
     expect(rows.filter((r) => r.kind === 'goalie').every((r) => r.save !== null && r.speed === null)).toBe(true);
   });

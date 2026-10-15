@@ -12,7 +12,8 @@ import { simulate } from '../src/sim/simulate';
 import { winChance } from '../src/sim/stats';
 import { matchSeeds, measure, shieldExampleChance, TARGETS, verdict } from '../src/sim/targets';
 
-const config = makeConfig();
+// No team cap: the roster pairs measure the costs, so one team may cost more than the cap.
+const config = makeConfig({ rosterCap: 0 });
 
 describe('confidence intervals', () => {
   it('gives the mean with ±1.96 standard errors', () => {

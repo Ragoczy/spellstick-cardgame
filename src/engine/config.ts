@@ -43,6 +43,11 @@ export interface GameConfig {
   deckGoalies: number;
   /** Field players per deck. Decks dealt from the shared player pool get this many. */
   deckFieldPlayers: number;
+  /**
+   * Built teams (v0.17, RULES.md "Building a team"): the players' costs may add up to at most this.
+   * 0 = no cap (online matches started before v0.17).
+   */
+  rosterCap: number;
   /** Draft (RULES.md "Draft"): players each team picks from a face-up pool before the game. 0 = no draft, players are dealt. */
   draftPicks: number;
   /**
@@ -229,6 +234,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   deckSize: 40,
   deckGoalies: 2,
   deckFieldPlayers: 22,
+  rosterCap: 240,
   draftPicks: 0,
   draftPoolGoalies: 0,
   draftPoolField: 30,

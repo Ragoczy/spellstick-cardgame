@@ -81,7 +81,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Josephine Carrington",
-      "bonusPoints": 4,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.panic",
@@ -101,7 +101,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Anastasia Stanhope-Ainsworth",
-      "bonusPoints": 4,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -121,7 +121,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Charlotte Stanhope-Ainsworth",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.triumph",
@@ -153,7 +153,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Theodora Radcliffe",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -180,7 +180,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Sibyl Prescott-Langley",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.alertness",
@@ -212,7 +212,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Margaret Ashford",
-      "bonusPoints": 2,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.euphoria",
@@ -237,7 +237,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Edith Radcliffe-Sinclair",
-      "bonusPoints": 2,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.feebleness",
@@ -257,7 +257,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Arabella Ashford-Pemberton",
-      "bonusPoints": 2,
+      "cost": 13,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -291,7 +291,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Eloise Harrow",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.smallness",
@@ -316,7 +316,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Ivy Danforth",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.lust",
@@ -341,7 +341,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Marguerite Thornton",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.longing",
@@ -366,7 +366,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Olga Hollis",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.aching",
@@ -398,7 +398,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Priscilla Sterling",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -432,7 +432,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Louisa Everly",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.dignity",
@@ -457,7 +457,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Clara Coventry",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.heat",
@@ -482,7 +482,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Harriet Wentworth-Hadley",
-      "bonusPoints": 4,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.cold",
@@ -507,7 +507,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Sigrid Everly",
-      "bonusPoints": 4,
+      "cost": 13,
       "resonants": [
         {
           "id": "emo.malice",
@@ -532,7 +532,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Hilda Hollis",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.blood-hunger",
@@ -552,7 +552,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Amelia Bancroft-Talbot",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -577,7 +577,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Beatrice Merriweather",
-      "bonusPoints": 3,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.climax",
@@ -602,7 +602,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Agatha Hollis-Sterling",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -627,7 +627,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Irene Thayer",
-      "bonusPoints": 2,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.grace",
@@ -661,7 +661,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Geraldine Wentworth-Hadley",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.alertness",
@@ -681,7 +681,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Juliet Thayer",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.ease",
@@ -706,7 +706,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Minerva Danforth",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -731,7 +731,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Eliza Talbot",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.fever",
@@ -763,7 +763,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Bridget Galloway",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.awe",
@@ -788,7 +788,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Maude Merriweather",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.aversion",
@@ -818,7 +818,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Gertrude Galloway",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.lust",
@@ -838,7 +838,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Rosalind Hadley",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.pity",
@@ -858,7 +858,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Viola Radcliffe",
-      "bonusPoints": 4,
+      "cost": 14,
       "resonants": [
         {
           "id": "phy.weakness",
@@ -883,7 +883,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Celeste Sterling",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "phy.balance",
@@ -908,7 +908,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Ottilie Langley",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -928,7 +928,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Cordelia Ellery",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.joy",
@@ -953,7 +953,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Tatiana Sterling",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.hostility",
@@ -985,7 +985,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Dorothea Langley",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -1010,7 +1010,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Lillian Holloway",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1035,7 +1035,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Rowena Bancroft",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.resolve",
@@ -1060,7 +1060,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Marianne Coventry",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.anger",
@@ -1090,7 +1090,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Bernadette Ellery",
-      "bonusPoints": 1,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.lucidity",
@@ -1124,7 +1124,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Genevieve Fenwick",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.contempt",
@@ -1149,7 +1149,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Imogen Prescott",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.care",
@@ -1174,7 +1174,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Marjorie Bancroft-Talbot",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -1194,7 +1194,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Florence Langley",
-      "bonusPoints": 1,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.embarrassment",
@@ -1219,7 +1219,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Valentina Hadley",
-      "bonusPoints": 4,
+      "cost": 15,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1253,7 +1253,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Matilda Thornton",
-      "bonusPoints": 3,
+      "cost": 13,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1287,7 +1287,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Evangeline Fenwick",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.stillness",
@@ -1307,7 +1307,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Nadia Harrow",
-      "bonusPoints": 3,
+      "cost": 13,
       "resonants": [
         {
           "id": "emo.joy",
@@ -1332,7 +1332,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Adelaide Lockwood",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.revulsion",
@@ -1357,7 +1357,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Georgiana Whitcombe",
-      "bonusPoints": 2,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.vigor",
@@ -1389,7 +1389,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Gwendolyn Thornton",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.giddiness",
@@ -1416,7 +1416,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Blanche Bancroft",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.contentment",
@@ -1448,7 +1448,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Odette Prescott",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.malice",
@@ -1473,7 +1473,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Eleanor Sinclair",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.pain",
@@ -1505,7 +1505,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Mabel Holloway",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.apathy",
@@ -1537,7 +1537,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Esme Hollis-Sterling",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.heat",
@@ -1569,7 +1569,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Alice Prescott",
-      "bonusPoints": 1,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.disappointment",
@@ -1594,7 +1594,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Isabella Carrington",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.disappointment",
@@ -1619,7 +1619,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Augusta Blair",
-      "bonusPoints": 4,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -1644,7 +1644,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Eugenia Carrington-Blair",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.heft",
@@ -1664,7 +1664,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Camille Whitcombe",
-      "bonusPoints": 3,
+      "cost": 12,
       "resonants": [
         {
           "id": "emo.letting-go",
@@ -1698,7 +1698,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Estelle Talbot",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.tiredness",
@@ -1723,7 +1723,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Lavinia Talbot",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.romance",
@@ -1748,7 +1748,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Clementine Wentworth",
-      "bonusPoints": 2,
+      "cost": 11,
       "resonants": [
         {
           "id": "phy.lucidity",
@@ -1782,7 +1782,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Elsa Prescott-Langley",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.lightness",
@@ -1802,7 +1802,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Freya Carrington",
-      "bonusPoints": 2,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -1827,7 +1827,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Frances Holloway",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.exposure",
@@ -1852,7 +1852,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Seraphina Ashford",
-      "bonusPoints": 1,
+      "cost": 6,
       "resonants": [
         {
           "id": "phy.tiredness",
@@ -1872,7 +1872,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Sabine Ellery",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.sweating",
@@ -1904,7 +1904,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Lucinda Stanhope",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -1929,7 +1929,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Madeleine Sinclair",
-      "bonusPoints": 1,
+      "cost": 6,
       "resonants": [
         {
           "id": "emo.determination",
@@ -1949,7 +1949,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Helena Bancroft",
-      "bonusPoints": 1,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.heat",
@@ -1974,7 +1974,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Ophelia Merriweather",
-      "bonusPoints": 4,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.sorrow",
@@ -2006,7 +2006,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Caroline Hollis",
-      "bonusPoints": 3,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.care",
@@ -2031,7 +2031,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Millicent Ainsworth",
-      "bonusPoints": 3,
+      "cost": 10,
       "resonants": [
         {
           "id": "emo.shame",
@@ -2056,7 +2056,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Henrietta Lockwood-Marlowe",
-      "bonusPoints": 3,
+      "cost": 11,
       "resonants": [
         {
           "id": "emo.playfulness",
@@ -2081,7 +2081,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Wilhelmina Ashford",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -2101,7 +2101,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Penelope Whitcombe-Thornton",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.joy",
@@ -2121,7 +2121,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Rosamund Danforth",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.spinning",
@@ -2141,7 +2141,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Victoria Pemberton",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "emo.tenacity",
@@ -2166,7 +2166,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Emmeline Whitcombe-Thornton",
-      "bonusPoints": 2,
+      "cost": 9,
       "resonants": [
         {
           "id": "phy.whirling",
@@ -2191,7 +2191,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Cecilia Lockwood",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "phy.frostbite",
@@ -2216,7 +2216,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Sophia Coventry",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.care",
@@ -2248,7 +2248,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Agnes Pemberton",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.apathy",
@@ -2273,7 +2273,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Greta Blair",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.joy",
@@ -2305,7 +2305,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Isadora Ainsworth",
-      "bonusPoints": 1,
+      "cost": 7,
       "resonants": [
         {
           "id": "emo.numbness",
@@ -2335,7 +2335,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Antoinette Whitcombe",
-      "bonusPoints": 4,
+      "cost": 25,
       "resonants": [
         {
           "id": "emo.shame",
@@ -2356,7 +2356,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Leonora Ainsworth",
-      "bonusPoints": 4,
+      "cost": 25,
       "resonants": [
         {
           "id": "phy.fullness",
@@ -2372,7 +2372,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Astrid Blair",
-      "bonusPoints": 3,
+      "cost": 26,
       "resonants": [
         {
           "id": "emo.derision",
@@ -2398,7 +2398,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Sylvia Ashford-Pemberton",
-      "bonusPoints": 3,
+      "cost": 25,
       "resonants": [
         {
           "id": "emo.weariness",
@@ -2419,7 +2419,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Adeline Marlowe",
-      "bonusPoints": 2,
+      "cost": 4,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -2440,7 +2440,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Daphne Wentworth",
-      "bonusPoints": 2,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.fear",
@@ -2461,7 +2461,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Ingrid Marlowe",
-      "bonusPoints": 2,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.exuberance",
@@ -2477,7 +2477,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Constance Wentworth",
-      "bonusPoints": 2,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.anger",
@@ -2498,7 +2498,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Ursula Radcliffe-Sinclair",
-      "bonusPoints": 2,
+      "cost": 4,
       "resonants": [
         {
           "id": "phy.famishment",
@@ -2519,7 +2519,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Philippa Hadley",
-      "bonusPoints": 1,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.numbness",
@@ -2540,7 +2540,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Annabel Pemberton",
-      "bonusPoints": 1,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.horror",
@@ -2556,7 +2556,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Felicity Lockwood-Marlowe",
-      "bonusPoints": 1,
+      "cost": 4,
       "resonants": [
         {
           "id": "phy.repletion",
@@ -2582,7 +2582,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Lydia Carrington-Blair",
-      "bonusPoints": 1,
+      "cost": 4,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -2603,7 +2603,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Katarina Stanhope",
-      "bonusPoints": 1,
+      "cost": 4,
       "resonants": [
         {
           "id": "emo.abandonment",
@@ -2751,7 +2751,7 @@
       "name": "Stone Skin",
       "spellType": "reaction",
       "magic": "earth.stone",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "ward",
         "params": {}
@@ -2765,7 +2765,7 @@
       "name": "Heavy Ground",
       "spellType": "action",
       "magic": "earth.gravity",
-      "tier": "rare",
+      "tier": "uncommon",
       "ability": {
         "effect": "steal",
         "params": {
@@ -2861,7 +2861,7 @@
       "name": "Jolt",
       "spellType": "reaction",
       "magic": "lightning.shock",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
@@ -2919,7 +2919,7 @@
       "name": "Shadow Double",
       "spellType": "action",
       "magic": "shadow",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}
@@ -3022,7 +3022,7 @@
       "name": "Brute Strength",
       "spellType": "reaction",
       "magic": "body.strength",
-      "tier": "rare",
+      "tier": "uncommon",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3089,7 +3089,7 @@
       "name": "Low Stance",
       "spellType": "reaction",
       "magic": "body.balance",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3123,7 +3123,7 @@
       "name": "Red Mist",
       "spellType": "reaction",
       "magic": "body.berserking",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
@@ -3153,7 +3153,7 @@
       "name": "Jinx",
       "spellType": "reaction",
       "magic": "curse",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
@@ -3239,7 +3239,7 @@
       "name": "Sting",
       "spellType": "reaction",
       "magic": "curse.pain",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "dirty_play",
         "params": {}
@@ -3253,7 +3253,7 @@
       "name": "Ward",
       "spellType": "reaction",
       "magic": "warding",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "ward",
         "params": {}
@@ -3281,7 +3281,7 @@
       "name": "Snare",
       "spellType": "action",
       "magic": "binding",
-      "tier": "rare",
+      "tier": "uncommon",
       "ability": {
         "effect": "steal",
         "params": {
@@ -3374,7 +3374,7 @@
       "name": "Quicken",
       "spellType": "reaction",
       "magic": "time.haste",
-      "tier": "uncommon",
+      "tier": "rare",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3433,7 +3433,7 @@
       "name": "Summon",
       "spellType": "action",
       "magic": "translocation.summoning",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "recall",
         "params": {
@@ -3463,7 +3463,7 @@
       "name": "Precognition",
       "spellType": "action",
       "magic": "divination.precognition",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "recall",
         "params": {
@@ -3636,7 +3636,7 @@
       "name": "Glamour Self",
       "spellType": "action",
       "magic": "illusion.glamour",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}
@@ -3678,7 +3678,7 @@
       "name": "Hall of Mirrors",
       "spellType": "action",
       "magic": "illusion.mirrors",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "mirror_images",
         "params": {}

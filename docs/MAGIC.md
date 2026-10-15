@@ -212,7 +212,7 @@ every spell was in about 20 decks).
 
 How much each spell helps a team win, as the computer plays it: for each spell, 1,000 games
 where one team swapped four rarely-cast spells for four copies of it (`npm run spell-tiers`,
-full table in `reports/spell-tiers-2026-10-14.md`). The edge is how many more games in 100 that
+full table in `reports/spell-tiers-2026-10-15.md`, rules v0.17; the v0.16 run is `reports/spell-tiers-2026-10-14.md`). The edge is how many more games in 100 that
 team wins. Same-effect spells came out the same within luck (about ±2), so the tiers are by
 effect; a spell's magic barely changes its power.
 
@@ -223,16 +223,20 @@ report. They are power tiers, not rarity yet, and change nothing in play.
 
 | Tier | Effects (average edge) | Why |
 |---|---|---|
-| Legendary (dominant, 17 spells) | Shield (+24); open boost +2 (+18); goalie's save boost, Turn Aside (+18) | A shield makes the other player's stat 0, so it nearly always wins the contest, and it works in any contest. Open boosts also work anywhere. Saves decide goals. |
-| Rare (strong, 7) | Shooting boost, Pinpoint (+13); steals (+10); tackling boost (+9); dodging boosts (+9) | Big swings in contests that decide possession and goals. |
-| Uncommon (useful, 15) | Intercepting boost (+5); mirror images (+4); dirty plays (+3); faceoff boost (+3); long passes (+2); draw 2 (+2) | They help, but less often or by less. |
-| Common (no clear edge, 34) | Decoy passes, resisting boost, swaps, scrying, receiving boosts, hits, long shots, mends (−1.5 to +1.4) | No better than the rarely-cast spells they replaced. |
+| Legendary (dominant, 15 spells) | Shield (+17); open boost +2 (+17); goalie's save boost, Turn Aside (+16) | A shield takes 2 off the other player's stat (v0.17), which still wins most contests, in any contest. Open boosts also work anywhere. Saves decide goals. |
+| Rare (strong, 5) | Shooting boost, Pinpoint (+14); dodging boosts (+10); intercepting boost (+9) | Big swings in contests that decide possession and goals. Dodging now also beats physical attacks. |
+| Uncommon (useful, 6) | Steals (+3); tackling boost (+3); long passes (+2) | They help, but less often or by less. |
+| Common (no clear edge, 46) | Decoy passes, receiving boosts, wards, recall, faceoff boost, mirror images, mends, swaps, hits, long shots, scrying, resisting boost, dirty plays (−3.7 to +1.9) | No better than the rarely-cast spells they replaced. |
+
+v0.17 moved several effects down: steals and tackling boosts (a won tackle now knocks the holder
+down whether or not a spell helped), mirror images, and dirty plays (a dirty play now risks the
+referee). Wards measure about 0, for the reason in `reports/sim-2026-10-15-v17f.md`: being Shaken
+is no better for a team than being Injured and swapped for a fresh player.
 
 What this says about the game:
-- **Shields are too strong.** Four shields in place of four weak spells turn a 49% team into a
-  73% team. Today both team decks hold two, so it evens out. But a deck built from the library
-  could be all shields. Softening them (for example −3 to the other side instead of making it 0)
-  is the obvious fix.
+- **Shields were too strong** in v0.16 (0 to the other player's stat): four shields in place of
+  four weak spells turned a 49% team into a 73% team. v0.17 makes it −2, and they're still the
+  strongest effect, along with open boosts.
 - **Narrow boosts are only as good as their contest.** Shooting, saving, tackling, and dodging
   matter. Receiving a pass doesn't, because the receiver already wins most passes (ties go to the
   receiver), so +3 rarely changes anything.

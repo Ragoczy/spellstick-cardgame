@@ -90,7 +90,7 @@ const players = byRole.map((slot, i) => {
   const name = `${givenNames[i]} ${surnames[i]}`;
   if (slot.role === 'goalie') {
     const save = goalieSave(slot.bonus);
-    return { id, team: 'pool', kind: 'goalie', role: 'goalie', name, bonusPoints: slot.bonus, resonants: resonants(), save };
+    return { id, team: 'pool', kind: 'goalie', role: 'goalie', name, resonants: resonants(), save };
   }
   const role = FIELD_TYPES[slot.role];
   const stats = { ...role.base };
@@ -100,12 +100,13 @@ const players = byRole.map((slot, i) => {
   }
   // Toughness comes from the player's type (v0.17), so Stoppers and Anchors are hardest to hurt.
   const toughness = DEFAULT_CONFIG.toughnessByRole[slot.role as keyof typeof DEFAULT_CONFIG.toughnessByRole];
-  return { id, team: 'pool', kind: 'field', role: slot.role, name, bonusPoints: slot.bonus, resonants: resonants(), ...stats, toughness };
+  return { id, team: 'pool', kind: 'field', role: slot.role, name, resonants: resonants(), ...stats, toughness };
 });
 
 // Replace the old placeholder players (team players and goalies) and any earlier named players.
-// Spells and promo cards stay.
-const kept = cardSet.cards.filter((card: { kind: string; team: string; promo?: boolean }) => card.kind === 'spell' || card.promo);
+// Spells, physical cards, and promo cards stay. Abilities and costs don't: run
+// npm run assign-abilities and then npm run price-players afterward.
+const kept = cardSet.cards.filter((card: { kind: string; team: string; promo?: boolean }) => card.kind === 'spell' || card.kind === 'physical' || card.promo);
 cardSet.cards = [...players, ...kept];
 writeFileSync(cardsPath, `${JSON.stringify(cardSet, null, 2)}\n`);
 

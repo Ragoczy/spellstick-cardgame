@@ -45,9 +45,9 @@
             "description": "Player cards: the card's type, which says what it is good at. Any field player can still play any position.",
             "enum": ["runner", "striker", "playmaker", "allrounder", "anchor", "stopper", "goalie"]
           },
-          "bonusPoints": {
-            "description": "Named players: extra skill points added to the type's base stats when the card was made.",
-            "type": "integer", "minimum": 0, "maximum": 4
+          "cost": {
+            "description": "Named players (v0.17): what the player counts against a team's cap. Made by npm run price-players from measured values; don't edit by hand.",
+            "type": "integer", "minimum": 1
           },
           "resonants": {
             "description": "Required for field and goalie cards. Each Resonant (e.g. Anger) has one Affinity: a whole family (\"fire\") or one specialization in it (\"fire.explosion\").",

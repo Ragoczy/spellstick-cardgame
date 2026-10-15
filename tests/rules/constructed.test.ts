@@ -5,7 +5,8 @@ import { prototypeCards } from '../../src/data/prototype';
 import { spellSets, starterSet, teamDeck, teamProblems } from '../../src/data/teams';
 import { LANE_COUNTS } from '../helpers';
 
-const config = makeConfig();
+// No cap here (the test decks take the first or last players, not a priced team); the cap has its own test.
+const config = makeConfig({ rosterCap: 0 });
 const players = prototypeCards.cards.filter((c) => c.team === 'pool');
 const goalieIds = players.filter((c) => c.kind === 'goalie').map((c) => c.id);
 const fieldIds = players.filter((c) => c.kind === 'field').map((c) => c.id);
@@ -20,7 +21,7 @@ function deck(from: 'start' | 'end', spells = 'A'): string[] {
 describe.each(LANE_COUNTS)('constructed games (%i lanes)', (lanes) => {
   it('gives each side exactly the deck it brought, playing for its own team', () => {
     const decks = { A: deck('start'), B: deck('end', 'B') };
-    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes }, decks });
+    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes, rosterCap: 0 }, decks });
     for (const side of ['A', 'B'] as const) {
       const team = state.teams[side];
       const uids = [...team.hand, ...team.players, ...team.spells];
@@ -30,12 +31,12 @@ describe.each(LANE_COUNTS)('constructed games (%i lanes)', (lanes) => {
   });
 
   it('works when both teams bring the same cards', () => {
-    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes }, decks: { A: deck('start'), B: deck('start') } });
+    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes, rosterCap: 0 }, decks: { A: deck('start'), B: deck('start') } });
     expect(state.pending).toEqual({ kind: 'chooseGoalie', side: 'A' });
   });
 
   it("hides the other team's deck", () => {
-    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes }, decks: { A: deck('start'), B: deck('end') } });
+    const { state } = createGame({ seed: 5, cardSet: prototypeCards, config: { lanes, rosterCap: 0 }, decks: { A: deck('start'), B: deck('end') } });
     const view = viewFor(state, 'A');
     expect(JSON.stringify(view)).not.toContain(fieldIds.at(-1));
   });
@@ -74,18 +75,32 @@ describe('legal decks', () => {
   it('keeps add-on cards for the center-lane add-on', () => {
     const addon = { ...prototypeCards, cards: prototypeCards.cards.map((c) => (c.id === fieldIds[0] ? { ...c, addon: true } : c)) };
     expect(deckProblems(addon, deck('start'), config)).toHaveLength(1);
-    expect(deckProblems(addon, deck('start'), makeConfig({ lanes: 3 }))).toEqual([]);
+    expect(deckProblems(addon, deck('start'), makeConfig({ lanes: 3, rosterCap: 0 }))).toEqual([]);
+  });
+
+  it("keeps a team's players within the cap (v0.17), counting goalies and field players", () => {
+    const ids = deck('start');
+    const cost = ids.reduce((sum, id) => {
+      const card = players.find((c) => c.id === id);
+      return sum + (card && (card.kind === 'field' || card.kind === 'goalie') ? (card.cost ?? 0) : 0);
+    }, 0);
+    expect(cost).toBeGreaterThan(0);
+    expect(deckProblems(prototypeCards, ids, makeConfig({ rosterCap: cost }))).toEqual([]);
+    expect(deckProblems(prototypeCards, ids, makeConfig({ rosterCap: cost - 1 }))).toEqual([`The players cost ${cost}, over the team cap of ${cost - 1}.`]);
+    expect(deckProblems(prototypeCards, ids, makeConfig({ rosterCap: 0 }))).toEqual([]);
   });
 
   it('will not start a game with an illegal deck, or with a draft', () => {
     expect(() => createGame({ seed: 1, cardSet: prototypeCards, decks: { A: deck('start').slice(1), B: deck('end') } })).toThrow(SetupError);
-    expect(() => createGame({ seed: 1, cardSet: prototypeCards, config: { draftPicks: 10 }, decks: { A: deck('start'), B: deck('end') } })).toThrow(SetupError);
+    expect(() => createGame({ seed: 1, cardSet: prototypeCards, config: { draftPicks: 10, rosterCap: 0 }, decks: { A: deck('start'), B: deck('end') } })).toThrow(SetupError);
   });
 });
 
 describe('saved teams', () => {
-  it('the starter set is a legal team', () => {
-    expect(teamProblems(prototypeCards, config, starterSet.players, starterSet.spellSet)).toEqual([]);
+  it('the starter set is a legal team, within the cap', () => {
+    const capped = makeConfig();
+    expect(capped.rosterCap).toBeGreaterThan(0);
+    expect(teamProblems(prototypeCards, capped, starterSet.players, starterSet.spellSet)).toEqual([]);
     expect(teamDeck(prototypeCards, config, starterSet.players, starterSet.spellSet)).toHaveLength(config.deckSize);
   });
 

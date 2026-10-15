@@ -72,6 +72,8 @@ slot, not the card: if the player in that slot changes (substitute, swap), the n
   magic family (Fire, Illusion, Body, ...) or one specialization in a family (Glamour, in
   Illusion). Where these come from: `docs/MAGIC.md`.
 - Optionally one ability (see "Effect vocabulary").
+- **Cost** (v0.17, named players): what the player counts against a team's cap when teams are
+  built (see "Constructed"). It's the number in the top left corner.
 
 Any field player can play any field position. Where you put them is the strategy.
 
@@ -79,29 +81,12 @@ Each player card also has a **type** that says what it is good at: Runner (Speed
 (Shot), Playmaker (Faceoff), All-rounder (even), Anchor and Stopper (Defense), or Goalie. The
 type sets the printed Toughness; otherwise it's just a label and changes nothing in play.
 
-**Goalie cards** have **Save** and 1 to 3 Resonants. They can only play in goal.
+**Goalie cards** have **Save**, 1 to 3 Resonants, and a cost. They can only play in goal.
 
 **Spell cards** have a kind of magic, a family or a specialization (or none, for neutral spells),
 and are either:
 - **Reaction spells**, played during a contest.
-- **Physical card effects** (v0.17; see "Physical attacks" for the cards). `reach`, `needs_holder`,
-`needs_shaken`, `after_pass_or_shot`, and `after_losing` only matter if physical cards are held in
-hand and chosen (config.physicalDraw 'hand', a simulation what-if); with blind draw, the rule, no
-card uses them.
-
-- `vs_holder` — `{ amount }`. +`amount` to the attack if the target holds the ball.
-- `reach` — `{}`. May attack the opposing player one lane over in the same row.
-- `needs_holder` — `{}`. Only against the ball carrier.
-- `needs_shaken` — `{}`. Only against a Shaken target.
-- `only_shaken` — `{}`. No Toughness roll: if the attack wins, the target is Shaken, never worse.
-- `shaken_anyway` — `{}`. If the target passes their Toughness roll, they're Shaken anyway.
-- `shaken_is_injured` — `{}`. If the target is hurt, a Shaken result counts as Injured.
-- `self_check` — `{}`. The attacker makes a Toughness roll too, win or lose.
-- `pile_on` — `{ amount }`. +`amount` for each of your standing players one lane over in the same row.
-- `after_pass_or_shot` — `{}`. Reaction: play after the opposing player in your spot passes or shoots.
-- `after_losing` — `{}`. Reaction: play when your player loses a contest to the opposing player in their spot.
-
-**Action spells**, played as your action for the turn.
+- **Action spells**, played as your action for the turn.
 
 ## Face down, revealed, and casters
 
@@ -195,7 +180,9 @@ from the cards a player owns.
 1. A deck is 2 goalies ⚙, 22 field players ⚙, and 16 spells (whatever the 40-card deck ⚙ leaves).
 2. Each named player can be on a team only once. Spells can repeat.
 3. Add-on cards can only be used with the center-lane add-on.
-4. Every card plays in the team's color for this game. Setup goes on from step 1.
+4. The players' costs add up to at most the **team cap** of 240 ⚙ (v0.17), the cost of an average
+   team. Dealt and drafted games have no cap.
+5. Every card plays in the team's color for this game. Setup goes on from step 1.
 
 Nobody sees the other team's deck. There's no draft in a constructed game.
 
@@ -612,6 +599,23 @@ Danger-sense.
   the real player: the images vanish (discard the card) and the action goes ahead as normal. The
   images also vanish when the player leaves the field. A player can only have one set of images.
 
+**Physical card effects** (v0.17; see "Physical attacks" for the cards). `reach`, `needs_holder`,
+`needs_shaken`, `after_pass_or_shot`, and `after_losing` only matter if physical cards are held in
+hand and chosen (config.physicalDraw 'hand', a simulation what-if); with blind draw, the rule, no
+card uses them.
+
+- `vs_holder` — `{ amount }`. +`amount` to the attack if the target holds the ball.
+- `reach` — `{}`. May attack the opposing player one lane over in the same row.
+- `needs_holder` — `{}`. Only against the ball carrier.
+- `needs_shaken` — `{}`. Only against a Shaken target.
+- `only_shaken` — `{}`. No Toughness roll: if the attack wins, the target is Shaken, never worse.
+- `shaken_anyway` — `{}`. If the target passes their Toughness roll, they're Shaken anyway.
+- `shaken_is_injured` — `{}`. If the target is hurt, a Shaken result counts as Injured.
+- `self_check` — `{}`. The attacker makes a Toughness roll too, win or lose.
+- `pile_on` — `{ amount }`. +`amount` for each of your standing players one lane over in the same row.
+- `after_pass_or_shot` — `{}`. Reaction: play after the opposing player in your spot passes or shoots.
+- `after_losing` — `{}`. Reaction: play when your player loses a contest to the opposing player in their spot.
+
 ## Add-on: center lane
 
 Set lanes ⚙ to 3. Each team fields 3 defenders, 3 midfielders, 3 forwards, and a goalie.
@@ -624,6 +628,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase f — **Player costs and the team cap** (from the v0.17 plan). Every named player has a **cost**, from measured values (`reports/value-2026-10-15.md`): what one more point of Speed, Shot, Defense, Faceoff, Toughness, Save, a Resonant, or an ability adds in wins. A built team's players may cost at most the **team cap** of 240 (an average team); dealt and drafted games have no cap. Bonus points are gone from the card data. Claude: costs count from the pool's weakest values (the cheapest field player costs 6, the average player 10); Heavy hands and Sturdy measured below 0, so they count 0. The 10% cost gap scores 62% (target 55–65%), but Defense-heavy teams score 40.5% against Striker-heavy teams at equal cost (target 45–55%): see `reports/sim-2026-10-15-v17f.md`. Online matches started before this have no cap.
 
 - v0.17 (in progress), phase e — **Tackle risk** (from the v0.17 plan): a tackler who loses by 3 or more is Shaken. Tried against tackle assist (+1 to a tackle for each standing teammate one lane over), and both together, on the same 5,000 games (Paul: keep whichever moves real injuries toward 3.5 without pushing another target out). Tackle risk did: real injuries 3.24 → 3.28, spells cast 14.7 → 15.2, Shaken share 58%, goals unchanged. Assist raised real injuries more (3.36) but dropped goals below their floor (1.81), and both together pushed goals and total hurts out, so assist is not kept (it stays as a what-if switch). Report: `reports/sim-2026-10-15-v17e.md`.
 

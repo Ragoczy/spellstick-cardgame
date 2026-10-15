@@ -147,8 +147,11 @@ interface CardBase {
 interface PlayerBase extends CardBase {
   resonants: Resonant[];
   role?: PlayerRole;
-  /** Extra skill points the card was made with, on top of its type's base stats (named players only). */
-  bonusPoints?: number;
+  /**
+   * What the player counts against a team's cap (v0.17, RULES.md "Building a team"). Named players
+   * have one; the prototype's team cards don't, and count 0.
+   */
+  cost?: number;
   ability?: PlayerAbility;
 }
 
@@ -475,6 +478,8 @@ export function deckProblems(cardSet: CardSet, ids: readonly string[], config: G
     if (seen.has(card.id)) problems.push(`${card.name} is on the team twice.`);
     seen.add(card.id);
   }
+  const cost = cards.reduce((sum, c) => sum + (c.kind === 'field' || c.kind === 'goalie' ? (c.cost ?? 0) : 0), 0);
+  if (config.rosterCap > 0 && cost > config.rosterCap) problems.push(`The players cost ${cost}, over the team cap of ${config.rosterCap}.`);
   for (const card of cards) {
     if (card.addon && config.lanes < 3) problems.push(`${card.name} is only for the center-lane add-on.`);
   }

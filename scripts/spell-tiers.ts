@@ -11,7 +11,7 @@
 //        leaves the tiers in the card data alone)
 //
 // The test: both teams use Team A's 16 spells and players dealt from the pool. The test team
-// swaps four rarely-cast spells (Scrying Bowl, Precognition, Mend, Blast Shot) for four copies of
+// swaps four rarely-cast spells (Tailwind, Precognition, Mend, Blast Shot) for four copies of
 // the spell being tested. How often it then wins, against a control run with no swap, is the
 // spell's power. It's a measure of the spell as the computer plays it: a spell the computer
 // misuses or never casts (swap) scores low even if a person could do more with it.
@@ -35,7 +35,7 @@ const library = prototypeCards.cards.filter((c): c is SpellCardDef =>
 const partial = effects !== undefined || args('set').length > 0;
 const label = arg('label') ?? 'partial';
 const base = prototypeCards.teams.find((t) => t.id === 'A')!.spells!;
-const SWAPPED_OUT = ['sp-scrying-bowl', 'sp-precognition', 'sp-mend', 'sp-blast-shot'];
+const SWAPPED_OUT = ['sp-tailwind', 'sp-precognition', 'sp-mend', 'sp-blast-shot'];
 const COPIES = SWAPPED_OUT.length;
 const CONTROL = 'control';
 const tmp = new URL('../reports/.spell-tiers/', import.meta.url);

@@ -1,22 +1,31 @@
 // The full card, laid out like a printed trading card: name bar, art window, type line, text box,
 // and footer, at the 2.5" x 3.5" (5:7) poker-card shape. Every size inside is a share of the
 // card's width (cqw units in styles.css), so the same design works at any size on screen and
-// at print size. Players, spells, and the draft physical attack cards (PLAN.md) share it.
+// at print size. Players, spells, and physical attack cards (v0.17) share it.
 
 import type { CSSProperties } from 'react';
-import type { CardDef, InjuryDef } from '../engine';
-import { PENALTY_TURNS, type PhysicalCardDef } from '../data/physicalCards';
+import { DEFAULT_CONFIG, type CardDef, type InjuryDef, type PhysicalCardDef } from '../engine';
 import { roleLabel } from '../data/playerTypes';
 import { cardArt } from './cardArt';
 import { TYPE_POSITION } from './Card';
 import { capitalize, cardText, injuryEffect, magicColor, magicLabel } from './labels';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
 
+/** "an Agility (body) Affinity" or "a Speed (body) Affinity". */
+function anAffinity(magic: string): string {
+  const label = magicLabel(magic);
+  return `${/^[aeiou]/i.test(label) ? 'an' : 'a'} ${label} Affinity`;
+}
+
 /** Any card this face can show. */
-type FaceDef = CardDef | PhysicalCardDef;
+type FaceDef = CardDef;
+
+/** Turns in the penalty box, printed on a physical card by its tier. */
+const PENALTY_TURNS = DEFAULT_CONFIG.penaltyTurns;
 
 /** The magic whose family colors the frame: a spell's magic, or a player's first Resonant's Affinity. */
 function frameMagic(def: CardDef): string | null {
+  if (def.kind === 'physical') return def.affinity;
   return def.kind === 'spell' ? def.magic : def.resonants[0]?.affinity ?? null;
 }
 
@@ -37,7 +46,7 @@ function figurePosition(def: CardDef): FigurePosition {
  */
 function Pips({ def }: { def: FaceDef }) {
   const pips = def.kind === 'physical'
-    ? [{ key: 'affinity', magic: def.affinity, letter: (def.affinity.split('.')[1] ?? def.affinity).charAt(0), title: `+1 with a ${magicLabel(def.affinity)} Affinity` }]
+    ? [{ key: 'affinity', magic: def.affinity, letter: (def.affinity.split('.')[1] ?? def.affinity).charAt(0), title: `+1 with ${anAffinity(def.affinity)}` }]
     : def.kind === 'spell'
       ? [{ key: 'spell', magic: def.magic, letter: def.magic?.charAt(0) ?? '·', title: `${magicLabel(def.magic)} spell` }]
       : def.resonants.map((r) => ({ key: r.name, magic: r.affinity, letter: r.affinity.charAt(0), title: `${r.name} Resonant: ${magicLabel(r.affinity)} Affinity` }));
@@ -66,7 +75,7 @@ function nameSize(def: FaceDef, hasCost: boolean): number {
  * A physical card says which Affinity helps it.
  */
 function resonantLine(def: FaceDef): string | null {
-  if (def.kind === 'physical') return `+1 with a ${magicLabel(def.affinity)} Affinity`;
+  if (def.kind === 'physical') return `+1 with ${anAffinity(def.affinity)}`;
   if (def.kind === 'spell') return null;
   return def.resonants.map((r) => `${r.name}: ${magicLabel(r.affinity)}`).join(' · ');
 }

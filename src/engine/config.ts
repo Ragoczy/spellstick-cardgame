@@ -1,6 +1,8 @@
 // Every tuning number in the rules lives here (marked ⚙ in docs/RULES.md).
 // Balance changes should be one-line edits to DEFAULT_CONFIG.
 
+import type { PhysicalTier } from './cards';
+
 /** Stats an injury can lower. (Goalies can't be injured.) */
 export type InjuryStat = 'speed' | 'shot' | 'defense' | 'faceoff';
 
@@ -146,6 +148,34 @@ export interface GameConfig {
    * referee; online matches started before v0.17 keep it.
    */
   foulTiming: 'before' | 'reaction';
+  /**
+   * Physical attack cards (v0.17): each team has a Physical pile, and a player can attack the
+   * opposing player in their spot as an action. false (the old rule): no physical cards; online
+   * matches started before v0.17 keep it.
+   */
+  physicalAttacks: boolean;
+  /** Cards in each team's Physical pile (one of each physical card, up to this many). */
+  physicalPileSize: number;
+  /** Physical cards drawn at setup, and by each team at each faceoff. */
+  physicalSetupDraw: number;
+  physicalFaceoffDraw: number;
+  /** Added to an attack when the attacker has the body Affinity printed on the card. */
+  affinityAttackBonus: number;
+  /** A player holding the ball may make a physical attack. */
+  attackWithBall: boolean;
+  /** Against any physical attack: this Affinity adds to the target's Speed to dodge, */
+  physicalDodge: { affinity: string; amount: number };
+  /** and this one to their Toughness. */
+  physicalEndurance: { affinity: string; amount: number };
+  /** Turns in the penalty box, by the card's tier ('card'), or by what the attack did ('result'). */
+  penaltyLength: 'card' | 'result';
+  penaltyTurns: Record<PhysicalTier, number>;
+  /** With penaltyLength 'result': turns for no hurt (or only Shaken), Injured, and Knocked out or carried off. */
+  penaltyTurnsByResult: { none: number; injured: number; out: number };
+  /** If the other team scores, a team's penalized players all come back at once. */
+  powerPlayReturn: boolean;
+  /** Nobody can be substituted into a penalized player's spot. */
+  penaltyNoSubstitution: boolean;
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -193,6 +223,19 @@ export const DEFAULT_CONFIG: GameConfig = {
   shakenPenalty: 2,
   knockedOutReturn: 4,
   foulTiming: 'before',
+  physicalAttacks: true,
+  physicalPileSize: 16,
+  physicalSetupDraw: 2,
+  physicalFaceoffDraw: 1,
+  affinityAttackBonus: 1,
+  attackWithBall: false,
+  physicalDodge: { affinity: 'divination.danger-sense', amount: 1 },
+  physicalEndurance: { affinity: 'body.endurance', amount: 1 },
+  penaltyLength: 'card',
+  penaltyTurns: { minor: 1, major: 2, brutal: 3 },
+  penaltyTurnsByResult: { none: 1, injured: 2, out: 3 },
+  powerPlayReturn: true,
+  penaltyNoSubstitution: true,
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

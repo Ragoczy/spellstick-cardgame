@@ -76,10 +76,14 @@ export function countCast(s: GameState, side: Side, pos: Pos): void {
   if (slot) slot.casts = (slot.casts ?? 0) + 1;
 }
 
-/** Puts a card on its owner's discard pile. An injured player's injury goes back to the injury deck. */
+/**
+ * Puts a card on its owner's discard pile. An injured player's injury goes back to the injury deck.
+ * A physical card goes to the Physical discard pile instead (v0.17).
+ */
 export function toDiscard(s: GameState, side: Side, uid: Uid): void {
   releaseInjury(s, uid);
-  s.teams[side].discard.push(uid);
+  if (defOf(s, uid).kind === 'physical') s.teams[side].physicalDiscard.push(uid);
+  else s.teams[side].discard.push(uid);
 }
 
 export function statOf(def: PlayerCardDef, stat: StatName): number {
@@ -147,9 +151,14 @@ export function handIsFull(s: GameState, side: Side): boolean {
   return s.teams[side].hand.length >= s.config.handLimit;
 }
 
+/** Whether a card is a player card (a field player or a goalie). */
+export function isPlayerCard(def: CardDef): def is PlayerCardDef {
+  return def.kind === 'field' || def.kind === 'goalie';
+}
+
 /** Whether the side holds a player who could substitute: any field player, or a goalie. */
 export function canSubstitute(s: GameState, side: Side): boolean {
-  return s.teams[side].hand.some((uid) => defOf(s, uid).kind !== 'spell');
+  return s.teams[side].hand.some((uid) => isPlayerCard(defOf(s, uid)));
 }
 
 /** The player at a spot came on at this turn's Draw step, so can't act yet (RULES.md "Turn sequence"). */
@@ -170,7 +179,7 @@ export function discardTopOfPile(s: GameState, side: Side, pile: Pile, ev: GameE
 
 /** The pile a card belongs in. */
 export function pileFor(def: CardDef): Pile {
-  return def.kind === 'spell' ? 'spells' : 'players';
+  return def.kind === 'spell' ? 'spells' : def.kind === 'physical' ? 'physical' : 'players';
 }
 
 /**
@@ -179,6 +188,7 @@ export function pileFor(def: CardDef): Pile {
  * only the Draw step at the start of a turn can end the game (RULES.md "End of the game").
  */
 export function drawCards(s: GameState, side: Side, count: number, reason: DrawReason, ev: GameEvent[], pile: Pile = 'spells'): number {
+  if (pile === 'physical') return drawPhysical(s, side, count, reason, ev);
   const team = s.teams[side];
   const other: Pile = pile === 'players' ? 'spells' : 'players';
   const drawn: Uid[] = [];
@@ -190,6 +200,29 @@ export function drawCards(s: GameState, side: Side, count: number, reason: DrawR
   team.hand.push(...drawn);
   if (drawn.length > 0) {
     ev.push({ type: 'drew', side, count: drawn.length, reason, pile, secret: { cards: drawn.map((uid) => cardView(s, uid)) } });
+  }
+  return drawn.length;
+}
+
+/**
+ * Draws from the Physical pile (v0.17). When it runs out, its discards are shuffled into a new
+ * pile. It never switches to another pile, and it isn't part of the game clock.
+ */
+function drawPhysical(s: GameState, side: Side, count: number, reason: DrawReason, ev: GameEvent[]): number {
+  const team = s.teams[side];
+  const drawn: Uid[] = [];
+  for (let i = 0; i < count; i++) {
+    if (team.physical.length === 0 && team.physicalDiscard.length > 0) {
+      [team.physical, s.rng] = shuffle(team.physicalDiscard, s.rng);
+      team.physicalDiscard = [];
+    }
+    const uid = team.physical.pop();
+    if (!uid) break;
+    drawn.push(uid);
+  }
+  team.hand.push(...drawn);
+  if (drawn.length > 0) {
+    ev.push({ type: 'drew', side, count: drawn.length, reason, pile: 'physical', secret: { cards: drawn.map((uid) => cardView(s, uid)) } });
   }
   return drawn.length;
 }

@@ -62,7 +62,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
       return isMe(e.side) && e.secret ? info(`You put ${e.secret.card.def.name} in goal, face down.`) : null;
     case 'drew': {
       if (e.reason === 'turn') {
-        return isMe(e.side) ? null : info(`${opp.Name} draws a ${e.pile === 'players' ? 'player' : 'spell'}.`);
+        return isMe(e.side) ? null : info(`${opp.Name} draws a ${e.pile === 'players' ? 'player' : e.pile === 'physical' ? 'physical card' : 'spell'}.`);
       }
       if (!isMe(e.side)) return e.reason === 'setup' ? null : info(`${opp.Name} draws ${e.count} card${e.count === 1 ? '' : 's'}.`);
       const names = e.secret?.cards.map((c) => c.def.name).join(', ');
@@ -93,6 +93,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
         case 'penalty': return info(`${who(a.side)} ${verb(a.side, 'take', 'takes')} a penalty with ${at(a.side, a.pos)}.${rolls}`);
         case 'hit': return info(`${capitalize(at(a.side, a.pos))} goes after ${at(e.defender.side, e.defender.pos)}!${rolls}`);
         case 'faceoff': return rolls ? info(rolls.trim()) : null;
+        case 'attack': return rolls ? info(rolls.trim()) : null;
       }
       return null;
     }
@@ -206,8 +207,23 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
         : e.result === 'injured'
           ? 'injured.'
           : `knocked out! They go beside the mat and roll to come back at each faceoff.`;
+      if (e.roll === undefined) return { text: `${e.cause}! ${where} (${e.card.def.name}) is ${result}`, tone: isMe(e.side) ? 'bad' : 'good' };
       return { text: `${e.cause}! ${where} (${e.card.def.name}) is hurt. Severity roll ${e.roll}: ${result}`, tone: isMe(e.side) ? 'bad' : 'good' };
     }
+    case 'attackDeclared':
+      return info(`${who(e.side)} ${verb(e.side, 'play', 'plays')} ${e.card.def.name}: ${at(e.side, e.attacker)} attacks ${at(otherSide(e.side), e.target)}!`);
+    case 'ballDropped':
+      return { text: `${capitalize(at(e.side, e.pos))} drops the ball.`, tone: isMe(e.side) ? 'bad' : 'good' };
+    case 'penaltyCheck':
+      return e.called
+        ? { text: `${capitalize(whose(e.side))} attacker rolled a 1, then the penalty die came up 1 too: the referee calls a penalty!`, tone: isMe(e.side) ? 'bad' : 'good' }
+        : info(`${capitalize(whose(e.side))} attacker rolled a 1, so the referee looked: penalty die ${e.roll}, no penalty.`);
+    case 'penalized':
+      return { text: `${capitalize(at(e.side, e.pos))} (${e.card.def.name}) goes to the penalty box for ${e.turns} turn${e.turns === 1 ? '' : 's'}. The spot stays empty and nobody can come on there until the penalty is over.`, tone: isMe(e.side) ? 'bad' : 'good' };
+    case 'penaltyServed':
+      return info(`${capitalize(whose(e.side))} ${e.card.def.name} is back from the penalty box (${posName(e.pos, lanes)}).`);
+    case 'powerPlayReturn':
+      return info(`Power play over: ${isMe(e.side) ? 'your' : 'their'} penalized players are back after the goal.`);
     case 'sentOff':
       return { text: `The dice match (${e.roll} and ${e.roll}): the referee saw the foul! ${capitalize(at(e.side, e.pos))} (${e.card.def.name}) is sent off for the game. The spot stays empty until ${isMe(e.side) ? 'you substitute' : `${opp.name} substitutes`} at a Draw step.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'stoodUp':

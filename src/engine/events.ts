@@ -38,9 +38,9 @@ export interface Breakdown {
   printed: number;
 }
 
-export type DrawReason = 'setup' | 'turn' | 'recall' | 'ability' | 'regroup';
-/** What hurt a player: a hit, a dirty play, or (v0.17) being knocked down by a tackle. */
-export type InjurySource = 'hit' | 'dirty_play' | 'tackle';
+export type DrawReason = 'setup' | 'turn' | 'recall' | 'ability' | 'regroup' | 'faceoff';
+/** What hurt a player: a hit, a dirty play, or (v0.17) being knocked down by a tackle or a physical attack. */
+export type InjurySource = 'hit' | 'dirty_play' | 'tackle' | 'attack';
 /** How badly a player was hurt (v0.17). */
 export type Severity = 'shaken' | 'injured' | 'knockedOut';
 
@@ -125,16 +125,29 @@ export type GameEvent =
    */
   | { type: 'knockedDown'; side: Side; pos: Pos; card: CardView; toughness: number; roll: number; hurt: boolean }
   /**
-   * A player was hurt and rolled for how badly (v0.17). An injury is followed by an 'injured'
+   * A player was hurt and rolled for how badly (v0.17); no roll means they were simply Shaken (a
+   * physical card's own rule). An injury is followed by an 'injured'
    * event; a knocked-out player leaves the field (then a forced substitution, or an empty spot).
    * until: a Shaken player stands up at the end of this turn.
    */
-  | { type: 'hurt'; side: Side; pos: Pos; card: CardView; source: InjurySource; cause: string; roll: number; result: Severity; until?: number }
+  | { type: 'hurt'; side: Side; pos: Pos; card: CardView; source: InjurySource; cause: string; roll?: number; result: Severity; until?: number }
   /**
    * The referee (v0.17): the two contest dice matched (both showed `roll`), so this side's player,
    * who fouled, is sent off for the game. Their spot stays empty until a Substitute fills it.
    */
   | { type: 'sentOff'; side: Side; pos: Pos; card: CardView; roll: number }
+  /** A physical attack (v0.17): `side`'s player at `attacker` plays this card against the opposing player at `target`. */
+  | { type: 'attackDeclared'; side: Side; card: CardView; attacker: FieldPos; target: FieldPos }
+  /** A physical attack won: the target dropped the ball. */
+  | { type: 'ballDropped'; side: Side; pos: Pos }
+  /** The attacker's final die was 1, so they rolled the penalty die: another 1 and the referee calls a penalty. */
+  | { type: 'penaltyCheck'; side: Side; pos: Pos; roll: number; called: boolean }
+  /** A penalty (v0.17): the player goes to the penalty box for this many turns, and their spot is empty. */
+  | { type: 'penalized'; side: Side; pos: FieldPos; card: CardView; turns: number }
+  /** A penalty is over: the player is back in their spot. */
+  | { type: 'penaltyServed'; side: Side; pos: FieldPos; card: CardView }
+  /** Power play: the other team scored, so `side`'s penalized players are all back. */
+  | { type: 'powerPlayReturn'; side: Side; cards: CardView[] }
   /** A Shaken player stood up: at the end of their team's turn, or at full time. */
   | { type: 'stoodUp'; side: Side; pos: Pos; card: CardView }
   /** At a faceoff, a knocked-out player rolled to come back: returned means back in the hand. */

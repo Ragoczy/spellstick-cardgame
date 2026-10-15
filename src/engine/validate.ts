@@ -3,7 +3,8 @@
 
 import type { Action } from './actions';
 import { castsLeft, defOf, isActionSpell, isFoulSpell, isReactionSpell, justCameOn, slotAt } from './board';
-import { isShaken } from './injuries';
+import { inPenaltyBox, isShaken } from './injuries';
+import { PHYSICAL_REACTIONS, type PhysicalCardDef } from './cards';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
 import { reactionFits, type SpellCardDef } from './cards';
@@ -82,6 +83,31 @@ const NEEDS_REST = 'That player has cast as many spells as they have Resonants. 
 const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
 const SHAKEN = "That player is Shaken, so they can't pass, shoot, tackle, or cast until they stand up.";
 const DIRTY_PLAYS_FIRST = 'A dirty play is a foul: declare it before the dice, not after.';
+const IN_THE_BOX = "That player is in the penalty box: nobody can come on in their spot until the penalty is over.";
+
+/**
+ * Whether a physical attack is allowed (v0.17): your standing field player (not holding the
+ * ball) attacks the opposing player in their spot, or in an adjacent lane of that row with Hooking.
+ */
+function canAttack(s: GameState, side: Side, card: string, attacker: FieldPos, target: FieldPos): string | null {
+  if (!s.config.physicalAttacks) return 'There are no physical attacks in this game.';
+  if (!inHand(s, side, card) || defOf(s, card).kind !== 'physical') return 'Attack with a physical card from your hand.';
+  const def = defOf(s, card) as PhysicalCardDef;
+  if (!validField(s, attacker) || !slotAt(s, side, attacker)) return 'Choose one of your field players to attack.';
+  const busy = cantAct(s, side, attacker);
+  if (busy) return busy;
+  if (!s.config.attackWithBall && s.ball?.side === side && samePos(s.ball.pos, attacker)) return "A player holding the ball can't attack.";
+  if (!validField(s, target)) return 'Attack an opposing field player.';
+  const facing = opposite(attacker);
+  const reach = def.ability?.effect === 'reach' && target.area === facing.area && Math.abs(target.lane - facing.lane) === 1;
+  if (!samePos(target, facing) && !reach) return def.ability?.effect === 'reach'
+    ? 'Attack the opposing player in your spot, or one lane over in that row.'
+    : 'Attack the opposing player in your spot.';
+  if (!slotAt(s, otherSide(side), target)) return 'There is nobody there to attack.';
+  if (def.ability?.effect === 'needs_holder' && !(s.ball?.side === otherSide(side) && samePos(s.ball.pos, target))) return `${def.name} only works against the ball carrier.`;
+  if (def.ability?.effect === 'needs_shaken' && !isShaken(s, otherSide(side), target)) return `${def.name} only works against a Shaken player.`;
+  return null;
+}
 
 /** Why the player in a spot can't pass, shoot, tackle, or cast right now, or null if they can. */
 function cantAct(s: GameState, side: Side, pos: Pos): string | null {
@@ -140,6 +166,15 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'physicalReaction': {
+      if (p.kind !== 'physicalReaction') return "It isn't time for a physical reaction.";
+      if (action.card === null) return null;
+      if (!inHand(s, side, action.card)) return 'Play a physical card from your hand.';
+      const def = defOf(s, action.card);
+      if (def.kind !== 'physical' || def.ability?.effect !== p.trigger) return "That card can't be played now.";
+      return null;
+    }
+
     case 'foul': {
       if (p.kind !== 'foul') return "It isn't time to declare a foul.";
       if (action.card === null) return null;
@@ -188,6 +223,7 @@ export function validateAction(s: GameState, action: Action): string | null {
         return 'Replace a goalie with a goalie, or a field player with a field player.';
       }
       if (action.pos.area === 'goal' && mustClear(s, side)) return GOALIE_CLEARING;
+      if (s.config.penaltyNoSubstitution && inPenaltyBox(s, side, action.pos)) return IN_THE_BOX;
       return null;
     }
 
@@ -220,6 +256,14 @@ export function validateAction(s: GameState, action: Action): string | null {
 
     case 'tackle':
       return canTackle(s, side);
+
+    case 'attack': {
+      const def = defOf(s, action.card);
+      if (def.kind === 'physical' && def.ability && PHYSICAL_REACTIONS.has(def.ability.effect)) {
+        return `${def.name} is a reaction: ${def.when ?? 'play it when it says'}`;
+      }
+      return canAttack(s, side, action.card, action.attacker, action.target);
+    }
 
 
     case 'regroup': {

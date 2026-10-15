@@ -6,7 +6,7 @@ import type { Area } from './cards';
 import type { GameConfig, InjuryDef } from './config';
 import { cardView, castsLeftIn, injuryOf } from './board';
 import type { CardView, GameEvent } from './events';
-import { AREAS, otherSide, type Pos, type Side } from './field';
+import { AREAS, otherSide, type FieldPos, type Pos, type Side } from './field';
 import type { GameResult, GameState, Pending, Shootout, Slot } from './state';
 
 export type SlotView =
@@ -72,6 +72,11 @@ export interface PlayerView {
     discard: CardView[];
     /** Knocked-out players, face up beside the mat (v0.17). */
     knockedOut: CardView[];
+    /** Physical cards (v0.17): left in the pile, and played or discarded (face up). */
+    physicalLeft: number;
+    physicalDiscard: CardView[];
+    /** Players in the penalty box (public): where they'll come back, and turns left. */
+    penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -82,6 +87,9 @@ export interface PlayerView {
     spellsLeft: number;
     discard: CardView[];
     knockedOut: CardView[];
+    physicalLeft: number;
+    physicalDiscard: CardView[];
+    penaltyBox: { card: CardView; pos: FieldPos; turnsLeft: number }[];
     goalie: SlotView;
     lineup: Record<Area, SlotView[]>;
   };
@@ -105,6 +113,15 @@ function slotView(s: GameState, slot: Slot | null, mine: boolean): SlotView {
   // Injury cards are face up, so an injury shows even on a player you can't see. So does a sideways card.
   const injury = injuryOf(s, slot.uid);
   return { state: 'unknown', ...(injury ? { injury } : {}), ...(slot.shakenUntil !== undefined ? { shaken: true } : {}) };
+}
+
+/** A team's Physical pile count, Physical discards, and penalty box (all public). */
+function physicalOf(s: GameState, team: GameState['teams'][Side]) {
+  return {
+    physicalLeft: team.physical.length,
+    physicalDiscard: team.physicalDiscard.map((uid) => cardView(s, uid)),
+    penaltyBox: team.penaltyBox.map((e) => ({ card: cardView(s, e.uid), pos: e.pos, turnsLeft: e.turnsLeft })),
+  };
 }
 
 function lineupView(s: GameState, side: Side, mine: boolean): Record<Area, SlotView[]> {
@@ -154,6 +171,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       spellsLeft: my.spells.length,
       discard: my.discard.map((uid) => cardView(s, uid)),
       knockedOut: my.knockedOut.map((uid) => cardView(s, uid)),
+      ...physicalOf(s, my),
       goalie: slotView(s, my.goalie, true),
       lineup: lineupView(s, me, true),
     },
@@ -164,6 +182,7 @@ export function viewFor(s: GameState, me: Side): PlayerView {
       spellsLeft: their.spells.length,
       discard: their.discard.map((uid) => cardView(s, uid)),
       knockedOut: their.knockedOut.map((uid) => cardView(s, uid)),
+      ...physicalOf(s, their),
       goalie: slotView(s, their.goalie, false),
       lineup: lineupView(s, them, false),
     },

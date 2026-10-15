@@ -1,7 +1,6 @@
 // Dev preview of the full card design: one of each kind of card, at the sizes the game would use.
 // Open the game with ?cards in the address (for example http://localhost:5173/?cards).
 
-import { physicalCards } from '../data/physicalCards';
 import { prototypeCards } from '../data/prototype';
 import type { CardDef, PlayerRole } from '../engine';
 import { Card, CardBack } from './Card';
@@ -9,6 +8,7 @@ import { CardFace } from './CardFace';
 import { cardArt } from './cardArt';
 
 const byId = (id: string) => prototypeCards.cards.find((c) => c.id === id);
+const physicalCards = prototypeCards.cards.filter((c) => c.kind === 'physical');
 
 /** A player with art, a goalie, a player without art yet, both kinds of spell, and the promo card. */
 function samples(): CardDef[] {

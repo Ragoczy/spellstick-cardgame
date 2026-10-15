@@ -467,7 +467,9 @@ losing the caster), and rerolls that break or chase doubles. Tests: `tests/rules
 spot stays empty; the ball is picked up; the foul still takes effect) and
 `tests/rules/dice.test.ts` (no reroll offered for Toughness, severity, or return rolls).
 
-**Phase c2: physical attacks and the penalty box.**
+**Phase c2: physical attacks and the penalty box.** *(Done 2026-10-15: 5.70 hurts a game,
+real injuries 2.87, 0.17 penalties; turns 50.7 and spells cast 13.5 now miss. See
+`reports/sim-2026-10-15-v17c2.md`.)*
 - Engine: `config.ts` (`physicalAttacks`, `physicalPileSize`, `physicalSetupDraw`,
   `physicalFaceoffDraw`, `affinityAttackBonus`, `tierModifiers`, `penaltyLength`,
   `powerPlayReturn`, `penaltyNoSubstitution`), `cards.ts` (a `physical` card kind with tier,

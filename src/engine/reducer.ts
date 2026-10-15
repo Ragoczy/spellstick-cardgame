@@ -7,7 +7,7 @@ import {
   cardView, countCast, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand,
 } from './board';
 import type { ActionSpellDef } from './cards';
-import { callDice, playFoul, playReaction, startContest } from './contest';
+import { callDice, playFoul, playPhysicalReaction, playReaction, startAttack, startContest } from './contest';
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
@@ -40,6 +40,8 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'substitute': substitute(s, action, ev); break;
     case 'regroup': regroup(s, side, action.discard, ev); break;
     case 'foul': playFoul(s, action.card, ev); break;
+    case 'attack': startAttack(s, side, action.card, action.attacker, action.target, ev); break;
+    case 'physicalReaction': playPhysicalReaction(s, action.card, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
     case 'callDice': callDice(s, action.roll, ev); break;
     case 'shootoutPick': penalty(s, side, action.pos, ev); break;
@@ -92,6 +94,10 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   const spots = 3 * s.config.lanes;
   drawCards(s, side, spots + s.config.setupExtraPlayers, 'setup', ev, 'players');
   drawCards(s, side, s.config.setupSpells, 'setup', ev, 'spells');
+  if (s.config.physicalAttacks) {
+    [team.physical, s.rng] = shuffle(team.physical, s.rng);
+    drawCards(s, side, s.config.physicalSetupDraw, 'setup', ev, 'physical');
+  }
 
   s.pending = side === 'A' ? { kind: 'chooseGoalie', side: 'B' } : { kind: 'placeLineup', side: 'A' };
 }
@@ -129,6 +135,7 @@ function pass(s: GameState, side: Side, to: FieldPos, ev: GameEvent[]): void {
     attacker: { side, pos: to, stat: 'speed', use: 'receive', spell: null, modifiers },
     defender: { side: otherSide(side), pos: opposite(to), stat: 'defense', use: 'intercept', spell: null, modifiers: [] },
     tiesGoTo: s.config.passTiesGoTo,
+    passer: s.ball!.pos,
   }, ev);
 }
 

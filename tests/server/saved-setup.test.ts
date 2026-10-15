@@ -23,15 +23,15 @@ describe('savedSetup', () => {
   });
 
   it('gives matches from before v0.17 the old Shield, injuries (no knockdowns), and dirty plays (no referee)', () => {
-    const { shieldEffect: _, knockdowns: __, foulTiming: ___, ...oldConfig } = makeConfig();
+    const { shieldEffect: _, knockdowns: __, foulTiming: ___, physicalAttacks: ____, ...oldConfig } = makeConfig();
     const setup = savedSetup({ seed: 1, cardSet: prototypeCards, config: oldConfig });
-    expect(setup.config).toMatchObject({ shieldEffect: 'zero', knockdowns: false, foulTiming: 'reaction' });
+    expect(setup.config).toMatchObject({ shieldEffect: 'zero', knockdowns: false, foulTiming: 'reaction', physicalAttacks: false });
   });
 
   it('replays a match from before v0.17 exactly as it was played', () => {
     // Games played with the old Shield, then replayed from a config saved before shieldEffect existed.
-    const played = makeConfig({ shieldEffect: 'zero', knockdowns: false, foulTiming: 'reaction', setupSpells: 2 });
-    const { shieldEffect: _, knockdowns: __, foulTiming: ___, ...saved } = played;
+    const played = makeConfig({ shieldEffect: 'zero', knockdowns: false, foulTiming: 'reaction', physicalAttacks: false, setupSpells: 2 });
+    const { shieldEffect: _, knockdowns: __, foulTiming: ___, physicalAttacks: ____, ...saved } = played;
     for (const seed of [1, 2, 3]) {
       const record = runGame({ seed, cardSet: prototypeCards, config: played }, { A: heuristicAgent(seed, played), B: heuristicAgent(seed + 10, played) });
       const replayed = replay(savedSetup({ seed, cardSet: prototypeCards, config: saved }), record.actions);
@@ -64,5 +64,6 @@ describe('savedSetup', () => {
     expect(setup.config.shieldEffect).toBe('minus');
     expect(setup.config.knockdowns).toBe(true);
     expect(setup.config.foulTiming).toBe('before');
+    expect(setup.config.physicalAttacks).toBe(true);
   });
 });

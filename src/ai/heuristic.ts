@@ -17,10 +17,14 @@
 //   row for a face-down player, whose card it can't see). Shaken players count as weaker.
 // - Fouls (v0.17) are declared before the dice: worth it when the chance of winning times the hurt
 //   beats the 1-in-6 risk of the referee sending its player off. Rerolls break or chase doubles.
+// - Physical attacks (v0.17) are worth the chance of winning times the ball (if the target has it)
+//   and the hurt, less the small chance of a penalty and the card. Late Hit and Elbow the same way.
 
 import { adjustAmount, adjustPenalty, affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
-import { NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse } from '../engine/cards';
+import {
+  familyOf, NUMERIC_EFFECTS, type Area, type CardDef, type FieldCardDef, type PhysicalCardDef, type PlayerCardDef, type SpellCardDef, type StatName, type StatUse,
+} from '../engine/cards';
 import type { GameConfig, InjuryDef, InjuryStat } from '../engine/config';
 import { DEFAULT_CONFIG } from '../engine/config';
 import type { CardView } from '../engine/events';
@@ -72,6 +76,10 @@ const TOUGHNESS_GUESS: Record<Area, number> = { defense: 4.5, midfield: 4, forwa
 const SENT_OFF_WORTH = 0.15;
 /** What playing a dirty play as a foul costs in cards: little, since a dirty play has no other use. */
 const FOUL_CARD_COST = 0.03;
+/** Rough worth of keeping a physical attack card in hand. */
+const PHYSICAL_CARD_VALUE = 0.03;
+/** Rough worth (as a loss) of each turn a player spends in the penalty box, their spot empty. */
+const PENALTY_TURN_WORTH = 0.05;
 /** Worth of substituting out a Shaken player, who comes back standing. */
 const SHAKEN_SUB_WORTH = 0.015;
 
@@ -227,6 +235,12 @@ class Thinker {
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
       case 'foul': return this.scoreFoul(action.card);
+      case 'attack': return this.currentValue() + this.attackGain(this.handCard(action.card) as PhysicalCardDef, action.attacker, action.target);
+      case 'physicalReaction': {
+        const pending = this.view.pending;
+        if (action.card === null || pending.kind !== 'physicalReaction') return 0;
+        return this.attackGain(this.handCard(action.card) as PhysicalCardDef, pending.attacker, pending.target);
+      }
       case 'react': return this.scoreReaction(action.card);
       case 'callDice': return action.roll ? this.scoreDice() : 0;
       case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
@@ -523,13 +537,14 @@ class Thinker {
   }
 
   /**
-   * Chance that a knocked-down player at `pos` is hurt: a roll above their Toughness. A face-down
-   * opponent's Toughness can't be seen, so it's guessed by row.
+   * Chance that a knocked-down player at `pos` is hurt: a roll above their Toughness (plus
+   * `modifier`, from a physical card). A face-down opponent's Toughness can't be seen, so it's
+   * guessed by row.
    */
-  private knockdownChance(owner: 'mine' | 'opponent', pos: Pos): number {
+  private knockdownChance(owner: 'mine' | 'opponent', pos: Pos, modifier = 0): number {
     if (!isFieldPos(pos)) return 0;
     const player = knownPlayer(this.view, owner, pos);
-    const toughness = player?.kind === 'field' ? player.toughness : TOUGHNESS_GUESS[pos.area];
+    const toughness = (player?.kind === 'field' ? player.toughness : TOUGHNESS_GUESS[pos.area]) + modifier;
     const die = this.config.contactDie;
     return Math.min(1, Math.max(0, die - toughness) / die);
   }
@@ -668,6 +683,55 @@ class Thinker {
     return card?.def.kind === 'spell' && card.def.ability.effect === 'dirty_play';
   }
 
+  // ---- Physical attacks (v0.17) ----
+
+  /**
+   * What a physical attack is worth, beyond what I have now: if it wins, the target drops the ball
+   * (if they have it) and may be hurt. Less the chance of a penalty (a 1 on my die, then another 1)
+   * and the card itself. Spearing risks my own player too.
+   */
+  private attackGain(def: PhysicalCardDef, attacker: FieldPos, target: FieldPos): number {
+    const attackerCard = knownPlayer(this.view, 'mine', attacker);
+    const targetCard = knownPlayer(this.view, 'opponent', target);
+    if (!attackerCard) return -1;
+    const mods: Modifier[] = def.bonus ? [{ label: def.name, amount: def.bonus }] : [];
+    if (this.hasAffinity(attackerCard, def.affinity)) mods.push({ label: 'Affinity', amount: this.config.affinityAttackBonus });
+    const ball = this.view.ball;
+    const theyHoldIt = !!ball && ball.side !== this.me && samePos(ball.pos, target);
+    const ability = def.ability;
+    if (ability?.effect === 'vs_holder' && theyHoldIt) mods.push({ label: 'Has the ball', amount: ability.params.amount });
+    if (ability?.effect === 'pile_on') {
+      const helpers = [attacker.lane - 1, attacker.lane + 1].filter((lane) => {
+        if (lane < 0 || lane >= this.view.lanes) return false;
+        const slot = slotOf(this.view, 'mine', { area: attacker.area, lane });
+        return slot.state !== 'empty' && !slot.shaken;
+      }).length;
+      if (helpers) mods.push({ label: 'Pile-on', amount: helpers * ability.params.amount });
+    }
+    const stat: StatName = def.uses === 'muscle' ? 'defense' : 'speed';
+    const mine = this.myValue(attacker, stat, 'attack', mods) + 0.6 * this.bestBoost(attacker, 'attack');
+    const dodge = targetCard && this.hasAffinity(targetCard, this.config.physicalDodge.affinity) ? this.config.physicalDodge.amount : 0;
+    const p = this.chance(mine, this.theirValue(target, 'speed', 'evade') + dodge, false);
+
+    const ballGain = theyHoldIt ? this.afterGaining(attacker) - this.currentValue() : 0;
+    let hurt = 0;
+    if (ability?.effect === 'only_shaken') hurt = SHAKEN_WORTH * this.unit();
+    else if (def.toughness !== null) {
+      const endurance = targetCard && this.hasAffinity(targetCard, this.config.physicalEndurance.affinity) ? this.config.physicalEndurance.amount : 0;
+      const chance = ability?.effect === 'shaken_anyway' ? 1 : this.knockdownChance('opponent', target, def.toughness + endurance);
+      hurt = chance * this.injuryWorth(target, true);
+    }
+    const selfRisk = ability?.effect === 'self_check' ? this.knockdownChance('mine', attacker) * this.ownHurtWorth() * this.unit() : 0;
+    const die = this.config.contestDie || 6;
+    const penaltyRisk = (1 / die) * (1 / this.config.contactDie) * this.config.penaltyTurns[def.tier] * PENALTY_TURN_WORTH * this.unit();
+    return p * (ballGain + hurt) - selfRisk - penaltyRisk - PHYSICAL_CARD_VALUE * this.unit();
+  }
+
+  /** Whether a player has this Affinity: exactly, or their whole family. */
+  private hasAffinity(player: PlayerCardDef, affinity: string): boolean {
+    return player.resonants.some((r) => r.affinity === affinity || r.affinity === familyOf(affinity));
+  }
+
   // ---- Fouls (v0.17) ----
 
   /**
@@ -766,6 +830,7 @@ class Thinker {
       case 'penalty': return 1;
       case 'hit': return role === 'attacker' ? this.injuryWorth(contest.defender.pos) / this.unit() : 0.05;
       case 'faceoff': return 0.5;
+      case 'attack': return 0.35;
       case 'pass':
         if (attackerArea === 'forward') return role === 'attacker' ? 0.6 : 0.7;
         if (attackerArea === 'defense') return role === 'attacker' ? 0.3 : 0.5;
@@ -788,6 +853,7 @@ class Thinker {
   }
 
   private cardValue(def: CardDef): number {
+    if (def.kind === 'physical') return PHYSICAL_CARD_VALUE;
     if (def.kind === 'spell') {
       if (def.ability.effect === 'mend' && this.hasInjuredPlayer()) return 0.08;
       return SPELL_VALUE[def.ability.effect] ?? 0.05;

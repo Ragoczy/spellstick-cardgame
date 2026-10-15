@@ -18,7 +18,7 @@ const END_REASON: Record<EndReason, string> = {
   turn_cap: 'turn limit reached — this is a bug',
 };
 
-const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit' } as const;
+const CONTEST_LABEL = { faceoff: 'Faceoff', pass: 'Pass', tackle: 'Tackle', shot: 'Shot', penalty: 'Penalty', hit: 'Hit', attack: 'Attack' } as const;
 
 /** "Speed 5 + Fire Boost 3 = 8", "Defense 6 − Shield 3 = 3", or "Defense 0 (shielded)". */
 export function describeValue(b: Breakdown): string {
@@ -100,8 +100,21 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       return `${names[e.side]}'s ${e.card.def.name} is knocked down. Toughness roll ${e.roll} against ${e.toughness}: ${e.hurt ? 'hurt' : 'no harm done'}.`;
     case 'hurt': {
       const result = e.result === 'shaken' ? 'Shaken until the end of their next turn' : e.result === 'injured' ? 'injured' : 'knocked out';
+      if (e.roll === undefined) return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is ${result}.`;
       return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is hurt. Severity roll ${e.roll}: ${result}.`;
     }
+    case 'attackDeclared':
+      return `${names[e.side]}'s player at ${posLabel(e.attacker)} attacks ${posLabel(e.target)} with ${e.card.def.name}!`;
+    case 'ballDropped':
+      return `${names[e.side]}'s player at ${posLabel(e.pos)} drops the ball.`;
+    case 'penaltyCheck':
+      return `${names[e.side]}'s attacker rolled a 1, so the penalty die: ${e.roll}${e.called ? '. The referee calls a penalty!' : ', no penalty.'}`;
+    case 'penalized':
+      return `${names[e.side]}'s ${e.card.def.name} goes to the penalty box for ${e.turns} turn${e.turns === 1 ? '' : 's'}; ${posLabel(e.pos)} is empty.`;
+    case 'penaltyServed':
+      return `${names[e.side]}'s ${e.card.def.name} is back from the penalty box (${posLabel(e.pos)}).`;
+    case 'powerPlayReturn':
+      return `Power play over: ${names[e.side]}'s penalized players are back.`;
     case 'sentOff':
       return `The dice match (${e.roll} and ${e.roll}): the referee saw the foul! ${names[e.side]}'s ${e.card.def.name} is sent off for the game.`;
     case 'stoodUp':

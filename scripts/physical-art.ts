@@ -1,4 +1,4 @@
-// Prompts for placeholder art on the draft physical attack cards (PLAN.md, rules v0.17 Phase c2),
+// Prompts for placeholder art on the physical attack cards (rules v0.17),
 // used by generate-art.ts.
 //
 // Each picture is the foul itself: an attacker in the charcoal-grey kit fouling a target in white,
@@ -7,7 +7,7 @@
 //   - TIER_LOOK: how nasty it looks, and whether the referee has noticed;
 //   - SCENES: what this one card shows.
 
-import type { PhysicalCardDef, PhysicalTier } from '../src/data/physicalCards';
+import type { PhysicalCardDef, PhysicalTier } from '../src/engine/cards';
 
 export const PHYSICAL_COMPOSITION = [
   'Wide landscape composition of one moment in a spellstick match: a foul.',

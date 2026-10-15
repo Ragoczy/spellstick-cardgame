@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 import type { CardDef, InjuryDef, PlayerRole } from '../engine';
-import { cardText, injuryEffect, magicColor, magicLabel } from './labels';
+import { capitalize, cardText, injuryEffect, magicColor, magicLabel } from './labels';
 import { spellWhen } from './spellHelp';
 import { roleLabel } from '../data/playerTypes';
 import { PlayerFigure, type FigurePosition } from './PlayerFigure';
@@ -28,8 +28,9 @@ export const TYPE_POSITION: Record<PlayerRole, FigurePosition> = {
 function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
   const art = cardArt(def.id);
   if (!art) return null;
-  const edge = magicColor(def.kind === 'spell' ? def.magic : def.resonants[0]?.affinity ?? null);
-  const classes = ['tile-art', def.kind === 'spell' ? 'spell' : '', injured ? 'injured' : ''].filter(Boolean).join(' ');
+  const magic = def.kind === 'spell' ? def.magic : def.kind === 'physical' ? def.affinity : def.resonants[0]?.affinity ?? null;
+  const edge = magicColor(magic);
+  const classes = ['tile-art', def.kind === 'spell' || def.kind === 'physical' ? 'spell' : '', injured ? 'injured' : ''].filter(Boolean).join(' ');
   return <span className={classes} style={{ backgroundImage: `url(${art})`, borderColor: edge }} />;
 }
 
@@ -38,14 +39,14 @@ function ArtStrip({ def, injured }: { def: CardDef; injured: boolean }) {
  * their first Resonant's Affinity.
  */
 function Figure({ def, position, injured }: { def: CardDef; position?: FigurePosition; injured: boolean }) {
-  if (def.kind === 'spell' || cardArt(def.id)) return null;
+  if (def.kind === 'spell' || def.kind === 'physical' || cardArt(def.id)) return null;
   const pos = def.kind === 'goalie' ? 'goal' : position ?? (def.role ? TYPE_POSITION[def.role] : 'midfield');
   return <PlayerFigure position={pos} magic={def.resonants[0]?.affinity ?? null} injured={injured} />;
 }
 
 /** Resonant dots. On the field, a dot goes hollow for each Resonant's worth of spells cast. */
 function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: number; castsLeft?: number }) {
-  if (def.kind === 'spell') return null;
+  if (def.kind === 'spell' || def.kind === 'physical') return null;
   const title = castsLeft === undefined ? undefined
     : castsLeft === 0 ? 'No spells left. Substitute this player out to recharge.'
     : `${castsLeft} ${castsLeft === 1 ? 'spell' : 'spells'} left before this player needs a rest`;
@@ -61,6 +62,15 @@ function Resonants({ def, usedDots = 0, castsLeft }: { def: CardDef; usedDots?: 
 
 function Stats({ def }: { def: CardDef }) {
   if (def.kind === 'goalie') return <div className="stats"><span>Save <b>{def.save}</b></span></div>;
+  if (def.kind === 'physical') {
+    // A physical attack card (v0.17): what it attacks with, and its penalty tier.
+    return (
+      <div className="stats spell-line">
+        <span>{def.uses === 'muscle' ? 'Def' : 'Spd'}{def.bonus ? ` +${def.bonus}` : ''}</span>
+        <span>{capitalize(def.tier)} foul</span>
+      </div>
+    );
+  }
   if (def.kind === 'field') {
     return (
       <div className="stats">
@@ -125,11 +135,11 @@ export function Card({ def, injury, position, faceDown, scried, images, castsLef
     <button type="button" className={classes} onClick={onClick} style={{ borderTopColor: colors[def.team] ?? '#555' }}>
       <ArtStrip def={def} injured={Boolean(injury)} />
       <div className="card-name">
-        {def.ability && def.kind !== 'spell' ? <span className="star" title={cardText(def)}>★</span> : null}
+        {def.ability && (def.kind === 'field' || def.kind === 'goalie') ? <span className="star" title={cardText(def)}>★</span> : null}
         {def.name}
       </div>
       <Figure def={def} position={position} injured={Boolean(injury)} />
-      {def.kind !== 'spell' && (def.role || cameOn || shaken) ? (
+      {(def.kind === 'field' || def.kind === 'goalie') && (def.role || cameOn || shaken) ? (
         <div className="card-role">
           {def.role ? roleLabel(def.role) : null}
           {cameOn ? <span className="just-on" title="Came on this turn: can't pass, shoot, tackle, or cast until the next turn">{def.role ? ' · ' : ''}just on</span> : null}

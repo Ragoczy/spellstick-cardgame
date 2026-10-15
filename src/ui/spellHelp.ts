@@ -31,6 +31,10 @@ function slots(view: PlayerView): SlotView[] {
 
 /** Why a spell can't be played right now (for when the player taps it anyway). */
 export function whyNotNow(view: PlayerView, def: CardDef): string | null {
+  if (def.kind === 'physical') {
+    if (def.when) return `${def.name} is a physical reaction: play it ${def.when.charAt(0).toLowerCase()}${def.when.slice(1)}`;
+    return `${def.name} is a physical attack: play it on your turn, as your action, with a standing player who doesn't have the ball, against the opposing player in their spot.`;
+  }
   if (def.kind !== 'spell') return null;
   const pending = view.pending;
   if (pending.kind === 'foul') {

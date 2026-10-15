@@ -3528,6 +3528,280 @@
         "params": {}
       },
       "text": "Pass. They think it went to the other lane: their player there is revealed, and nobody can intercept. Your receiver stays face down."
+    },
+    {
+      "id": "ph-shirt-pull",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Shirt Pull",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.agility",
+      "toughness": null,
+      "severity": null,
+      "text": "No knockdown: the target only drops the ball.",
+      "from": "Soccer"
+    },
+    {
+      "id": "ph-tripping",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Tripping",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": 0,
+      "severity": 0,
+      "ability": {
+        "effect": "vs_holder",
+        "params": {
+          "amount": 2
+        }
+      },
+      "text": "+2 more if the target holds the ball.",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-hooking",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Hooking",
+      "tier": "minor",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": 0,
+      "severity": 0,
+      "ability": {
+        "effect": "reach",
+        "params": {}
+      },
+      "text": "You may attack the opposing player in the next lane of the same row instead.",
+      "from": "Hockey"
+    },
+    {
+      "id": "ph-atomic-wedgie",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Atomic Wedgie",
+      "tier": "minor",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": null,
+      "severity": null,
+      "ability": {
+        "effect": "only_shaken",
+        "params": {}
+      },
+      "text": "No Toughness roll: if you win, the target is Shaken, never worse.",
+      "from": "Made up"
+    },
+    {
+      "id": "ph-slashing",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Slashing",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-cross-check",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Cross-check",
+      "tier": "major",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 0,
+      "text": "",
+      "from": "Lacrosse and hockey"
+    },
+    {
+      "id": "ph-clothesline",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Clothesline",
+      "tier": "major",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "needs_holder",
+        "params": {}
+      },
+      "text": "Only against the ball carrier.",
+      "from": "Football and wrestling"
+    },
+    {
+      "id": "ph-gouge",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Gouge",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.agility",
+      "toughness": -1,
+      "severity": 0,
+      "ability": {
+        "effect": "shaken_anyway",
+        "params": {}
+      },
+      "text": "If the target passes their Toughness roll, they're Shaken anyway.",
+      "from": "Rugby"
+    },
+    {
+      "id": "ph-slew-foot",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Slew-foot",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.agility",
+      "toughness": -2,
+      "severity": 0,
+      "text": "",
+      "from": "Hockey"
+    },
+    {
+      "id": "ph-late-hit",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Late Hit",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "ability": {
+        "effect": "after_pass_or_shot",
+        "params": {}
+      },
+      "when": "After the opposing player in this spot passes or shoots.",
+      "text": "No ball to drop: it can only hurt.",
+      "from": "Football and rugby"
+    },
+    {
+      "id": "ph-elbow",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Elbow",
+      "tier": "major",
+      "uses": "speed",
+      "bonus": 1,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 0,
+      "ability": {
+        "effect": "after_losing",
+        "params": {}
+      },
+      "when": "When the opposing player in this spot beats yours in a contest.",
+      "text": "That result stands. Then attack.",
+      "from": "Soccer and basketball"
+    },
+    {
+      "id": "ph-kneecap",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Kneecap",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.strength",
+      "toughness": -2,
+      "severity": 1,
+      "ability": {
+        "effect": "shaken_is_injured",
+        "params": {}
+      },
+      "text": "If the target is hurt, Shaken counts as Injured.",
+      "from": "Made up"
+    },
+    {
+      "id": "ph-spearing",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Spearing",
+      "tier": "brutal",
+      "uses": "speed",
+      "bonus": 2,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "self_check",
+        "params": {}
+      },
+      "text": "Your player makes a Toughness roll too, win or lose.",
+      "from": "Lacrosse, hockey, and football"
+    },
+    {
+      "id": "ph-chop-block",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Chop Block",
+      "tier": "brutal",
+      "uses": "speed",
+      "bonus": 0,
+      "affinity": "body.speed",
+      "toughness": -2,
+      "severity": 1,
+      "text": "",
+      "from": "Football"
+    },
+    {
+      "id": "ph-stamp",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Stamp",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 3,
+      "affinity": "body.strength",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "needs_shaken",
+        "params": {}
+      },
+      "text": "Only against a Shaken target.",
+      "from": "Rugby"
+    },
+    {
+      "id": "ph-pile-on",
+      "team": "physical",
+      "kind": "physical",
+      "name": "Pile-on",
+      "tier": "brutal",
+      "uses": "muscle",
+      "bonus": 0,
+      "affinity": "body.berserking",
+      "toughness": -1,
+      "severity": 1,
+      "ability": {
+        "effect": "pile_on",
+        "params": {
+          "amount": 1
+        }
+      },
+      "text": "+1 for each of your standing players in the next lane of the same row.",
+      "from": "Rugby"
     }
   ]
 }

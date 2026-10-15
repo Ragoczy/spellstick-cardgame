@@ -24,7 +24,7 @@ const COMPUTER_DELAY_MS = 650;
 const ANNOUNCEMENT_MS = 2600;
 
 const CONTEST_TITLE: Record<ContestKind, string> = {
-  pass: 'Pass', tackle: 'Tackle', shot: 'Shot on goal', faceoff: 'Faceoff', penalty: 'Penalty', hit: 'Hit',
+  pass: 'Pass', tackle: 'Tackle', shot: 'Shot on goal', faceoff: 'Faceoff', penalty: 'Penalty', hit: 'Hit', attack: 'Physical attack',
 };
 
 /** Extra controls for an online match. */

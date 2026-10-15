@@ -11,7 +11,7 @@
 import { cardView, defOf, injuryOf, releaseInjury, setSlotAt, slotAt, takeFromHand, toDiscard } from './board';
 import type { InjuryDef, InjuryStat } from './config';
 import type { GameEvent, InjurySource, Severity } from './events';
-import { isFieldPos, opposite, otherSide, samePos, SIDES, type Pos, type Side } from './field';
+import { isFieldPos, opposite, otherSide, samePos, SIDES, type FieldPos, type Pos, type Side } from './field';
 import type { FieldCardDef, PlayerCardDef, StatName } from './cards';
 import { randomInt } from './rng';
 import type { GameState, Uid } from './state';
@@ -97,40 +97,141 @@ export function isShaken(s: GameState, side: Side, pos: Pos): boolean {
  * A successful tackle knocks the tackled player down: they roll against their Toughness, fine at
  * or below it, hurt above it.
  */
-export function knockDown(s: GameState, side: Side, pos: Pos, cause: string, ev: GameEvent[]): void {
+/** Changes to the contact rolls, from a physical attack card (v0.17). */
+export interface HurtOptions {
+  /** What hurt them (default: a tackle, for a knockdown). */
+  source?: InjurySource;
+  /** Added to the Toughness the roll must beat (negative makes them easier to hurt). */
+  toughness?: number;
+  /** Added to the severity roll. */
+  severity?: number;
+  /** Passing the Toughness roll still leaves them Shaken (Gouge). */
+  shakenAnyway?: boolean;
+  /** A Shaken result counts as Injured (Kneecap). */
+  shakenIsInjured?: boolean;
+}
+
+/** How a hurt turned out, or null if the player wasn't hurt. */
+export type HurtResult = Severity | 'carriedOff' | null;
+
+/**
+ * A successful tackle (or physical attack) knocks the player down: they roll against their
+ * Toughness, fine at or below it, hurt above it.
+ */
+export function knockDown(s: GameState, side: Side, pos: Pos, cause: string, ev: GameEvent[], options: HurtOptions = {}): HurtResult {
   const slot = slotAt(s, side, pos);
-  if (!slot || pos.area === 'goal') return;
-  const toughness = (defOf(s, slot.uid) as FieldCardDef).toughness;
+  if (!slot || pos.area === 'goal') return null;
+  const toughness = (defOf(s, slot.uid) as FieldCardDef).toughness + (options.toughness ?? 0);
   const roll = contactRoll(s);
   const hurt = roll > toughness;
   ev.push({ type: 'knockedDown', side, pos, card: cardView(s, slot.uid), toughness, roll, hurt });
-  if (hurt) hurtPlayer(s, side, pos, 'tackle', cause, ev);
+  const source = options.source ?? 'tackle';
+  if (hurt) return hurtPlayer(s, side, pos, source, cause, ev, options);
+  if (options.shakenAnyway) return shake(s, side, pos, source, cause, ev);
+  return null;
 }
 
 /**
  * Hurts the player in a spot. Since v0.17 they roll for severity: Shaken, Injured, or Knocked out.
  * Before v0.17 every hurt was an injury. Goalies are never hurt.
  */
-export function hurtPlayer(s: GameState, side: Side, pos: Pos, source: InjurySource, cause: string, ev: GameEvent[]): void {
-  if (!s.config.knockdowns) {
-    injurePlayer(s, side, pos, source, cause, ev);
-    return;
-  }
+export function hurtPlayer(s: GameState, side: Side, pos: Pos, source: InjurySource, cause: string, ev: GameEvent[], options: HurtOptions = {}): HurtResult {
   const slot = slotAt(s, side, pos);
-  if (!slot || pos.area === 'goal') return;
-  const roll = contactRoll(s);
+  if (!s.config.knockdowns) {
+    const already = !!slot && !!s.injuries[slot.uid];
+    injurePlayer(s, side, pos, source, cause, ev);
+    return slot && pos.area !== 'goal' ? (already ? 'carriedOff' : 'injured') : null;
+  }
+  if (!slot || pos.area === 'goal') return null;
+  const roll = contactRoll(s) + (options.severity ?? 0);
   const { shaken, injured } = s.config.severity;
-  const result: Severity = roll <= shaken ? 'shaken' : roll <= injured ? 'injured' : 'knockedOut';
+  let result: Severity = roll <= shaken ? 'shaken' : roll <= injured ? 'injured' : 'knockedOut';
+  if (result === 'shaken' && options.shakenIsInjured) result = 'injured';
   const hurt = { type: 'hurt', side, pos, card: cardView(s, slot.uid), source, cause, roll, result } as const;
   if (result === 'shaken') {
     // Shaken again while Shaken: the count starts over. They keep the ball if they have it.
     slot.shakenUntil = shakenUntil(s, side);
     ev.push({ ...hurt, until: slot.shakenUntil });
-    return;
+    return 'shaken';
   }
   ev.push(hurt);
-  if (result === 'injured') injurePlayer(s, side, pos, source, cause, ev);
-  else knockOut(s, side, pos, ev);
+  if (result === 'injured') {
+    const already = !!s.injuries[slot.uid];
+    injurePlayer(s, side, pos, source, cause, ev);
+    return already ? 'carriedOff' : 'injured';
+  }
+  knockOut(s, side, pos, ev);
+  return 'knockedOut';
+}
+
+/** Makes a player Shaken with no severity roll (Atomic Wedgie, and Gouge after a passed Toughness roll). */
+export function shake(s: GameState, side: Side, pos: Pos, source: InjurySource, cause: string, ev: GameEvent[]): HurtResult {
+  const slot = slotAt(s, side, pos);
+  if (!slot || pos.area === 'goal') return null;
+  slot.shakenUntil = shakenUntil(s, side);
+  ev.push({ type: 'hurt', side, pos, card: cardView(s, slot.uid), source, cause, result: 'shaken', until: slot.shakenUntil });
+  return 'shaken';
+}
+
+// ---- The penalty box (v0.17) ----
+
+/** The penalty die: rolled when an attacker's final die is a 1. Another 1 and the referee calls a penalty. */
+export function penaltyRoll(s: GameState): number {
+  return contactRoll(s);
+}
+
+/**
+ * A penalty: the player goes to the penalty box beside the mat, face up, for `turns` turns. Their
+ * spot stays empty meanwhile. A ball they held goes to the opposing player in that spot.
+ */
+export function penalize(s: GameState, side: Side, pos: FieldPos, turns: number, ev: GameEvent[]): void {
+  const slot = slotAt(s, side, pos);
+  if (!slot) return;
+  setSlotAt(s, side, pos, null);
+  // An injured attacker (Spearing) goes to the box injured: nobody comes on in their spot.
+  if (s.forcedSub && s.forcedSub.side === side && samePos(s.forcedSub.pos, pos)) s.forcedSub = null;
+  s.teams[side].penaltyBox.push({ uid: slot.uid, pos, turnsLeft: turns, since: s.turn });
+  ev.push({ type: 'penalized', side, pos, card: cardView(s, slot.uid), turns });
+  dropBall(s, side, pos, ev);
+}
+
+/**
+ * At the end of a team's turn, a turn comes off each of its penalties, except those given this
+ * turn. A player whose penalty is over goes back to their spot (or to the hand, if someone is there).
+ */
+export function servePenalties(s: GameState, side: Side, ev: GameEvent[]): void {
+  const team = s.teams[side];
+  for (const entry of [...team.penaltyBox]) {
+    if (entry.since >= s.turn) continue;
+    entry.turnsLeft -= 1;
+    if (entry.turnsLeft <= 0) endPenalty(s, side, entry.uid, ev);
+  }
+}
+
+/** Every penalized player of a team comes back at once: after the other team scores (power play), or at full time. */
+export function endAllPenalties(s: GameState, side: Side, ev: GameEvent[], powerPlay: boolean): void {
+  const team = s.teams[side];
+  if (team.penaltyBox.length === 0) return;
+  const cards = team.penaltyBox.map((entry) => cardView(s, entry.uid));
+  for (const entry of [...team.penaltyBox]) endPenalty(s, side, entry.uid, ev);
+  if (powerPlay) ev.push({ type: 'powerPlayReturn', side, cards });
+}
+
+function endPenalty(s: GameState, side: Side, uid: string, ev: GameEvent[]): void {
+  const team = s.teams[side];
+  const entry = team.penaltyBox.find((e) => e.uid === uid)!;
+  team.penaltyBox = team.penaltyBox.filter((e) => e.uid !== uid);
+  if (slotAt(s, side, entry.pos)) {
+    team.hand.push(uid);
+  } else {
+    setSlotAt(s, side, entry.pos, { uid, revealed: true, scried: false });
+  }
+  ev.push({ type: 'penaltyServed', side, pos: entry.pos, card: cardView(s, uid) });
+}
+
+/** Whether a field spot is held open for a player in the penalty box. */
+export function inPenaltyBox(s: GameState, side: Side, pos: Pos): boolean {
+  return s.teams[side].penaltyBox.some((e) => samePos(e.pos, pos));
 }
 
 /**

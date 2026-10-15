@@ -3,7 +3,7 @@
 
 import type { Area, CardDef, PlayerCardDef, StatName, StatUse } from './cards';
 import type { GameConfig, InjuryDef } from './config';
-import type { Pos, Side } from './field';
+import type { FieldPos, Pos, Side } from './field';
 
 /** A card instance id within one game, e.g. "A07". Every physical card has its own. */
 export type Uid = string;
@@ -35,14 +35,30 @@ export interface Slot {
   shakenUntil?: number;
 }
 
-/** The two face-down draw piles each team has. */
-export type Pile = 'players' | 'spells';
+/** The face-down draw piles each team has: Players and Spells (the game clock), and since v0.17 Physical. */
+export type Pile = 'players' | 'spells' | 'physical';
+
+/** A player serving a penalty (v0.17). Their spot is empty until they come back. */
+export interface PenaltyEntry {
+  uid: Uid;
+  pos: FieldPos;
+  /** Turns left: one comes off at the end of each of their team's turns after the one they were penalized in. */
+  turnsLeft: number;
+  /** The turn they were penalized in. */
+  since: number;
+}
 
 export interface TeamState {
   /** Draw pile of field players (and the spare goalie). Top of the pile is the end of the list. */
   players: Uid[];
   /** Draw pile of spells. Top of the pile is the end of the list. */
   spells: Uid[];
+  /** Draw pile of physical attack cards (v0.17). Reshuffled from its own discards when empty. */
+  physical: Uid[];
+  /** Played and discarded physical cards (public), shuffled back into the Physical pile when it runs out. */
+  physicalDiscard: Uid[];
+  /** Players in the penalty box (public). */
+  penaltyBox: PenaltyEntry[];
   hand: Uid[];
   /** Public. Newest card last. */
   discard: Uid[];
@@ -87,7 +103,7 @@ export interface ContestSide {
   roll?: number;
 }
 
-export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty' | 'hit';
+export type ContestKind = 'faceoff' | 'pass' | 'tackle' | 'shot' | 'penalty' | 'hit' | 'attack';
 export type ContestRole = 'attacker' | 'defender';
 
 export interface Contest {
@@ -97,7 +113,14 @@ export interface Contest {
   defender: ContestSide;
   /** Who wins a tie: the defender, except at faceoffs where it's the chooser (the attacker). */
   tiesGoTo: ContestRole;
+  /** A physical attack (v0.17): the physical card played. */
+  physical?: Uid;
+  /** A pass: the passer's spot (v0.17: Late Hit can go after them). */
+  passer?: Pos;
 }
+
+/** What gave a side the chance to play a physical reaction card (v0.17). */
+export type PhysicalTrigger = 'after_pass_or_shot' | 'after_losing';
 
 /** The decision the engine is waiting for, and who must make it. */
 export type Pending =
@@ -109,6 +132,11 @@ export type Pending =
   /** Draw step: draw from a pile, or substitute instead (asked when there is a choice to make). */
   | { kind: 'draw'; side: Side }
   | { kind: 'action'; side: Side }
+  /**
+   * A physical reaction card can be played now (v0.17): the player at `attacker` may attack the
+   * opposing player at `target` with a card for this trigger.
+   */
+  | { kind: 'physicalReaction'; side: Side; trigger: PhysicalTrigger; attacker: FieldPos; target: FieldPos }
   /** Before the dice (v0.17): declare a foul (a dirty play) in this contest? */
   | { kind: 'foul'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }

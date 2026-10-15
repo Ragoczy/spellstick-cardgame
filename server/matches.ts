@@ -115,6 +115,9 @@ export function savedSetup(setup: GameSetup): GameSetup {
   if (result.config && !('foulTiming' in result.config)) {
     result = { ...result, config: { ...result.config, foulTiming: 'reaction' } };
   }
+  if (result.config && !('physicalAttacks' in result.config)) {
+    result = { ...result, config: { ...result.config, physicalAttacks: false } };
+  }
   const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
   if (old.elements && !old.families) {
     const { elements, ...rest } = result.cardSet as unknown as { elements: string[] } & Record<string, unknown>;

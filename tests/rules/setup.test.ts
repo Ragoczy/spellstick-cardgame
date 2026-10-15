@@ -45,17 +45,19 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     const s = applyAction(state, { type: 'chooseGoalie', side: 'A', card: chosen! }).state;
     expect(s.teams.A.goalie).toEqual({ uid: chosen, revealed: false, scried: false });
     expect([...s.teams.A.players, ...s.teams.A.hand]).toContain(other);
-    expect(s.teams.A.players.length + s.teams.A.spells.length + s.teams.A.hand.length).toBe(39);
-    expect(s.teams.A.players.every((u) => s.cards[u]!.kind !== 'spell')).toBe(true);
+    // 40 cards less the goalie in goal, plus the 16-card Physical pile.
+    expect(s.teams.A.players.length + s.teams.A.spells.length + s.teams.A.physical.length + s.teams.A.hand.length).toBe(39 + 16);
+    expect(s.teams.A.players.every((u) => s.cards[u]!.kind === 'field' || s.cards[u]!.kind === 'goalie')).toBe(true);
     expect(s.teams.A.spells.every((u) => s.cards[u]!.kind === 'spell')).toBe(true);
   });
 
-  it(`draws ${spots} + 2 players and 3 spells`, () => {
+  it(`draws ${spots} + 2 players, 3 spells, and 2 physical cards`, () => {
     for (let seed = 1; seed <= 10; seed++) {
       const s = chooseFirstGoalie(createGame({ seed, cardSet: prototypeCards, config: { lanes } }).state);
       const hand = s.teams.A.hand.map((u) => s.cards[u]!.kind);
-      expect(hand).toHaveLength(spots + 5);
+      expect(hand).toHaveLength(spots + 7);
       expect(hand.filter((k) => k === 'spell')).toHaveLength(3);
+      expect(hand.filter((k) => k === 'physical')).toHaveLength(2);
       // At most one of the players drawn is the spare goalie, so every spot can be filled.
       expect(hand.filter((k) => k === 'field').length).toBeGreaterThanOrEqual(spots);
     }
@@ -71,7 +73,8 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
       expect(slots).toHaveLength(spots);
       expect(slots.every((slot) => slot && !slot.revealed)).toBe(true);
     }
-    expect(s.teams.A.hand.length).toBe(handBefore - spots);
+    // The opening faceoff follows, and each team draws a physical card for it.
+    expect(s.teams.A.hand.length).toBe(handBefore - spots + s.config.physicalFaceoffDraw);
   });
 
   it("rejects placing a spell, or placing into a filled spot", () => {
@@ -113,7 +116,7 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
 
 describe('dealing players from the shared pool', () => {
   const playerIds = (state: GameState, side: 'A' | 'B') =>
-    Object.entries(state.cards).filter(([uid, def]) => uid.startsWith(side) && def.kind !== 'spell').map(([, def]) => def.id);
+    Object.entries(state.cards).filter(([uid, def]) => uid.startsWith(side) && (def.kind === 'field' || def.kind === 'goalie')).map(([, def]) => def.id);
 
   it('deals each side different players, the same way for the same seed', () => {
     const a = createGame({ seed: 7, cardSet: prototypeCards }).state;

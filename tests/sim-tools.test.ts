@@ -141,7 +141,7 @@ describe('Constructed roster pairs', () => {
   // A stand-in cost until real costs are measured: the sum of the card's numbers.
   const cost = (c: PlayerCardDef) => (c.kind === 'goalie' ? 2 * c.save : c.speed + c.shot + c.defense + c.faceoff);
   const spells = prototypeCards.teams.find((t) => t.id === 'A')!.spells!;
-  const roleOf = new Map(prototypeCards.cards.map((c) => [c.id, c.kind === 'spell' ? 'spell' : c.role]));
+  const roleOf = new Map(prototypeCards.cards.map((c) => [c.id, c.kind === 'field' || c.kind === 'goalie' ? c.role : c.kind]));
   const roles = (ids: string[]) => ids.map((id) => roleOf.get(id));
 
   it('builds legal Defense-heavy and Striker-heavy decks at equal cost', () => {

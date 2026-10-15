@@ -51,8 +51,15 @@ export interface GameTally {
   foulsCaught: number;
   /** Players sent off for the game (v0.17). */
   sentOff: number;
-  /** Penalties called on physical attacks (v0.17). */
+  /** Penalties called on physical attacks (v0.17), and the turns they gave in the penalty box. */
   penalties: number;
+  boxTurns: number;
+  /** Times a power play brought a team's penalized players back. */
+  powerPlays: number;
+  /** Physical attacks (v0.17), how many won, and how many made the target drop the ball. */
+  attacks: number;
+  attacksWon: number;
+  ballDrops: number;
   /** The side that suffered the game's first carry-off or knockout, if any. */
   firstSerious: Side | null;
   /** Shots at a goalie, and the sum of each one's chance to score against an unanswered Shield. */
@@ -96,9 +103,9 @@ export function tallyGame(record: GameRecord): GameTally {
     turns: s.turn,
     goals: s.score.A + s.score.B,
     shots: 0, shotGoals: 0, spellsCast: 0, tackles: 0, tacklesWon: 0, hits: 0, hitsLanded: 0,
-    knockdowns: 0, knockdownHurts: 0, hurts: 0, hurtsBySource: { hit: 0, dirty_play: 0, tackle: 0 },
+    knockdowns: 0, knockdownHurts: 0, hurts: 0, hurtsBySource: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
     shaken: 0, injured: 0, knockedOut: 0, carriedOff: 0,
-    fouls: 0, foulsCaught: 0, sentOff: 0, penalties: 0,
+    fouls: 0, foulsCaught: 0, sentOff: 0, penalties: 0, boxTurns: 0, powerPlays: 0, attacks: 0, attacksWon: 0, ballDrops: 0,
     firstSerious: null, shieldShots: 0, shieldChanceSum: 0,
   };
   for (const e of record.events) {
@@ -118,6 +125,16 @@ export function tallyGame(record: GameRecord): GameTally {
       case 'sentOff':
         t.sentOff += 1;
         t.foulsCaught += 1;
+        break;
+      case 'penalized':
+        t.penalties += 1;
+        t.boxTurns += e.turns;
+        break;
+      case 'powerPlayReturn':
+        t.powerPlays += 1;
+        break;
+      case 'ballDropped':
+        t.ballDrops += 1;
         break;
       case 'knockedDown':
         t.knockdowns += 1;
@@ -151,6 +168,10 @@ export function tallyGame(record: GameRecord): GameTally {
         if (e.kind === 'hit') {
           t.hits += 1;
           t.hitsLanded += won;
+        }
+        if (e.kind === 'attack') {
+          t.attacks += 1;
+          t.attacksWon += won;
         }
         break;
       }
@@ -207,9 +228,13 @@ export class SimStats {
     shot: { count: 0, attackerWins: 0 },
     penalty: { count: 0, attackerWins: 0 },
     hit: { count: 0, attackerWins: 0 },
+    attack: { count: 0, attackerWins: 0 },
   };
   /** Injuries suffered, by the injured team and by what caused them (carry-offs included). */
-  injuries: Record<Side, Record<InjurySource, number>> = { A: { hit: 0, dirty_play: 0, tackle: 0 }, B: { hit: 0, dirty_play: 0, tackle: 0 } };
+  injuries: Record<Side, Record<InjurySource, number>> = {
+    A: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
+    B: { hit: 0, dirty_play: 0, tackle: 0, attack: 0 },
+  };
   carriedOff = 0;
   /** Goals (and shootout penalties) scored into an empty goal. */
   emptyGoalGoals = 0;
@@ -248,7 +273,7 @@ export class SimStats {
   constructor(allCards: CardDef[]) {
     for (const def of allCards) {
       if (def.promo) continue;
-      const role = def.kind === 'spell' ? undefined : def.role;
+      const role = def.kind === 'field' || def.kind === 'goalie' ? def.role : undefined;
       this.cards.set(def.id, {
         id: def.id, name: def.name, team: def.team, kind: def.kind, role,
         played: 0, inContest: 0, contestWins: 0, deckGames: 0, deckWins: 0, draftedGames: 0, draftedWins: 0,

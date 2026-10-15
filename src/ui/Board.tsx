@@ -28,10 +28,14 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
     onClick: () => props.onSpot(side, pos),
   };
   if (slot.state === 'empty') {
-    // Only during play: a player was carried off with nobody to replace them.
+    // Only during play: a player was carried off or sent off with nobody to replace them, or is
+    // in the penalty box (v0.17).
+    const team = side === props.view.me ? props.view.mine : props.view.opponent;
+    const boxed = team.penaltyBox.find((e) => samePos(e.pos, pos));
     return (
       <button type="button" className={`card empty ${common.highlight ? `hl-${common.highlight}` : ''}`} onClick={common.onClick}>
-        {props.view.turn > 0 ? <span className="empty-label">Empty</span> : null}
+        {boxed ? <span className="empty-label" title={`${boxed.card.def.name} is in the penalty box`}>Penalty box: {boxed.turnsLeft}</span>
+          : props.view.turn > 0 ? <span className="empty-label">Empty</span> : null}
       </button>
     );
   }
@@ -39,7 +43,7 @@ function Spot({ slot, side, pos, team, props }: { slot: SlotView; side: Side; po
   // Casting limit: each Resonant is worth castsPerResonant spells, so a dot goes hollow per that many cast.
   const def = slot.card.def;
   const perResonant = props.view.config.castsPerResonant;
-  const usedDots = slot.castsLeft !== undefined && def.kind !== 'spell'
+  const usedDots = slot.castsLeft !== undefined && (def.kind === 'field' || def.kind === 'goalie')
     ? def.resonants.length - Math.ceil(slot.castsLeft / perResonant)
     : 0;
   return (

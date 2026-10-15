@@ -3,7 +3,7 @@
 
 import type { Action } from '../src/engine/actions';
 import type {
-  ActionEffect, Area, CardDef, FieldCardDef, GoalieCardDef, PlayerAbility, ReactionEffect, SpellCardDef,
+  ActionEffect, Area, CardDef, FieldCardDef, GoalieCardDef, PhysicalCardDef, PlayerAbility, ReactionEffect, SpellCardDef,
 } from '../src/engine/cards';
 import { makeConfig, type GameConfig, type InjuryDef } from '../src/engine/config';
 import type { GameEvent } from '../src/engine/events';
@@ -52,6 +52,14 @@ export function actionSpell(name: string, ability: ActionEffect, magic: string |
   return { id: nextId(), team: 'T', kind: 'spell', name, spellType: 'action', magic, ability };
 }
 
+/** A physical attack card (v0.17): a Minor Speed attack with no bonus, unless changed. */
+export function physicalCard(name: string, overrides: Partial<PhysicalCardDef> = {}): PhysicalCardDef {
+  return {
+    id: nextId(), team: 'T', kind: 'physical', name, tier: 'minor', uses: 'speed', bonus: 0, affinity: 'body.speed',
+    toughness: 0, severity: 0, from: 'Test', text: '', ...overrides,
+  };
+}
+
 export const boost = (name: string, amount = 2, magic: string | null = null) =>
   reaction(name, { effect: 'boost', params: { amount } }, magic);
 export const shield = (name: string, magic: string | null = null) =>
@@ -69,6 +77,8 @@ export interface SideSpec {
   discard?: CardDef[];
   /** Knocked-out players beside the mat (v0.17). */
   knockedOut?: FieldCardDef[];
+  /** The Physical pile (v0.17), physical[0] drawn first. Empty unless given. */
+  physical?: CardDef[];
 }
 
 export interface ScenarioOptions {
@@ -153,6 +163,9 @@ export function scenario(options: ScenarioOptions = {}): GameState {
       spells: pile('spells'),
       discard: (spec.discard ?? []).map(add),
       knockedOut: (spec.knockedOut ?? []).map(add),
+      physical: (spec.physical ?? []).map(add).reverse(), // physical[0] is drawn first
+      physicalDiscard: [],
+      penaltyBox: [],
     };
   }
 

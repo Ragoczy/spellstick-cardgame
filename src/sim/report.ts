@@ -6,7 +6,7 @@ import type { CardStats, SimStats } from './stats';
 import type { InjurySource } from '../engine/events';
 
 /** Injuries (injury cards and carry-offs) one team suffered, from every cause. */
-const injuriesOf = (bySource: Record<InjurySource, number>) => bySource.hit + bySource.dirty_play + bySource.tackle;
+const injuriesOf = (bySource: Record<InjurySource, number>) => bySource.hit + bySource.dirty_play + bySource.tackle + bySource.attack;
 
 export interface KeyMetrics {
   firstWinRate: number;

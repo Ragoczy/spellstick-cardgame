@@ -84,7 +84,21 @@ type sets the printed Toughness; otherwise it's just a label and changes nothing
 **Spell cards** have a kind of magic, a family or a specialization (or none, for neutral spells),
 and are either:
 - **Reaction spells**, played during a contest.
-- **Action spells**, played as your action for the turn.
+- **Physical card effects** (v0.17; see "Physical attacks" for the cards)
+
+- `vs_holder` — `{ amount }`. +`amount` to the attack if the target holds the ball.
+- `reach` — `{}`. May attack the opposing player one lane over in the same row.
+- `needs_holder` — `{}`. Only against the ball carrier.
+- `needs_shaken` — `{}`. Only against a Shaken target.
+- `only_shaken` — `{}`. No Toughness roll: if the attack wins, the target is Shaken, never worse.
+- `shaken_anyway` — `{}`. If the target passes their Toughness roll, they're Shaken anyway.
+- `shaken_is_injured` — `{}`. If the target is hurt, a Shaken result counts as Injured.
+- `self_check` — `{}`. The attacker makes a Toughness roll too, win or lose.
+- `pile_on` — `{ amount }`. +`amount` for each of your standing players one lane over in the same row.
+- `after_pass_or_shot` — `{}`. Reaction: play after the opposing player in your spot passes or shoots.
+- `after_losing` — `{}`. Reaction: play when your player loses a contest to the opposing player in their spot.
+
+**Action spells**, played as your action for the turn.
 
 ## Face down, revealed, and casters
 
@@ -251,6 +265,9 @@ ball and the holder is **knocked down** (see "Contact"). If you lose, nothing ch
 You can't tackle a forward who has just caught a pass (see "Catch and shoot").
 If the holder has mirror images, roll for them first (see `mirror_images`).
 
+**Attack.** Play a physical card: one of your players attacks the opposing player in their spot
+(see "Physical attacks").
+
 ## Actions any time
 
 **Cast.** Play an action spell with a caster you choose (one with a spell left; see "Casting
@@ -293,7 +310,7 @@ Every contest has an attacker (the side taking the action) and a defender.
    won, and a successful tackle knocks the holder down (see "Contact").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
-tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser acts first like an
+tackling team in a tackle, the hitting team in a hit, the attacking team in a physical attack. In a faceoff, the chooser acts first like an
 attacker and wins ties.
 
 An **empty spot** (a player was carried off, knocked out, or sent off, and nobody replaced them) counts as 0 and can't play
@@ -330,6 +347,89 @@ one reaction spell for this contest.
   the spot stays empty until you Substitute at a Draw step. If they held the ball, the opposing
   player in that spot picks it up. A goalie can be sent off too, leaving an empty goal until you
   substitute your spare goalie.
+
+## Physical attacks
+
+Physical attacks are cheap shots from real sports (lacrosse, hockey, football, rugby, soccer,
+basketball, wrestling), plus a few made up. They're cards, not spells: they aren't cast, so
+affinity rules, the casting limit, Recall, and anything that counters spells don't apply to them,
+and they don't count as spells cast.
+
+**The Physical pile.** Each team has its own Physical pile: one of each of the 16 physical cards ⚙,
+shuffled at setup. Draw 2 ⚙ at setup and 1 ⚙ at each faceoff (after the knocked-out return rolls,
+before the lane is chosen). Physical cards go in your hand with your other cards and count toward
+the hand limit. When the pile runs out, shuffle its discards to make a new one. It isn't part of
+the game clock.
+
+**Making an attack** (your action). One of your standing field players plays a physical card
+against the opposing player in their spot. Standing means on the field, not Shaken, and not just
+come on. A player holding the ball can't attack ⚙. Goalies can't attack or be attacked. It's a
+contest, rolled like every contest, with rerolls and reaction spells, but no fouls (it's already
+one):
+
+- **Attacker:** Speed + die + the card's bonus. *Muscle* cards use Defense instead of Speed. +1 ⚙ if
+  the attacker has the body Affinity printed on the card (or the whole Body family).
+- **Target:** Speed + die. +1 ⚙ with a Danger-sense Affinity. Ties go to the target.
+- **If the attacker wins,** the target drops the ball (the attacker takes it, as with a tackle) and
+  is knocked down: a Toughness roll with the card's Toughness modifier (+1 Toughness ⚙ with an
+  Endurance Affinity). If hurt, the severity roll takes the card's severity modifier. A card with
+  no Toughness roll (—) doesn't knock anyone down.
+- **If the attacker loses,** nothing happens, apart from the penalty check (see "The penalty box").
+
+**Tiers.** Each card has a tier: the modifiers printed on it include its tier's.
+
+| Tier | Toughness roll | Severity roll | Penalty if caught |
+| --- | --- | --- | --- |
+| Minor | as normal | as normal | 1 turn ⚙ |
+| Major | −1 | as normal | 2 turns ⚙ |
+| Brutal | −1 | +1 | 3 turns ⚙ |
+
+**Reaction cards** are played at the moment they name, instead of as your action: **Late Hit**, after
+the opposing player in your spot passes or shoots (once that resolves), and **Elbow**, when your
+player loses a contest to the opposing player in their spot (that result stands, then you attack).
+Your player must be standing and not holding the ball, and your side must not have played a
+reaction spell in that contest. Not after a physical attack (no chains), and not while a forced
+substitution is waiting.
+
+**The cards:**
+
+| Card | Tier | Attack | Affinity | Toughness, severity | Effect |
+| --- | --- | --- | --- | --- | --- |
+| Shirt Pull | Minor | Speed +1 | Agility | —, — | No knockdown: the target only drops the ball. |
+| Tripping | Minor | Speed | Speed | ±0, ±0 | +2 if the target holds the ball (`vs_holder`). |
+| Hooking | Minor | Speed | Speed | ±0, ±0 | May attack the opposing player one lane over in the same row (`reach`). |
+| Atomic Wedgie | Minor | Muscle | Strength | —, — | No Toughness roll: if you win, the target is Shaken, never worse (`only_shaken`). |
+| Slashing | Major | Speed +1 | Berserking | −1, ±0 | |
+| Cross-check | Major | Muscle | Strength | −1, ±0 | |
+| Clothesline | Major | Muscle | Strength | −1, +1 | Only against the ball carrier (`needs_holder`). |
+| Gouge | Major | Speed | Agility | −1, ±0 | Passing the Toughness roll still leaves the target Shaken (`shaken_anyway`). |
+| Slew-foot | Major | Speed | Agility | −2, ±0 | |
+| Late Hit | Major | Speed | Berserking | −1, ±0 | Reaction: after the opposing player in your spot passes or shoots (`after_pass_or_shot`). |
+| Elbow | Major | Speed +1 | Berserking | −1, ±0 | Reaction: when your player loses a contest to the opposing player in their spot (`after_losing`). |
+| Kneecap | Brutal | Muscle | Strength | −2, +1 | If hurt, Shaken counts as Injured (`shaken_is_injured`). |
+| Spearing | Brutal | Speed +2 | Berserking | −1, +1 | Your player makes a Toughness roll too, win or lose (`self_check`). |
+| Chop Block | Brutal | Speed | Speed | −2, +1 | |
+| Stamp | Brutal | Muscle +3 | Strength | −1, +1 | Only against a Shaken target (`needs_shaken`). |
+| Pile-on | Brutal | Muscle | Berserking | −1, +1 | +1 for each of your standing players one lane over in the same row (`pile_on`). |
+
+## The penalty box
+
+After the rerolls, if the attacker's die in a physical attack shows 1, they roll the **penalty
+die** (never rerolled). On another 1, the referee calls a **penalty**: 1 in 36 per attack. Rerolling
+a 1 away avoids the check. The attack still resolves as normal, then:
+
+- The attacker goes to the **penalty box** beside the mat, face up, for their card's penalty: 1, 2,
+  or 3 turns ⚙ by tier. The count goes down at the end of each of their own team's turns, starting
+  with the next one. When it reaches 0, they come back to their spot.
+- Meanwhile **the spot is empty**: it counts as 0 and can't intercept, and nobody can tackle, hit,
+  or attack from there. **Nobody can be substituted into the spot** ⚙ (that's the difference from
+  being sent off). If they held the ball, the opposing player in that spot picks it up.
+- **Power play:** if the other team scores while they're in the box, all of that team's penalized
+  players come back at once, before the faceoff ⚙.
+- Every penalty ends at full time.
+
+A physical attack is the only foul punished this way. A dirty play, which is magic, is punished
+harder: the referee sends the player off for the game (see "Fouls and the referee").
 
 ## Contact
 
@@ -497,6 +597,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase c2 — Physical attack cards and the penalty box, from the v0.17 plan Paul approved (`PLAN.md`; Paul: more injuries, real ones, from cheap shots like Gouge, Kneecap, and Atomic Wedgie, with a penalty box; decisions 8, 9, and 11). Each team has a 16-card **Physical pile** (draw 2 at setup, 1 at each faceoff). An **attack** is an action: the attacker's Speed (Defense for muscle cards) plus the card's bonus against the target's Speed; a win makes the target drop the ball and knocks them down with the card's modifiers. A 1 on the attacker's die, then a 1 on the penalty die, sends the attacker to the **penalty box** for 1–3 turns by tier, with the spot empty and no substitution; a goal by the other team brings them back. Claude: the tier modifiers are printed on each card (its own text included); "body Affinity" counts the exact specialization or the whole Body family; reaction cards need the side not to have played a reaction spell in that contest, and don't chain; the penalty count starts with the team's next turn, so even a 1-turn penalty costs something. Result (`reports/sim-2026-10-15-v17c2.md`): 7.7 attacks a game; hurts 3.85 → 5.70 and real injuries 1.92 → 2.87 (target 3.5); 0.17 penalties a game; but turns 47.1 → 50.7 and spells cast 16.3 → 13.5 now miss their targets. Online matches started before this have no physical cards.
 
 - v0.17 (in progress), phase c — Fouls and the referee, from the v0.17 plan Paul approved (`PLAN.md`, decisions 1 and 10). A dirty play is now a **foul declared before the dice**, using the side's reaction spell for the contest. If the two contest dice match, the **referee sends every fouler off** for the game: no free replacement, the spot stays empty until a Substitute, and a ball they held goes to the opposing player. Doubles are judged after rerolls. Claude: a caught foul still takes effect if its side won (the plan's order: referee, then hurts); a fizzled dirty play still counts as a foul. Result (`reports/sim-2026-10-15-v17c.md`): 1.39 fouls a game, 15.9% caught (0.22 players sent off a game); hurts 3.55 → 3.85; spells cast 15.2 → 16.3. Online matches started before this keep dirty plays as reactions with no referee.
 

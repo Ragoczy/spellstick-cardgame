@@ -4,7 +4,7 @@
 // game screen the same GameController.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Action, Breakdown, ContestKind, GameEvent, Pos, Side } from '../engine';
+import type { Action, Breakdown, CardView, ContestKind, GameEvent, Pos, Side } from '../engine';
 import type { MatchSummary } from '../shared/matchApi';
 import type { Seat } from './seat';
 import { GameSession, type SessionOptions } from './session';
@@ -17,6 +17,8 @@ export interface Announcement {
   text: string;
   tone: Tone;
   contest?: { kind: ContestKind; mine: Breakdown; theirs: Breakdown };
+  /** A physical attack (v0.17): the card flipped from the attacker's Physical pile, and whose it was. */
+  physical?: { card: CardView; mine: boolean };
 }
 
 /** How long the computer waits before acting, and how long pop-ups stay up. */
@@ -68,6 +70,8 @@ export function usePlayByPlay(opp: OpponentWords) {
   const [queue, setQueue] = useState<Announcement[]>([]);
   const [justRevealed, setJustRevealed] = useState<Set<string>>(new Set());
   const nextId = useRef(1);
+  /** The last physical card flipped, until its contest is over (the contest may end in a later batch). */
+  const flipped = useRef<{ card: CardView; mine: boolean } | null>(null);
 
   /** Adds new events (as seen from this seat, after they happened). announce: false for catching up on old events. */
   const show = useCallback((events: GameEvent[], seat: Seat, announce = true) => {
@@ -82,10 +86,13 @@ export function usePlayByPlay(opp: OpponentWords) {
       if (line) lines.push(line);
       if (!announce) continue;
       if (e.type === 'revealed') revealed.add(posKey(e.side, e.pos));
+      if (e.type === 'attackDeclared') flipped.current = { card: e.card, mine: e.side === seat.human };
       if (e.type === 'contestResolved' && line) {
         const mine = e.attacker.side === seat.human ? e.attacker : e.defender;
         const theirs = e.attacker.side === seat.human ? e.defender : e.attacker;
-        announcements.push({ id: nextId.current++, title: CONTEST_TITLE[e.kind], text: line.text, tone: line.tone, contest: { kind: e.kind, mine, theirs } });
+        const physical = e.kind === 'attack' && flipped.current ? flipped.current : undefined;
+        if (e.kind === 'attack') flipped.current = null;
+        announcements.push({ id: nextId.current++, title: CONTEST_TITLE[e.kind], text: line.text, tone: line.tone, contest: { kind: e.kind, mine, theirs }, ...(physical ? { physical } : {}) });
       }
       if (e.type === 'injured' && line) {
         announcements.push({ id: nextId.current++, title: e.carriedOff ? 'Carried off!' : 'Injury!', text: line.text, tone: line.tone });

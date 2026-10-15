@@ -274,6 +274,23 @@ button.danger {
 /* ---- Hand: full cards in a row that scrolls sideways ---- */
 .hand { display: flex; gap: 10px; overflow-x: auto; padding: 8px 4px 10px; align-items: flex-start; }
 .hand .cf { width: 170px; }
+.hand-row { display: flex; align-items: flex-start; gap: 8px; }
+.hand-row .hand-strip { flex: 1 1 auto; min-width: 0; }
+.physical-pile {
+  flex: 0 0 auto; width: 120px; aspect-ratio: 5 / 7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 3px solid var(--tier-major); border-radius: 10px; background: repeating-linear-gradient(135deg, #3a2a20, #3a2a20 8px, #46332a 8px, #46332a 16px);
+  color: #fff; cursor: pointer; padding: 6px; text-align: center;
+}
+.physical-pile.hl-target { box-shadow: 0 0 0 3px var(--target); }
+.physical-pile.dim { opacity: 0.5; }
+.physical-pile .pile-name { font-weight: 700; font-size: 0.85rem; }
+.physical-pile .pile-count { font-size: 2rem; font-weight: 700; line-height: 1; }
+.physical-pile .pile-sub { font-size: 0.75rem; }
+.physical-pile .pile-last { font-size: 0.7rem; opacity: 0.85; margin-top: 4px; }
+.opponent-physical { margin-left: 6px; }
+.flipped-physical { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px; }
+.flipped-physical .cf { width: 120px; animation: flip 0.6s ease-out; }
+.flipped-physical .flipped-caption { font-size: 0.85rem; color: var(--muted); }
 .hand-divider { flex: 0 0 2px; align-self: stretch; margin: 0 4px; background: var(--line); border-radius: 1px; }
 .empty-hand { color: var(--muted); font-size: 0.85rem; }
 /* ---- Table: the field with the prompts under it, and your hand beside it (below it on narrow screens) ---- */

@@ -2,7 +2,7 @@
 // if it's fine. legalActions() uses this too, so there is one source of truth for legality.
 
 import type { Action } from './actions';
-import { castsLeft, defOf, isActionSpell, isReactionSpell, justCameOn, slotAt } from './board';
+import { castsLeft, defOf, isActionSpell, isFoulSpell, isReactionSpell, justCameOn, slotAt } from './board';
 import { isShaken } from './injuries';
 import { isFieldPos, opposite, otherSide, passTargets, samePos, type FieldPos, type Pos, type Side } from './field';
 import type { GameState } from './state';
@@ -81,6 +81,7 @@ const GOALIE_CLEARING = "Your goalie has the ball and must clear it this turn, s
 const NEEDS_REST = 'That player has cast as many spells as they have Resonants. Substitute them out to recharge.';
 const JUST_CAME_ON = "That player just came on, so they can't act until your next turn.";
 const SHAKEN = "That player is Shaken, so they can't pass, shoot, tackle, or cast until they stand up.";
+const DIRTY_PLAYS_FIRST = 'A dirty play is a foul: declare it before the dice, not after.';
 
 /** Why the player in a spot can't pass, shoot, tackle, or cast right now, or null if they can. */
 function cantAct(s: GameState, side: Side, pos: Pos): string | null {
@@ -139,10 +140,19 @@ export function validateAction(s: GameState, action: Action): string | null {
       return null;
     }
 
+    case 'foul': {
+      if (p.kind !== 'foul') return "It isn't time to declare a foul.";
+      if (action.card === null) return null;
+      if (!inHand(s, side, action.card) || !isFoulSpell(defOf(s, action.card))) return 'Declare a foul with a dirty play from your hand.';
+      if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
+      return cantAct(s, side, p.contest[p.role].pos);
+    }
+
     case 'react': {
       if (p.kind !== 'reaction') return 'There is no contest to react to.';
       if (action.card === null) return null;
       if (!inHand(s, side, action.card) || !isReactionSpell(defOf(s, action.card))) return 'Play a reaction spell from your hand.';
+      if (s.config.foulTiming === 'before' && isFoulSpell(defOf(s, action.card))) return DIRTY_PLAYS_FIRST;
       if (!reactionFits(defOf(s, action.card) as SpellCardDef, p.contest[p.role])) return `${defOf(s, action.card).name} doesn't work in this contest.`;
       if (castsLeft(s, side, p.contest[p.role].pos) <= 0) return NEEDS_REST;
       return cantAct(s, side, p.contest[p.role].pos);

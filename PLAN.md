@@ -458,7 +458,8 @@ injuries 1.75. Under the 4–8 and 3.5 targets; see `reports/sim-2026-10-14-v17b
   `dirty_play.test.ts`, `hidden-info.test.ts` (Toughness is on the card, so the computer still
   can't see a face-down player's).
 
-**Phase c: fouls and the referee.** `state.ts` (a new `foul` decision before the roll),
+**Phase c: fouls and the referee.** *(Done 2026-10-15: 1.39 fouls a game, 15.9% caught, 0.22
+sent off; spells cast back to 16.3. See `reports/sim-2026-10-15-v17c.md`.)* `state.ts` (a new `foul` decision before the roll),
 `contest.ts` (the foul step, the referee, sent off), `injuries.ts` (sent off), `legal.ts` and
 `validate.ts`. Computer: whether to foul (win chance before the dice, minus 1 in 6 × the cost of
 losing the caster), and rerolls that break or chase doubles. Tests: `tests/rules/referee.test.ts`

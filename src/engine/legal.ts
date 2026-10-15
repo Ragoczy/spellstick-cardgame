@@ -94,6 +94,11 @@ export function legalActions(s: GameState, side: Side): Action[] {
       candidates.push({ type: 'callDice', side, roll: false }, { type: 'callDice', side, roll: true });
       break;
 
+    case 'foul':
+      candidates.push({ type: 'foul', side, card: null });
+      for (const card of hand) if (isReactionSpell(defOf(s, card))) candidates.push({ type: 'foul', side, card });
+      break;
+
     case 'reaction':
       candidates.push({ type: 'react', side, card: null });
       for (const card of hand) if (isReactionSpell(defOf(s, card))) candidates.push({ type: 'react', side, card });

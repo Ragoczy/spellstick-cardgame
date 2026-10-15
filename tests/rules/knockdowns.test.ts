@@ -94,7 +94,7 @@ describe.each(LANE_COUNTS)('contact (%i lanes)', (lanes) => {
 
     it('a dirty play hurts with no Toughness check, and a player is hurt only once per contest', () => {
       const s = tackleSetup({ toughness: 6, config: SHAKEN, aHand: [redMist()] });
-      const { events } = play(s, { type: 'tackle', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+      const { events } = play(s, { type: 'tackle', side: 'A' }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
       expect(lastContest(events).winner).toBe('A');
       expect(eventsOfType(events, 'knockedDown')).toHaveLength(0);
       expect(eventsOfType(events, 'hurt')).toEqual([expect.objectContaining({ side: 'B', source: 'dirty_play', cause: 'Red Mist' })]);
@@ -106,7 +106,7 @@ describe.each(LANE_COUNTS)('contact (%i lanes)', (lanes) => {
         A: { hand: [redMist()], lineup: { forward: { 0: player('A fwd', { shot: 6 }) } } },
         B: { goalie: goalie('B goalie', 0) },
       });
-      const { events } = play(s, { type: 'shoot', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+      const { events } = play(s, { type: 'shoot', side: 'A' }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
       expect(eventsOfType(events, 'goal')).toHaveLength(1);
       expect(eventsOfType(events, 'hurt')).toHaveLength(0);
     });

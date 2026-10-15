@@ -133,6 +133,21 @@ export function hurtPlayer(s: GameState, side: Side, pos: Pos, source: InjurySou
   else knockOut(s, side, pos, ev);
 }
 
+/**
+ * Sent off by the referee (v0.17): the player goes to the discard pile, out for the game. There's
+ * no free replacement: the spot stays empty until a Substitute at a Draw step fills it. A ball
+ * they held goes to the opposing player in that spot.
+ */
+export function sendOff(s: GameState, side: Side, pos: Pos, roll: number, ev: GameEvent[]): void {
+  const slot = slotAt(s, side, pos);
+  if (!slot) return;
+  const card = cardView(s, slot.uid);
+  setSlotAt(s, side, pos, null);
+  toDiscard(s, side, slot.uid);
+  ev.push({ type: 'sentOff', side, pos, card, roll });
+  dropBall(s, side, pos, ev);
+}
+
 /** Knocked out: off the field, face up beside the mat, until a return roll at a faceoff. */
 function knockOut(s: GameState, side: Side, pos: Pos, ev: GameEvent[]): void {
   const slot = slotAt(s, side, pos)!;

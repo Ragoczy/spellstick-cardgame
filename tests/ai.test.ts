@@ -1,6 +1,9 @@
 // The computer opponent's judgement in a few clear-cut situations.
 import { describe, expect, it } from 'vitest';
 import { explainChoice } from '../src/ai/heuristic';
+import { prototypeCards } from '../src/data/prototype';
+import { makeConfig } from '../src/engine/config';
+import { simulate } from '../src/sim/simulate';
 import { legalActions } from '../src/engine/legal';
 import { viewFor } from '../src/engine/view';
 import { LANE_COUNTS, GOAL_POS, dfn, fwd, goalie, mid, player, scenario } from './helpers';
@@ -45,5 +48,21 @@ describe.each(LANE_COUNTS)('computer opponent (%i lanes)', (lanes) => {
     });
     const best = explainChoice(viewFor(s, 'A'), legalActions(s, 'A'), s.config)[0]!.action;
     expect(best.type).toBe('shoot');
+  });
+});
+
+describe('computer opponent in whole games (v0.17)', () => {
+  // The simulator measures the rules through the computer's play, so it has to use the new options.
+  const result = simulate({ games: 40, seed: 3, config: makeConfig(), cardSet: prototypeCards });
+  const tallies = result.stats.tallies;
+
+  it('declares fouls', () => {
+    expect(result.crashes).toEqual([]);
+    expect(tallies.reduce((sum, t) => sum + t.fouls, 0)).toBeGreaterThan(0);
+  });
+
+  it('tackles and hurts players, some only Shaken', () => {
+    expect(tallies.reduce((sum, t) => sum + t.knockdowns, 0)).toBeGreaterThan(0);
+    expect(tallies.reduce((sum, t) => sum + t.shaken, 0)).toBeGreaterThan(0);
   });
 });

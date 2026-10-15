@@ -71,6 +71,8 @@ export type GameEvent =
       affinity: Affinity;
       /** True if an opposed non-numeric spell had no effect. */
       fizzled: boolean;
+      /** A dirty play declared as a foul, before the dice (v0.17). */
+      foul?: boolean;
     }
   | { type: 'contestResolved'; kind: ContestKind; attacker: Breakdown; defender: Breakdown; winner: Side; winnerRole: ContestRole }
   | { type: 'ballMoved'; side: Side; pos: Pos }
@@ -128,6 +130,11 @@ export type GameEvent =
    * until: a Shaken player stands up at the end of this turn.
    */
   | { type: 'hurt'; side: Side; pos: Pos; card: CardView; source: InjurySource; cause: string; roll: number; result: Severity; until?: number }
+  /**
+   * The referee (v0.17): the two contest dice matched (both showed `roll`), so this side's player,
+   * who fouled, is sent off for the game. Their spot stays empty until a Substitute fills it.
+   */
+  | { type: 'sentOff'; side: Side; pos: Pos; card: CardView; roll: number }
   /** A Shaken player stood up: at the end of their team's turn, or at full time. */
   | { type: 'stoodUp'; side: Side; pos: Pos; card: CardView }
   /** At a faceoff, a knocked-out player rolled to come back: returned means back in the hand. */

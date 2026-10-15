@@ -49,7 +49,7 @@ describe.each(LANE_COUNTS)('injuries (%i lanes)', (lanes) => {
   it("can't happen to goalies: a dirty play that beats the goalie does nothing more", () => {
     const redMist = reaction('Red Mist', { effect: 'dirty_play', params: {} });
     const s = scenario({ lanes, ball: { side: 'A', pos: fwd(0) }, A: { hand: [redMist], lineup: { forward: { 0: player('A fwd', { shot: 6 }) } } } });
-    const { state, events } = play(s, { type: 'shoot', side: 'A' }, { type: 'react', side: 'A', card: uid(s, 'A', 'Red Mist') });
+    const { state, events } = play(s, { type: 'shoot', side: 'A' }, { type: 'foul', side: 'A', card: uid(s, 'A', 'Red Mist') });
     expect(state.score.A).toBe(1);
     expect(eventsOfType(events, 'injured')).toHaveLength(0);
     expect(Object.keys(state.injuries)).toHaveLength(0);

@@ -102,6 +102,8 @@ export function describeEvent(e: GameEvent, names: Record<Side, string>): string
       const result = e.result === 'shaken' ? 'Shaken until the end of their next turn' : e.result === 'injured' ? 'injured' : 'knocked out';
       return `${e.cause}! ${names[e.side]}'s ${e.card.def.name} is hurt. Severity roll ${e.roll}: ${result}.`;
     }
+    case 'sentOff':
+      return `The dice match (${e.roll} and ${e.roll}): the referee saw the foul! ${names[e.side]}'s ${e.card.def.name} is sent off for the game.`;
     case 'stoodUp':
       return `${names[e.side]}'s ${e.card.def.name} stands up.`;
     case 'returnRoll':

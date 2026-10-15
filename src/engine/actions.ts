@@ -35,6 +35,8 @@ export type Action =
   | { type: 'cast'; side: Side; card: Uid; caster: Pos; target: SpellTarget }
   | { type: 'substitute'; side: Side; pos: Pos; card: Uid }
   | { type: 'regroup'; side: Side; discard: Uid[] }
+  // During a contest, before the dice (v0.17): declare a foul (a dirty play), or null for none
+  | { type: 'foul'; side: Side; card: Uid | null }
   // During a contest: play a reaction spell, or null for none
   | { type: 'react'; side: Side; card: Uid | null }
   // During a contest: spend a roll token (reroll your die; with the old rule, call for dice), or not

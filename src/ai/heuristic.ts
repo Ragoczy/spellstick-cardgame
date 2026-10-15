@@ -15,6 +15,8 @@
 // - Since v0.17, a hurt is worth its chance of each severity (Shaken, Injured, Knocked out), and a
 //   tackle also counts the chance of knocking the holder down, from their Toughness (a guess by
 //   row for a face-down player, whose card it can't see). Shaken players count as weaker.
+// - Fouls (v0.17) are declared before the dice: worth it when the chance of winning times the hurt
+//   beats the 1-in-6 risk of the referee sending its player off. Rerolls break or chase doubles.
 
 import { adjustAmount, adjustPenalty, affinityFor } from '../engine/affinity';
 import type { Action } from '../engine/actions';
@@ -66,6 +68,10 @@ const SHAKEN_WORTH = 0.04;
 const KNOCKOUT_WORTH = 0.12;
 /** A guess at an unseen player's Toughness, by row (Stoppers and Anchors usually play deep). */
 const TOUGHNESS_GUESS: Record<Area, number> = { defense: 4.5, midfield: 4, forward: 3.5 };
+/** Rough worth (as a loss) of a player sent off for the game: like a carry-off, with the spot empty until a substitute. */
+const SENT_OFF_WORTH = 0.15;
+/** What playing a dirty play as a foul costs in cards: little, since a dirty play has no other use. */
+const FOUL_CARD_COST = 0.03;
 /** Worth of substituting out a Shaken player, who comes back standing. */
 const SHAKEN_SUB_WORTH = 0.015;
 
@@ -220,6 +226,7 @@ class Thinker {
       case 'chooseGoalie': return this.scoreGoalie(action.card);
       case 'place': return this.scorePlacement(action.card, action.pos);
       case 'faceoffLane': return this.scoreFaceoffLane(action.lane);
+      case 'foul': return this.scoreFoul(action.card);
       case 'react': return this.scoreReaction(action.card);
       case 'callDice': return action.roll ? this.scoreDice() : 0;
       case 'shootoutPick': return this.myValue(action.pos, 'shot', 'shoot') + this.random() * 0.1;
@@ -637,7 +644,54 @@ class Thinker {
     // Rolls are scarce: worth more as the pile runs down.
     const left = this.view.diceLeft[this.me];
     const rollValue = (left > this.config.diceBudget / 2 ? 0.05 : 0.1) * this.unit();
-    return this.importance(contest, role) * (withDice - now) - rollValue;
+    return this.importance(contest, role) * (withDice - now) - rollValue + this.refereeGain(me, them, die);
+  }
+
+  /**
+   * The referee (v0.17): rerolling my die changes whether the dice match. Worth it to break a
+   * double when I fouled, or to chase one when they did.
+   */
+  private refereeGain(me: Contest['attacker'], them: Contest['attacker'], die: number): number {
+    if (this.config.foulTiming !== 'before' || this.config.diceTokens !== 'reroll' || !me.roll || !them.roll) return 0;
+    const iFouled = this.isFoul(me.spell?.uid);
+    const theyFouled = this.isFoul(them.spell?.uid);
+    if (!iFouled && !theyFouled) return 0;
+    const doublesNow = me.roll === them.roll ? 1 : 0;
+    const stake = (theyFouled ? SENT_OFF_WORTH : 0) - (iFouled ? SENT_OFF_WORTH : 0);
+    return (1 / die - doublesNow) * stake * this.unit();
+  }
+
+  /** Whether a spell played in this contest was a dirty play (it's on a discard pile by now). */
+  private isFoul(uid: string | undefined): boolean {
+    if (!uid) return false;
+    const card = [...this.view.mine.discard, ...this.view.opponent.discard].find((c) => c.uid === uid);
+    return card?.def.kind === 'spell' && card.def.ability.effect === 'dirty_play';
+  }
+
+  // ---- Fouls (v0.17) ----
+
+  /**
+   * Declaring a foul before the dice: if my side wins, their player is hurt; if the dice match,
+   * the referee sends mine off. It also uses up my reaction spell for this contest.
+   */
+  private scoreFoul(uid: string | null): number {
+    const pending = this.view.pending;
+    if (uid === null || pending.kind !== 'foul') return 0;
+    const { contest, role } = pending;
+    const me = contest[role];
+    const them = contest[role === 'attacker' ? 'defender' : 'attacker'];
+    const myCard = knownCard(this.view, 'mine', me.pos);
+    if (!myCard) return -1;
+    const spell = this.handCard(uid) as SpellCardDef;
+    if (this.affinity(myCard.def as PlayerCardDef, spell) === 'opposed') return -1; // it would fail
+    const theirCard = knownCard(this.view, 'opponent', them.pos);
+    const total = (card: CardView | null, side: typeof me, owner: 'mine' | 'opponent') =>
+      scoreSide({ player: (card?.def as PlayerCardDef | undefined) ?? null, injury: card?.injury, shaken: isShakenAt(this.view, owner, side.pos), side, spell: null, shielded: false }, this.config).total;
+    const pWin = this.chance(total(myCard, me, 'mine'), total(theirCard, them, 'opponent'), contest.tiesGoTo === role);
+    // An empty spot doesn't roll, so there can be no doubles.
+    const die = this.config.contestDie || this.config.shotDie;
+    const caught = theirCard && die ? 1 / die : 0;
+    return pWin * this.injuryWorth(them.pos) - caught * SENT_OFF_WORTH * this.unit() - FOUL_CARD_COST * this.unit();
   }
 
   // ---- Reactions ----

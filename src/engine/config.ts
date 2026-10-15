@@ -139,6 +139,13 @@ export interface GameConfig {
   shakenPenalty: number;
   /** At each faceoff, each knocked-out player goes back to their owner's hand on this roll or higher. */
   knockedOutReturn: number;
+  /**
+   * When dirty plays are played. 'before' (the rule since v0.17): declared as a foul before the
+   * dice, and if the two contest dice match, the referee sends the fouler off for the game.
+   * 'reaction' (the old rule): an ordinary reaction spell, played after the dice, with no
+   * referee; online matches started before v0.17 keep it.
+   */
+  foulTiming: 'before' | 'reaction';
 
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
@@ -185,6 +192,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   severity: { shaken: 3, injured: 5 },
   shakenPenalty: 2,
   knockedOutReturn: 4,
+  foulTiming: 'before',
   injuries: [
     { id: 'singed-hair', name: 'Singed hair', count: 3, penalty: { speed: 1 } },
     { id: 'broken-finger', name: 'Broken finger', count: 3, penalty: { shot: 2 } },

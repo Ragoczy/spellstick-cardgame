@@ -221,6 +221,11 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       if (react) act(react);
       return;
     }
+    if (pending.kind === 'foul') {
+      const foul = legal.find((a) => a.type === 'foul' && a.card === uid);
+      if (foul) act(foul);
+      return;
+    }
     if (pending.kind === 'discard') {
       const discard = legal.find((a) => a.type === 'discard' && a.card === uid);
       if (discard) act(discard);
@@ -251,9 +256,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   function canPlayNow(uid: string): boolean {
     if (pending.kind === 'action') return castsFor(uid).length > 0;
     if (pending.kind === 'reaction') return legal.some((a) => a.type === 'react' && a.card === uid);
+    if (pending.kind === 'foul') return legal.some((a) => a.type === 'foul' && a.card === uid);
     return false;
   }
-  const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction');
+  const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction' || pending.kind === 'foul');
   const castable = view.mine.hand.filter((c) => c.def.kind === 'spell' && pending.kind === 'action' && canPlayNow(c.uid));
 
   // ---- Setup screens ----
@@ -344,6 +350,8 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
         );
       case 'reaction':
         return <ReactionPrompt view={view} opp={opp} onPlay={(uid) => act(legal.find((a) => a.type === 'react' && a.card === uid)!)} />;
+      case 'foul':
+        return <FoulPrompt view={view} legal={legal} onFoul={(uid) => act(legal.find((a) => a.type === 'foul' && a.card === uid)!)} />;
       case 'callDice':
         return <DicePrompt view={view} onChoose={(roll) => act({ type: 'callDice', side: me, roll })} />;
       case 'draw':
@@ -483,7 +491,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       def={c.def}
       injury={c.injury}
       selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'foul' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
       dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
       onClick={() => onHandCard(c.uid, c.def, c.injury)}
     />
@@ -633,6 +641,24 @@ function ReactionPrompt({ view, opp, onPlay }: { view: PlayerView; opp: Opponent
           return <button type="button" key={o.uid} className={wins && !o.fizzles ? 'primary' : ''} onClick={() => onPlay(o.uid)}>{o.def.name}: {note}</button>;
         })}
         <button type="button" onClick={() => onPlay(null)}>No spell</button>
+      </div>
+    </div>
+  );
+}
+
+/** Before the dice (v0.17): declare a foul with a dirty play, or not. */
+function FoulPrompt({ view, legal, onFoul }: { view: PlayerView; legal: import('../engine').Action[]; onFoul: (uid: string | null) => void }) {
+  const fouls = legal.flatMap((a) => (a.type === 'foul' && a.card ? [view.mine.hand.find((c) => c.uid === a.card)!] : []));
+  const pending = view.pending;
+  const casterPos = pending.kind === 'foul' ? pending.contest[pending.role].pos : null;
+  return (
+    <div className="prompt">
+      <strong>Foul? Decide before the dice.</strong> If your side wins this contest, a dirty play hurts their player.
+      But if the two dice match (1 in 6), the referee sends your {casterPos ? posName(casterPos, view.lanes) : 'player'} off for the game.
+      A foul also uses up your reaction spell for this contest.
+      <div className="buttons">
+        {fouls.map((c) => <button type="button" key={c.uid} onClick={() => onFoul(c.uid)}>Foul: {c.def.name}</button>)}
+        <button type="button" className="primary" onClick={() => onFoul(null)}>Play it clean</button>
       </div>
     </div>
   );

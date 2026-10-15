@@ -1,24 +1,31 @@
 // Contests (RULES.md "Contests"):
-// 1. Reveal both players, and both roll a die.
-// 2. The attacker may spend a roll token to reroll their die. Then the defender may.
-// 3. The attacker may play one reaction spell, cast by its player in the contest. Then the
-//    defender, having seen it, may do the same. (In a faceoff, the chooser goes first.)
-// 4. Apply abilities, injuries, spells, and dice.
-// 5. The attacker wins only with a higher value. Ties go to the defender, except in passes
+// 1. Reveal both players.
+// 2. Fouls (v0.17): the attacker may declare a dirty play, then the defender may. A side that
+//    fouls has used its one reaction spell for this contest.
+// 3. Both roll a die. The attacker may spend a roll token to reroll theirs. Then the defender may.
+// 4. The attacker may play one reaction spell, cast by its player in the contest. Then the
+//    defender, having seen it, may do the same. (In a faceoff, the chooser goes first.) Sides
+//    that fouled don't.
+// 5. Apply abilities, injuries, spells, and dice.
+// 6. The attacker wins only with a higher value. Ties go to the defender, except in passes
 //    (the receiver) and faceoffs (the chooser).
-// 6. Then hurts: a hit that lands, a dirty play by the winning side, and (v0.17) a successful
+// 7. The referee (v0.17): if the two dice match, every side that fouled has its player sent off.
+// 8. Then hurts: a hit that lands, a dirty play by the winning side, and (v0.17) a successful
 //    tackle, which knocks the tackled player down. A player is hurt at most once per contest.
+//
+// Before v0.17 (config.foulTiming 'reaction'), a dirty play is an ordinary reaction spell, played
+// after the dice, and there is no referee.
 //
 // An empty spot (a player carried off) counts as 0 and can't play reaction spells. Nor can a
 // player who has used up their casting limit.
 
 import { affinityFor, spellFizzles } from './affinity';
-import { cardView, castsLeft, countCast, defOf, drawCards, hasReactionSpell, injuryOf, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
+import { cardView, castsLeft, countCast, defOf, drawCards, hasReactionSpell, injuryOf, isFoulSpell, isReactionSpell, moveHandToDiscard, playerAt, reveal, slotAt } from './board';
 import type { PlayerCardDef, SpellCardDef } from './cards';
 import type { Breakdown, GameEvent } from './events';
 import { GOAL, type Side } from './field';
 import { continueGame, recordPenalty, scoreGoal } from './flow';
-import { hurtPlayer, injurePlayer, isShaken, knockDown } from './injuries';
+import { hurtPlayer, injurePlayer, isShaken, knockDown, sendOff } from './injuries';
 import { randomInt } from './rng';
 import { scoreSide } from './score';
 import type { Contest, ContestRole, ContestSide, GameState, Uid } from './state';
@@ -39,6 +46,72 @@ function contestDie(s: GameState, contest: Contest): number {
 export function startContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   reveal(s, contest.attacker.side, contest.attacker.pos, ev);
   reveal(s, contest.defender.side, contest.defender.pos, ev);
+  if (s.config.foulTiming === 'before') askForFoul(s, contest, 'attacker', ev);
+  else rollDice(s, contest, ev);
+}
+
+// ---- Fouls (v0.17, RULES.md "Fouls and the referee") ----
+
+/** Whether the player on this side of the contest can cast now (a spell left, not just on, not Shaken). */
+function canCast(s: GameState, side: ContestSide): boolean {
+  const slot = slotAt(s, side.side, side.pos);
+  return !!slot && castsLeft(s, side.side, side.pos) > 0 && !slot.cameOn && !isShaken(s, side.side, side.pos);
+}
+
+/** Asks a side whether to declare a foul, if it holds a dirty play its player can cast; otherwise moves on. */
+function askForFoul(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
+  const me = contest[role];
+  if (canCast(s, me) && hasReactionSpell(s, me.side, me, true)) {
+    s.pending = { kind: 'foul', side: me.side, role, contest };
+    return;
+  }
+  afterFoul(s, contest, role, ev);
+}
+
+function afterFoul(s: GameState, contest: Contest, role: ContestRole, ev: GameEvent[]): void {
+  if (role === 'attacker') askForFoul(s, contest, 'defender', ev);
+  else rollDice(s, contest, ev);
+}
+
+/** A side declares a foul (a dirty play, cast by its player in the contest), or null for none. */
+export function playFoul(s: GameState, card: Uid | null, ev: GameEvent[]): void {
+  if (s.pending.kind !== 'foul') throw new Error('No contest is waiting for a foul');
+  const { contest, role } = s.pending;
+  if (card !== null) castReaction(s, contest[role], card, true, ev);
+  afterFoul(s, contest, role, ev);
+}
+
+/** The player on this side casts a reaction spell (or a foul) from hand. */
+function castReaction(s: GameState, me: ContestSide, card: Uid, foul: boolean, ev: GameEvent[]): void {
+  const spell = defOf(s, card) as SpellCardDef;
+  const caster = playerAt(s, me.side, me.pos);
+  const affinity = affinityFor(caster, spell.magic, s.opposedPairs);
+  const fizzled = spellFizzles(spell, affinity);
+  me.spell = { uid: card, affinity, fizzled };
+  moveHandToDiscard(s, me.side, card);
+  countCast(s, me.side, me.pos);
+  ev.push({ type: 'spellCast', side: me.side, card: cardView(s, card), caster: me.pos, affinity, fizzled, ...(foul ? { foul: true } : {}) });
+}
+
+/** Whether this side declared a foul (a dirty play before the dice), whether or not it worked. */
+function fouled(s: GameState, side: ContestSide): boolean {
+  return s.config.foulTiming === 'before' && !!side.spell && isFoulSpell(defOf(s, side.spell.uid));
+}
+
+/**
+ * The referee: if both dice show the same number, every side that fouled has its player sent off.
+ * Judged on the final dice, after rerolls.
+ */
+function referee(s: GameState, contest: Contest, ev: GameEvent[]): void {
+  const { attacker, defender } = contest;
+  if (!attacker.roll || attacker.roll !== defender.roll) return;
+  for (const side of [attacker, defender]) {
+    if (fouled(s, side) && slotAt(s, side.side, side.pos)) sendOff(s, side.side, side.pos, side.roll!, ev);
+  }
+}
+
+/** Both players roll their die (every contest is rolled), then the rerolls. */
+function rollDice(s: GameState, contest: Contest, ev: GameEvent[]): void {
   const die = contestDie(s, contest);
   if (die > 0) {
     for (const side of [contest.attacker, contest.defender]) {
@@ -132,8 +205,9 @@ function askForReaction(s: GameState, contest: Contest, role: ContestRole, ev: G
   // A tired player is announced whatever the hand holds: their spells left are public anyway.
   const left = castsLeft(s, me.side, me.pos);
   if (slotAt(s, me.side, me.pos) && left === 0) ev.push({ type: 'outOfSpells', side: me.side, pos: me.pos });
-  // A player who came on this turn can't cast yet, and a Shaken player can't cast at all.
-  if (hasReactionSpell(s, me.side, me) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn && !isShaken(s, me.side, me.pos)) {
+  // A player who came on this turn can't cast yet, and a Shaken player can't cast at all. A side
+  // that fouled has already used its reaction spell.
+  if (!me.spell && hasReactionSpell(s, me.side, me) && left > 0 && !slotAt(s, me.side, me.pos)?.cameOn && !isShaken(s, me.side, me.pos)) {
     s.pending = { kind: 'reaction', side: me.side, role, contest };
     return;
   }
@@ -149,17 +223,7 @@ function afterReaction(s: GameState, contest: Contest, role: ContestRole, ev: Ga
 export function playReaction(s: GameState, card: Uid | null, ev: GameEvent[]): void {
   if (s.pending.kind !== 'reaction') throw new Error('No contest is waiting for a reaction');
   const { contest, role } = s.pending;
-  const me = contest[role];
-  if (card !== null) {
-    const spell = defOf(s, card) as SpellCardDef;
-    const caster = playerAt(s, me.side, me.pos);
-    const affinity = affinityFor(caster, spell.magic, s.opposedPairs);
-    const fizzled = spellFizzles(spell, affinity);
-    me.spell = { uid: card, affinity, fizzled };
-    moveHandToDiscard(s, me.side, card);
-    countCast(s, me.side, me.pos);
-    ev.push({ type: 'spellCast', side: me.side, card: cardView(s, card), caster: me.pos, affinity, fizzled });
-  }
+  if (card !== null) castReaction(s, contest[role], card, false, ev);
   afterReaction(s, contest, role, ev);
 }
 
@@ -213,6 +277,8 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
 
   applyOutcome(s, contest, attackerWins, ev);
 
+  // The referee looks before the hurts: a caught foul still takes effect if its side won.
+  if (!s.result && s.config.foulTiming === 'before') referee(s, contest, ev);
   if (!s.result) applyHurts(s, contest, attackerWins, ev);
   continueGame(s, ev);
 }

@@ -277,22 +277,26 @@ allowed: the action does nothing.
 
 Every contest has an attacker (the side taking the action) and a defender.
 
-1. Reveal both players involved. **Both roll a six-sided die** ⚙ (see "Dice").
-2. **Rerolls:** the attacker may spend a roll token to reroll their own die. Then the defender may
-   (see "Dice").
-3. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
-   having seen it, may do the same. Each side plays at most one.
-4. Apply abilities, injuries, spells, and dice. A value can't go below 0.
-5. **The attacker wins only if their value is higher.** Ties go to the defender, except in
+1. Reveal both players involved.
+2. **Fouls:** the attacker may declare a dirty play, then the defender may (see "Fouls and the
+   referee"). A side that fouls has used its one reaction spell for this contest.
+3. **Both roll a six-sided die** ⚙ (see "Dice"). **Rerolls:** the attacker may spend a roll token to
+   reroll their own die. Then the defender may.
+4. The attacker may play one reaction spell, cast by its player in the contest. Then the defender,
+   having seen it, may do the same. Each side plays at most one, and a side that fouled plays none.
+5. Apply abilities, injuries, spells, and dice. A value can't go below 0.
+6. **The attacker wins only if their value is higher.** Ties go to the defender, except in
    passes (ties go to the receiver) and faceoffs (ties go to the chooser).
-6. **Hurts:** a hit that lands hurts its target, a dirty play hurts the losing player if its side
+7. **The referee:** if the two dice show the same number, every side that fouled has its player
+   sent off (see "Fouls and the referee").
+8. **Hurts:** a hit that lands hurts its target, a dirty play hurts the losing player if its side
    won, and a successful tackle knocks the holder down (see "Contact").
 
 Who is the attacker: the passing team in a pass, the shooting team in a shot or penalty, the
 tackling team in a tackle, the hitting team in a hit. In a faceoff, the chooser acts first like an
 attacker and wins ties.
 
-An **empty spot** (a player was carried off or knocked out and nobody replaced them) counts as 0 and can't play
+An **empty spot** (a player was carried off, knocked out, or sent off, and nobody replaced them) counts as 0 and can't play
 reaction spells, roll, or reroll. A player with no spells left (see "Casting limit") can't play reaction
 spells either.
 
@@ -309,6 +313,23 @@ many are left.
   defender, having seen that, may do the same. The new roll replaces the old one.
 - Each side can reroll at most once per contest. Reaction spells are played after the rerolls, so
   both players can see the dice before deciding.
+
+## Fouls and the referee
+
+A **dirty play** is a foul. It isn't played after the dice like other reaction spells: it's
+declared **before the dice**, by your player in the contest, when you don't yet know whether you'll
+win or get caught. The attacker decides first, then the defender. A side that fouls has used its
+one reaction spell for this contest.
+
+- If your side wins the contest, the dirty play hurts the losing player (see "Contact").
+- **The referee:** if the two dice show the same number, the referee saw it. Every side that
+  fouled has its player **sent off**. That's 1 in 6 before any rerolls. Doubles are judged on the
+  final dice, after rerolls, so you can spend a reroll to break a double you're on, and the other
+  side can reroll hoping to make one. A caught foul still takes effect if its side won.
+- **Sent off:** the player goes to your discard pile, out for the game. There's no free replacement:
+  the spot stays empty until you Substitute at a Draw step. If they held the ball, the opposing
+  player in that spot picks it up. A goalie can be sent off too, leaving an empty goal until you
+  substitute your spare goalie.
 
 ## Contact
 
@@ -426,8 +447,9 @@ engine together. "Numeric" effects are adjusted by affinity.
   strength, then take 2 off. Dice and spells are added after, so their own spell still counts in
   full. If both sides shield, both lose 2. (Before v0.17 a Shield made the value 0 and ignored
   abilities and injuries; online matches started before then keep that rule.)
-- `dirty_play` — `{}`, non-numeric. Play during any contest. If your side wins, the opposing player
-  in that contest is injured (unless it's the goalie).
+- `dirty_play` — `{}`, non-numeric. A foul: declared before the dice in any contest (see "Fouls and
+  the referee"). If your side wins, the opposing player in that contest is hurt (unless it's the
+  goalie). If the dice match, the referee sends your player off.
 
 **Action spells**
 
@@ -475,6 +497,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase c — Fouls and the referee, from the v0.17 plan Paul approved (`PLAN.md`, decisions 1 and 10). A dirty play is now a **foul declared before the dice**, using the side's reaction spell for the contest. If the two contest dice match, the **referee sends every fouler off** for the game: no free replacement, the spot stays empty until a Substitute, and a ball they held goes to the opposing player. Doubles are judged after rerolls. Claude: a caught foul still takes effect if its side won (the plan's order: referee, then hurts); a fizzled dirty play still counts as a foul. Result (`reports/sim-2026-10-15-v17c.md`): 1.39 fouls a game, 15.9% caught (0.22 players sent off a game); hurts 3.55 → 3.85; spells cast 15.2 → 16.3. Online matches started before this keep dirty plays as reactions with no referee.
 
 - v0.17 (in progress), phase b — Contact, from the v0.17 plan Paul approved (`PLAN.md`; Paul: too few injuries, and more injuries means real ones). Field players get **Toughness** by type (5, 4, or 3). A successful tackle **knocks the holder down**: a roll above their Toughness hurts them. Hits and dirty plays hurt with no Toughness roll. Every hurt rolls for **severity**: 1–3 Shaken, 4–5 Injured, 6 Knocked out. **Shaken** players (card sideways) can't pass, shoot, tackle, or cast and get −2 in contests until the end of their team's next turn (Paul's decision 2); **knocked-out** players sit beside the mat and roll 4–6 at each faceoff to go back to the hand. Claude: a player is hurt at most once per contest (a hit, then a dirty play, then a knockdown), so one contest can't stack two severity rolls; a knocked-out player keeps any injury card. Result (`reports/sim-2026-10-14-v17b.md`): 3.55 hurts a game (target 4–8), half of them Shaken, but real injuries fell from 2.87 to 1.75; physical attacks (phase c2) and the phase e levers are meant to raise them. Online matches started before this keep the old injuries (no knockdowns).
 

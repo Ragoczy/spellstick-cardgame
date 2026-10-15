@@ -71,12 +71,12 @@ SPELLS = [
     ("long_shot", "action",   {"penalty": 2}, ["fire"], "A midfielder holding the ball may shoot, with -2 Shot."),
     ("steal",     "action",   {"amount": 2},  ["fire", "earth"], "Tackle with +2."),
     ("recall",    "action",   {"count": 2},   [None], "Draw 2 cards."),
-    ("dirty_play", "reaction", {},            [None], "If your side wins this contest, the opposing player is injured."),
+    ("dirty_play", "reaction", {},            [None], "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."),
     ("mend",      "action",   {},             ["water"], "Remove the injury from one of your players, on the field or in your hand."),
 ]
 
 # Hits, chosen to fit each team's main elements: (element, name)
-HIT_TEXT = "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're injured. (Not the goalie.)"
+HIT_TEXT = "Attack the opposing player in the caster's spot: strength 3 against their Defense. If it lands, they're hurt. (Not the goalie.)"
 HITS = {
     "A": [("fire", "Flambé"), ("fire", "Flambé"), ("air", "Thunderclap")],
     "B": [("water", "Water Spear"), ("water", "Water Spear"), ("earth", "Earth Crush")],

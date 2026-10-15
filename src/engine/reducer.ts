@@ -7,7 +7,7 @@ import {
   cardView, countCast, defOf, discardFromHand, discardTopOfPile, drawCards, handIsFull, moveHandToDiscard, pileFor, playerAt, reveal, setSlotAt, slotAt, takeFromHand,
 } from './board';
 import type { ActionSpellDef } from './cards';
-import { callDice, playReaction, startContest } from './contest';
+import { callDice, playFoul, playReaction, startContest } from './contest';
 import type { GameEvent } from './events';
 import { AREAS, GOAL, opposite, otherSide, type FieldPos, type Side } from './field';
 import { continueGame } from './flow';
@@ -39,6 +39,7 @@ export function applyAction(state: GameState, action: Action): { state: GameStat
     case 'cast': cast(s, action, ev); break;
     case 'substitute': substitute(s, action, ev); break;
     case 'regroup': regroup(s, side, action.discard, ev); break;
+    case 'foul': playFoul(s, action.card, ev); break;
     case 'react': playReaction(s, action.card, ev); break;
     case 'callDice': callDice(s, action.roll, ev); break;
     case 'shootoutPick': penalty(s, side, action.pos, ev); break;

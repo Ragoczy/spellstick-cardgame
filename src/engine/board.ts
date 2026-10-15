@@ -95,11 +95,22 @@ export function isReactionSpell(def: CardDef): def is SpellCardDef & { spellType
   return def.kind === 'spell' && def.spellType === 'reaction';
 }
 
-/** Whether this side holds a reaction spell it could play in this side of a contest. */
-export function hasReactionSpell(s: GameState, side: Side, contestSide: ContestSide): boolean {
+/** A dirty play: since v0.17 it's declared as a foul before the dice, not played as a reaction. */
+export function isFoulSpell(def: CardDef): boolean {
+  return isReactionSpell(def) && def.ability.effect === 'dirty_play';
+}
+
+/**
+ * Whether this side holds a reaction spell it could play in this side of a contest. `foul`: a dirty
+ * play to declare before the dice (v0.17); otherwise any other reaction spell, after the dice.
+ * (With the old rule, dirty plays are ordinary reaction spells.)
+ */
+export function hasReactionSpell(s: GameState, side: Side, contestSide: ContestSide, foul = false): boolean {
+  const foulsFirst = s.config.foulTiming === 'before';
   return s.teams[side].hand.some((uid) => {
     const def = defOf(s, uid);
-    return isReactionSpell(def) && reactionFits(def, contestSide);
+    if (!isReactionSpell(def) || !reactionFits(def, contestSide)) return false;
+    return foul ? isFoulSpell(def) : !(foulsFirst && isFoulSpell(def));
   });
 }
 

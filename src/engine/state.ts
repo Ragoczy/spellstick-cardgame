@@ -109,6 +109,8 @@ export type Pending =
   /** Draw step: draw from a pile, or substitute instead (asked when there is a choice to make). */
   | { kind: 'draw'; side: Side }
   | { kind: 'action'; side: Side }
+  /** Before the dice (v0.17): declare a foul (a dirty play) in this contest? */
+  | { kind: 'foul'; side: Side; role: ContestRole; contest: Contest }
   | { kind: 'reaction'; side: Side; role: ContestRole; contest: Contest }
   /**
    * Spend a roll token in this contest? With 'reroll' tokens (the rule), it rerolls your own die.

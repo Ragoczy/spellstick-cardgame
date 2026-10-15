@@ -33,7 +33,15 @@ function slots(view: PlayerView): SlotView[] {
 export function whyNotNow(view: PlayerView, def: CardDef): string | null {
   if (def.kind !== 'spell') return null;
   const pending = view.pending;
+  if (pending.kind === 'foul') {
+    return def.ability.effect === 'dirty_play'
+      ? null
+      : `Only a dirty play can be played now, as a foul before the dice. ${def.spellType === 'reaction' ? 'Other reaction spells come after the dice.' : ''}`.trim();
+  }
   if (pending.kind === 'reaction') {
+    if (def.ability.effect === 'dirty_play' && view.config.foulTiming === 'before') {
+      return `${def.name} is a dirty play: declare it as a foul before the dice, not after.`;
+    }
     return def.spellType === 'action' ? `${def.name} is an action spell: play it on your turn, as your action. Only reaction spells work in a contest.` : null;
   }
   if (def.spellType === 'reaction') return `${def.name} is a reaction spell. ${REACTION_HELP}`;

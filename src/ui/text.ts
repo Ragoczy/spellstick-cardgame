@@ -103,6 +103,7 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
         : e.affinity === 'specialist' ? (numeric ? ' Specialist affinity: +2.' : ' Specialist affinity.')
         : e.affinity === 'match' ? (numeric ? ' Affinity match: +1.' : ' Affinity match.')
         : e.affinity === 'opposed' ? ' Opposed affinity: −1.' : '';
+      if (e.foul) return info(`Foul! ${who(e.side)} ${verb(e.side, 'declare', 'declares')} ${e.card.def.name} with ${at(e.side, e.caster)}, before the dice. If the dice match, the referee sends them off.${note}`);
       return info(`${who(e.side)} ${verb(e.side, 'cast', 'casts')} ${e.card.def.name} with ${at(e.side, e.caster)}.${note}`);
     }
     case 'contestResolved': {
@@ -207,6 +208,8 @@ export function describeForPlayer(e: GameEvent, me: Side, lanes: number, holding
           : `knocked out! They go beside the mat and roll to come back at each faceoff.`;
       return { text: `${e.cause}! ${where} (${e.card.def.name}) is hurt. Severity roll ${e.roll}: ${result}`, tone: isMe(e.side) ? 'bad' : 'good' };
     }
+    case 'sentOff':
+      return { text: `The dice match (${e.roll} and ${e.roll}): the referee saw the foul! ${capitalize(at(e.side, e.pos))} (${e.card.def.name}) is sent off for the game. The spot stays empty until ${isMe(e.side) ? 'you substitute' : `${opp.name} substitutes`} at a Draw step.`, tone: isMe(e.side) ? 'bad' : 'good' };
     case 'stoodUp':
       return info(`${capitalize(at(e.side, e.pos))} (${e.card.def.name}) stands up.`);
     case 'returnRoll':

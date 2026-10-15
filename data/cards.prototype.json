@@ -2468,7 +2468,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-blast-shot",
@@ -2500,7 +2500,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-mist-veil",
@@ -2558,7 +2558,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-stone-skin",
@@ -2652,7 +2652,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-bolt",
@@ -2668,7 +2668,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-jolt",
@@ -2682,7 +2682,7 @@
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-thunderclap",
@@ -2698,7 +2698,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-dazzle",
@@ -2944,7 +2944,7 @@
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-empower",
@@ -2974,7 +2974,7 @@
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-hex",
@@ -3032,7 +3032,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-wither",
@@ -3060,7 +3060,7 @@
         "effect": "dirty_play",
         "params": {}
       },
-      "text": "If your side wins this contest, the opposing player is injured."
+      "text": "Foul: play before the dice. If your side wins, the opposing player is hurt. If the dice match, your player is sent off."
     },
     {
       "id": "sp-ward",
@@ -3150,7 +3150,7 @@
           "strength": 4
         }
       },
-      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're injured. (Not the goalie.)"
+      "text": "Attack the opposing player in the caster's spot: strength 4 against their Defense. If it lands, they're hurt. (Not the goalie.)"
     },
     {
       "id": "sp-turn-aside",

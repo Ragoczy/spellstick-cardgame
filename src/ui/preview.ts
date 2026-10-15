@@ -64,6 +64,8 @@ export function reactionPreview(view: PlayerView): ReactionPreview | null {
   const now = score(null);
   const options = view.mine.hand
     .filter((c) => c.def.kind === 'spell' && c.def.spellType === 'reaction' && reactionFits(c.def, me))
+    // Since v0.17 a dirty play is a foul, declared before the dice, so it isn't offered here.
+    .filter((c) => !(view.config.foulTiming === 'before' && c.def.kind === 'spell' && c.def.ability.effect === 'dirty_play'))
     .map((c) => {
       const def = c.def as SpellCardDef;
       const affinity = affinityFor(myPlayer, def.magic, view.opposedPairs);

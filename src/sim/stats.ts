@@ -115,6 +115,10 @@ export function tallyGame(record: GameRecord): GameTally {
           t.firstSerious ??= e.side;
         } else t.injured += 1;
         break;
+      case 'sentOff':
+        t.sentOff += 1;
+        t.foulsCaught += 1;
+        break;
       case 'knockedDown':
         t.knockdowns += 1;
         if (e.hurt) t.knockdownHurts += 1;

@@ -100,10 +100,9 @@ describe.each(LANE_COUNTS)('setup (%i lanes)', (lanes) => {
     expect(s.pending).toEqual({ kind: 'faceoffLane', side: second });
     expect(s.ball).toBeNull();
     s = applyAction(s, { type: 'faceoffLane', side: second, lane: lanes - 1 }).state;
-    while (s.pending.kind === 'reaction' || s.pending.kind === 'callDice') {
-      s = applyAction(s, s.pending.kind === 'reaction'
-        ? { type: 'react', side: s.pending.side, card: null }
-        : { type: 'callDice', side: s.pending.side, roll: false }).state;
+    // Nobody fouls, rerolls, or plays a spell.
+    for (let p = s.pending; p.kind === 'foul' || p.kind === 'reaction' || p.kind === 'callDice'; p = s.pending) {
+      s = applyAction(s, p.kind === 'callDice' ? { type: 'callDice', side: p.side, roll: false } : { type: p.kind === 'foul' ? 'foul' : 'react', side: p.side, card: null }).state;
     }
     expect(s.turn).toBe(1);
     // Turn 1 starts with the draw step: both piles have cards, so the player chooses.

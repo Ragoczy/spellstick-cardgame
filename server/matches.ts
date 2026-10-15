@@ -112,6 +112,9 @@ export function savedSetup(setup: GameSetup): GameSetup {
   if (result.config && !('knockdowns' in result.config)) {
     result = { ...result, config: { ...result.config, knockdowns: false } };
   }
+  if (result.config && !('foulTiming' in result.config)) {
+    result = { ...result, config: { ...result.config, foulTiming: 'reaction' } };
+  }
   const old = result.cardSet as unknown as { elements?: string[]; families?: string[] };
   if (old.elements && !old.families) {
     const { elements, ...rest } = result.cardSet as unknown as { elements: string[] } & Record<string, unknown>;

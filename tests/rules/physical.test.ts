@@ -239,7 +239,8 @@ describe.each(LANE_COUNTS)('physical attacks (%i lanes)', (lanes) => {
 
     it('Elbow: when your player loses a contest to the opposing player in their spot, that result stands, then attack', () => {
       const s = scenario({
-        lanes, config: HAND, ball: { side: 'B', pos: mid(LAST) },
+        // Tackle risk off: a tackler who loses badly would be Shaken, and couldn't elbow.
+        lanes, config: { ...HAND, tackleRiskMargin: 0 }, ball: { side: 'B', pos: mid(LAST) },
         A: { hand: [elbow()], lineup: { midfield: { [LAST]: player('A mid', { defense: 0, speed: 6 }) } } },
         B: { lineup: { midfield: { [LAST]: player('B mid', { speed: 4, toughness: NEVER_HURT }) } } },
       });
@@ -253,7 +254,8 @@ describe.each(LANE_COUNTS)('physical attacks (%i lanes)', (lanes) => {
 
     it('are only offered to a side that has one, and can be declined', () => {
       const s = scenario({
-        lanes, config: HAND, ball: { side: 'B', pos: mid(LAST) },
+        // Tackle risk off: a tackler who loses badly would be Shaken, and couldn't elbow.
+        lanes, config: { ...HAND, tackleRiskMargin: 0 }, ball: { side: 'B', pos: mid(LAST) },
         A: { hand: [elbow()], lineup: { midfield: { [LAST]: player('A mid', { defense: 0 }) } } },
       });
       const { state } = play(s, { type: 'tackle', side: 'A' }, { type: 'physicalReaction', side: 'A', card: null });

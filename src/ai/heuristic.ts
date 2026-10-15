@@ -471,16 +471,40 @@ class Thinker {
   private tackleValue(modifiers: Modifier[]): number {
     const holder = this.view.ball!.pos as FieldPos;
     const tackler = opposite(holder);
-    const mine = this.myValue(tackler, 'defense', 'tackle', modifiers) + 0.6 * this.bestBoost(tackler, 'tackle');
-    const p = this.chance(mine, this.theirValue(holder, 'speed', 'evade'), false);
+    const assist = this.assistFor(tackler);
+    const mine = this.myValue(tackler, 'defense', 'tackle', [...modifiers, ...assist]) + 0.6 * this.bestBoost(tackler, 'tackle');
+    const theirs = this.theirValue(holder, 'speed', 'evade');
+    const p = this.chance(mine, theirs, false);
+    // Tackle risk (optional): losing badly leaves my tackler Shaken.
+    const risk = this.config.tackleRiskMargin ? this.loseByChance(mine, theirs, this.config.tackleRiskMargin) * SHAKEN_WORTH * this.unit() : 0;
     const lost = -this.ladder()[holder.area];
     // Since v0.17 a won tackle also knocks the holder down (who no longer has the ball by then).
     const knockdown = this.config.knockdowns ? this.knockdownChance('opponent', holder) * this.injuryWorth(holder, true) : 0;
-    const tackled = p * (this.afterGaining(tackler) + knockdown) + (1 - p) * lost;
+    const tackled = p * (this.afterGaining(tackler) + knockdown) + (1 - p) * lost - risk;
     // Against mirror images, the tackle usually goes for an image and changes nothing.
     if (!hasImages(this.view, 'opponent', holder)) return tackled;
     const real = this.findsRealPlayer();
     return real * tackled + (1 - real) * lost;
+  }
+
+  /** Tackle assist (optional): my standing teammates one lane over in the tackler's row. */
+  private assistFor(tackler: FieldPos): Modifier[] {
+    if (!this.config.tackleAssist) return [];
+    const helpers = [tackler.lane - 1, tackler.lane + 1].filter((lane) => {
+      if (lane < 0 || lane >= this.view.lanes) return false;
+      const slot = slotOf(this.view, 'mine', { area: tackler.area, lane });
+      return slot.state !== 'empty' && !slot.shaken;
+    }).length;
+    return helpers ? [{ label: 'Assist', amount: helpers * this.config.tackleAssist }] : [];
+  }
+
+  /** Chance that a side worth `mine` loses to one worth `theirs` by `margin` or more, both rolling. */
+  private loseByChance(mine: number, theirs: number, margin: number): number {
+    const die = this.config.contestDie;
+    if (!die) return theirs - mine >= margin ? 1 : 0;
+    let n = 0;
+    for (let a = 1; a <= die; a++) for (let b = 1; b <= die; b++) if (theirs + b - (mine + a) >= margin) n += 1;
+    return n / (die * die);
   }
 
   /** Chance that a tackle or hit on a player with mirror images finds the real one. */

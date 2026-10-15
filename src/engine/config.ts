@@ -198,6 +198,18 @@ export interface GameConfig {
   /** Nobody can be substituted into a penalized player's spot. */
   penaltyNoSubstitution: boolean;
 
+  /**
+   * Tackle assist (v0.17 phase e, tried and not kept: it cost goals): +this to a tackle for each of
+   * the tackler's standing teammates (on the field, not Shaken) in an adjacent lane of the same
+   * row. 0 = off. A simulation what-if.
+   */
+  tackleAssist: number;
+  /**
+   * Tackle risk (v0.17 phase e, the rule): a tackler who loses by this much or more is Shaken (no
+   * Toughness roll). 0 = off.
+   */
+  tackleRiskMargin: number;
+
   // Experimental rule switches, used only by simulation what-ifs. Not in RULES.md.
   /** With 'call' tokens: 'both' (the old rule) makes both players roll; only the caller pays. 'self': only the caller rolls. */
   diceMode: 'both' | 'self';
@@ -258,6 +270,8 @@ export const DEFAULT_CONFIG: GameConfig = {
   penaltyTurns: { minor: 1, major: 2, brutal: 3 },
   penaltyTurnsByResult: { none: 1, injured: 2, out: 3 },
   penaltyEscalation: true,
+  tackleAssist: 0,
+  tackleRiskMargin: 3,
   powerPlayReturn: true,
   penaltyNoSubstitution: true,
   injuries: [

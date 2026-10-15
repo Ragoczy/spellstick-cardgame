@@ -463,8 +463,9 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const tackleChance = tackleMatchup && tackleMatchup.theirs !== null && view.config.contestDie
     ? chanceWithDice(tackleMatchup.mine, tackleMatchup.theirs, false, view.config.contestDie)
     : null;
+  const riskNote = view.config.tackleRiskMargin ? `; lose by ${view.config.tackleRiskMargin} or more and your tackler is Shaken` : '';
   const tackleLabel = !theirHolder ? ''
-    : tackleChance !== null ? ` (your Defense ${tackleMatchup!.mine} vs their Speed ${tackleMatchup!.theirs}, both roll: about ${Math.round(tackleChance * 100)}% to win)${imagesNote}`
+    : tackleChance !== null ? ` (your Defense ${tackleMatchup!.mine} vs their Speed ${tackleMatchup!.theirs}, both roll: about ${Math.round(tackleChance * 100)}% to win${riskNote})${imagesNote}`
     : versus(tackleMatchup, 'Defense', 'Speed') + imagesNote;
 
   function actionPrompt() {

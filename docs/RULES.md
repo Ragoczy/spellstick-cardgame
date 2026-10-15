@@ -264,7 +264,8 @@ goalie.
 
 **Tackle.** Your player in the ball holder's slot challenges them. Both are revealed. Contest:
 your player's **Defense** against the holder's **Speed**. If you win, your player holds the
-ball and the holder is **knocked down** (see "Contact"). If you lose, nothing changes. Goalies can't be tackled, and you need a player in that spot to tackle.
+ball and the holder is **knocked down** (see "Contact"). If you lose, nothing changes, unless you
+lose by 3 or more ⚙: then your tackler is **Shaken** (tackle risk; no Toughness roll). Goalies can't be tackled, and you need a player in that spot to tackle.
 You can't tackle a forward who has just caught a pass (see "Catch and shoot").
 If the holder has mirror images, roll for them first (see `mirror_images`).
 
@@ -448,6 +449,7 @@ Spellstick is a rough sport. Players get hurt three ways:
 - **Hit.** A hit that lands hurts its target, with no Toughness roll: the hit already had to beat
   their Defense.
 - **Dirty play.** A dirty play by the winning side hurts the losing player, with no Toughness roll.
+- **A bad miss.** A tackler who loses by 3 or more ⚙ is Shaken (no Toughness or severity roll).
 
 A player is hurt at most once in a contest (a hit first, then a dirty play, then a knockdown).
 **Goalies are never hurt:** they can't be tackled or hit, and a dirty play against a goalie does
@@ -622,6 +624,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress), phase e — **Tackle risk** (from the v0.17 plan): a tackler who loses by 3 or more is Shaken. Tried against tackle assist (+1 to a tackle for each standing teammate one lane over), and both together, on the same 5,000 games (Paul: keep whichever moves real injuries toward 3.5 without pushing another target out). Tackle risk did: real injuries 3.24 → 3.28, spells cast 14.7 → 15.2, Shaken share 58%, goals unchanged. Assist raised real injuries more (3.36) but dropped goals below their floor (1.81), and both together pushed goals and total hurts out, so assist is not kept (it stays as a what-if switch). Report: `reports/sim-2026-10-15-v17e.md`.
 
 - v0.17 (in progress), phase d — Healing, Ward, and player abilities, from the v0.17 plan Paul approved (decisions 3, 4, 5). **Mend** can also bring a knocked-out player back to the hand. **Ward** (new reaction effect): if your player is hurt in this contest, they're only Shaken; **Ward** and **Stone Skin** become wards (Team A swaps Scrying Bowl for Stone Skin; Team B swaps True Sight for Hex). New player abilities **Heavy hands** (+1 severity for anyone they hurt) and **Sturdy** (−1 severity when hurt), and **Quick but fragile** (+2 Speed when evading, Toughness 1 lower), 8 players each by their Resonants. Claude: Heavy hands counts physical attacks too; a Ward cast by the attacker also covers a Spearing self-roll; the two wards are marked Uncommon until phase f measures them. Result (`reports/sim-2026-10-15-v17d.md`): the Shaken share reaches 50.8% and spells cast rise to 14.7 (the computer plays its Ward), but real injuries fall from 3.44 to 3.24.
 

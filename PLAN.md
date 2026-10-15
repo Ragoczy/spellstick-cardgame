@@ -511,7 +511,8 @@ abilities), the library and team decks in `cards.prototype.json`, MAGIC.md, `spe
 Tests: `tests/effects/ward.test.ts`, `mend.test.ts`, `hits_harder.test.ts`,
 `hard_to_hurt.test.ts`.
 
-**Phase e: optional rules.** `config.ts` (`tackleAssist`, `tackleRiskMargin`, both off unless
+**Phase e: optional rules.** *(Done 2026-10-15: tackle risk kept, assist not; real injuries 3.28.
+See `reports/sim-2026-10-15-v17e.md`.)* `config.ts` (`tackleAssist`, `tackleRiskMargin`, both off unless
 kept), `contest.ts`, the computer's tackle estimate, and tests for whichever are kept.
 
 **Measurement (before pricing).** `scripts/measure-value.ts` (new) writes

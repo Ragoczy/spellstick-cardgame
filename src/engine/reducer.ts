@@ -150,7 +150,9 @@ function shoot(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[])
 
 function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]): void {
   const holderPos = s.ball!.pos as FieldPos;
-  const attacker: ContestSide = { side, pos: opposite(holderPos), stat: 'defense', use: 'tackle', spell: null, modifiers };
+  const tacklerPos = opposite(holderPos);
+  const assist = tackleAssist(s, side, tacklerPos);
+  const attacker: ContestSide = { side, pos: tacklerPos, stat: 'defense', use: 'tackle', spell: null, modifiers: [...modifiers, ...assist] };
   const defender: ContestSide = { side: otherSide(side), pos: holderPos, stat: 'speed', use: 'evade', spell: null, modifiers: [] };
   // The tackler is revealed by going for the holder, even if they only find an image.
   reveal(s, side, attacker.pos, ev);
@@ -159,6 +161,20 @@ function tackle(s: GameState, side: Side, modifiers: Modifier[], ev: GameEvent[]
     return;
   }
   startContest(s, { kind: 'tackle', attacker, defender, tiesGoTo: 'defender' }, ev);
+}
+
+/**
+ * Tackle assist (config.tackleAssist, optional): + for each of the tackler's standing teammates
+ * (on the field, not Shaken) in an adjacent lane of the same row.
+ */
+function tackleAssist(s: GameState, side: Side, tackler: FieldPos): Modifier[] {
+  if (!s.config.tackleAssist) return [];
+  const helpers = [tackler.lane - 1, tackler.lane + 1].filter((lane) => {
+    if (lane < 0 || lane >= s.config.lanes) return false;
+    const slot = slotAt(s, side, { area: tackler.area, lane });
+    return !!slot && slot.shakenUntil === undefined;
+  }).length;
+  return helpers ? [{ label: 'Assist', amount: helpers * s.config.tackleAssist }] : [];
 }
 
 /**

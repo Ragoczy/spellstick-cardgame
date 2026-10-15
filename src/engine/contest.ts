@@ -286,7 +286,7 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
   if (!s.result && s.config.foulTiming === 'before') referee(s, contest, ev);
   if (!s.result) {
     if (contest.kind === 'attack') applyAttack(s, contest, attackerWins, ev);
-    else applyHurts(s, contest, attackerWins, ev);
+    else applyHurts(s, contest, attackerWins, ev, defender.total - attacker.total);
   }
   // A physical reaction card (Late Hit, Elbow) may follow.
   if (!s.result && offerPhysicalReaction(s, contest, attackerWins)) return;
@@ -297,7 +297,7 @@ function resolveContest(s: GameState, contest: Contest, ev: GameEvent[]): void {
  * Hurts after a contest: a hit that lands hurts its target, a dirty play by the winner hurts the
  * loser, and (v0.17) a successful tackle knocks the tackled player down.
  */
-function applyHurts(s: GameState, contest: Contest, attackerWins: boolean, ev: GameEvent[]): void {
+function applyHurts(s: GameState, contest: Contest, attackerWins: boolean, ev: GameEvent[], lostBy = 0): void {
   const winner = attackerWins ? contest.attacker : contest.defender;
   const loser = attackerWins ? contest.defender : contest.attacker;
   const hitLands = contest.kind === 'hit' && attackerWins;
@@ -316,6 +316,9 @@ function applyHurts(s: GameState, contest: Contest, attackerWins: boolean, ev: G
   else if (dirty) hurtPlayer(s, loser.side, loser.pos, 'dirty_play', dirty, ev, hurtOptions(s, winner, loser));
   else if (contest.kind === 'tackle' && attackerWins) {
     knockDown(s, contest.defender.side, contest.defender.pos, 'Tackle', ev, hurtOptions(s, contest.attacker, contest.defender));
+  } else if (contest.kind === 'tackle' && s.config.tackleRiskMargin && lostBy >= s.config.tackleRiskMargin) {
+    // Tackle risk (optional): a tackler who loses badly is Shaken, with no Toughness roll.
+    shake(s, contest.attacker.side, contest.attacker.pos, 'tackle', 'A missed tackle', ev);
   }
 }
 

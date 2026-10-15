@@ -121,7 +121,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Charlotte Stanhope-Ainsworth",
-      "cost": 13,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.triumph",
@@ -180,7 +180,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Sibyl Prescott-Langley",
-      "cost": 13,
+      "cost": 14,
       "resonants": [
         {
           "id": "phy.alertness",
@@ -257,7 +257,7 @@
       "kind": "field",
       "role": "runner",
       "name": "Arabella Ashford-Pemberton",
-      "cost": 13,
+      "cost": 14,
       "resonants": [
         {
           "id": "emo.wonder",
@@ -602,7 +602,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Agatha Hollis-Sterling",
-      "cost": 12,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.fatigue",
@@ -681,7 +681,7 @@
       "kind": "field",
       "role": "striker",
       "name": "Juliet Thayer",
-      "cost": 12,
+      "cost": 13,
       "resonants": [
         {
           "id": "phy.ease",
@@ -953,7 +953,7 @@
       "kind": "field",
       "role": "playmaker",
       "name": "Tatiana Sterling",
-      "cost": 9,
+      "cost": 8,
       "resonants": [
         {
           "id": "emo.hostility",
@@ -1473,7 +1473,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Eleanor Sinclair",
-      "cost": 9,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.pain",
@@ -1537,7 +1537,7 @@
       "kind": "field",
       "role": "allrounder",
       "name": "Esme Hollis-Sterling",
-      "cost": 9,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.heat",
@@ -1748,7 +1748,7 @@
       "kind": "field",
       "role": "anchor",
       "name": "Clementine Wentworth",
-      "cost": 9,
+      "cost": 10,
       "resonants": [
         {
           "id": "phy.lucidity",
@@ -2081,7 +2081,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Wilhelmina Ashford",
-      "cost": 9,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.intoxication",
@@ -2166,7 +2166,7 @@
       "kind": "field",
       "role": "stopper",
       "name": "Emmeline Whitcombe-Thornton",
-      "cost": 9,
+      "cost": 8,
       "resonants": [
         {
           "id": "phy.whirling",
@@ -2335,7 +2335,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Antoinette Whitcombe",
-      "cost": 21,
+      "cost": 22,
       "resonants": [
         {
           "id": "emo.shame",
@@ -2356,7 +2356,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Leonora Ainsworth",
-      "cost": 21,
+      "cost": 22,
       "resonants": [
         {
           "id": "phy.fullness",
@@ -2372,7 +2372,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Astrid Blair",
-      "cost": 22,
+      "cost": 23,
       "resonants": [
         {
           "id": "emo.derision",
@@ -2398,7 +2398,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Sylvia Ashford-Pemberton",
-      "cost": 21,
+      "cost": 22,
       "resonants": [
         {
           "id": "emo.weariness",
@@ -2556,7 +2556,7 @@
       "kind": "goalie",
       "role": "goalie",
       "name": "Felicity Lockwood-Marlowe",
-      "cost": 6,
+      "cost": 5,
       "resonants": [
         {
           "id": "phy.repletion",
@@ -2707,7 +2707,7 @@
       "name": "Fog Bank",
       "spellType": "action",
       "magic": "water.fog",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -2812,7 +2812,7 @@
       "name": "Leap",
       "spellType": "reaction",
       "magic": "air.flight",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "boost",
         "params": {
@@ -2933,7 +2933,7 @@
       "name": "Cloak of Night",
       "spellType": "action",
       "magic": "shadow.darkness",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3022,7 +3022,7 @@
       "name": "Brute Strength",
       "spellType": "reaction",
       "magic": "body.strength",
-      "tier": "uncommon",
+      "tier": "common",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3055,7 +3055,7 @@
       "name": "Burst of Speed",
       "spellType": "reaction",
       "magic": "body.speed",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "boost",
         "params": {
@@ -3594,7 +3594,7 @@
       "name": "Befuddle",
       "spellType": "action",
       "magic": "enchantment.confusion",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3622,7 +3622,7 @@
       "name": "Glamour Ball",
       "spellType": "action",
       "magic": "illusion.glamour",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3650,7 +3650,7 @@
       "name": "Unseen Pass",
       "spellType": "action",
       "magic": "illusion.invisibility",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3692,7 +3692,7 @@
       "name": "Misdirection",
       "spellType": "action",
       "magic": "illusion.misdirection",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}
@@ -3706,7 +3706,7 @@
       "name": "Trick Pass",
       "spellType": "action",
       "magic": "illusion.trickery",
-      "tier": "common",
+      "tier": "uncommon",
       "ability": {
         "effect": "decoy_pass",
         "params": {}

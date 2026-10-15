@@ -180,7 +180,7 @@ from the cards a player owns.
 1. A deck is 2 goalies ⚙, 22 field players ⚙, and 16 spells (whatever the 40-card deck ⚙ leaves).
 2. Each named player can be on a team only once. Spells can repeat.
 3. Add-on cards can only be used with the center-lane add-on.
-4. The players' costs add up to at most the **team cap** of 238 ⚙ (v0.17), the cost of an average
+4. The players' costs add up to at most the **team cap** of 239 ⚙ (v0.17), the cost of an average
    team. Dealt and drafted games have no cap.
 5. Every card plays in the team's color for this game. Setup goes on from step 1.
 
@@ -481,8 +481,8 @@ A player is **injured** when their severity roll comes up Injured (see "Contact"
   straight away, face down. This is free and doesn't use an action, even during
   the other player's turn. The injured player goes to the owner's hand with the injury still
   attached. If they held the ball, the substitute holds it.
-- *Trial, off by default ⚙ (v0.17):* every forced substitute (after an injury, a carry-off, a
-  knockout, or a sending off) comes on **Shaken**.
+- **The substitute comes on Shaken** ⚙ (v0.17), whatever forced the substitution: an injury, a
+  carry-off, a knockout, or a sending off. So an injury costs a team more than being Shaken.
 - If the owner has nobody to bring on, the injured player stays in place, playing hurt.
 - An injured player can be substituted back in later. The injury stays until it's **mended**.
 - **Injuries don't stack:** a player who is already injured and gets injured again is **carried
@@ -630,6 +630,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress) — **Forced substitutes come on Shaken** is now the rule (Paul, after the trial below). Players are re-priced under it from a fresh measurement (`reports/value-2026-10-15-v17g.md` and `-v17g-by-type.md`). With half by-type values, Defense-heavy teams scored 55.8% (just out); at 40% by type and 60% all-player, both roster targets are met: Defense-heavy vs Striker-heavy 51.4% (45–55%), a 10% cost gap 61.4% (55–65%). Field players cost 6 to 15, goalies 5 (Save 5) or 22–23 (Save 6). The team cap is 239 and the starter set costs 219. Heavy hands and Sturdy still measure below 0 and cost 0. Spell tiers re-measured: wards are small but positive. Online matches started before v0.17 keep the old substitutes. Report: `reports/sim-2026-10-15-v17g.md`.
 
 - v0.17 (in progress), trial — **Forced substitutes come on Shaken** (Paul: try it; off by default for now). Pricing found that being Shaken was worse than being Injured with a sub in hand, since an Injured player is swapped at once for a fresh one. With the trial on (5,000 games, `reports/sim-2026-10-15-v17g-subshaken.md`): spells cast 15.2 → 17.5 (target met), real injuries 3.28 → 3.42, goals 1.91 → 1.82 (just under the 1.84 floor), and wards go from no edge (−0.3) to +3.6. Heavy hands and Sturdy stay slightly below 0 and Toughness near 0, so the trial doesn't make them worth a cost.
 

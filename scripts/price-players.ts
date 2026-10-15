@@ -1,22 +1,30 @@
 // Prices the 100 named players from a value measurement (PLAN.md, Phase f).
 //
-//   npm run price-players                                    (the newest reports/value-*.json)
+//   npm run price-players                                    (the measurements the prices use now)
 //   npm run price-players -- --from reports/value-2026-10-15.json
 //   npm run price-players -- --check                         (print the costs, change nothing)
-//   npm run price-players -- --by-type reports/value-2026-10-15-by-type.json
-//       (field stats by type group; the newest reports/value-*-by-type.json is used if there is one)
-//   npm run price-players -- --type-weight 1                 (all by type; 0.5, half and half, is the default)
+//   npm run price-players -- --by-type reports/value-2026-10-15-by-type.json   (field stats by type group)
+//   npm run price-players -- --type-weight 1                 (all by type; the default is TYPE_WEIGHT)
 //
 // Writes data/player-values.json (what each part is worth, and the scale) and each player's
 // `cost` in data/cards.prototype.json, then prints the team cap to put in src/engine/config.ts.
 // Run it again after scripts/generate-players.ts and scripts/assign-abilities.ts, which don't
 // keep costs.
 
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { FIELD_STATS, playerCost, playerWorth, TYPE_GROUPS, type FieldStatName, type PlayerValues, type PricedPart, type TypeGroup } from '../src/data/pricing';
 import { POOL_TEAM, type PlayerCardDef } from '../src/engine/cards';
 import { DEFAULT_CONFIG } from '../src/engine/config';
 import { arg } from '../src/sim/configArgs';
+
+/**
+ * The measurements the prices use now (rules v0.17 with Shaken substitutes), and how much of the
+ * by-type values to use: 0.4 by type and 0.6 all-player is the blend that meets both roster
+ * targets (reports/sim-2026-10-15-v17f.md).
+ */
+const VALUES = 'reports/value-2026-10-15-v17g.json';
+const BY_TYPE = 'reports/value-2026-10-15-v17g-by-type.json';
+const TYPE_WEIGHT = 0.4;
 
 /** The cheapest field player costs this, and the average one this. */
 const FLOOR_COST = 6;
@@ -24,8 +32,8 @@ const AVERAGE_COST = 10;
 
 interface Measured { key: string; perPoint: number; perPointLow: number; perPointHigh: number }
 
-const from = arg('from') ?? `reports/${readdirSync('reports').filter((f) => /^value-\d{4}-\d\d-\d\d\.json$/.test(f)).sort().at(-1)}`;
-const byTypeFrom = arg('by-type') ?? readdirSync('reports').filter((f) => /^value-\d{4}-\d\d-\d\d-by-type\.json$/.test(f)).sort().map((f) => `reports/${f}`).at(-1);
+const from = arg('from') ?? VALUES;
+const byTypeFrom = arg('by-type') ?? BY_TYPE;
 const measured = JSON.parse(readFileSync(from, 'utf8')) as { items: Measured[] };
 if (byTypeFrom) measured.items.push(...(JSON.parse(readFileSync(byTypeFrom, 'utf8')) as { items: Measured[] }).items);
 const notes: string[] = [];
@@ -57,7 +65,7 @@ const floor: Record<PricedPart, number> = {
 };
 
 // By-type values, blended with the all-player value: 1 is all by type, 0 all flat.
-const typeWeight = Number(arg('type-weight') ?? 0.5); // 0.5 is the kept blend (reports/sim-2026-10-15-v17f.md)
+const typeWeight = Number(arg('type-weight') ?? TYPE_WEIGHT);
 const byType = byTypeFrom
   ? Object.fromEntries(Object.keys(TYPE_GROUPS).map((group) => [group, Object.fromEntries(FIELD_STATS.map((stat) => {
     const typed = value(`${stat}@${group}`, `${stat} on ${group}`);

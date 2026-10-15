@@ -1,365 +1,365 @@
 {
   "games": 1000,
-  "control": 50.06,
+  "control": 49.49,
   "rows": [
     {
       "id": "sp-earth-crush",
-      "edge": -3.21,
-      "castsPerGame": 0.581
+      "edge": -1.69,
+      "castsPerGame": 1.032
     },
     {
       "id": "sp-bolt",
-      "edge": -3.91,
-      "castsPerGame": 0.526
+      "edge": -0.84,
+      "castsPerGame": 0.978
     },
     {
       "id": "sp-mend",
-      "edge": -2.21,
-      "castsPerGame": 0.42
+      "edge": -3.64,
+      "castsPerGame": 0.579
     },
     {
       "id": "sp-burst-of-speed",
-      "edge": 1.59,
-      "castsPerGame": 1.521
+      "edge": 3.66,
+      "castsPerGame": 1.518
     },
     {
       "id": "sp-hex",
-      "edge": 21.04,
-      "castsPerGame": 2.884
+      "edge": 21.51,
+      "castsPerGame": 3.01
     },
     {
       "id": "sp-alarm-ward",
-      "edge": -2.96,
-      "castsPerGame": 0.086
+      "edge": -5.69,
+      "castsPerGame": 0.115
     },
     {
       "id": "sp-quicken",
-      "edge": 8.74,
-      "castsPerGame": 1.832
+      "edge": 9.51,
+      "castsPerGame": 1.815
     },
     {
       "id": "sp-scrying-bowl",
-      "edge": -5.21,
-      "castsPerGame": 0.081
+      "edge": -1.34,
+      "castsPerGame": 0.095
     },
     {
       "id": "sp-mesmerize",
-      "edge": 17.04,
-      "castsPerGame": 2.963
+      "edge": 17.71,
+      "castsPerGame": 3.055
     },
     {
       "id": "sp-hall-of-mirrors",
-      "edge": -2.81,
-      "castsPerGame": 1.678
+      "edge": -1.49,
+      "castsPerGame": 1.79
     },
     {
       "id": "sp-flambe",
-      "edge": -3.21,
-      "castsPerGame": 0.854
+      "edge": -0.04,
+      "castsPerGame": 1.621
     },
     {
       "id": "sp-stone-skin",
-      "edge": -0.76,
-      "castsPerGame": 3.517
+      "edge": 1.86,
+      "castsPerGame": 3.729
     },
     {
       "id": "sp-jolt",
-      "edge": -3.86,
-      "castsPerGame": 2.69
+      "edge": -1.24,
+      "castsPerGame": 3.18
     },
     {
       "id": "sp-knit",
-      "edge": -0.01,
-      "castsPerGame": 0.435
+      "edge": 0.26,
+      "castsPerGame": 0.589
     },
     {
       "id": "sp-sidestep",
-      "edge": 8.99,
-      "castsPerGame": 1.839
+      "edge": 9.16,
+      "castsPerGame": 1.763
     },
     {
       "id": "sp-bad-luck",
-      "edge": 15.99,
-      "castsPerGame": 2.879
+      "edge": 17.21,
+      "castsPerGame": 3.103
     },
     {
       "id": "sp-snare",
-      "edge": 2.99,
-      "castsPerGame": 3.212
+      "edge": 2.41,
+      "castsPerGame": 2.949
     },
     {
       "id": "sp-slow",
-      "edge": 19.74,
-      "castsPerGame": 3.639
+      "edge": 21.26,
+      "castsPerGame": 3.788
     },
     {
       "id": "sp-far-sight",
-      "edge": -4.46,
-      "castsPerGame": 0.09
+      "edge": -4.89,
+      "castsPerGame": 0.085
     },
     {
       "id": "sp-befuddle",
-      "edge": 0.34,
-      "castsPerGame": 2.402
+      "edge": 2.71,
+      "castsPerGame": 2.632
     },
     {
       "id": "sp-misdirection",
-      "edge": 3.24,
-      "castsPerGame": 2.46
+      "edge": 3.06,
+      "castsPerGame": 2.68
     },
     {
       "id": "sp-blast-shot",
-      "edge": -1.56,
+      "edge": -2.54,
       "castsPerGame": 0.033
     },
     {
       "id": "sp-heavy-ground",
-      "edge": 3.74,
-      "castsPerGame": 3.309
+      "edge": 4.71,
+      "castsPerGame": 3.08
     },
     {
       "id": "sp-thunderclap",
-      "edge": -3.51,
-      "castsPerGame": 0.529
+      "edge": -6.49,
+      "castsPerGame": 0.988
     },
     {
       "id": "sp-set-the-bone",
-      "edge": -3.76,
-      "castsPerGame": 0.412
+      "edge": -2.29,
+      "castsPerGame": 0.555
     },
     {
       "id": "sp-low-stance",
-      "edge": -1.41,
-      "castsPerGame": 0.837
+      "edge": -1.44,
+      "castsPerGame": 0.804
     },
     {
       "id": "sp-evil-eye",
-      "edge": 15.19,
-      "castsPerGame": 2.923
+      "edge": 16.91,
+      "castsPerGame": 3.119
     },
     {
       "id": "sp-freeze-in-place",
-      "edge": 14.44,
-      "castsPerGame": 2.902
+      "edge": 17.81,
+      "castsPerGame": 3.065
     },
     {
       "id": "sp-blink",
-      "edge": -0.41,
-      "castsPerGame": 0.001
+      "edge": -0.79,
+      "castsPerGame": 0.002
     },
     {
       "id": "sp-second-sight",
-      "edge": -3.16,
-      "castsPerGame": 0.064
+      "edge": -2.59,
+      "castsPerGame": 0.09
     },
     {
       "id": "sp-sleight",
-      "edge": -3.76,
+      "edge": -2.39,
       "castsPerGame": 0
     },
     {
       "id": "sp-trick-pass",
-      "edge": 2.84,
-      "castsPerGame": 2.487
+      "edge": 2.06,
+      "castsPerGame": 2.68
     },
     {
       "id": "sp-water-spear",
-      "edge": -3.16,
-      "castsPerGame": 0.489
+      "edge": -3.94,
+      "castsPerGame": 1.01
     },
     {
       "id": "sp-light-as-air",
-      "edge": 9.44,
-      "castsPerGame": 1.839
+      "edge": 10.61,
+      "castsPerGame": 1.815
     },
     {
       "id": "sp-dazzle",
-      "edge": 15.04,
-      "castsPerGame": 2.941
+      "edge": 18.56,
+      "castsPerGame": 3.057
     },
     {
       "id": "sp-shrug-it-off",
-      "edge": -3.51,
-      "castsPerGame": 0.184
+      "edge": -1.44,
+      "castsPerGame": 0.324
     },
     {
       "id": "sp-pinpoint",
-      "edge": 14.14,
-      "castsPerGame": 1.475
+      "edge": 14.26,
+      "castsPerGame": 1.461
     },
     {
       "id": "sp-elf-shot",
-      "edge": -1.36,
-      "castsPerGame": 0.556
+      "edge": -2.09,
+      "castsPerGame": 1.054
     },
     {
       "id": "sp-force-shot",
-      "edge": -4.56,
-      "castsPerGame": 0.014
+      "edge": -1.14,
+      "castsPerGame": 0.017
     },
     {
       "id": "sp-sending",
-      "edge": 2.39,
-      "castsPerGame": 2.523
+      "edge": 4.66,
+      "castsPerGame": 2.744
     },
     {
       "id": "sp-true-sight",
-      "edge": -1.96,
-      "castsPerGame": 0.086
+      "edge": -1.79,
+      "castsPerGame": 0.116
     },
     {
       "id": "sp-glamour-ball",
-      "edge": 0.69,
-      "castsPerGame": 3.074
+      "edge": 2.96,
+      "castsPerGame": 3.379
     },
     {
       "id": "sp-mist-veil",
-      "edge": 17.79,
-      "castsPerGame": 2.913
+      "edge": 20.31,
+      "castsPerGame": 3.038
     },
     {
       "id": "sp-tailwind",
-      "edge": 0.89,
-      "castsPerGame": 2.541
+      "edge": 4.61,
+      "castsPerGame": 2.752
     },
     {
       "id": "sp-blinding-flash",
-      "edge": 16.74,
-      "castsPerGame": 2.963
+      "edge": 19.96,
+      "castsPerGame": 3.028
     },
     {
       "id": "sp-fresh-legs",
-      "edge": 18.24,
-      "castsPerGame": 2.923
+      "edge": 19.56,
+      "castsPerGame": 3.108
     },
     {
       "id": "sp-red-mist",
-      "edge": -1.76,
-      "castsPerGame": 3.403
+      "edge": -4.44,
+      "castsPerGame": 4.005
     },
     {
       "id": "sp-wither",
-      "edge": 18.59,
-      "castsPerGame": 2.923
+      "edge": 19.61,
+      "castsPerGame": 3.055
     },
     {
       "id": "sp-shatter",
-      "edge": -3.56,
-      "castsPerGame": 0.747
+      "edge": -2.44,
+      "castsPerGame": 1.27
     },
     {
       "id": "sp-summon",
-      "edge": -2.51,
-      "castsPerGame": 2.415
+      "edge": -1.34,
+      "castsPerGame": 2.697
     },
     {
       "id": "sp-danger-sense",
-      "edge": 11.24,
-      "castsPerGame": 1.817
+      "edge": 8.86,
+      "castsPerGame": 1.732
     },
     {
       "id": "sp-glamour-self",
-      "edge": -1.31,
-      "castsPerGame": 2.085
+      "edge": -1.84,
+      "castsPerGame": 2.181
     },
     {
       "id": "sp-fog-bank",
-      "edge": 4.84,
-      "castsPerGame": 2.475
+      "edge": 4.01,
+      "castsPerGame": 2.585
     },
     {
       "id": "sp-leap",
-      "edge": -0.71,
-      "castsPerGame": 1.471
+      "edge": 1.31,
+      "castsPerGame": 1.519
     },
     {
       "id": "sp-shadow-double",
-      "edge": -1.56,
-      "castsPerGame": 1.64
+      "edge": -0.39,
+      "castsPerGame": 1.725
     },
     {
       "id": "sp-brute-strength",
-      "edge": 2.49,
-      "castsPerGame": 2.027
+      "edge": 0.81,
+      "castsPerGame": 1.627
     },
     {
       "id": "sp-empower",
-      "edge": 15.29,
-      "castsPerGame": 2.94
+      "edge": 18.71,
+      "castsPerGame": 3.101
     },
     {
       "id": "sp-sting",
-      "edge": -3.21,
-      "castsPerGame": 2.774
+      "edge": 0.61,
+      "castsPerGame": 3.192
     },
     {
       "id": "sp-turn-aside",
-      "edge": 16.19,
-      "castsPerGame": 0.727
+      "edge": 17.51,
+      "castsPerGame": 0.732
     },
     {
       "id": "sp-divine",
-      "edge": -0.81,
-      "castsPerGame": 0.07
+      "edge": -1.69,
+      "castsPerGame": 0.09
     },
     {
       "id": "sp-read-their-mind",
-      "edge": -3.41,
-      "castsPerGame": 0.065
+      "edge": -5.19,
+      "castsPerGame": 0.091
     },
     {
       "id": "sp-unseen-pass",
-      "edge": -0.46,
-      "castsPerGame": 2.515
+      "edge": 3.96,
+      "castsPerGame": 2.657
     },
     {
       "id": "sp-ice-wall",
-      "edge": 16.09,
-      "castsPerGame": 3.574
+      "edge": 17.31,
+      "castsPerGame": 3.804
     },
     {
       "id": "sp-squall",
-      "edge": -2.11,
-      "castsPerGame": 0.511
+      "edge": -1.89,
+      "castsPerGame": 1.022
     },
     {
       "id": "sp-cloak-of-night",
-      "edge": 1.54,
-      "castsPerGame": 2.455
+      "edge": 4.51,
+      "castsPerGame": 2.684
     },
     {
       "id": "sp-second-wind",
-      "edge": 16.39,
-      "castsPerGame": 3.617
+      "edge": 18.86,
+      "castsPerGame": 3.857
     },
     {
       "id": "sp-jinx",
-      "edge": -6.16,
-      "castsPerGame": 2.774
+      "edge": -3.19,
+      "castsPerGame": 3.144
     },
     {
       "id": "sp-ward",
-      "edge": 0.19,
-      "castsPerGame": 2.793
+      "edge": 0.56,
+      "castsPerGame": 2.993
     },
     {
       "id": "sp-float-pass",
-      "edge": 2.84,
-      "castsPerGame": 2.526
+      "edge": 3.16,
+      "castsPerGame": 2.738
     },
     {
       "id": "sp-precognition",
-      "edge": 0.24,
-      "castsPerGame": 2.441
+      "edge": -3.04,
+      "castsPerGame": 2.708
     },
     {
       "id": "sp-silent-call",
-      "edge": -2.66,
-      "castsPerGame": 0.002
+      "edge": -3.19,
+      "castsPerGame": 0.001
     },
     {
       "id": "sp-hidden-hands",
-      "edge": -4.21,
+      "edge": -4.29,
       "castsPerGame": 0.001
     }
   ]

@@ -223,15 +223,15 @@ report. They are power tiers, not rarity yet, and change nothing in play.
 
 | Tier | Effects (average edge) | Why |
 |---|---|---|
-| Legendary (dominant, 15 spells) | Shield (+17); open boost +2 (+17); goalie's save boost, Turn Aside (+16) | A shield takes 2 off the other player's stat (v0.17), which still wins most contests, in any contest. Open boosts also work anywhere. Saves decide goals. |
-| Rare (strong, 5) | Shooting boost, Pinpoint (+14); dodging boosts (+10); intercepting boost (+9) | Big swings in contests that decide possession and goals. Dodging now also beats physical attacks. |
-| Uncommon (useful, 6) | Steals (+3); tackling boost (+3); long passes (+2) | They help, but less often or by less. |
-| Common (no clear edge, 46) | Decoy passes, receiving boosts, wards, recall, faceoff boost, mirror images, mends, swaps, hits, long shots, scrying, resisting boost, dirty plays (−3.7 to +1.9) | No better than the rarely-cast spells they replaced. |
+| Legendary (dominant, 15 spells) | Open boost +2 (+19); shield (+19); goalie's save boost, Turn Aside (+18) | A shield takes 2 off the other player's stat (v0.17), which still wins most contests, in any contest. Open boosts also work anywhere. Saves decide goals. |
+| Rare (strong, 5) | Shooting boost, Pinpoint (+14); dodging boosts (+10); intercepting boost (+10) | Big swings in contests that decide possession and goals. Dodging now also beats physical attacks. |
+| Uncommon (useful, 14) | Long passes (+4); steals (+4); decoy passes (+3); receiving boosts (+3) | They help, but less often or by less. |
+| Common (no clear edge, 38) | Wards, tackling boost, mirror images, faceoff and resisting boosts, long shots, mends, dirty plays, recall, hits, swaps, scrying (−3.3 to +1.2) | No better than the rarely-cast spells they replaced. |
 
-v0.17 moved several effects down: steals and tackling boosts (a won tackle now knocks the holder
-down whether or not a spell helped), mirror images, and dirty plays (a dirty play now risks the
-referee). Wards measure about 0, for the reason in `reports/sim-2026-10-15-v17f.md`: being Shaken
-is no better for a team than being Injured and swapped for a fresh player.
+v0.17 moved several effects down: tackling boosts (a won tackle now knocks the holder down
+whether or not a spell helped), mirror images, and dirty plays (a dirty play now risks the
+referee). Wards are small but positive (+1 to +4 across runs) now that a forced substitute comes on
+Shaken; before that they measured about 0 (`reports/sim-2026-10-15-v17g.md`).
 
 What this says about the game:
 - **Shields were too strong** in v0.16 (0 to the other player's stat): four shields in place of

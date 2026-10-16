@@ -34,9 +34,12 @@ the team with more goals wins. Reaching 3 goals ⚙ wins straight away.
   starts) and **Spells**.
 - A field mat (see "The field").
 - A ball token and a score tracker.
+- Two **Physical piles**, one per team, of 16 physical cards ⚙ (see "Physical attacks").
 - A shared **injury deck** of 12 cards ⚙ (see "Injuries").
-- Two six-sided dice, and 3 roll tokens ⚙ per player (see "Dice").
+- Three six-sided dice: one per team, and the penalty die (see "The penalty box"). 3 roll tokens ⚙
+  per player (see "Dice").
 - Spell markers (any small tokens) to show which players have cast (see "Casting limit").
+- A penalty risk marker per team (see "The penalty box").
 
 ## The field
 
@@ -631,6 +634,8 @@ A player who loses a contest is tired (turned sideways) and gets −1 to all sta
 substituted or until their owner spends a turn resting them. Off by default ⚙. Not built yet.
 
 ## Change log
+
+- v0.17 (in progress) — Components list brought up to date (Claude, for the printer spec in `docs/PRINT_QUOTE_SPEC.md`): the two Physical piles, a third die for penalties, and a penalty risk marker per team. No change to play.
 
 - v0.17 (wording) — Substitute: a player who just came on can't make a physical attack either (the engine already worked this way), and a forced substitute comes on Shaken instead of being free to act (matching "Injuries"). No change to play.
 

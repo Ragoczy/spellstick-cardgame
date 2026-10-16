@@ -64,7 +64,7 @@ without Paul's OK.
 ## M4 — Two players at one screen and a playtest build
 
 - Hotseat mode with a "pass the device" screen between turns, so hands and face-down lineups
-  stay hidden.
+  stay hidden. *(Deferred by Paul, 2026-10-16. Online play covers two humans for now.)*
 - A setting for the center-lane add-on (3 lanes).
 - A static build Paul can upload for Discord volunteers, with a link to a short feedback form.
 

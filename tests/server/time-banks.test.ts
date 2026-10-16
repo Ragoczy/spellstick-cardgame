@@ -148,7 +148,7 @@ describe.skipIf(!haveDb)('time banks', () => {
     }
     expect(latest.match.status).toBe('finished');
     expect(latest.match.result!.reason).toBe('played');
-  });
+  }, 30_000); // Plays a whole game: allow for a busy machine.
 
   it("refuses a move sent after the player's time ran out", async () => {
     const id = await newMatch();

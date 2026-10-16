@@ -7,7 +7,8 @@
 //   POST /api/tournaments/:id/leave             before the start, withdraw; after it, drop out
 //   POST /api/redeem                            use a redeem code: { code }
 //   POST /api/admin/tournaments                 admins: set one up (TournamentInput)
-//   POST /api/admin/tournaments/:id/start       admins: close entries and pair round 1
+//   POST /api/admin/tournaments/:id/start       admins: close entries and pair round 1 now
+//   POST /api/admin/tournaments/:id/start-time  admins: change when it starts by itself: { startsAt } (null: by hand)
 //   POST /api/admin/tournaments/:id/cancel      admins: call it off
 //   POST /api/admin/tournaments/:id/prize-sent  admins: the top prize is on its way
 //   GET  /api/admin/codes                       admins: recent redeem codes
@@ -23,7 +24,7 @@ import { inTransaction, type ClockNotice } from '../matches';
 import type { Notifier } from '../notify';
 import {
   advanceTournaments, cancelTournament, createTournament, enterTournament, getTournament, leaveTournament, listTournaments,
-  markPrizeSent, startTournament, TournamentError,
+  markPrizeSent, setStartTime, startTournament, TournamentError,
 } from '../tournaments';
 import type { User } from '../users';
 
@@ -145,6 +146,12 @@ export function tournamentRoutes(app: FastifyInstance, deps: AppDeps, runner: To
   app.post<IdParams>('/api/admin/tournaments/:id/start', (req, reply) =>
     signedIn(req, reply, async (user) => {
       runner.tell(await inTransaction(db, (client) => startTournament(client, user, Number(req.params.id))));
+      return getTournament(db, user, Number(req.params.id));
+    }, true));
+
+  app.post<IdParams & { Body: { startsAt?: unknown } | undefined }>('/api/admin/tournaments/:id/start-time', (req, reply) =>
+    signedIn(req, reply, async (user) => {
+      await inTransaction(db, (client) => setStartTime(client, user, Number(req.params.id), req.body?.startsAt ?? null));
       return getTournament(db, user, Number(req.params.id));
     }, true));
 

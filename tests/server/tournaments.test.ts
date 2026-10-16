@@ -140,6 +140,41 @@ describe.skipIf(!haveDb)('tournaments', () => {
     await api('admin', 'POST', `/api/admin/tournaments/${id}/cancel`);
   });
 
+  it('starts by itself at its start time, or once four have entered after it', async () => {
+    const inAnHour = new Date(Date.now() + 3_600_000).toISOString();
+    expect((await api('admin', 'POST', '/api/admin/tournaments', {
+      name: 'Past Cup', format: 'draft', lanes: 2, pace: 'async', roundHours: 96, topPrize: '', awardCard: '', startsAt: '2020-01-01T00:00:00Z',
+    })).statusCode).toBe(400);
+    const id = await setUp({ name: 'Scheduled Cup', awardCard: '', startsAt: inAnHour });
+    expect((await detail('p1', id)).tournament.startsAt).toBe(inAnHour);
+    await enter(id, ['p1', 'p2', 'p3']);
+    // Not time yet: still open.
+    expect((await detail('admin', id)).tournament.status).toBe('registration');
+
+    // Time has come, but only three players: it stays open for entries.
+    await db.query(`update tournaments set starts_at = now() - interval '1 second' where id = $1`, [id]);
+    expect((await detail('admin', id)).tournament.status).toBe('registration');
+    // The fourth player enters, and it starts.
+    await enter(id, ['p4']);
+    const started = await detail('p4', id);
+    expect(started.tournament).toMatchObject({ status: 'swiss', round: 1 });
+    expect(started.you.currentMatchId).not.toBeNull();
+  });
+
+  it('lets admins change the start time until it starts', async () => {
+    const id = await setUp({ name: 'Moving Cup', awardCard: '' });
+    expect((await detail('admin', id)).tournament.startsAt).toBeNull();
+    const later = new Date(Date.now() + 86_400_000).toISOString();
+    expect((await api('p1', 'POST', `/api/admin/tournaments/${id}/start-time`, { startsAt: later })).statusCode).toBe(403);
+    const moved = await api('admin', 'POST', `/api/admin/tournaments/${id}/start-time`, { startsAt: later });
+    expect(moved.json<TournamentDetail>().tournament.startsAt).toBe(later);
+    expect((await api('admin', 'POST', `/api/admin/tournaments/${id}/start-time`, { startsAt: 'soon' })).statusCode).toBe(400);
+    const byHand = await api('admin', 'POST', `/api/admin/tournaments/${id}/start-time`, { startsAt: null });
+    expect(byHand.json<TournamentDetail>().tournament.startsAt).toBeNull();
+    await api('admin', 'POST', `/api/admin/tournaments/${id}/cancel`);
+    expect((await api('admin', 'POST', `/api/admin/tournaments/${id}/start-time`, { startsAt: later })).statusCode).toBe(409);
+  });
+
   it('runs four players through two Swiss rounds, with no knockout, then gives out the award cards', async () => {
     const id = await setUp();
     const four = ['p1', 'p2', 'p3', 'p4'];

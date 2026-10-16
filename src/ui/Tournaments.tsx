@@ -13,7 +13,7 @@ import type {
 import { liveConnected, listenLive } from './live';
 import {
   cancelTournament, createCodes, createTournament, enterTournament, fetchCollection, fetchTournament, leaveTournament, listCodes,
-  listTournaments, markPrizeSent, startTournament,
+  listTournaments, markPrizeSent, setStartTime, startTournament,
 } from './online';
 
 /** How often an open tournament page checks for changes when live updates aren't working. */
@@ -26,6 +26,31 @@ const awardablePlayers = prototypeCards.cards
 const playerName = (cardId: string | null) => prototypeCards.cards.find((c) => c.id === cardId)?.name ?? cardId;
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+/** An ISO time as the value of a datetime-local input, in the viewer's own time zone. */
+function toLocalInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** A datetime-local value (the viewer's own time zone) as an ISO time, or null if it's empty. */
+function fromLocalInput(value: string): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** "Starts Oct 20, 2026, 6:00 PM." or, once that time has passed, that it's waiting for players. */
+function startText(t: TournamentSummary): string {
+  if (t.status !== 'registration') return '';
+  if (!t.startsAt) return 'An admin starts it when everyone is in.';
+  if (new Date(t.startsAt).getTime() <= Date.now()) return `Starts as soon as ${MIN_PLAYERS} players have entered.`;
+  return `Starts ${when(t.startsAt)}.`;
+}
+
+/** Fewest players a tournament starts with (MIN_ENTRANTS on the server). */
+const MIN_PLAYERS = 4;
 const hoursText = (hours: number) => (hours % 24 === 0 ? `${hours / 24} day${hours === 24 ? '' : 's'}` : `${hours} hour${hours === 1 ? '' : 's'}`);
 
 /** "Draft, two lanes, at your own pace. Rounds last 4 days." */
@@ -66,7 +91,7 @@ export function TournamentsScreen({ isAdmin, onOpen, onBack }: { isAdmin: boolea
   const row = (t: TournamentSummary) => (
     <li key={t.id} className={`match-row${t.youEntered ? ' yours' : ''}`}>
       <span>
-        <strong>{t.name}</strong>{t.youEntered ? ' (you’re in)' : ''}. {formatText(t)} {t.entrants} player{t.entrants === 1 ? '' : 's'}.
+        <strong>{t.name}</strong>{t.youEntered ? ' (you’re in)' : ''}. {startText(t)} {formatText(t)} {t.entrants} player{t.entrants === 1 ? '' : 's'}.
         {t.topPrize ? <> Top prize: {t.topPrize}.</> : null}
         {t.status === 'finished' && t.champion ? <> Champion: {t.champion}.</> : null}
       </span>
@@ -161,7 +186,10 @@ export function TournamentScreen({ id, isAdmin, onOpenMatch, onBack }: {
   return (
     <div className="screen lobby">
       <h2>{t.name}</h2>
-      <p>{stageText(t, inRound(t.round).length)}.{underWay && t.roundEndsAt ? ` This round ends ${when(t.roundEndsAt)}.` : ''}</p>
+      <p>
+        {stageText(t, inRound(t.round).length)}.{underWay && t.roundEndsAt ? ` This round ends ${when(t.roundEndsAt)}.` : ''}
+        {t.status === 'registration' ? ` ${startText(t)}` : ''}
+      </p>
       <p className="small">{formatText(t)}</p>
       {t.topPrize ? (
         <p>
@@ -179,7 +207,9 @@ export function TournamentScreen({ id, isAdmin, onOpenMatch, onBack }: {
           <p>You've left this tournament. Your results so far stay in the standings.</p>
         ) : you.entered ? (
           <div className="account-row">
-            <span>{t.status === 'registration' ? "You're in. Your first match starts when the tournament does." : "You're playing."}</span>
+            <span>{t.status === 'registration'
+              ? `You're in. Your first match starts when the tournament does${t.startsAt ? ` (${when(t.startsAt)} or later)` : ''}.`
+              : "You're playing."}</span>
             {you.currentMatchId ? (
               <span className="buttons"><button type="button" className="primary" onClick={() => onOpenMatch(you.currentMatchId!)}>Go to your match</button></span>
             ) : null}
@@ -280,10 +310,11 @@ export function TournamentScreen({ id, isAdmin, onOpenMatch, onBack }: {
       {isAdmin ? (
         <div className="account">
           <strong>Admin</strong>
+          {t.status === 'registration' ? <StartTimeEditor tournament={t} onSave={(startsAt) => run(() => setStartTime(id, startsAt))} /> : null}
           <div className="buttons">
             {t.status === 'registration' ? (
               <button type="button" className="primary" onClick={() => run(() => startTournament(id),
-                `Start ${t.name} with ${data.entrants.length} players? Entries close, and round 1 starts now.`)}>Start the tournament</button>
+                `Start ${t.name} with ${data.entrants.length} players? Entries close, and round 1 starts now.`)}>Start it now</button>
             ) : null}
             {t.status === 'registration' || underWay ? (
               <button type="button" onClick={() => run(() => cancelTournament(id),
@@ -337,6 +368,8 @@ function NewTournamentForm({ onCreated }: { onCreated: (t: TournamentSummary) =>
   const [roundHours, setRoundHours] = useState(96);
   const [topPrize, setTopPrize] = useState('');
   const [awardCard, setAwardCard] = useState(awardablePlayers[0]?.id ?? '');
+  /** A datetime-local value, or '' for "an admin starts it by hand". */
+  const [startsAt, setStartsAt] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
 
   const changePace = (next: Pace) => {
@@ -348,7 +381,7 @@ function NewTournamentForm({ onCreated }: { onCreated: (t: TournamentSummary) =>
     e.preventDefault();
     setProblem(null);
     try {
-      onCreated(await createTournament({ name, format, lanes, pace, roundHours, topPrize, awardCard }));
+      onCreated(await createTournament({ name, format, lanes, pace, roundHours, topPrize, awardCard, startsAt: fromLocalInput(startsAt) }));
     } catch (err) {
       setProblem((err as Error).message);
     }
@@ -394,6 +427,10 @@ function NewTournamentForm({ onCreated }: { onCreated: (t: TournamentSummary) =>
           </select>
         </label>
       </div>
+      <label className="small" htmlFor="tournament-start">
+        Start time (optional, your time zone). Players can enter until then, and it starts by itself. Leave it empty to start it by hand.
+      </label>
+      <input id="tournament-start" className="text-input" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
       <label className="small" htmlFor="tournament-prize">Top prize (optional). Anything you like; you send it to the champion yourself.</label>
       <input id="tournament-prize" className="text-input" value={topPrize} onChange={(e) => setTopPrize(e.target.value)} maxLength={200}
         placeholder="A signed paperback of the next Warlock book" />
@@ -402,7 +439,10 @@ function NewTournamentForm({ onCreated }: { onCreated: (t: TournamentSummary) =>
       </p>
       {problem ? <p className="account-problem">{problem}</p> : null}
       <div className="buttons"><button type="submit" className="primary" disabled={!name.trim()}>Set it up</button></div>
-      <p className="small">Players can enter as soon as it's set up. Start it from its page when everyone is in (at least 4 players).</p>
+      <p className="small">
+        Players can enter as soon as it's set up. It needs at least 4 players: if fewer have entered at the start time, it
+        starts as soon as the 4th enters. You can also start it early from its page.
+      </p>
     </form>
   );
 }
@@ -489,5 +529,20 @@ function RedeemCodes() {
         </table>
       ) : null}
     </form>
+  );
+}
+
+/** Admins: change when a tournament still open for entries starts. */
+function StartTimeEditor({ tournament, onSave }: { tournament: TournamentSummary; onSave: (startsAt: string | null) => void }) {
+  const [value, setValue] = useState(tournament.startsAt ? toLocalInput(tournament.startsAt) : '');
+  return (
+    <div className="account-row">
+      <label className="small" htmlFor="change-start">Start time (your time zone)</label>
+      <input id="change-start" className="text-input" type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} />
+      <span className="buttons">
+        <button type="button" disabled={!value} onClick={() => onSave(fromLocalInput(value))}>Save start time</button>
+        {tournament.startsAt ? <button type="button" className="quiet" onClick={() => { setValue(''); onSave(null); }}>Start it by hand instead</button> : null}
+      </span>
+    </div>
   );
 }

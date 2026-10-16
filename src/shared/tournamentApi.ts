@@ -29,6 +29,11 @@ export interface TournamentSummary {
   /** The round being played (0 before the start). Knockout rounds come after the Swiss rounds. */
   round: number;
   roundEndsAt: string | null;
+  /**
+   * When it starts by itself (null: an admin starts it by hand). If too few players have entered
+   * by then, it stays open and starts as soon as enough have.
+   */
+  startsAt: string | null;
   champion: string | null;
   /** True if you're entered (and haven't dropped). */
   youEntered: boolean;
@@ -97,6 +102,8 @@ export interface TournamentInput {
   topPrize: string;
   /** A player card id, or '' for no award cards. */
   awardCard: string;
+  /** ISO date and time, or null for "an admin starts it by hand". */
+  startsAt: string | null;
 }
 
 /** A redeem code, as admins see it. */

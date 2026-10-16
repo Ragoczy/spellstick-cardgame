@@ -43,6 +43,8 @@ export const TOP_PRIZE_MAX = 200;
 export const MAX_ENTRANTS = 256;
 /** Longest round an admin can set: two weeks. */
 export const MAX_ROUND_HOURS = 336;
+/** Furthest ahead a start time can be set. */
+export const MAX_START_DAYS = 180;
 
 /**
  * Shortest round for a pace: both players' whole time banks, so a match where both players use
@@ -70,6 +72,7 @@ interface TournamentRow {
   top_cut: number | null;
   round: number;
   round_ends_at: Date | null;
+  starts_at: Date | null;
   champion_id: string | null;
   champion_name: string | null;
   created_at: Date;
@@ -83,7 +86,7 @@ const nameOf = (u: string) => `coalesce(${u}.display_name, 'Deleted player')`;
 
 const TOURNAMENT_SELECT = `
   select t.id, t.name, t.format, t.lanes, t.pace, t.round_hours, t.top_prize, t.prize_sent_at, t.award_card, t.status,
-    t.seed, t.swiss_rounds, t.top_cut, t.round, t.round_ends_at, t.champion_id, t.created_at,
+    t.seed, t.swiss_rounds, t.top_cut, t.round, t.round_ends_at, t.starts_at, t.champion_id, t.created_at,
     case when t.champion_id is null then null else ${nameOf('uc')} end as champion_name,
     (select count(*)::int from tournament_entries e where e.tournament_id = t.id) as entrants,
     exists (select 1 from tournament_entries e where e.tournament_id = t.id and e.user_id = $1 and e.dropped_at is null) as you_entered,
@@ -106,6 +109,7 @@ function toSummary(row: TournamentRow): TournamentSummary {
     knockoutSize: row.top_cut,
     round: row.round,
     roundEndsAt: row.round_ends_at?.toISOString() ?? null,
+    startsAt: row.starts_at?.toISOString() ?? null,
     champion: row.champion_name,
     youEntered: row.you_entered,
     createdAt: row.created_at.toISOString(),
@@ -255,9 +259,24 @@ export function isAwardableCard(cardId: string): boolean {
   return prototypeCards.cards.some((c) => c.id === cardId && c.team === POOL_TEAM && c.kind !== 'spell');
 }
 
+/**
+ * A start time from the admin: an ISO date string in the future (up to MAX_START_DAYS ahead), or
+ * null / '' for "an admin starts it by hand".
+ */
+function parseStartsAt(value: unknown): Date | null {
+  if (value === null || value === undefined || value === '') return null;
+  const at = typeof value === 'string' ? new Date(value) : null;
+  if (!at || Number.isNaN(at.getTime())) throw new TournamentError(400, 'Choose a start date and time.');
+  if (at.getTime() <= Date.now()) throw new TournamentError(400, 'Choose a start time in the future.');
+  if (at.getTime() > Date.now() + MAX_START_DAYS * 86_400_000) throw new TournamentError(400, `Choose a start time within ${MAX_START_DAYS} days.`);
+  return at;
+}
+
 export async function createTournament(
   client: pg.PoolClient, admin: User,
-  input: { name?: unknown; format?: unknown; lanes?: unknown; pace?: unknown; roundHours?: unknown; topPrize?: unknown; awardCard?: unknown },
+  input: {
+    name?: unknown; format?: unknown; lanes?: unknown; pace?: unknown; roundHours?: unknown; topPrize?: unknown; awardCard?: unknown; startsAt?: unknown;
+  },
 ): Promise<TournamentSummary> {
   const name = typeof input.name === 'string' ? tidy(input.name) : '';
   if (name.length < TOURNAMENT_NAME_MIN || name.length > TOURNAMENT_NAME_MAX) {
@@ -275,11 +294,12 @@ export async function createTournament(
   if (prize.length > TOP_PRIZE_MAX) throw new TournamentError(400, `Keep the top prize under ${TOP_PRIZE_MAX} characters.`);
   const awardCard = typeof input.awardCard === 'string' && input.awardCard ? input.awardCard : null;
   if (awardCard !== null && !isAwardableCard(awardCard)) throw new TournamentError(400, 'Choose one of the named players for the award cards.');
+  const startsAt = parseStartsAt(input.startsAt);
 
   const { rows } = await client.query<{ id: string }>(
-    `insert into tournaments (name, format, lanes, pace, round_hours, top_prize, award_card, seed, created_by)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
-    [name, input.format, input.lanes, pace, hours, prize || null, awardCard, randomInt(1, 1_000_000_000), admin.id],
+    `insert into tournaments (name, format, lanes, pace, round_hours, top_prize, award_card, seed, created_by, starts_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
+    [name, input.format, input.lanes, pace, hours, prize || null, awardCard, randomInt(1, 1_000_000_000), admin.id, startsAt],
   );
   return toSummary(await loadTournament(client, Number(rows[0]!.id), admin.id));
 }
@@ -289,11 +309,23 @@ export async function startTournament(client: pg.PoolClient, admin: User, id: nu
   const t = await loadTournament(client, id, admin.id, true);
   if (t.status !== 'registration') throw new TournamentError(409, 'This tournament has already started.');
   if (t.entrants < MIN_ENTRANTS) throw new TournamentError(409, `A tournament needs at least ${MIN_ENTRANTS} players to start. It has ${t.entrants}.`);
+  return begin(client, t);
+}
+
+/** Closes entries, works out the rounds and the knockout size, and pairs round 1. */
+async function begin(client: pg.PoolClient, t: TournamentRow): Promise<ClockNotice[]> {
   await client.query(
     `update tournaments set status = 'swiss', swiss_rounds = $2, top_cut = $3, started_at = now() where id = $1`,
     [t.id, swissRounds(t.entrants), topCutSize(t.entrants)],
   );
-  return nextRound(client, await loadTournament(client, id, admin.id, true));
+  return nextRound(client, await loadTournament(client, Number(t.id), 0, true));
+}
+
+/** Changes when a tournament still open for entries starts (null: an admin starts it by hand). */
+export async function setStartTime(client: pg.PoolClient, admin: User, id: number, startsAt: unknown): Promise<void> {
+  const t = await loadTournament(client, id, admin.id, true);
+  if (t.status !== 'registration') throw new TournamentError(409, 'The start time can only change while the tournament is open for entries.');
+  await client.query('update tournaments set starts_at = $2 where id = $1', [t.id, parseStartsAt(startsAt)]);
 }
 
 /**
@@ -391,8 +423,25 @@ export async function leaveAllTournaments(client: pg.PoolClient, userId: number)
  * matches that started or changed, so their players can be told.
  */
 export async function advanceTournaments(db: pg.Pool): Promise<ClockNotice[]> {
-  const { rows } = await db.query<{ id: string }>(`select id from tournaments where status in ('swiss', 'knockout') order by id`);
   const notices: ClockNotice[] = [];
+  // Tournaments whose start time has come. One with too few players stays open for entries and
+  // starts as soon as enough have entered.
+  const due = await db.query<{ id: string }>(
+    `select t.id from tournaments t
+     where t.status = 'registration' and t.starts_at <= now()
+       and (select count(*) from tournament_entries e where e.tournament_id = t.id) >= $1
+     order by t.starts_at, t.id`,
+    [MIN_ENTRANTS],
+  );
+  for (const { id } of due.rows) {
+    notices.push(...await inTransaction(db, async (client) => {
+      const t = await loadTournament(client, Number(id), 0, true);
+      // Someone else may have started it, or a player withdrawn, since the check above.
+      if (t.status !== 'registration' || t.entrants < MIN_ENTRANTS || !t.starts_at || t.starts_at.getTime() > Date.now()) return [];
+      return begin(client, t);
+    }));
+  }
+  const { rows } = await db.query<{ id: string }>(`select id from tournaments where status in ('swiss', 'knockout') order by id`);
   for (const { id } of rows) {
     notices.push(...await inTransaction(db, (client) => advanceOne(client, Number(id))));
   }

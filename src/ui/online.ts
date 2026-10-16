@@ -174,6 +174,9 @@ export const leaveTournament = (id: number) => call<TournamentDetail>('POST', `/
 /** Admins only. */
 export const createTournament = (input: TournamentInput) => call<TournamentSummary>('POST', '/api/admin/tournaments', input);
 export const startTournament = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/start`);
+/** startsAt: an ISO time, or null for "an admin starts it by hand". */
+export const setStartTime = (id: number, startsAt: string | null) =>
+  call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/start-time`, { startsAt });
 export const cancelTournament = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/cancel`);
 export const markPrizeSent = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/prize-sent`);
 export const listCodes = () => call<RedeemCodeRow[]>('GET', '/api/admin/codes');

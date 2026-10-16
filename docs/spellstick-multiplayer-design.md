@@ -225,7 +225,8 @@ Tournaments are Swiss rounds followed by a single-elimination top cut, run entir
 - Top-cut matches can be scheduled live and streamed on Discord as an event.
 
 *Built 2026-10-16 (online phase 3: `server/tournaments.ts`, the sums in `server/swiss.ts`, migration `012_tournaments.sql`), with these decisions:*
-- *Admins set one up in the game (Tournaments, in the online lobby): name, draft or saved teams, field size, pace, round length, the featured award card, and the free-form top prize. Players enter from the tournament's page; the admin starts it when everyone is in. Entry is open until the start (no separate entry window), and there are no entry fees until the store exists.*
+- *Admins set one up in the game (Tournaments, in the online lobby): name, draft or saved teams, field size, pace, round length, the featured award card, the free-form top prize, and an optional start time. Players enter from the tournament's page until it starts (no separate entry window), and there are no entry fees until the store exists.*
+- *Start time (added 2026-10-16, Paul: so events can be set up and entered in advance): up to 180 days ahead, in the admin's own time zone, and changeable until the start. At that time the server starts it by itself. With fewer than 4 players it stays open and starts as soon as the 4th enters. Admins can still start it early, and an event with no start time is started by hand.*
 - *At least 4 players to start, at most 256. Swiss rounds are log2 of the players, rounded up.*
 - *Knockout: top 8 from 32 players, top 4 from 6, and none under 6 (a top 4 of 4 or 5 would just replay the Swiss rounds); the Swiss leader is then champion. The knockout shrinks if players have dropped. Seeds follow the Swiss standings (1v8, 4v5, 2v7, 3v6).*
 - *Round length is the admin's choice, at least both players' whole time banks (72 hours async, 1 hour live). The form suggests 96 hours (4 days) async and 2 hours live.*
@@ -416,6 +417,8 @@ Each phase ships something playable; the gate must pass before the next phase st
 6. **Later.** Rarity and Capped Constructed, pod draft, coins in trades, Patreon perks. *(Ranked ladder built early, 2026-10-10; see Ranked play.)*
 
 ## Change log
+
+- 2026-10-16: Tournaments can have a start time, so they can be set up and entered in advance (Paul). See Tournaments.
 
 - 2026-10-16: Online phase 3, tournaments and awards (Paul: go ahead without waiting for the beta, and add a free-form top prize). Swiss rounds and a knockout run by the server, round deadlines settled by the score, drops after two missed rounds, award cards from each tournament's featured card, the top prize with "mark as sent", and redeem codes. See Tournaments and Special award cards for the decisions.
 

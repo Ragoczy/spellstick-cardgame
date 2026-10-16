@@ -8,6 +8,7 @@ import { Rankings } from './Rankings';
 import { BetaDashboard } from './BetaDashboard';
 import { CollectionScreen } from './Collection';
 import { StatsDashboard } from './StatsDashboard';
+import { TournamentScreen, TournamentsScreen } from './Tournaments';
 import { TeamColors } from './Card';
 import { LocalGameScreen } from './GameScreen';
 import { FutureFeatures } from './FutureFeatures';
@@ -18,8 +19,10 @@ import type { SessionOptions } from './session';
 
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
-  // Online build only: your matches, one match, the rankings, and your cards and saved teams.
-  | { kind: 'lobby' } | { kind: 'match'; id: number } | { kind: 'rankings' } | { kind: 'collection' }
+  // Online build only: your matches, one match, the rankings, your cards and saved teams, and
+  // tournaments. A match opened from a tournament goes back to it (fromTournament).
+  | { kind: 'lobby' } | { kind: 'match'; id: number; fromTournament?: number } | { kind: 'rankings' } | { kind: 'collection' }
+  | { kind: 'tournaments' } | { kind: 'tournament'; id: number }
   // Moderators and admins: the beta dashboard and the stats dashboard.
   | { kind: 'beta' } | { kind: 'stats' };
 
@@ -108,6 +111,7 @@ export function App() {
             onBack={() => setScreen({ kind: 'start' })}
             onRankings={() => setScreen({ kind: 'rankings' })}
             onCollection={() => setScreen({ kind: 'collection' })}
+            onTournaments={() => setScreen({ kind: 'tournaments' })}
             onDashboard={me && me.role !== 'player' ? () => setScreen({ kind: 'beta' }) : undefined}
             onStats={me && me.role !== 'player' ? () => setScreen({ kind: 'stats' }) : undefined}
           />
@@ -116,6 +120,18 @@ export function App() {
           <Rankings onBack={() => setScreen({ kind: 'lobby' })} isAdmin={me?.role === 'admin'} />
         ) : null}
         {screen.kind === 'collection' ? <CollectionScreen onBack={() => setScreen({ kind: 'lobby' })} /> : null}
+        {screen.kind === 'tournaments' ? (
+          <TournamentsScreen isAdmin={me?.role === 'admin'} onOpen={(id) => setScreen({ kind: 'tournament', id })} onBack={() => setScreen({ kind: 'lobby' })} />
+        ) : null}
+        {screen.kind === 'tournament' ? (
+          <TournamentScreen
+            key={screen.id}
+            id={screen.id}
+            isAdmin={me?.role === 'admin'}
+            onOpenMatch={(matchId) => setScreen({ kind: 'match', id: matchId, fromTournament: screen.id })}
+            onBack={() => setScreen({ kind: 'tournaments' })}
+          />
+        ) : null}
         {screen.kind === 'beta' ? (
           <BetaDashboard onBack={() => setScreen({ kind: 'lobby' })} />
         ) : null}
@@ -123,7 +139,10 @@ export function App() {
           <StatsDashboard onBack={() => setScreen({ kind: 'lobby' })} />
         ) : null}
         {screen.kind === 'match' ? (
-          <OnlineMatchScreen key={screen.id} matchId={screen.id} onBack={() => { clearMatchLink(); setScreen({ kind: 'lobby' }); }} />
+          <OnlineMatchScreen key={screen.id} matchId={screen.id} onBack={() => {
+            clearMatchLink();
+            setScreen(screen.fromTournament ? { kind: 'tournament', id: screen.fromTournament } : { kind: 'lobby' });
+          }} />
         ) : null}
         {screen.kind === 'game' ? (
           <LocalGameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />

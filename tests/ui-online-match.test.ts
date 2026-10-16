@@ -23,7 +23,7 @@ function fakeServer() {
       lanes: 2, team: 'A', opponentTeam: 'B', yourMove: state.pending.kind !== 'gameOver' && state.pending.side === 'A',
       moveCount: events.length - 1, waitingSince: new Date().toISOString(), result: null, createdAt: new Date().toISOString(),
       pace: null, draft: false, constructed: false, teamName: null, opponentTeamName: null, ranked: false, clock: null,
-      autopilot: { you: false, them: false },
+      autopilot: { you: false, them: false }, tournament: null,
     },
     game: {
       view: viewFor(state, 'A'),

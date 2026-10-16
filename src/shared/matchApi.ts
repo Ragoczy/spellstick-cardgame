@@ -44,11 +44,14 @@ export interface MatchSummary {
   clock: { you: number; them: number; running: 'you' | 'them' | null } | null;
   /** Players whose time ran out: the computer makes their decisions. */
   autopilot: { you: boolean; them: boolean };
+  /** Tournament matches: which tournament. They start straight away, with no challenge to accept. */
+  tournament: { id: number; name: string } | null;
   /**
-   * forfeit: a player's time ran out before they had made a single move. ratingChange: how much
-   * your rating went up or down (null for unranked matches).
+   * forfeit: a player's time ran out before they had made a single move. deadline: a tournament
+   * round ended first, and the score at that moment decided it. ratingChange: how much your
+   * rating went up or down (null for unranked matches).
    */
-  result: { outcome: 'won' | 'lost' | 'draw'; reason: 'played' | 'resigned' | 'forfeit'; ratingChange: number | null } | null;
+  result: { outcome: 'won' | 'lost' | 'draw'; reason: 'played' | 'resigned' | 'forfeit' | 'deadline'; ratingChange: number | null } | null;
   createdAt: string;
 }
 

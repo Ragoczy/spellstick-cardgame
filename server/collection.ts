@@ -9,7 +9,7 @@ import type pg from 'pg';
 import { prototypeCards } from '../src/data/prototype';
 import { MAX_TEAMS, TEAM_NAME_MAX, TEAM_NAME_MIN, spellSets, starterSet, teamDeck, teamProblems } from '../src/data/teams';
 import { makeConfig, type CardSet, type GameConfig } from '../src/engine';
-import type { CardSource, Collection, OwnedCard, SavedTeam } from '../src/shared/collectionApi';
+import type { CardEdition, CardSource, Collection, OwnedCard, SavedTeam } from '../src/shared/collectionApi';
 import type { User } from './users';
 
 export type { Collection, OwnedCard, SavedTeam };
@@ -75,15 +75,26 @@ export async function giveCards(client: pg.PoolClient, userId: number, cardIds: 
   return ids;
 }
 
+/** Gives the player one award copy of a card, with its edition. Returns the new instance id. */
+export async function giveAwardCard(client: pg.PoolClient, userId: number, cardId: string, edition: CardEdition): Promise<number> {
+  const [id] = await giveCards(client, userId, [cardId], 'award');
+  await client.query('update card_instances set edition = $2 where id = $1', [id, JSON.stringify(edition)]);
+  return id!;
+}
+
 // ---- Reading ----
 
 export async function getCollection(db: pg.Pool | pg.PoolClient, user: User): Promise<Collection> {
-  const cards = await db.query<{ id: string; card_id: string; serial: number; source: CardSource }>(
-    'select id, card_id, serial, source from card_instances where owner_id = $1 order by card_id, serial',
+  const cards = await db.query<{ id: string; card_id: string; serial: number; source: CardSource; edition: Partial<CardEdition> }>(
+    'select id, card_id, serial, source, edition from card_instances where owner_id = $1 order by card_id, serial',
     [user.id],
   );
   return {
-    cards: cards.rows.map((r) => ({ instanceId: Number(r.id), cardId: r.card_id, serial: r.serial, source: r.source })),
+    cards: cards.rows.map((r) => ({
+      instanceId: Number(r.id), cardId: r.card_id, serial: r.serial, source: r.source,
+      // Ordinary cards have an empty edition.
+      edition: r.edition.label ? (r.edition as CardEdition) : null,
+    })),
     teams: await listTeams(db, user.id),
     maxTeams: MAX_TEAMS,
   };

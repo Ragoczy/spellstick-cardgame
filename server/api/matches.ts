@@ -19,12 +19,13 @@ import {
   type MatchDetail, type MatchSummary,
 } from '../matches';
 import type { LiveHub } from '../live';
+import type { TournamentRunner } from './tournaments';
 import type { Notifier } from '../notify';
 import type { User } from '../users';
 
 type IdParams = { Params: { id: string } };
 
-export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, notifier: Notifier): void {
+export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, notifier: Notifier, tournaments: TournamentRunner): void {
   const { db } = deps;
 
   /** Tells both players' open pages that the match changed, then passes the answer on. */
@@ -33,15 +34,20 @@ export function matchRoutes(app: FastifyInstance, deps: AppDeps, live: LiveHub, 
     live.matchChanged([user.id, match.opponent.id], { matchId: match.id, status: match.status, moveCount: match.moveCount });
     // A Discord alert for whoever the match now waits on, if they asked for one.
     notifier.later(match.status === 'challenged' ? notifier.challengeReceived(match.id) : notifier.matchWaiting(match.id, user.id));
+    // A tournament match that just ended may finish its round.
+    if (match.tournament && match.status === 'finished') tournaments.soon();
     return result;
   }
 
   /** Deals with any time banks that have run out, and tells the players. */
   async function settleClocks(): Promise<void> {
-    for (const notice of await settleOverdue(db)) {
+    const notices = await settleOverdue(db);
+    for (const notice of notices) {
       live.matchChanged(notice.playerIds, notice.change);
       notifier.later(notifier.matchWaiting(notice.change.matchId));
     }
+    // A forfeit may have ended a tournament match.
+    if (notices.some((n) => n.change.status === 'finished')) tournaments.soon();
   }
 
   // Check the clocks every so often. (Requests check too, so a deadline is kept even when the

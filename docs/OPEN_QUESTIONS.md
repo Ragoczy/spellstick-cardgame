@@ -64,6 +64,10 @@ Decided and open items are tracked in `docs/spellstick-multiplayer-design.md` un
 
 - Time bank sizes: tune after the beta.
 - HexBot connection details: needed at the start of phase 4 (Store).
+- Tournament posts in Discord (pairings, standings, the bracket): which channel? Needs the bot
+  token too. (Added 2026-10-16.)
+- Achievement cards (first win, 10-win streak, 100 matches): which cards, and what they say.
+  Award cards are player cards for now, since spells aren't owned yet. (Added 2026-10-16.)
 
 Tournament scoring, tiebreakers, deadlines, first-tournament prizes, and the rarity direction
 were decided on 2026-10-12 (see the design doc).

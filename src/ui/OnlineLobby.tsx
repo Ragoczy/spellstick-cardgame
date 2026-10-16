@@ -26,9 +26,13 @@ const teamName = (id: string) => prototypeCards.teams.find((t) => t.id === id)?.
 /** Your saved teams that are ready to play. */
 const readyTeams = (collection: Collection | null): SavedTeam[] => collection?.teams.filter((t) => !t.problems.length) ?? [];
 
+/** " (Spring Cup)" for tournament matches. */
+const tournamentText = (m: MatchSummary) => (m.tournament ? ` (${m.tournament.name})` : '');
+
 /** onDashboard and onStats: moderators and admins only (the beta and stats dashboards). */
-export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onDashboard, onStats }: {
-  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onCollection: () => void; onDashboard?: () => void; onStats?: () => void;
+export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onTournaments, onDashboard, onStats }: {
+  onOpen: (id: number) => void; onBack: () => void; onRankings: () => void; onCollection: () => void; onTournaments: () => void;
+  onDashboard?: () => void; onStats?: () => void;
 }) {
   const [matches, setMatches] = useState<MatchSummary[] | null>(null);
   const [ratings, setRatings] = useState<RatingsBoard | null>(null);
@@ -103,6 +107,7 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onDashbo
         <span>{yourRatingText(ratings)}</span>
         <button type="button" className="quiet" onClick={onRankings}>Rankings</button>
         <button type="button" className="quiet" onClick={onCollection}>Your cards and teams</button>
+        <button type="button" className="quiet" onClick={onTournaments}>Tournaments</button>
       </div>
 
       <ChallengeForm teams={readyTeams(collection)} onSent={() => reload()} onProblem={setProblem} />
@@ -134,7 +139,7 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onDashbo
               </>
             ) : (
               <>
-                <span>Your move against <strong>{m.opponent.name}</strong>{yourTimeLeft(m)}.</span>
+                <span>Your move against <strong>{m.opponent.name}</strong>{tournamentText(m)}{yourTimeLeft(m)}.</span>
                 <span className="buttons"><button type="button" className="primary" onClick={() => onOpen(m.id)}>Play</button></span>
               </>
             )}
@@ -153,7 +158,7 @@ export function OnlineLobby({ onOpen, onBack, onRankings, onCollection, onDashbo
               </>
             ) : (
               <>
-                <span><strong>{m.opponent.name}</strong>'s move.</span>
+                <span><strong>{m.opponent.name}</strong>'s move{tournamentText(m)}.</span>
                 <span className="buttons"><button type="button" onClick={() => onOpen(m.id)}>Look</button></span>
               </>
             )}
@@ -199,10 +204,12 @@ function finishedText(m: MatchSummary): string {
   if (m.status === 'declined') return m.youChallenged ? `Your challenge to ${name} was called off.` : `Challenge from ${name} called off.`;
   const r = m.result!;
   const resigned = r.reason === 'resigned' ? (r.outcome === 'won' ? ` (${name} resigned)` : ' (you resigned)')
-    : r.reason === 'forfeit' ? (r.outcome === 'won' ? ` (${name} ran out of time)` : ' (you ran out of time)') : '';
+    : r.reason === 'forfeit' ? (r.outcome === 'won' ? ` (${name} ran out of time)` : ' (you ran out of time)')
+      : r.reason === 'deadline' ? ' (score when the round ended)' : '';
   const rating = r.ratingChange === null ? '' : ` ${ratingChangeText(r.ratingChange)}`;
-  if (r.outcome === 'draw') return `Draw with ${name}.${rating}`;
-  return (r.outcome === 'won' ? `You beat ${name}${resigned}.` : `${name} beat you${resigned}.`) + rating;
+  const event = tournamentText(m);
+  if (r.outcome === 'draw') return `Draw with ${name}${resigned}${event}.${rating}`;
+  return (r.outcome === 'won' ? `You beat ${name}${resigned}${event}.` : `${name} beat you${resigned}${event}.`) + rating;
 }
 
 /** Find a player by name, choose the field and your team, and send a challenge. teams: your saved teams that are ready. */

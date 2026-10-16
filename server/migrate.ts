@@ -11,8 +11,9 @@ import type pg from 'pg';
 export async function migrate(pool: pg.Pool, dir: string): Promise<string[]> {
   const client = await pool.connect();
   try {
-    // Only one server at a time may migrate (a deploy can briefly run two copies).
-    await client.query('select pg_advisory_lock(717171)');
+    // Only one server at a time may migrate the same schema (a deploy can briefly run two
+    // copies). The lock is per schema so the tests, each in a schema of its own, don't queue.
+    await client.query('select pg_advisory_lock(717171, hashtext(current_schema()))');
     await client.query(`create table if not exists schema_migrations (
       name text primary key,
       applied_at timestamptz not null default now()
@@ -36,7 +37,7 @@ export async function migrate(pool: pg.Pool, dir: string): Promise<string[]> {
     }
     return applied;
   } finally {
-    await client.query('select pg_advisory_unlock(717171)').catch(() => {});
+    await client.query('select pg_advisory_unlock(717171, hashtext(current_schema()))').catch(() => {});
     client.release();
   }
 }

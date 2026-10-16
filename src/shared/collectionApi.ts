@@ -11,6 +11,22 @@ export interface OwnedCard {
   /** This copy's number among every copy of the card ever given out ("#12"). */
   serial: number;
   source: CardSource;
+  /** Award cards only: what it was awarded for. Null for ordinary cards. */
+  edition: CardEdition | null;
+}
+
+/**
+ * An award card's edition (docs/spellstick-multiplayer-design.md, "Special award cards").
+ * champion, knockout, and played come from a tournament; code from a redeem code.
+ */
+export interface CardEdition {
+  kind: 'champion' | 'knockout' | 'played' | 'code';
+  /** Shown on the card: "Spring Cup Champion, 1 of 1". */
+  label: string;
+  /** False for cards bound to the player who earned them (champions). Trading checks this later. */
+  tradeable: boolean;
+  foil?: boolean;
+  tournamentId?: number;
 }
 
 /** A saved team: a name, a spell set, and owned player cards. */

@@ -24,4 +24,10 @@ describe('match ended early', () => {
     expect(endedEarlyText(null, 'Bob Wands')).toBeNull();
     expect(endedEarlyText({ outcome: 'won', reason: 'played', ratingChange: 5 }, 'Bob Wands')).toBeNull();
   });
+
+  it('explains a tournament match settled at the round deadline', () => {
+    expect(endedEarlyText({ outcome: 'won', reason: 'deadline', ratingChange: null }, 'Bob Wands')?.headline).toMatch(/you were ahead/i);
+    expect(endedEarlyText({ outcome: 'lost', reason: 'deadline', ratingChange: null }, 'Bob Wands')?.headline).toMatch(/Bob Wands was ahead/);
+    expect(endedEarlyText({ outcome: 'draw', reason: 'deadline', ratingChange: null }, 'Bob Wands')?.headline).toMatch(/score level/);
+  });
 });

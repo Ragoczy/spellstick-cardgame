@@ -8,7 +8,7 @@ import { spellSets, TEAM_NAME_MAX, teamProblems } from '../data/teams';
 import { makeConfig, type CardDef, type PlayerCardDef } from '../engine';
 import type { Collection, OwnedCard, SavedTeam } from '../shared/collectionApi';
 import { CardFace } from './CardFace';
-import { deleteTeam, fetchCollection, saveTeam } from './online';
+import { deleteTeam, fetchCollection, redeemCode, saveTeam } from './online';
 
 const config = makeConfig();
 const sets = spellSets(prototypeCards, config);
@@ -42,14 +42,46 @@ function spellList(setId: string): string {
   return [...counts].map(([name, n]) => (n > 1 ? `${name} ×${n}` : name)).join(', ');
 }
 
-/** A card you own, with its serial number in the footer. */
+/** A card you own, with its serial number in the footer. Award cards also say what they were for. */
 function OwnedCardView({ card, dim, highlight, onClick }: { card: OwnedCard; dim?: boolean; highlight?: boolean; onClick?: () => void }) {
   const def = defOf(card);
   if (!def) return null;
+  const edition = card.edition;
   return (
-    <div className="owned-card" title="Copies are numbered in the order they were given out">
+    <div className={`owned-card${edition ? ` award${edition.foil ? ' foil' : ''}` : ''}`} title="Copies are numbered in the order they were given out">
       <CardFace def={def} serial={card.serial} dim={dim} highlight={highlight ? 'target' : null} onClick={onClick} />
+      {edition ? (
+        <span className="edition-label">
+          {edition.label}{edition.foil ? ' (foil)' : ''}{edition.tradeable ? '' : '. Yours to keep: it can’t be traded'}
+        </span>
+      ) : null}
     </div>
+  );
+}
+
+/** Type in a redeem code to get its award card. */
+function RedeemForm({ onRedeemed }: { onRedeemed: () => void }) {
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState<{ good: boolean; text: string } | null>(null);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    try {
+      const card = await redeemCode(code);
+      setMessage({ good: true, text: `You got ${defs.get(card.cardId)?.name ?? 'a card'}: ${card.edition?.label ?? 'an award card'}.` });
+      setCode('');
+      onRedeemed();
+    } catch (err) {
+      setMessage({ good: false, text: (err as Error).message });
+    }
+  };
+  return (
+    <form className="account account-row" onSubmit={submit}>
+      <label className="small" htmlFor="redeem-code">Have a code for an award card?</label>
+      <input id="redeem-code" className="text-input" value={code} onChange={(e) => setCode(e.target.value)} maxLength={20} autoComplete="off" placeholder="ABCDE-FGHJK" />
+      <button type="submit" disabled={!code.trim()}>Redeem</button>
+      {message ? <p className={message.good ? 'account-notice' : 'account-problem'}>{message.text}</p> : null}
+    </form>
   );
 }
 
@@ -137,10 +169,11 @@ export function CollectionScreen({ onBack }: { onBack: () => void }) {
 
           <h3>Your cards ({data.cards.length})</h3>
           <p className="small">
-            Everyone starts with the same {data.cards.length === 24 ? '24 ' : ''}cards. More ways to get cards come with
-            tournaments and the store. The number under each card is that copy's number: copies are numbered in the order
-            they were given out.
+            Everyone starts with the same 24 cards. Tournaments give award cards, and codes from events can too; the store
+            comes later. The number under each card is that copy's number: copies are numbered in the order they were
+            given out.
           </p>
+          <RedeemForm onRedeemed={() => void reload()} />
           <div className="choice-row owned-cards">
             {cards.map((c) => <OwnedCardView key={c.instanceId} card={c} />)}
           </div>

@@ -89,7 +89,11 @@ export function endedEarlyText(result: MatchSummary['result'], oppName: string):
   const won = result.outcome === 'won';
   const headline = result.reason === 'resigned'
     ? (won ? `${oppName} resigned. You win!` : 'You resigned.')
-    : (won ? `${oppName} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
+    : result.reason === 'deadline'
+      ? (result.outcome === 'draw'
+        ? 'The tournament round ended before this match did, with the score level.'
+        : won ? 'The tournament round ended before this match did. You were ahead, so you win.' : `The tournament round ended before this match did. ${oppName} was ahead, so they win.`)
+      : (won ? `${oppName} ran out of time without making a move. You win by forfeit.` : 'Your time ran out before you made a move, so the match was forfeited.');
   const rating = result.ratingChange === null ? '' : ratingChangeText(result.ratingChange);
   return { headline, rating };
 }

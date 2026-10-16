@@ -28,8 +28,8 @@ export function FutureFeatures({ onBack }: { onBack: () => void }) {
       <ul>
         <li><b>Season stats for your teams:</b> goals, saves, and injuries caused by each player on your saved teams.</li>
         <li><b>Team crests:</b> a crest for each saved team.</li>
-        <li><b>Tournaments:</b> automatic pairings, standings, and a final bracket, with alerts from a Discord bot.</li>
-        <li><b>Award cards:</b> numbered cards for tournament champions and finalists, achievements, and book launches. Earned, never bought.</li>
+        <li><b>Tournament alerts:</b> pairings, standings, and the bracket posted to our Discord server.</li>
+        <li><b>Achievement cards:</b> award cards for milestones like your first win or 100 matches.</li>
         <li><b>Card store:</b> spend your Discord coins on packs, single cards, and cosmetics like crests and card backs. Earn coins by playing.</li>
         <li><b>Trading:</b> safe card-for-card trades where both sides swap at the same moment.</li>
       </ul>

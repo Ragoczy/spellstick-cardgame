@@ -15,6 +15,7 @@ import { matchRoutes } from './api/matches';
 import { meRoutes } from './api/me';
 import { ratingRoutes } from './api/ratings';
 import { statsRoutes } from './api/stats';
+import { tournamentRoutes, TournamentRunner } from './api/tournaments';
 import { notificationRoutes } from './api/notifications';
 import { accessRules, type DiscordApi } from './auth/discord';
 import { RoleCheck } from './auth/role-check';
@@ -84,7 +85,9 @@ export async function buildApp(deps: AppDeps, logger: FastifyServerOptions['logg
   const notifier = new Notifier(deps.db, bot, live, deps.config.publicUrl, (err) => app.log.error(err, 'notification failed'));
   notificationRoutes(app, deps, notifier);
   betaRoutes(app, deps);
-  matchRoutes(app, deps, live, notifier);
+  const tournaments = new TournamentRunner(deps.db, live, notifier, app.log);
+  matchRoutes(app, deps, live, notifier, tournaments);
+  tournamentRoutes(app, deps, tournaments);
   collectionRoutes(app, deps);
   ratingRoutes(app, deps);
   statsRoutes(app, deps);

@@ -1,9 +1,10 @@
 // Talking to the game server. Only used by the online build (VITE_ONLINE=true); the plain
 // static build never calls these.
 
-import type { Collection, SavedTeam, TeamInput } from '../shared/collectionApi';
+import type { Collection, OwnedCard, SavedTeam, TeamInput } from '../shared/collectionApi';
 import type { MatchDetail, MatchSummary, Pace, PlayerListing, RatingsBoard } from '../shared/matchApi';
 import type { StatsOverview } from '../shared/statsApi';
+import type { RedeemCodeInput, RedeemCodeRow, TournamentDetail, TournamentInput, TournamentSummary } from '../shared/tournamentApi';
 import { ServerError, StaleMatchError, type MatchApi } from './onlineMatch';
 
 export const ONLINE = import.meta.env.VITE_ONLINE === 'true';
@@ -158,6 +159,25 @@ export const fetchCollection = () => call<Collection>('GET', '/api/collection');
 /** Saves a team: a new one, or changes to team id. */
 export const saveTeam = (team: TeamInput, id?: number) => call<SavedTeam>('POST', id === undefined ? '/api/teams' : `/api/teams/${id}`, team);
 export const deleteTeam = (id: number) => call<{ ok: true }>('POST', `/api/teams/${id}/delete`);
+
+/** Uses a redeem code. Returns the card it gave you. */
+export const redeemCode = (code: string) => call<OwnedCard>('POST', '/api/redeem', { code });
+
+// ---- Tournaments ----
+
+export const listTournaments = () => call<TournamentSummary[]>('GET', '/api/tournaments');
+export const fetchTournament = (id: number) => call<TournamentDetail>('GET', `/api/tournaments/${id}`);
+/** teamId: your saved team, for a saved-team event. */
+export const enterTournament = (id: number, teamId?: number) =>
+  call<TournamentDetail>('POST', `/api/tournaments/${id}/enter`, teamId === undefined ? undefined : { teamId });
+export const leaveTournament = (id: number) => call<TournamentDetail>('POST', `/api/tournaments/${id}/leave`);
+/** Admins only. */
+export const createTournament = (input: TournamentInput) => call<TournamentSummary>('POST', '/api/admin/tournaments', input);
+export const startTournament = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/start`);
+export const cancelTournament = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/cancel`);
+export const markPrizeSent = (id: number) => call<TournamentDetail>('POST', `/api/admin/tournaments/${id}/prize-sent`);
+export const listCodes = () => call<RedeemCodeRow[]>('GET', '/api/admin/codes');
+export const createCodes = (input: RedeemCodeInput) => call<RedeemCodeRow[]>('POST', '/api/admin/codes', input);
 
 // ---- Ratings ----
 

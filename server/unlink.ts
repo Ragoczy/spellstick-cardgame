@@ -11,12 +11,15 @@
 import type pg from 'pg';
 import { deleteCollection } from './collection';
 import { inTransaction, leaveAllMatches, type ClockNotice } from './matches';
+import { leaveAllTournaments } from './tournaments';
 
 /** Deletes the player's data. Returns match changes to tell their opponents about. */
 export async function unlinkAccount(db: pg.Pool, userId: number): Promise<ClockNotice[]> {
   return inTransaction(db, async (client) => {
-    // Matches in progress count as resigned; open challenges are turned down.
-    const notices = await leaveAllMatches(client, userId);
+    // They leave their tournaments (no award cards), then matches in progress count as
+    // resigned and open challenges are turned down.
+    const notices = await leaveAllTournaments(client, userId);
+    notices.push(...await leaveAllMatches(client, userId));
 
     // Signs them out everywhere, and forgets their notification settings and history.
     await client.query('delete from sessions where user_id = $1', [userId]);

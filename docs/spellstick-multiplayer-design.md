@@ -207,7 +207,7 @@ Drafted and dealt cards exist only for that match; they are not added to collect
 
 Tournaments are Swiss rounds followed by a single-elimination top cut, run entirely inside the app. Results come from finished matches, so nobody reports scores by hand.
 
-**Setup (admin):** name, format (from Match formats), time bank per player, entry window, round length, top-cut size, entry fee in coins (optional), and prizes.
+**Setup (admin):** name, format (from Match formats), time bank per player, entry window, round length, top-cut size, entry fee in coins (optional), and prizes. *(Added 2026-10-16, Paul: a free-form **top prize**, typed by the admin (for example "a signed paperback of the next Warlock book"). It shows on the event page and on the champion's result, and the admin marks it as sent once it's on its way. The game only records it; delivering it is done by hand.)*
 
 **Structure**
 
@@ -223,6 +223,19 @@ Tournaments are Swiss rounds followed by a single-elimination top cut, run entir
 - At the round deadline, an unfinished match is decided by the current score; a tied score is a draw. If neither player made a move, both take a loss. *(Decided 2026-10-12. The earlier "more recent turns" rule could be gamed.)*
 - Two missed rounds drops a player from the event.
 - Top-cut matches can be scheduled live and streamed on Discord as an event.
+
+*Built 2026-10-16 (online phase 3: `server/tournaments.ts`, the sums in `server/swiss.ts`, migration `012_tournaments.sql`), with these decisions:*
+- *Admins set one up in the game (Tournaments, in the online lobby): name, draft or saved teams, field size, pace, round length, the featured award card, and the free-form top prize. Players enter from the tournament's page; the admin starts it when everyone is in. Entry is open until the start (no separate entry window), and there are no entry fees until the store exists.*
+- *At least 4 players to start, at most 256. Swiss rounds are log2 of the players, rounded up.*
+- *Knockout: top 8 from 32 players, top 4 from 6, and none under 6 (a top 4 of 4 or 5 would just replay the Swiss rounds); the Swiss leader is then champion. The knockout shrinks if players have dropped. Seeds follow the Swiss standings (1v8, 4v5, 2v7, 3v6).*
+- *Round length is the admin's choice, at least both players' whole time banks (72 hours async, 1 hour live). The form suggests 96 hours (4 days) async and 2 hours live.*
+- *Matches start straight away, with no challenge to accept. They're unranked. Who plays side A is random (fixed by the tournament's seed), since in a draft the second player picks first.*
+- *Saved-team events copy each player's team when they enter, so changing the team later doesn't change the event. (Card locks come with trading.)*
+- *At the deadline the score decides; level is a draw; if neither player moved, both lose. In the knockout, a level score or a double no-show sends the higher seed through. A game played to the end always has a winner (penalty shootout).*
+- *A "missed round" is a Swiss round where the player made no move themselves. Two drops them. Players can also drop out: their match in progress counts as resigned, and they play no more rounds. A knockout player who drops gives their opponent a walkover.*
+- *Results are recorded and the next round paired within half a minute of the last match ending (sooner when anyone opens a tournament page).*
+- *An admin can call a tournament off at any time. Matches under way can still be played, but no longer count, and nobody gets award cards.*
+- *Not built yet: tournament channel posts (pairings, standings, bracket) need a channel and the bot. Players already get the "Your move" alert for tournament matches if they turned it on.*
 
 **Notifications (Discord bot)**
 
@@ -264,6 +277,12 @@ Award cards are earned, never bought, and carry a visible record of how they wer
 - "Tradeable: No" cards are bound to the earner. That keeps titles like Champion meaningful; anything else becomes a purchase.
 - When rarity arrives, award cards follow normal rarity points in Capped Constructed so they don't distort prize events.
 - Redeemable codes (single-use, expiring) cover book promotions, convention handouts, and the physical card game: a QR code in a physical pack could unlock its digital twin.
+
+*Built 2026-10-16 (online phase 3), with these decisions:*
+- *Award cards are copies of named player cards with an edition: a label, whether it can be traded, and foil for knockout players. Spells aren't owned yet, so the achievement spell variants wait.*
+- *Each tournament has one featured player card, chosen by the admin (or none). When it finishes, each player gets one copy: their best placing only. Champion: "Spring Cup Champion, 1 of 1", not tradeable. Finalist: "Spring Cup Finalist", foil. Other knockout players: "Spring Cup Top 4", foil. Everyone else who made at least one move: "Spring Cup, October 2026". Players who never moved, or who unlinked their account, get nothing.*
+- *Redeem codes: admins make 1 to 200 at a time for one card and label, choose whether the card can be traded, and set how many days they last (or no end). Codes look like ABCDE-FGHJK (no 0, O, 1, I, or L). Players type them in on their cards page. Ten wrong codes in an hour pauses a player, so codes can't be guessed. Admins see who used each code.*
+- *Achievement cards (first win, 10-win streak, 100 matches) and moderator grants aren't built. A moderator grant can be done now with a single redeem code.*
 
 ## Economy: Discord coins and the store
 
@@ -333,8 +352,10 @@ Thirteen core tables in Postgres cover every feature in this design; JSON column
 | matches | id, format, tournament_id, round, player_a, player_b, seed, setup (JSON), status, winner, bank_a, bank_b, waiting_on, waiting_since, ranked, rating_change_a, rating_change_b | One per game; banks are remaining time |
 | ratings | user_id, rating, games, wins, losses, draws | Running totals since the last reset (`rating_resets`) |
 | match_events | match_id, seq, player_id, move (JSON), at | Append-only log; state is rebuilt from it |
-| tournaments | id, name, format, points_cap, settings (JSON), status | Includes prize rules and time bank size |
-| registrations | tournament_id, user_id, team_id, record, tiebreakers (JSON), dropped | Swiss standings |
+| tournaments | id, name, format, lanes, pace, round_hours, top_prize, award_card, status, seed, round | Built (migration 012). Time bank size comes from the pace |
+| tournament_entries | tournament_id, user_id, team_id, deck (copy), missed_rounds, dropped_at, knockout_seed, final_place | Built as `tournament_entries`; standings are worked out from the pairings |
+| tournament_pairings | tournament_id, round, stage, slot, player_a, player_b, match_id, outcome, goals | Built (migration 012). One per match or bye |
+| redeem_codes | code, card_id, label, tradeable, expires_at, redeemed_by | Built (migration 012) |
 | trades | id, from_user, to_user, offer (JSON), version, status, accepted_by (JSON), expires_at | Atomic swap record |
 | coin_ledger | id, user_id, amount, reason, ref_id, idempotency_key, provider_status, at | Every debit and credit the game made |
 
@@ -385,15 +406,18 @@ Draft picks are match events, and the random deck fill comes from the match seed
 Each phase ships something playable; the gate must pass before the next phase starts.
 
 1. **Online play.** Server referee using the existing engine, Discord login, async 1v1 with time banks, head-to-head draft, Discord bot notifications. *Gate: a 20-reader beta finishes 100 matches with no state disagreements between client and server.*
-   *Status 2026-10-10: built. The beta itself is next (see "Running the beta" below).*
+   *Status 2026-10-10: built. The beta itself is next (see "Running the beta" below).* *Changed 2026-10-16 (Paul): the beta is no longer a prerequisite for later phases. It still runs, and its dashboard stays, but phase 3 went ahead without it.*
 2. **Collections and teams.** Card definitions and instances, starter deck, persistent teams, Constructed.
    *Status 2026-10-12: built, except team crests and per-player season stats. Until awards (phase 3) or the store (phase 4) give out more cards, everyone owns the same 24.*
 3. **Tournaments and awards.** Swiss plus top cut, deadlines and forfeits, automatic award cards, redeem codes. *Gate: a free beta tournament with no prize at stake.*
+   *Status 2026-10-16: built, except tournament channel posts and achievement cards. The free beta tournament is next.*
 4. **Store.** Coin adapter, ledger, packs, singles, cosmetics, coin rewards for play. *Gate: HexBot's debit and credit endpoints pass a retry and double-spend test.*
 5. **Trading.** Card-for-card atomic swaps with safeguards and moderator tools.
 6. **Later.** Rarity and Capped Constructed, pod draft, coins in trades, Patreon perks. *(Ranked ladder built early, 2026-10-10; see Ranked play.)*
 
 ## Change log
+
+- 2026-10-16: Online phase 3, tournaments and awards (Paul: go ahead without waiting for the beta, and add a free-form top prize). Swiss rounds and a knockout run by the server, round deadlines settled by the score, drops after two missed rounds, award cards from each tournament's featured card, the top prize with "mark as sent", and redeem codes. See Tournaments and Special award cards for the decisions.
 
 - 2026-10-12: Online phase 2: owned cards and saved teams. Everyone gets the starter set (`data/starter.json`) and a ready-made team; teams are a name, a spell set, and 24 owned player cards; "Your saved team" challenges play constructed games (rules v0.13). See Cards, collection, and persistent teams for the decisions.
 - 2026-10-12: Paul approved the tournament rules and the rarity direction. Win 3, draw 1, loss 0; tiebreakers are opponents' match-win % (33% floor), goal difference, then a seeded random draw; 4-day rounds, with the current score deciding any match still unfinished at the deadline; one-game top-cut matches in async events; the first tournament awards cards only, no coins. Rarer cards will be mostly different with a small fixed stat edge.

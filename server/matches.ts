@@ -56,7 +56,7 @@ interface MatchRow {
   waiting_since: Date;
   move_count: number;
   winner: string | null;
-  end_reason: 'played' | 'resigned' | 'forfeit' | null;
+  end_reason: 'played' | 'resigned' | 'forfeit' | 'deadline' | null;
   created_at: Date;
   ranked: boolean;
   rating_change_a: number | null;
@@ -70,6 +70,8 @@ interface MatchRow {
   waited_ms: string;
   /** True when the waiting player's bank has run out. */
   overdue: boolean;
+  tournament_id: string | null;
+  tournament_name: string | null;
 }
 
 /** A player who unlinked their Discord account (migration 004) shows up as "Deleted player". */
@@ -78,8 +80,9 @@ const MATCH_COLUMNS = `m.id, m.player_a, m.player_b, ${nameOf('ua')} as a_name, 
   m.status, m.waiting_on, m.waiting_since, m.move_count, m.winner, m.end_reason, m.created_at,
   m.ranked, m.rating_change_a, m.rating_change_b, m.pace, m.bank_a_ms, m.bank_b_ms, m.autopilot_a, m.autopilot_b,
   floor(extract(epoch from (now() - m.waiting_since)) * 1000)::bigint as waited_ms,
-  coalesce(m.waiting_due <= now(), false) as overdue`;
-const MATCH_FROM = 'matches m join users ua on ua.id = m.player_a join users ub on ub.id = m.player_b';
+  coalesce(m.waiting_due <= now(), false) as overdue, m.tournament_id, t.name as tournament_name`;
+const MATCH_FROM = `matches m join users ua on ua.id = m.player_a join users ub on ub.id = m.player_b
+  left join tournaments t on t.id = m.tournament_id`;
 
 // ---- Rebuilding a game ----
 
@@ -243,6 +246,7 @@ function toSummary(row: MatchRow, side: Side, userId: number): MatchSummary {
     ranked: row.ranked,
     clock: banks ? { you: banks[side], them: banks[them], running: waiting === null ? null : waiting === side ? 'you' : 'them' } : null,
     autopilot: { you: autopilot[side], them: autopilot[them] },
+    tournament: row.tournament_id ? { id: Number(row.tournament_id), name: row.tournament_name ?? '' } : null,
     result,
     createdAt: row.created_at.toISOString(),
   };
@@ -683,4 +687,101 @@ async function runOutOfTime(client: pg.PoolClient, matchId: number): Promise<Clo
     playerIds: [Number(row.player_a), Number(row.player_b)],
     change: { matchId, status: after.status, moveCount: after.move_count },
   };
+}
+
+// ---- Tournament matches (tournaments.ts) ----
+
+/**
+ * Starts a tournament match straight away: there's no challenge to accept. Side A plays in the
+ * first team's colors. A saved-team event passes each side's deck and team name (copied when
+ * the players entered). Returns the new match's id.
+ */
+export async function createTournamentMatch(client: pg.PoolClient, input: {
+  tournamentId: number; playerA: number; playerB: number; format: 'draft' | 'constructed'; lanes: number; pace: Pace;
+  saved?: { A: { deck: string[]; name: string; teamId: number | null }; B: { deck: string[]; name: string; teamId: number | null } };
+}): Promise<number> {
+  const [teamA, teamB] = prototypeCards.teams;
+  let cardSet = prototypeCards;
+  if (input.saved) cardSet = withTeamName(withTeamName(cardSet, teamA!.id, input.saved.A.name), teamB!.id, input.saved.B.name);
+  const config = makeConfig({ lanes: input.lanes, draftPicks: input.format === 'draft' ? DRAFT_PICKS : 0 });
+  const setup: GameSetup = {
+    seed: randomInt(1, 1_000_000_000),
+    cardSet,
+    teams: { A: teamA!.id, B: teamB!.id },
+    config,
+    ...(input.saved ? { decks: { A: input.saved.A.deck, B: input.saved.B.deck } } : {}),
+  };
+  const { state } = createGame(savedSetup(setup));
+  const bank = TIME_BANKS[input.pace];
+  const inserted = await client.query<{ id: string }>(
+    `insert into matches (player_a, player_b, setup, status, waiting_on, pace, bank_a_ms, bank_b_ms, format, ranked, team_a, team_b, tournament_id, started_at)
+     values ($1, $2, $3, 'active', null, $4, $5, $5, $6, false, $7, $8, $9, now()) returning id`,
+    [input.playerA, input.playerB, JSON.stringify(setup), input.pace, bank, input.format,
+      input.saved?.A.teamId ?? null, input.saved?.B.teamId ?? null, input.tournamentId],
+  );
+  const matchId = Number(inserted.rows[0]!.id);
+  // Starts the clock of whoever moves first.
+  await saveProgress(client, (await loadRowById(client, matchId, true))!, { state }, []);
+  return matchId;
+}
+
+/** How a finished tournament match counts: the result, the score, and whether each player moved at all. */
+export interface TournamentResult {
+  outcome: 'A' | 'B' | 'draw' | 'double_loss';
+  goalsA: number;
+  goalsB: number;
+  moved: Record<Side, boolean>;
+}
+
+/** Whether each player made at least one move themselves (not the computer for them). */
+async function whoMoved(client: pg.PoolClient, row: MatchRow): Promise<Record<Side, boolean>> {
+  const { rows } = await client.query<{ player_id: string }>(
+    'select distinct player_id from match_events where match_id = $1 and not by_computer',
+    [row.id],
+  );
+  const movers = new Set(rows.map((r) => Number(r.player_id)));
+  return { A: movers.has(Number(row.player_a)), B: movers.has(Number(row.player_b)) };
+}
+
+/** A finished match's result for its tournament. Null if the match isn't finished. */
+export async function tournamentResult(client: pg.PoolClient, matchId: number): Promise<TournamentResult | null> {
+  const row = await loadRowById(client, matchId);
+  if (!row || row.status !== 'finished') return null;
+  const { score } = rebuild(row.setup, await loadMoves(client, matchId)).state;
+  const moved = await whoMoved(client, row);
+  let outcome: TournamentResult['outcome'];
+  if (row.winner !== null) outcome = Number(row.winner) === Number(row.player_a) ? 'A' : 'B';
+  else outcome = row.end_reason === 'deadline' && !moved.A && !moved.B ? 'double_loss' : 'draw';
+  return { outcome, goalsA: score.A, goalsB: score.B, moved };
+}
+
+/**
+ * The round deadline has passed with this match still going: the score at this moment decides
+ * it, and a level score is a draw. If neither player has made a move, it ends with no winner
+ * (the tournament counts that as a loss for both).
+ */
+export async function endAtDeadline(client: pg.PoolClient, matchId: number): Promise<ClockNotice | null> {
+  const row = await loadRowById(client, matchId, true);
+  if (!row || row.status !== 'active') return null;
+  const { score } = rebuild(row.setup, await loadMoves(client, matchId)).state;
+  const moved = await whoMoved(client, row);
+  const winner = !moved.A && !moved.B ? null
+    : score.A > score.B ? playerOn(row, 'A') : score.B > score.A ? playerOn(row, 'B') : null;
+  const banks = banksNow(row);
+  await client.query(
+    `update matches set status = 'finished', waiting_on = null, waiting_due = null, bank_a_ms = $3, bank_b_ms = $4,
+       winner = $2, end_reason = 'deadline', finished_at = now()
+     where id = $1`,
+    [row.id, winner, banks?.A ?? null, banks?.B ?? null],
+  );
+  return { playerIds: [Number(row.player_a), Number(row.player_b)], change: { matchId, status: 'finished', moveCount: row.move_count } };
+}
+
+/** A player leaving a tournament: their match in progress counts as resigned. */
+export async function resignIfActive(client: pg.PoolClient, matchId: number, userId: number): Promise<ClockNotice | null> {
+  const row = await loadRowById(client, matchId, true);
+  if (!row || row.status !== 'active') return null;
+  const side: Side = Number(row.player_a) === userId ? 'A' : 'B';
+  await resignRow(client, row, side);
+  return { playerIds: [Number(row.player_a), Number(row.player_b)], change: { matchId, status: 'finished', moveCount: row.move_count } };
 }

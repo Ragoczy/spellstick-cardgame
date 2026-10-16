@@ -485,6 +485,10 @@ button.danger {
 
 /* Your cards and saved teams (online) */
 .owned-cards .owned-card { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+/* Award cards (tournaments and redeem codes): a label under the card saying what it was for. */
+.owned-card .edition-label { max-width: 150px; font-size: 0.75rem; text-align: center; color: var(--accent); line-height: 1.25; }
+.owned-card.foil > .cf { box-shadow: 0 0 0 2px var(--accent), 0 0 10px var(--accent); }
+.code-list { width: 100%; max-width: 260px; font-family: ui-monospace, monospace; }
 .team-problem { color: var(--bad); font-size: 0.9rem; }
 .team-editor .text-input { width: 100%; }
 

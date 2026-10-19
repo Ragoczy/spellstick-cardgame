@@ -1,7 +1,7 @@
 # Spellstick — tutorial design
 
-Status: the first tutorial is built (2026-10-19); the contact tutorial isn't yet. Decisions are at
-the end. Where building changed the plan, this document says what was built and why.
+Status: both tutorials are built (2026-10-19). Decisions are at the end. Where building changed
+the plan, this document says what was built and why.
 
 ## Goal
 
@@ -285,7 +285,7 @@ its own lessons. About 7 minutes.
 
 | Setting | Contact tutorial | Why |
 |---|---|---|
-| Deck | 2 goalies, 10 field players, 6 spells (18) | About 14 turns |
+| Deck | 2 goalies, 10 field players, 6 spells (18) | About 12–16 turns |
 | Goals to win | 2 | Same as the first |
 | Physical attacks | on, in a fixed order | The point of this one |
 | Dirty plays | one in your hand, two in theirs | So both sides foul |
@@ -313,8 +313,10 @@ likely to work.
 **Their team** is the same weak team, made rougher: **Sabine Ellery** (Speed 4, Defense 3, Heavy
 hands) at left defense, facing Josephine; Frances Holloway at right defense; Isabella and Eleanor
 in midfield; Gertrude and Rosalind at forward. Bench: Seraphina Ashford, Madeleine Sinclair.
-Spells: **Jinx** and **Sting** (dirty plays), **Second Wind**; then Summon, Mend, Water Spear.
-Physical pile: Hooking, Slashing, Tripping, then the rest.
+Spells: **Jinx** and **Sting** (dirty plays), **Second Wind**; then Alarm Ward, Mend, Water Spear.
+Physical pile: Hooking, Slashing, Tripping, then the rest. Players pile: Lucinda Stanhope, Helena
+Bancroft. (Built: Alarm Ward instead of Summon, which draws 2 cards and runs the computer's deck
+out early, as it did in the first tutorial.)
 
 ### Lessons
 
@@ -353,14 +355,26 @@ Physical pile: Hooking, Slashing, Tripping, then the rest.
 13. **Wrap-up.** "That's everything in a real game. Real teams are evenly matched and dealt at
     random." Buttons: **Play a real game**, **Play this again**.
 
+Built (`src/tutorial/contactLessons.ts`): lessons at a decision are the welcome, physical
+attacks, the penalty risk, rerolling to dodge the referee's check, fouls, "they fouled", and
+wards. Notes after events are the first flip, their first attack, the penalty box, sent off, Heavy
+hands, Sturdy, knocked out, power play, and the wrap-up, plus a few kept from the first tutorial
+(goals, knocked down, Shaken, injured). Lesson 4 ("who can't attack") was left out: tapping the
+Physical pile already says who can attack. None of the first tutorial's lessons come back.
+
 ### Coach rules added
 
-- Attack a player who holds the ball when the chance of winning is about 60% or better and your
-  penalty risk is 1 or 2.
-- Declare a dirty play only when the contest is about 75% or better to win (the referee is 1 in 6).
-- Reroll to break a double when you fouled, to make one when they fouled and your die doesn't
-  decide the contest, or to get your die above your penalty risk.
-- Play a ward when your player is likely to lose a contest that hurts.
+- Attack the ball holder when the chance of winning is about 55% or better, at least as good as
+  a tackle, and your penalty risk is 1 or 2. (The card is face down, so the chance counts an
+  average card's bonus.)
+- Declare a dirty play only when the contest is about 75% or better to win, never against a
+  goalie, and never with the player's last spell (a foul is cast like a spell). Built: the last
+  rule was added after the coach fouled in the opening faceoff with Anastasia, who then had no
+  spells for the rest of the game.
+- Reroll to break a double when you fouled; when they fouled and you're losing anyway; or, in
+  your own attack, to get your die above your penalty risk when the reroll still likely wins.
+- Play a ward when your player is losing a contest that can hurt them and no spell turns it
+  around.
 
 ### When the player does something else
 
@@ -368,22 +382,32 @@ Physical pile: Hooking, Slashing, Tripping, then the rest.
 |---|---|
 | Attacks a player without the ball | "That can still hurt them, but they keep the ball. Attacks are worth most against the ball holder." |
 | Attacks three turns in a row | "Your penalty risk is 3 now: about 1 in 4 to be caught. A turn off brings it down." |
-| Fouls in a close contest | "If you lose, the foul does nothing, and the referee can still send you off." |
+| Fouls in a close contest | "If you lose the contest it does nothing, and matching dice still send your player off." |
 | Never attacks | Nothing. Attacking is a choice; the lessons still come up when the computer attacks. |
+
+Built as above (attacking at risk 3 or more counts the odds instead: "about 9 in 36 to be
+caught"). The first tutorial's comments apply here too.
 
 ### Choosing the seed
 
-As for the first tutorial, keeping seeds where, on the coached line: the player's first attack
-wins, the computer attacks at least once, both sides declare a foul, the referee sends someone
-off (ideally theirs), and the player wins. A penalty is rare (1 in 36 at risk 1), so it's
-preferred but not required; lesson 6 waits until one happens.
+As for the first tutorial (`npx tsx scripts/tutorial-seed.ts 400 contact`), keeping seeds where,
+on the coached line: the player wins, wins a physical attack, and fouls; the computer attacks and
+fouls; the referee sends off one of theirs and none of the player's; and the game takes 10–26
+turns. A penalty is rare (1 in 36 at risk 1), so it's preferred but not required; lesson 6 waits
+until one happens.
+
+Built: of 400 seeds, 16 qualified. **Seed 297** was chosen. Following the coach, the computer
+attacks twice, Stone Skin keeps Josephine safe, her own Tripping wins the ball but draws a
+penalty (so the penalty box is taught on the player's own team), both sides foul, the referee
+sends off their goalie, and the player wins 1–0 at full time. Across all 400 seeds, a player
+following the coach won 94.5%, one playing like the computer 92.8%, and random moves 47.8%.
 
 ## Engine changes (small)
 
-1. **Fixed draw order.** A new optional `GameSetup.scenario` with `stackedPiles: true` and
-   `firstSide`. With it, `chooseGoalie` doesn't shuffle the Players, Spells, or Physical piles
-   (the spare goalie goes to the bottom of Players, and the Physical pile takes the scenario's
-   order), and the coin toss is skipped. The injury deck still shuffles from
+1. **Fixed draw order.** A new optional `GameSetup.scenario` with `stackedPiles: true`,
+   `firstSide`, and `physicalOrder` (physical card ids to put on top of each side's Physical
+   pile). With it, `chooseGoalie` doesn't shuffle the Players, Spells, or Physical piles (the
+   spare goalie goes to the bottom of Players), and the coin toss is skipped. The injury deck still shuffles from
    the seed. Constructed decks already give each side its exact cards; this keeps their order.
 2. **Config.** No new settings: the tutorial uses `deckFieldPlayers`, `deckSize`, `goalsToWin`,
    `physicalAttacks`, and `rosterCap`, which all exist.
@@ -396,18 +420,21 @@ other, so "Report a problem" works.
 | Where | What |
 |---|---|
 | `data/tutorial.json` | The scenario: decks in draw order, both goalies and lineups, config, seed |
+| `data/tutorial-contact.json` | The contact tutorial's scenario, with Physical pile orders and `setupDone` |
 | `src/tutorial/scenario.ts` | Loads and checks the scenario (`deckProblems` with the tutorial config) |
 | `src/tutorial/agent.ts` | `tutorialAgent`: the scenario's setup, then the heuristic agent |
 | `src/tutorial/coach.ts` | The coach rules and the fallback: `suggest(view, legal)` |
 | `src/tutorial/lessons.ts` | Lessons, notes, comments on other choices, and `TutorialCoach` |
+| `src/tutorial/contactLessons.ts` | The contact tutorial's lessons and notes |
 | `src/tutorial/play.ts` | Plays whole tutorial games headless (for the seed script and tests) |
 | `src/ui/tutorialSession.ts` | `TutorialSession`: a `GameSession` built from the scenario, with the coach |
 | `src/ui/CoachPanel.tsx` | The coach panel; the glow on the suggested spot or card is in `GameScreen` |
 | `scripts/tutorial-seed.ts` | Finds the seed (below) |
 
-The start screen has a **Learn to play** button, highlighted until the tutorial has been played to
-the end in this browser. It works in both the static build and the online build, with no server.
-The contact tutorial (its scenario, lessons, and start button) isn't built yet.
+The start screen has a **Learn to play** button, highlighted until the first tutorial has been
+played to the end in this browser. After that, a **Contact and fouls** button appears, highlighted
+until that one is done too. The first tutorial's wrap-up has a **Next: contact and fouls**
+button. Both work in the static build and the online build, with no server.
 
 ## Choosing the seed
 
@@ -436,15 +463,20 @@ seed in `data/tutorial.json`.
   at the bottom. (Without it nothing changes: the existing replay tests cover that.)
 - The computer puts out the scenario's goalie and lineup.
 - The chosen seed still qualifies, and the key lessons are taught.
-- In 40 games each with the player's side following the coach, playing like the computer, and
-  making random moves: every coach suggestion is a legal action, and no suggestion or lesson names
-  one of the computer's cards the player hasn't seen.
-- Following the coach wins at least 95 of 100 games.
+- For each tutorial, in 30 games each with the player's side following the coach, playing like
+  the computer, and making random moves: every coach suggestion is a legal action, and no
+  suggestion or lesson names one of the computer's cards the player hasn't seen.
+- Following the coach wins at least 95 of 100 first-tutorial games, and 90 of 100 contact games.
 - Picking the other goalie gets a kind comment, and each kind of comment is made only once.
+- Contact tutorial: the scenario is legal with physical attacks on; the listed physical cards are
+  on top of each Physical pile; the game opens at the faceoff with both teams set up; the game on
+  screen plays out exactly like the seed search; and the chosen seed teaches the contact lessons
+  and none of the first tutorial's.
 
-Win rates over 400 seeds: following the coach 99.5%, playing like the computer 99.3%, random
-legal moves 27%. Random moves fall short of the 50% hoped for, but they're far worse than a real
-new player (they regroup, pass backward, and waste spells at random).
+Win rates over 400 seeds, first tutorial: following the coach 99.5%, playing like the computer
+99.3%, random legal moves 27%. Contact tutorial: 94.5%, 92.8%, and 47.8%. Random moves fall short
+of the 50% hoped for in the first tutorial, but they're far worse than a real new player (they
+regroup, pass backward, and waste spells at random).
 
 ## Decisions (Paul, 2026-10-19)
 

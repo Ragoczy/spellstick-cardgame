@@ -10,6 +10,7 @@ import { Clocks } from './Clocks';
 import { CoachPanel, coachCardUid, coachSpotKey } from './CoachPanel';
 import { prototypeCards } from '../data/prototype';
 import { TutorialSession } from './tutorialSession';
+import { scenarioById } from '../tutorial/scenario';
 import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, endedEarlyText, injuryEffect, laneName, magicLabel, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
@@ -41,14 +42,17 @@ export function LocalGameScreen({ options, onQuit, autoplay = false }: { options
   return <GameScreen game={game} onQuit={onQuit} />;
 }
 
-/** The tutorial game, with the coach (docs/tutorial-design.md). onAgain starts it over. */
-export function TutorialGameScreen({ onQuit, onAgain }: { onQuit: () => void; onAgain: () => void }) {
-  const game = useGame(() => new TutorialSession(prototypeCards));
-  return <GameScreen game={game} onQuit={onQuit} onAgain={onAgain} />;
+/**
+ * A tutorial game, with the coach (docs/tutorial-design.md). onAgain starts it over; onNext opens
+ * the next tutorial, if there is one.
+ */
+export function TutorialGameScreen({ scenario, onQuit, onAgain, onNext }: { scenario: string; onQuit: () => void; onAgain: () => void; onNext?: () => void }) {
+  const game = useGame(() => new TutorialSession(prototypeCards, scenarioById(scenario)));
+  return <GameScreen game={game} onQuit={onQuit} onAgain={onAgain} onNext={onNext} />;
 }
 
 /** The table, for a game against the computer or an online match. onQuit: leave the screen. onAgain: replay (the tutorial). */
-export function GameScreen({ game, onQuit, onAgain }: { game: GameController; onQuit: () => void; onAgain?: () => void }) {
+export function GameScreen({ game, onQuit, onAgain, onNext }: { game: GameController; onQuit: () => void; onAgain?: () => void; onNext?: () => void }) {
   const { seat, opp, online } = game;
   const view = seat.view;
   const legal = seat.legal;
@@ -314,7 +318,7 @@ export function GameScreen({ game, onQuit, onAgain }: { game: GameController; on
   // ---- The tutorial coach ----
 
   const coachPanel = game.tutorial ? (
-    <CoachPanel tutorial={game.tutorial} myDecision={myDecision} onDo={act} onAutoPlace={game.autoPlace} onAgain={onAgain} onQuit={onQuit} />
+    <CoachPanel tutorial={game.tutorial} myDecision={myDecision} onDo={act} onAutoPlace={game.autoPlace} onAgain={onAgain} onNext={onNext} onQuit={onQuit} />
   ) : null;
 
   // ---- Setup screens ----

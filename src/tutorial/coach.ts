@@ -10,7 +10,8 @@
 import { heuristicAgent } from '../ai/heuristic';
 import {
   depth, isFieldPos, opposite, samePos,
-  type Action, type Area, type CardView, type FieldCardDef, type FieldPos, type PlayerCardDef, type PlayerView, type Pos, type SlotView, type SpellCardDef,
+  type Action, type Area, type CardView, type Contest, type ContestSide, type FieldCardDef, type FieldPos, type PlayerCardDef, type PlayerView, type Pos, type SlotView,
+  type SpellCardDef, type StatName,
 } from '../engine';
 import { posName } from '../ui/labels';
 import { casterAffinity, chanceWithDice, dicePreview, matchup, reactionPreview } from '../ui/preview';
@@ -60,6 +61,9 @@ const GUESS_DEFENSE: Record<Area, number> = { defense: 3.5, midfield: 3, forward
 const GUESS_SPEED = 3.5;
 const GUESS_FACEOFF = 4;
 const GUESS_SAVE = 5.5;
+const GUESS_SHOT = 3.5;
+/** The average physical card adds about this much to an attack (the top card is face down). */
+const AVERAGE_ATTACK_BONUS = 0.5;
 
 const die = (view: PlayerView) => view.config.contestDie;
 
@@ -90,6 +94,48 @@ export function shotChance(view: PlayerView, from: Pos): { chance: number; mine:
   const goalie = slotAt(view, 'opponent', { area: 'goal' });
   return { chance: chanceWithDice(mine, theirs ?? GUESS_SAVE, false, die(view), goalie?.state !== 'empty'), mine, theirs };
 }
+
+/**
+ * Chance a physical attack from `attacker` on the player opposite wins (ties go to the target).
+ * The card is flipped after choosing, so it's a guess: Speed plus an average card's bonus.
+ */
+export function attackChance(view: PlayerView, attacker: FieldPos): { chance: number; mine: number; theirs: number | null } {
+  const target = opposite(attacker);
+  const m = matchup(view, { pos: attacker, stat: 'speed', use: 'attack' }, { pos: target, stat: 'speed', use: 'evade' });
+  const mine = m?.mine ?? 0;
+  const theirs = m?.theirs ?? null;
+  return { chance: chanceWithDice(mine + AVERAGE_ATTACK_BONUS, theirs ?? GUESS_SPEED, false, die(view)), mine, theirs };
+}
+
+/** A guess for one of their face-down players' stats, by where they are. */
+function guessStat(stat: StatName, pos: Pos): number {
+  if (stat === 'save') return GUESS_SAVE;
+  if (stat === 'defense') return pos.area === 'goal' ? 0 : GUESS_DEFENSE[pos.area];
+  if (stat === 'faceoff') return GUESS_FACEOFF;
+  if (stat === 'shot') return GUESS_SHOT;
+  return GUESS_SPEED;
+}
+
+/** Your chance of winning the current contest before the dice (for deciding on a foul). */
+function contestChance(view: PlayerView, contest: Contest, role: 'attacker' | 'defender'): number {
+  const me = contest[role];
+  const them = contest[role === 'attacker' ? 'defender' : 'attacker'];
+  const m = matchup(view, { pos: me.pos, stat: me.stat, use: me.use }, { pos: them.pos, stat: them.stat, use: them.use });
+  const plus = (side: ContestSide) => side.modifiers.reduce((sum, x) => sum + x.amount, 0);
+  const mine = (me.power?.value ?? m?.mine ?? 0) + plus(me);
+  const theirEmpty = slotAt(view, 'opponent', them.pos)?.state === 'empty';
+  const theirs = (them.power?.value ?? m?.theirs ?? guessStat(them.stat, them.pos)) + plus(them);
+  return chanceWithDice(mine, theirs, contest.tiesGoTo === role, die(view), !theirEmpty);
+}
+
+/** The spell a side played in this contest (a foul is declared as a spell), if it's face up. */
+function contestSpell(view: PlayerView, side: ContestSide): SpellCardDef | null {
+  if (!side.spell) return null;
+  const card = [...view.mine.discard, ...view.opponent.discard].find((c) => c.uid === side.spell!.uid);
+  return card?.def.kind === 'spell' ? card.def : null;
+}
+
+const isFoul = (spell: SpellCardDef | null) => spell?.ability.effect === 'dirty_play';
 
 /** How well a player suits a row: forwards catch and shoot, midfielders win faceoffs, defenders defend. */
 export function fitFor(def: PlayerCardDef, area: Area | 'goal'): number {
@@ -124,7 +170,7 @@ function byRule(view: PlayerView, legal: Action[], options: CoachOptions): Sugge
     case 'faceoffLane': return faceoffLane(view, legal);
     case 'callDice': return dice(view, legal);
     case 'reaction': return reaction(view, legal);
-    case 'foul': return foul(legal);
+    case 'foul': return foul(view, legal);
     case 'draw': return draw(view, legal);
     case 'action': return action(view, legal);
     case 'discard': return discard(view, legal);
@@ -214,11 +260,32 @@ function dice(view: PlayerView, legal: Action[]): Suggestion | null {
   const winning = p.mine > p.theirs || (p.mine === p.theirs && p.iWinTies);
   const keep: Action = { type: 'callDice', side: view.me, roll: false };
   const roll: Action = { type: 'callDice', side: view.me, roll: true };
-  if (winning) return { action: keep, says: `Keep your roll: ${p.mine} against ${p.theirs}, you're winning.` };
+  // The referee judges fouls on matching dice, and a physical attack's penalty check on a low die.
+  const pending = view.pending;
+  if (pending.kind === 'callDice' && p.rollsLeft > 0 && p.myRoll !== undefined) {
+    const me = pending.contest[pending.role];
+    const them = pending.contest[pending.role === 'attacker' ? 'defender' : 'attacker'];
+    const doubles = p.myRoll === p.theirRoll;
+    if (doubles && isFoul(contestSpell(view, me))) {
+      return { action: roll, says: `Reroll! Both dice show ${p.myRoll}, and you fouled: matching dice mean the referee sends your player off. A new roll will probably break the double.` };
+    }
+    if (!doubles && !winning && isFoul(contestSpell(view, them))) {
+      return { action: roll, says: `Reroll: you're behind ${p.mine} to ${p.theirs}, and they fouled. A new roll might win it (${pct(p.chanceIfRolled)}), and if it matches their ${p.theirRoll}, the referee sends their player off.` };
+    }
+    const level = view.mine.penaltyLevel;
+    if (pending.contest.kind === 'attack' && pending.role === 'attacker' && p.myRoll <= level && winning && p.chanceIfRolled >= 0.7) {
+      return { action: roll, says: `Reroll: your die shows ${p.myRoll}, at or under your penalty risk of ${level}, so the referee will check for a penalty. A new roll still wins ${pct(p.chanceIfRolled)} of the time.` };
+    }
+  }
+  if (winning) {
+    const why = p.mine === p.theirs ? `it's tied at ${p.mine}, and ties go to you` : `${p.mine} against ${p.theirs}, you're winning`;
+    return { action: keep, says: `Keep your roll: ${why}.` };
+  }
   if (p.rollsLeft > 0 && p.chanceIfRolled >= 0.4) {
     return { action: roll, says: `Reroll: you're behind ${p.mine} to ${p.theirs}, and a new roll wins ${pct(p.chanceIfRolled)} of the time.` };
   }
-  return { action: keep, says: `Keep it. You're behind ${p.mine} to ${p.theirs}, but a reroll only wins ${pct(p.chanceIfRolled)} of the time. A spell might still help.` };
+  const odds = p.chanceIfRolled < 0.05 ? 'even a 6 wouldn\'t be enough' : `a reroll only wins ${pct(p.chanceIfRolled)} of the time`;
+  return { action: keep, says: `Keep it. You're behind ${p.mine} to ${p.theirs}, and ${odds}. A spell might still help.` };
 }
 
 function reaction(view: PlayerView, legal: Action[]): Suggestion | null {
@@ -237,14 +304,56 @@ function reaction(view: PlayerView, legal: Action[]): Suggestion | null {
     .sort((x, y) => affinityRank(x.affinity) - affinityRank(y.affinity) || (x.mine - x.theirs) - (y.mine - y.theirs));
   const pick = winners[0];
   const action = pick ? legal.find((a) => a.type === 'react' && a.card === pick.uid) : undefined;
-  if (!pick || !action) return { action: none, says: `No spell: nothing in your hand turns ${p.mine} against ${p.theirs} around.` };
+  if (!pick || !action) {
+    // Losing a contest that can hurt your player: a ward keeps it to Shaken.
+    const ward = p.options.find((o) => !o.fizzles && o.def.ability.effect === 'ward');
+    const wardAction = ward ? legal.find((a) => a.type === 'react' && a.card === ward.uid) : undefined;
+    const pending = view.pending;
+    if (ward && wardAction && pending.kind === 'reaction' && canHurtMe(view, pending.contest, pending.role)) {
+      const pos = pending.contest[pending.role].pos;
+      return { action: wardAction, says: `Play ${ward.def.name}: you'll probably lose this one, ${p.mine} to ${p.theirs}, and if ${nameAt(view, 'mine', pos)} is hurt, they're only Shaken.` };
+    }
+    return { action: none, says: `No spell: nothing in your hand turns ${p.mine} against ${p.theirs} around.` };
+  }
   const aff = pick.affinity === 'specialist' ? ' (a specialist affinity, so it counts extra)' : pick.affinity === 'match' ? ' (an affinity match, so +1)' : '';
   return { action, says: `Play ${pick.def.name}${aff}: it turns ${p.mine} against ${p.theirs} into ${pick.mine} against ${pick.theirs}.` };
 }
 
-function foul(legal: Action[]): Suggestion | null {
+/** Whether losing this contest can hurt your player: a tackle on your holder, an attack or hit on them, or their foul. */
+function canHurtMe(view: PlayerView, contest: Contest, role: 'attacker' | 'defender'): boolean {
+  if (contest[role].pos.area === 'goal') return false; // goalies are never hurt
+  if (isFoul(contestSpell(view, contest[role === 'attacker' ? 'defender' : 'attacker']))) return true;
+  return role === 'defender' && (contest.kind === 'tackle' || contest.kind === 'attack' || contest.kind === 'hit');
+}
+
+/**
+ * Before the dice: foul only when the contest is very likely won (if you win, their player is
+ * hurt; matching dice, 1 in 6, send yours off). Never against a goalie, who can't be hurt.
+ */
+function foul(view: PlayerView, legal: Action[]): Suggestion | null {
   const clean = legal.find((a) => a.type === 'foul' && a.card === null);
-  return clean ? { action: clean, says: 'Play it clean.' } : null;
+  const pending = view.pending;
+  if (!clean || pending.kind !== 'foul') return clean ? { action: clean, says: 'Play it clean.' } : null;
+  const { contest, role } = pending;
+  const target = contest[role === 'attacker' ? 'defender' : 'attacker'].pos;
+  const chance = contestChance(view, contest, role);
+  const dirty = legal.find((a) => a.type === 'foul' && a.card !== null);
+  // A foul is cast like a spell, so it uses one of the player's casts. Not their last one.
+  const fouler = slotAt(view, 'mine', contest[role].pos);
+  const castsLeft = fouler && (fouler.state === 'revealed' || fouler.state === 'faceDown') ? fouler.castsLeft : undefined;
+  const lastCast = castsLeft !== undefined && castsLeft < 2;
+  if (dirty && dirty.type === 'foul' && dirty.card && target.area !== 'goal' && chance >= 0.75 && !lastCast) {
+    const uid = dirty.card;
+    const spell = view.mine.hand.find((c) => c.uid === uid)?.def.name ?? 'a dirty play';
+    return {
+      action: dirty,
+      says: `Foul with ${spell}: you're ${pct(chance)} to win this one, and if you win, their player is hurt. The risk: if the two dice match (1 in 6), the referee sends ${nameAt(view, 'mine', contest[role].pos)} off for the game.`,
+    };
+  }
+  const why = target.area === 'goal' ? 'a foul does nothing to a goalie'
+    : lastCast && chance >= 0.75 ? `a foul is cast like a spell, and it would use ${nameAt(view, 'mine', contest[role].pos)}'s last one`
+    : `you're only ${pct(chance)} to win this contest, and a foul only hurts them if you win`;
+  return { action: clean, says: `Play it clean: ${why}.` };
 }
 
 function draw(view: PlayerView, legal: Action[]): Suggestion | null {
@@ -346,9 +455,22 @@ function action(view: PlayerView, legal: Action[]): Suggestion | null {
     };
   }
 
-  // 3. They have the ball in a spot you can tackle.
+  // 3. They have the ball in a spot you can tackle or attack: whichever is likelier to win it.
+  // A physical attack risks a penalty, so only while the penalty risk is low.
   const tackle = legal.find((a) => a.type === 'tackle');
   const theirBall = view.ball?.side !== me && view.ball && isFieldPos(view.ball.pos) ? view.ball.pos : null;
+  const attack = theirBall ? legal.find((a) => a.type === 'attack' && samePos(a.target, theirBall)) : undefined;
+  if (attack && attack.type === 'attack' && theirBall && view.mine.penaltyLevel <= 2) {
+    const at = attackChance(view, attack.attacker);
+    const t = tackle ? tackleChance(view, theirBall).chance : 0;
+    if (at.chance >= 0.55 && at.chance >= t) {
+      const against = at.theirs === null ? 'their Speed (face down, so a guess)' : `${nameAt(view, 'opponent', theirBall)}'s Speed ${at.theirs}`;
+      return {
+        action: attack,
+        says: `Physical attack with ${nameAt(view, 'mine', attack.attacker)}: Speed ${at.mine} plus whatever card you flip, against ${against}, ${pct(at.chance)}. Win and they drop the ball and are knocked down. Your penalty risk is ${view.mine.penaltyLevel}.`,
+      };
+    }
+  }
   if (tackle && theirBall) {
     const t = tackleChance(view, theirBall);
     if (t.chance >= 0.45) {

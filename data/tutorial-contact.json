@@ -1,0 +1,46 @@
+{
+  "about": "The second tutorial: contact and fouls (docs/tutorial-design.md). Same format as tutorial.json, plus each side's Physical pile order (top first; the rest follow in card order). setupDone: both goalies and lineups are put out as listed when the game opens, so the player starts at the faceoff. The seed is picked by scripts/tutorial-seed.ts.",
+  "id": "contact",
+  "lessons": "contact",
+  "setupDone": true,
+  "seed": 297,
+  "firstSide": "B",
+  "config": {
+    "deckFieldPlayers": 10,
+    "deckSize": 18,
+    "goalsToWin": 2,
+    "rosterCap": 0
+  },
+  "player": {
+    "team": "A",
+    "goalies": ["pl-087", "pl-091"],
+    "players": [
+      "pl-001", "pl-020", "pl-002", "pl-031", "pl-062", "pl-073", "pl-003", "pl-061",
+      "pl-004", "pl-016"
+    ],
+    "spells": ["sp-red-mist", "sp-stone-skin", "sp-burst-of-speed", "sp-mend", "sp-pinpoint", "sp-fresh-legs"],
+    "physical": ["ph-tripping", "ph-shirt-pull", "ph-cross-check", "ph-hooking"],
+    "goalie": "pl-087",
+    "lineup": {
+      "forward": ["pl-001", "pl-020"],
+      "midfield": ["pl-002", "pl-031"],
+      "defense": ["pl-062", "pl-073"]
+    }
+  },
+  "computer": {
+    "team": "B",
+    "goalies": ["pl-097", "pl-096"],
+    "players": [
+      "pl-069", "pl-067", "pl-058", "pl-054", "pl-029", "pl-030", "pl-068", "pl-071",
+      "pl-070", "pl-072"
+    ],
+    "spells": ["sp-jinx", "sp-sting", "sp-second-wind", "sp-alarm-ward", "sp-mend", "sp-water-spear"],
+    "physical": ["ph-hooking", "ph-slashing", "ph-tripping"],
+    "goalie": "pl-097",
+    "lineup": {
+      "forward": ["pl-029", "pl-030"],
+      "midfield": ["pl-058", "pl-054"],
+      "defense": ["pl-069", "pl-067"]
+    }
+  }
+}

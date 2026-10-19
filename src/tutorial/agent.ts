@@ -19,6 +19,16 @@ export function scenarioSetupAction(team: TutorialTeam, view: Parameters<Agent['
   return null;
 }
 
+/** A player whose setup decisions are the scenario's (for a scenario that starts with setup done). */
+export function withScenarioSetup(agent: Agent, team: TutorialTeam): Agent {
+  return {
+    name: agent.name,
+    chooseAction(view, legal) {
+      return scenarioSetupAction(team, view, legal) ?? agent.chooseAction(view, legal);
+    },
+  };
+}
+
 export function tutorialAgent(seed: number, config: GameConfig, team: TutorialTeam): Agent {
   const ai = heuristicAgent(seed, config);
   return {

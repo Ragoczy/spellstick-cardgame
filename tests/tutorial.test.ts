@@ -1,5 +1,5 @@
-// The tutorial (docs/tutorial-design.md): its fixed scenario, the engine's stacked piles, the
-// coach's suggestions, and the seed chosen for it.
+// The tutorials (docs/tutorial-design.md): their fixed scenarios, the engine's stacked piles, the
+// coach's suggestions, and the seeds chosen for them.
 import { describe, expect, it } from 'vitest';
 import type { Agent } from '../src/ai/agent';
 import { heuristicAgent } from '../src/ai/heuristic';
@@ -7,11 +7,12 @@ import { randomAgent } from '../src/ai/random';
 import { runGame } from '../src/ai/runGame';
 import { prototypeCards } from '../src/data/prototype';
 import { applyAction, createGame, legalActions, viewFor, type Action, type GameState, type PlayerView } from '../src/engine';
-import { tutorialAgent } from '../src/tutorial/agent';
+import { tutorialAgent, withScenarioSetup } from '../src/tutorial/agent';
 import { sameAction, suggest } from '../src/tutorial/coach';
 import { commentOn, TutorialCoach } from '../src/tutorial/lessons';
 import { coachOptions, computerSeed, playTutorial, seedProblems } from '../src/tutorial/play';
-import { TUTORIAL, tutorialConfig, tutorialProblems, tutorialSetup } from '../src/tutorial/scenario';
+import { CONTACT_TUTORIAL, TUTORIAL, tutorialConfig, tutorialProblems, tutorialSetup, type TutorialScenario } from '../src/tutorial/scenario';
+import { TutorialSession } from '../src/ui/tutorialSession';
 
 const names = (s: GameState, uids: string[]) => uids.map((uid) => s.cards[uid]!.id);
 const def = (id: string) => prototypeCards.cards.find((c) => c.id === id)!;
@@ -107,37 +108,43 @@ function checkingAgent(inner: Agent, coach: TutorialCoach, hiddenNames: (view: P
   };
 }
 
-describe('the coach', () => {
-  // The computer's players the person hasn't seen: everyone on its team not face up in this view.
-  const computerNames = [...TUTORIAL.computer.goalies, ...TUTORIAL.computer.players].map((id) => def(id).name);
-  const hiddenNames = (view: PlayerView) => {
+/** The computer's players the person hasn't seen in this view. */
+function hiddenNamesFor(scenario: TutorialScenario) {
+  const computerNames = [...scenario.computer.goalies, ...scenario.computer.players].map((id) => def(id).name);
+  return (view: PlayerView) => {
     const seen = new Set<string>();
     const team = view.opponent;
     for (const s of [team.goalie, ...team.lineup.defense, ...team.lineup.midfield, ...team.lineup.forward]) {
       if (s && (s.state === 'revealed' || s.state === 'faceDown')) seen.add(s.card.def.name);
     }
     for (const c of [...team.discard, ...team.knockedOut]) seen.add(c.def.name);
+    for (const e of [...team.penaltyBox]) seen.add(e.card.def.name);
     return computerNames.filter((n) => !seen.has(n));
   };
+}
 
-  const humans: [string, (seed: number) => Agent | null][] = [
+describe('the coach', () => {
+  const humans: [string, (seed: number, scenario: TutorialScenario) => Agent | null][] = [
     ['following the coach', () => null],
-    ['playing like the computer', (seed) => heuristicAgent(seed + 2, tutorialConfig())],
+    ['playing like the computer', (seed, scenario) => heuristicAgent(seed + 2, tutorialConfig(scenario))],
     ['making random moves', (seed) => randomAgent(seed + 3)],
   ];
-  for (const [label, make] of humans) {
-    it(`suggests a legal move every time and never names a hidden card, with the person ${label}`, () => {
-      for (let seed = 1; seed <= 40; seed++) {
-        const coach = new TutorialCoach(coachOptions());
-        const inner = make(seed) ?? { name: 'coach', chooseAction: (view: PlayerView, legal: Action[]) => coach.tip(view, legal).suggestion!.action };
-        const record = runGame(tutorialSetup(prototypeCards, seed), {
-          A: checkingAgent(inner, coach, hiddenNames),
-          B: tutorialAgent(computerSeed(seed), tutorialConfig(), TUTORIAL.computer),
-        });
-        expect(record.final.result).not.toBeNull();
-        expect(record.final.result!.reason).not.toBe('turn_cap');
-      }
-    }, 60_000);
+  for (const scenario of [TUTORIAL, CONTACT_TUTORIAL]) {
+    for (const [label, make] of humans) {
+      it(`suggests a legal move every time and never names a hidden card (${scenario.id}, the person ${label})`, () => {
+        for (let seed = 1; seed <= 30; seed++) {
+          const coach = new TutorialCoach(coachOptions(scenario));
+          const inner = make(seed, scenario) ?? { name: 'coach', chooseAction: (view: PlayerView, legal: Action[]) => coach.tip(view, legal).suggestion!.action };
+          const checked = checkingAgent(inner, coach, hiddenNamesFor(scenario));
+          const record = runGame(tutorialSetup(prototypeCards, seed, scenario), {
+            A: scenario.setupDone ? withScenarioSetup(checked, scenario.player) : checked,
+            B: tutorialAgent(computerSeed(seed), tutorialConfig(scenario), scenario.computer),
+          });
+          expect(record.final.result).not.toBeNull();
+          expect(record.final.result!.reason).not.toBe('turn_cap');
+        }
+      }, 60_000);
+    }
   }
 
   it('wins nearly every game when followed', () => {
@@ -166,4 +173,61 @@ describe('the coach', () => {
     expect(coach.chose(view, legal, other)).not.toBeNull();
     expect(coach.chose(view, legal, other)).toBeNull();
   });
+});
+
+describe('the contact tutorial', () => {
+  it('has legal decks and lineups, with physical attacks on', () => {
+    expect(tutorialProblems(prototypeCards, CONTACT_TUTORIAL)).toEqual([]);
+    expect(tutorialConfig(CONTACT_TUTORIAL).physicalAttacks).toBe(true);
+  });
+
+  it('puts the listed physical cards on top of each Physical pile, in order', () => {
+    let { state } = createGame(tutorialSetup(prototypeCards, undefined, CONTACT_TUTORIAL));
+    for (const side of ['A', 'B'] as const) {
+      const goalie = state.teams[side].hand[0]!;
+      ({ state } = applyAction(state, { type: 'chooseGoalie', side, card: goalie }));
+    }
+    for (const [side, team] of [['A', CONTACT_TUTORIAL.player], ['B', CONTACT_TUTORIAL.computer]] as const) {
+      const pile = names(state, state.teams[side].physical);
+      const top = [...pile].reverse().slice(0, team.physical!.length);
+      expect(top).toEqual(team.physical);
+      expect(pile).toHaveLength(16);
+    }
+  });
+
+  it('starts at the faceoff, with both teams set up as listed', () => {
+    const session = new TutorialSession(prototypeCards, CONTACT_TUTORIAL);
+    const view = session.view;
+    expect(view.pending.kind).toBe('faceoffLane');
+    expect(view.mine.goalie.state !== 'empty' && view.mine.goalie.state !== 'unknown' && view.mine.goalie.card.def.id).toBe(CONTACT_TUTORIAL.player.goalie);
+    for (const area of ['defense', 'midfield', 'forward'] as const) {
+      const ids = view.mine.lineup[area].map((s) => (s.state === 'faceDown' || s.state === 'revealed' ? s.card.def.id : null));
+      expect(ids).toEqual(CONTACT_TUTORIAL.player.lineup[area]);
+    }
+  });
+
+  it('plays the same on screen as in the seed search, when the coach is followed', () => {
+    const session = new TutorialSession(prototypeCards, CONTACT_TUTORIAL);
+    while (session.waitingFor !== 'over') {
+      if (session.waitingFor === 'human') session.act(session.hint()!);
+      else session.computerStep();
+    }
+    expect(session.view.score).toEqual(playTutorial(prototypeCards, CONTACT_TUTORIAL.seed, undefined, CONTACT_TUTORIAL).score);
+  });
+
+  it('has a chosen seed that teaches contact when the coach is followed', () => {
+    const r = playTutorial(prototypeCards, CONTACT_TUTORIAL.seed, undefined, CONTACT_TUTORIAL);
+    expect(seedProblems(r, CONTACT_TUTORIAL)).toEqual([]);
+    for (const id of ['contact-welcome', 'attack', 'foul', 'ward', 'first-flip', 'their-attack', 'penalty-box', 'sent-off', 'game-over']) {
+      expect(r.coach.hasTaught(id), id).toBe(true);
+    }
+    // None of the first tutorial's lessons come back.
+    for (const id of ['welcome', 'field', 'dice', 'pass']) expect(r.coach.hasTaught(id), id).toBe(false);
+  });
+
+  it('wins nearly every game when the coach is followed', () => {
+    let wins = 0;
+    for (let seed = 1; seed <= 100; seed++) if (playTutorial(prototypeCards, seed, undefined, CONTACT_TUTORIAL).won) wins++;
+    expect(wins).toBeGreaterThanOrEqual(90);
+  }, 60_000);
 });

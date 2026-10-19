@@ -72,7 +72,7 @@ button { font: inherit; color: inherit; }
 .buttons button, .quiet {
   border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 14px; cursor: pointer;
 }
-.buttons button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+.buttons button.primary, .coach-suggest button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
 .buttons button:disabled { opacity: 0.5; cursor: default; }
 .quiet { border: none; background: transparent; color: var(--muted); padding: 6px 8px; text-decoration: underline; }
 
@@ -314,6 +314,25 @@ button.danger {
 .prompt.waiting { color: var(--muted); }
 .prompt.notice { border-color: var(--select); background: #eef5fc; cursor: pointer; }
 .hint { margin-top: 6px; color: var(--muted); font-style: italic; }
+
+/* The tutorial coach (CoachPanel.tsx). */
+.coach { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--select); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.45; }
+.coach.coach-hidden { border-left-width: 1px; padding: 4px 8px; }
+.coach-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--select); }
+.coach p { margin: 6px 0; }
+.coach-note { color: var(--ink); }
+.coach-comment { color: var(--muted); font-style: italic; }
+.coach-lesson { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.coach-lesson h4 { margin: 0 0 2px; }
+.coach-suggest { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding: 8px; background: #eef5fc; border-radius: 8px; }
+.coach-suggest span { flex: 1 1 240px; }
+.coach-wait { color: var(--muted); }
+.coached-setup > .coach { max-width: 900px; margin: 8px auto 0; }
+.screen.setup > .coach { max-width: 720px; margin: 8px 0; text-align: left; }
+.card.hl-coach { box-shadow: 0 0 0 3px var(--select); animation: coach-pulse 1.6s ease-in-out infinite; }
+.cf.hl-coach .cf-card { box-shadow: 0 0 0 4px var(--select); animation: coach-pulse 1.6s ease-in-out infinite; }
+@keyframes coach-pulse { 50% { box-shadow: 0 0 0 6px rgba(47, 127, 209, 0.35); } }
+@media (prefers-reduced-motion: reduce) { .card.hl-coach, .cf.hl-coach .cf-card { animation: none; } }
 
 /* ---- Inspector ---- */
 /* The card you tapped, floating in the lower-left corner like a zoomed-in card. Tap it to close. */

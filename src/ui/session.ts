@@ -22,6 +22,12 @@ export interface SessionOptions {
   draft?: boolean;
 }
 
+/** A game already set up by the caller (the tutorial): its setup and the computer player. */
+export interface PreparedGame {
+  setup: GameSetup;
+  ai: Agent;
+}
+
 export class GameSession implements Seat {
   readonly human: Side = 'A';
   readonly computer: Side = 'B';
@@ -33,14 +39,19 @@ export class GameSession implements Seat {
   /** Events from creating the game (who goes first), as the person may see them. */
   readonly openingEvents: GameEvent[];
 
-  constructor(options: SessionOptions) {
-    const config = makeConfig({ lanes: options.lanes, draftPicks: options.draft ? DRAFT_PICKS : 0 });
-    const otherTeam = options.cardSet.teams.find((t) => t.id !== options.team)?.id ?? options.team;
-    this.setup = { seed: options.seed, cardSet: options.cardSet, config, teams: { A: options.team, B: otherTeam } };
+  constructor(options: SessionOptions | PreparedGame) {
+    if ('setup' in options) {
+      this.setup = options.setup;
+      this.ai = options.ai;
+    } else {
+      const config = makeConfig({ lanes: options.lanes, draftPicks: options.draft ? DRAFT_PICKS : 0 });
+      const otherTeam = options.cardSet.teams.find((t) => t.id !== options.team)?.id ?? options.team;
+      this.setup = { seed: options.seed, cardSet: options.cardSet, config, teams: { A: options.team, B: otherTeam } };
+      this.ai = heuristicAgent(options.seed + 1, config);
+    }
     const created = createGame(this.setup);
     this.state = created.state;
     this.openingEvents = eventsFor(created.events, this.human);
-    this.ai = heuristicAgent(options.seed + 1, config);
   }
 
   /** What the person can see. */

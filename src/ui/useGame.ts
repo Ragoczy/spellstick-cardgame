@@ -8,6 +8,7 @@ import type { Action, Breakdown, CardView, ContestKind, GameEvent, Pos, Side } f
 import type { MatchSummary } from '../shared/matchApi';
 import type { Seat } from './seat';
 import { GameSession, type SessionOptions } from './session';
+import { TutorialSession } from './tutorialSession';
 import { describeForPlayer, opponentWords, type Line, type OpponentWords, type Tone } from './text';
 
 /** A pop-up that pauses the game briefly: a contest result, a goal, or the final whistle. */
@@ -57,6 +58,8 @@ export interface GameController {
   opp: OpponentWords;
   /** Null when playing the computer. */
   online: OnlineControls | null;
+  /** The tutorial game, with its coach (only in the tutorial). */
+  tutorial?: TutorialSession;
 }
 
 export function posKey(side: Side, pos: Pos): string {
@@ -124,9 +127,12 @@ export function usePlayByPlay(opp: OpponentWords) {
   return { version, log, setLog, show, announcement, dismissAnnouncement, clearAnnouncements, justRevealed };
 }
 
-/** A game against the computer. autoplay: your side is played by the hint (for testing and for watching a game). */
-export function useGame(options: SessionOptions, autoplay = false): GameController {
-  const [session] = useState(() => new GameSession(options));
+/**
+ * A game against the computer: from options, or a session made by the caller (the tutorial).
+ * autoplay: your side is played by the hint (for testing and for watching a game).
+ */
+export function useGame(source: SessionOptions | (() => GameSession), autoplay = false): GameController {
+  const [session] = useState(() => (typeof source === 'function' ? source() : new GameSession(source)));
   const opp = useMemo(() => opponentWords(), []);
   const feed = usePlayByPlay(opp);
   const { show, setLog, announcement, clearAnnouncements } = feed;
@@ -179,5 +185,6 @@ export function useGame(options: SessionOptions, autoplay = false): GameControll
     autoPlace,
     opp,
     online: null,
+    ...(session instanceof TutorialSession ? { tutorial: session } : {}),
   };
 }

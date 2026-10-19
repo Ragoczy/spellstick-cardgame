@@ -20,6 +20,13 @@ export interface GameSetup {
    * teams use this.
    */
   decks?: Record<Side, string[]>;
+  /**
+   * A fixed scenario (the tutorial): with stackedPiles, each side's draw piles keep the order the
+   * cards are listed in (first listed is drawn first) instead of being shuffled, and the spare
+   * goalie goes to the bottom of the Players pile. firstSide skips the coin toss. Dice and the
+   * injury deck still come from the seed.
+   */
+  scenario?: { stackedPiles?: boolean; firstSide?: Side };
 }
 
 export class SetupError extends Error {}
@@ -42,7 +49,7 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
   let rng = seedToState(setup.seed);
   let coin: number;
   [coin, rng] = randomInt(rng, 2);
-  const firstSide: Side = coin === 0 ? 'A' : 'B';
+  const firstSide: Side = setup.scenario?.firstSide ?? (coin === 0 ? 'A' : 'B');
 
   // The shared injury deck: one card id per injury card, shuffled.
   const injuryCards: Record<string, InjuryDef> = {};
@@ -81,6 +88,7 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     diceLeft: { A: config.diceBudget, B: config.diceBudget },
     pending: { kind: 'chooseGoalie', side: 'A' },
     result: null,
+    ...(setup.scenario?.stackedPiles ? { stackedPiles: true } : {}),
   };
   const teamCards = {
     A: [...buildDeck(setup.cardSet, teamIds.A, config), ...physicalPile(setup.cardSet, config, teamIds.A)],
@@ -142,10 +150,15 @@ function dealTeams(s: GameState, decks: Record<Side, CardDef[]>, teamIds: Record
     const fieldCount = uids.filter((uid) => s.cards[uid]!.kind === 'field').length;
     if (goalies.length < 1) throw new SetupError(`Team ${teamIds[side]} has no goalie.`);
     if (fieldCount < spots) throw new SetupError(`Team ${teamIds[side]} needs at least ${spots} field players.`);
+    // The top of a pile is the end of the list, so a stacked pile is reversed: first listed, first drawn.
+    const pile = (kind: CardDef['kind']) => {
+      const cards = uids.filter((uid) => s.cards[uid]!.kind === kind);
+      return s.stackedPiles ? cards.reverse() : cards;
+    };
     s.teams[side] = {
-      players: uids.filter((uid) => s.cards[uid]!.kind === 'field'),
-      spells: uids.filter((uid) => s.cards[uid]!.kind === 'spell'),
-      physical: uids.filter((uid) => s.cards[uid]!.kind === 'physical'),
+      players: pile('field'),
+      spells: pile('spell'),
+      physical: pile('physical'),
       physicalDiscard: [],
       penaltyBox: [],
       attackHeat: 0,

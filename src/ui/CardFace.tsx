@@ -148,7 +148,7 @@ export interface CardFaceProps {
   /** Can't be played right now (shown faded). */
   dim?: boolean;
   /** Highlight: something you can do with this card. */
-  highlight?: 'target' | 'match' | 'opposed' | null;
+  highlight?: 'target' | 'match' | 'opposed' | 'coach' | null;
   onClick?: () => void;
 }
 

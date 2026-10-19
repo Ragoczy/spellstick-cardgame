@@ -10,7 +10,8 @@ import { CollectionScreen } from './Collection';
 import { StatsDashboard } from './StatsDashboard';
 import { TournamentScreen, TournamentsScreen } from './Tournaments';
 import { TeamColors } from './Card';
-import { LocalGameScreen } from './GameScreen';
+import { LocalGameScreen, TutorialGameScreen } from './GameScreen';
+import { tutorialDone } from './tutorialSession';
 import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
 import { RecentChanges } from './RecentChanges';
@@ -19,6 +20,8 @@ import type { SessionOptions } from './session';
 
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
+  // The tutorial: a fixed practice game with a coach (docs/tutorial-design.md).
+  | { kind: 'tutorial'; id: number }
   // Online build only: your matches, one match, the rankings, your cards and saved teams, and
   // tournaments. A match opened from a tournament goes back to it (fromTournament).
   | { kind: 'lobby' } | { kind: 'match'; id: number; fromTournament?: number } | { kind: 'rankings' } | { kind: 'collection' }
@@ -56,7 +59,7 @@ export function App() {
   const [team, setTeam] = useState(prototypeCards.teams[0]!.id);
 
   // Inside Discord: game screens set their own presence; everything else is "In the menu".
-  const inGame = screen.kind === 'game' || screen.kind === 'match';
+  const inGame = screen.kind === 'game' || screen.kind === 'match' || screen.kind === 'tutorial';
   useEffect(() => {
     if (!inGame) setDiscordPresence(MENU_PRESENCE);
   }, [inGame]);
@@ -65,7 +68,7 @@ export function App() {
 
   return (
     <TeamColors.Provider value={teamColors}>
-      <main className={screen.kind === 'game' || screen.kind === 'match' ? 'app app-game' : 'app'}>
+      <main className={inGame ? 'app app-game' : 'app'}>
         {screen.kind === 'start' ? (
           <div className="screen start">
             <h1>Spellstick</h1>
@@ -94,7 +97,9 @@ export function App() {
               </label>
             </div>
             <div className="buttons">
-              <button type="button" className="primary" onClick={start}>Play against the computer</button>
+              {/* New players are steered to the tutorial until they've finished it once. */}
+              <button type="button" className={tutorialDone() ? '' : 'primary'} onClick={() => setScreen({ kind: 'tutorial', id: Date.now() })}>Learn to play</button>
+              <button type="button" className={tutorialDone() ? 'primary' : ''} onClick={start}>Play against the computer</button>
               {ONLINE && me?.displayName ? <button type="button" className="primary" onClick={() => setScreen({ kind: 'lobby' })}>Play online</button> : null}
               <button type="button" onClick={() => setScreen({ kind: 'rules' })}>How to play</button>
             </div>
@@ -143,6 +148,9 @@ export function App() {
             clearMatchLink();
             setScreen(screen.fromTournament ? { kind: 'tournament', id: screen.fromTournament } : { kind: 'lobby' });
           }} />
+        ) : null}
+        {screen.kind === 'tutorial' ? (
+          <TutorialGameScreen key={screen.id} onQuit={() => setScreen({ kind: 'start' })} onAgain={() => setScreen({ kind: 'tutorial', id: Date.now() })} />
         ) : null}
         {screen.kind === 'game' ? (
           <LocalGameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />

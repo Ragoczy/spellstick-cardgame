@@ -242,4 +242,9 @@ export interface GameState {
   result: GameResult | null;
   /** The draft, in games that start with one (config.draftPicks > 0). */
   draft?: DraftState;
+  /**
+   * A fixed scenario (the tutorial, GameSetup.scenario): draw piles keep their dealt order and
+   * are never shuffled at setup.
+   */
+  stackedPiles?: boolean;
 }

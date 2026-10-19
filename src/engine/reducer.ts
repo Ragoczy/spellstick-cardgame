@@ -83,11 +83,17 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   team.goalie = { uid: card, revealed: false, scried: false };
   ev.push({ type: 'goalieChosen', side, secret: { card: cardView(s, card) } });
 
-  // The other goalie is shuffled into the Players pile; both piles are shuffled.
-  team.players.push(...team.hand);
-  team.hand = [];
-  [team.players, s.rng] = shuffle(team.players, s.rng);
-  [team.spells, s.rng] = shuffle(team.spells, s.rng);
+  // The other goalie is shuffled into the Players pile; both piles are shuffled. In a fixed
+  // scenario (the tutorial) the piles keep their order and the spare goalie goes to the bottom.
+  if (s.stackedPiles) {
+    team.players.unshift(...team.hand);
+    team.hand = [];
+  } else {
+    team.players.push(...team.hand);
+    team.hand = [];
+    [team.players, s.rng] = shuffle(team.players, s.rng);
+    [team.spells, s.rng] = shuffle(team.spells, s.rng);
+  }
 
   // Draw a player for every spot plus a few extra, and a few spells. (At most one of the
   // players drawn can be the spare goalie, so there are always enough to fill every spot.)
@@ -95,7 +101,7 @@ function chooseGoalie(s: GameState, side: Side, card: string, ev: GameEvent[]): 
   drawCards(s, side, spots + s.config.setupExtraPlayers, 'setup', ev, 'players');
   drawCards(s, side, s.config.setupSpells, 'setup', ev, 'spells');
   if (s.config.physicalAttacks) {
-    [team.physical, s.rng] = shuffle(team.physical, s.rng);
+    if (!s.stackedPiles) [team.physical, s.rng] = shuffle(team.physical, s.rng);
     if (s.config.physicalDraw === 'hand') drawCards(s, side, s.config.physicalSetupDraw, 'setup', ev, 'physical');
   }
 

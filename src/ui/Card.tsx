@@ -120,7 +120,7 @@ export interface CardProps {
   /** Can't be played right now (shown faded). */
   dim?: boolean;
   /** Highlight: something you can do with this card or spot. */
-  highlight?: 'target' | 'match' | 'opposed' | null;
+  highlight?: 'target' | 'match' | 'opposed' | 'coach' | null;
   flip?: boolean;
   showText?: boolean;
   onClick?: () => void;

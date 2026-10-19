@@ -7,6 +7,9 @@ import { Board } from './Board';
 import { CardBack, type CardProps } from './Card';
 import { CardFace } from './CardFace';
 import { Clocks } from './Clocks';
+import { CoachPanel, coachCardUid, coachSpotKey } from './CoachPanel';
+import { prototypeCards } from '../data/prototype';
+import { TutorialSession } from './tutorialSession';
 import { gamePresence, setDiscordPresence } from './discord';
 import { capitalize, endedEarlyText, injuryEffect, laneName, magicLabel, posName, ratingChangeText } from './labels';
 import { DraftScreen } from './DraftScreen';
@@ -38,8 +41,14 @@ export function LocalGameScreen({ options, onQuit, autoplay = false }: { options
   return <GameScreen game={game} onQuit={onQuit} />;
 }
 
-/** The table, for a game against the computer or an online match. onQuit: leave the screen. */
-export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () => void }) {
+/** The tutorial game, with the coach (docs/tutorial-design.md). onAgain starts it over. */
+export function TutorialGameScreen({ onQuit, onAgain }: { onQuit: () => void; onAgain: () => void }) {
+  const game = useGame(() => new TutorialSession(prototypeCards));
+  return <GameScreen game={game} onQuit={onQuit} onAgain={onAgain} />;
+}
+
+/** The table, for a game against the computer or an online match. onQuit: leave the screen. onAgain: replay (the tutorial). */
+export function GameScreen({ game, onQuit, onAgain }: { game: GameController; onQuit: () => void; onAgain?: () => void }) {
   const { seat, opp, online } = game;
   const view = seat.view;
   const legal = seat.legal;
@@ -47,7 +56,8 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const them = seat.opponent;
   const teams = seat.teams;
   // Hints come from the computer player, so they're for practice games only.
-  const hintsAllowed = !online;
+  // In the tutorial the coach gives suggestions instead.
+  const hintsAllowed = !online && !game.tutorial;
   const [selection, setSelection] = useState<Selection>(NONE);
   const [inspected, setInspected] = useState<{ def: CardDef; injury?: InjuryDef } | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -63,6 +73,10 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
 
   // While a move is on its way to the server, nothing else can be chosen.
   const myDecision = seat.waitingFor === 'human' && !online?.sending;
+  // The tutorial coach's suggestion, for its glow on the board or in your hand.
+  const coachAction = game.tutorial && myDecision ? game.tutorial.tip()?.suggestion?.action ?? null : null;
+  const coachSpot = coachAction ? coachSpotKey(view, coachAction) : null;
+  const coachCard = coachAction ? coachCardUid(coachAction) : null;
 
   const act = (action: Action) => {
     setSelection(NONE);
@@ -159,6 +173,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       default:
         break;
     }
+    if (coachSpot && selection.kind === 'none' && !map.has(coachSpot)) map.set(coachSpot, 'coach');
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.version, selection]);
@@ -296,6 +311,12 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
   const spellDecision = myDecision && (pending.kind === 'action' || pending.kind === 'reaction' || pending.kind === 'foul' || pending.kind === 'physicalReaction');
   const castable = view.mine.hand.filter((c) => (c.def.kind === 'spell' || c.def.kind === 'physical') && pending.kind === 'action' && canPlayNow(c.uid));
 
+  // ---- The tutorial coach ----
+
+  const coachPanel = game.tutorial ? (
+    <CoachPanel tutorial={game.tutorial} myDecision={myDecision} onDo={act} onAutoPlace={game.autoPlace} onAgain={onAgain} onQuit={onQuit} />
+  ) : null;
+
   // ---- Setup screens ----
 
   const leaveLabel = online ? 'Back to your matches' : 'New game';
@@ -326,17 +347,19 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
     return (
       <div className="screen setup">
         <h2>Choose your goalie</h2>
-        <p>Your goalie starts face down in goal. The other one is shuffled into your deck.</p>
+        {coachPanel}
+        <p>Your goalie starts face down in goal. The other one {game.tutorial ? 'goes into' : 'is shuffled into'} your deck.</p>
         <div className="choice-row">
           {legal.map((a) => a.type === 'chooseGoalie' ? (
-            <CardFace key={a.card} def={view.mine.hand.find((c) => c.uid === a.card)!.def} width={220} onClick={() => act(a)} />
+            <CardFace key={a.card} def={view.mine.hand.find((c) => c.uid === a.card)!.def} width={220} highlight={coachCard === a.card ? 'coach' : null} onClick={() => act(a)} />
           ) : null)}
         </div>
       </div>
     );
   }
   if (pending.kind === 'placeLineup' && myDecision) {
-    return <LineupScreen view={view} legal={legal} onPlace={(actions) => actions.forEach((a) => game.act(a))} onAuto={game.autoPlace} />;
+    const lineup = <LineupScreen view={view} legal={legal} onPlace={(actions) => actions.forEach((a) => game.act(a))} onAuto={game.autoPlace} />;
+    return coachPanel ? <div className="coached-setup">{coachPanel}{lineup}</div> : lineup;
   }
 
   // ---- Prompts ----
@@ -548,7 +571,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
       def={c.def}
       injury={c.injury}
       selected={(selection.kind === 'cast' || selection.kind === 'substitute') && selection.card === c.uid || (selection.kind === 'regroup' && selection.picked.includes(c.uid))}
-      highlight={myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'foul' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
+      highlight={coachCard === c.uid && selection.kind === 'none' ? 'coach' : myDecision && (handTargets.has(c.uid) || (selection.kind === 'none' && castable.some((x) => x.uid === c.uid)) || legal.some((a) => (a.type === 'react' || a.type === 'foul' || a.type === 'discard' || a.type === 'forcedSub') && a.card === c.uid)) ? 'target' : null}
       dim={spellDecision && c.def.kind === 'spell' && selection.kind === 'none' && !canPlayNow(c.uid)}
       onClick={() => onHandCard(c.uid, c.def, c.injury)}
     />
@@ -607,6 +630,7 @@ export function GameScreen({ game, onQuit }: { game: GameController; onQuit: () 
             {online?.match.status === 'active' && online.match.autopilot.them ? (
               <div className="prompt notice">{opp.Name} ran out of time, so the computer is making their decisions for the rest of the match.</div>
             ) : null}
+            {coachPanel}
             {prompt()}
             {notice ? <div className="prompt notice" onClick={() => setNotice(null)}>{notice}</div> : null}
             {inspected ? (

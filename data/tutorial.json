@@ -1,0 +1,108 @@
+{
+  "about": "The tutorial game (docs/tutorial-design.md). Both decks are listed in draw order: the first card in each list is drawn first. Card ids are from cards.prototype.json. The player's team is strong, the computer's is weak on purpose. The player's goalie and lineup are the coach's suggestions; the computer's are placed as listed. The seed is picked by scripts/tutorial-seed.ts so that following the coach gives a good first game.",
+  "seed": 73,
+  "firstSide": "B",
+  "config": {
+    "deckFieldPlayers": 13,
+    "deckSize": 24,
+    "goalsToWin": 2,
+    "physicalAttacks": false,
+    "rosterCap": 0
+  },
+  "player": {
+    "team": "A",
+    "goalies": [
+      "pl-087",
+      "pl-091"
+    ],
+    "players": [
+      "pl-001",
+      "pl-020",
+      "pl-002",
+      "pl-031",
+      "pl-062",
+      "pl-073",
+      "pl-016",
+      "pl-061",
+      "pl-004",
+      "pl-045",
+      "pl-032",
+      "pl-018",
+      "pl-022"
+    ],
+    "spells": [
+      "sp-burst-of-speed",
+      "sp-pinpoint",
+      "sp-fresh-legs",
+      "sp-ice-wall",
+      "sp-divine",
+      "sp-heavy-ground",
+      "sp-float-pass",
+      "sp-second-wind",
+      "sp-mend"
+    ],
+    "goalie": "pl-087",
+    "lineup": {
+      "forward": [
+        "pl-001",
+        "pl-020"
+      ],
+      "midfield": [
+        "pl-002",
+        "pl-031"
+      ],
+      "defense": [
+        "pl-062",
+        "pl-073"
+      ]
+    }
+  },
+  "computer": {
+    "team": "B",
+    "goalies": [
+      "pl-097",
+      "pl-096"
+    ],
+    "players": [
+      "pl-068",
+      "pl-067",
+      "pl-058",
+      "pl-054",
+      "pl-029",
+      "pl-030",
+      "pl-065",
+      "pl-071",
+      "pl-070",
+      "pl-072",
+      "pl-043",
+      "pl-042",
+      "pl-041"
+    ],
+    "spells": [
+      "sp-alarm-ward",
+      "sp-far-sight",
+      "sp-sleight",
+      "sp-second-wind",
+      "sp-mend",
+      "sp-water-spear",
+      "sp-knit",
+      "sp-dazzle",
+      "sp-set-the-bone"
+    ],
+    "goalie": "pl-097",
+    "lineup": {
+      "forward": [
+        "pl-029",
+        "pl-030"
+      ],
+      "midfield": [
+        "pl-058",
+        "pl-054"
+      ],
+      "defense": [
+        "pl-068",
+        "pl-067"
+      ]
+    }
+  }
+}

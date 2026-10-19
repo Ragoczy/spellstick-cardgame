@@ -1,5 +1,7 @@
 {
   "about": "The tutorial game (docs/tutorial-design.md). Both decks are listed in draw order: the first card in each list is drawn first. Card ids are from cards.prototype.json. The player's team is strong, the computer's is weak on purpose. The player's goalie and lineup are the coach's suggestions; the computer's are placed as listed. The seed is picked by scripts/tutorial-seed.ts so that following the coach gives a good first game.",
+  "id": "basics",
+  "lessons": "basics",
   "seed": 73,
   "firstSide": "B",
   "config": {

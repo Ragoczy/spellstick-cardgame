@@ -13,8 +13,8 @@ import { posKey } from './useGame';
 const ROW_TITLE: Record<Area, string> = { forward: 'Forwards', midfield: 'Midfielders', defense: 'Defenders' };
 
 /** The whole suggested lineup in one line, and who stays in hand. */
-function lineupSummary(view: PlayerView): string {
-  const plan = suggestedLineup(view, coachOptions());
+function lineupSummary(view: PlayerView, tutorial: TutorialSession): string {
+  const plan = suggestedLineup(view, coachOptions(tutorial.scenario));
   const rows = (['forward', 'midfield', 'defense'] as Area[]).map((area) => {
     const names = Array.from({ length: view.lanes }, (_, lane) => {
       const card = plan.get(`${area}:${lane}`);
@@ -36,6 +36,7 @@ export function coachSpotKey(view: PlayerView, a: Action): string | null {
     case 'tackle': return view.ball && isFieldPos(view.ball.pos) ? posKey(me, opposite(view.ball.pos)) : null;
     case 'substitute': return posKey(me, a.pos);
     case 'cast': return posKey(me, a.caster);
+    case 'attack': return posKey(me, a.attacker);
     case 'shootoutPick': return posKey(me, a.pos);
     default: return null;
   }
@@ -50,20 +51,22 @@ export function coachCardUid(a: Action): string | null {
   }
 }
 
-export function CoachPanel({ tutorial, myDecision, onDo, onAutoPlace, onAgain, onQuit }: {
+export function CoachPanel({ tutorial, myDecision, onDo, onAutoPlace, onAgain, onNext, onQuit }: {
   tutorial: TutorialSession;
   myDecision: boolean;
   onDo: (action: Action) => void;
   onAutoPlace: () => void;
   onAgain?: () => void;
+  /** The next tutorial, if there is one. */
+  onNext?: () => void;
   onQuit: () => void;
 }) {
   const [hidden, setHidden] = useState(false);
   const view = tutorial.view;
   const over = view.pending.kind === 'gameOver';
   useEffect(() => {
-    if (over) markTutorialDone();
-  }, [over]);
+    if (over) markTutorialDone(tutorial.scenario.id);
+  }, [over, tutorial]);
 
   if (hidden) {
     return (
@@ -75,7 +78,7 @@ export function CoachPanel({ tutorial, myDecision, onDo, onAutoPlace, onAgain, o
 
   const tip = myDecision ? tutorial.tip() : null;
   const lineup = view.pending.kind === 'placeLineup';
-  const says = lineup ? lineupSummary(view) : tip?.suggestion?.says;
+  const says = lineup ? lineupSummary(view, tutorial) : tip?.suggestion?.says;
   return (
     <aside className="coach" aria-label="Coach">
       <div className="coach-head">
@@ -102,7 +105,8 @@ export function CoachPanel({ tutorial, myDecision, onDo, onAutoPlace, onAgain, o
       {!myDecision && !over ? <p className="coach-wait">The computer is making its move.</p> : null}
       {over ? (
         <div className="buttons">
-          {onAgain ? <button type="button" className="primary" onClick={onAgain}>Play the tutorial again</button> : null}
+          {onNext ? <button type="button" className="primary" onClick={onNext}>Next: contact and fouls</button> : null}
+          {onAgain ? <button type="button" className={onNext ? '' : 'primary'} onClick={onAgain}>Play this again</button> : null}
           <button type="button" onClick={onQuit}>Play a real game</button>
         </div>
       ) : null}

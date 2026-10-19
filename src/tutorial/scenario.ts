@@ -4,6 +4,7 @@
 // other.
 
 import raw from '../../data/tutorial.json';
+import rawContact from '../../data/tutorial-contact.json';
 import {
   AREAS, deckProblems, makeConfig, type Area, type CardSet, type GameConfig, type GameSetup, type Side,
 } from '../engine';
@@ -18,9 +19,18 @@ export interface TutorialTeam {
   /** The goalie to put in goal, and who goes where (by lane). */
   goalie: string;
   lineup: Record<Area, string[]>;
+  /** Physical cards (by card id) on top of the Physical pile, top first; the rest follow in card order. */
+  physical?: string[];
 }
 
+/** Which lessons the coach teaches: the first tutorial, or the second (contact and fouls). */
+export type LessonSet = 'basics' | 'contact';
+
 export interface TutorialScenario {
+  id: string;
+  lessons: LessonSet;
+  /** Both goalies and lineups are put out as listed when the game opens (the player already knows setup). */
+  setupDone?: boolean;
   seed: number;
   firstSide: Side;
   config: Partial<GameConfig>;
@@ -30,7 +40,14 @@ export interface TutorialScenario {
   computer: TutorialTeam;
 }
 
+/** The first tutorial. */
 export const TUTORIAL: TutorialScenario = raw as TutorialScenario;
+/** The second tutorial: contact and fouls. */
+export const CONTACT_TUTORIAL: TutorialScenario = rawContact as TutorialScenario;
+
+export function scenarioById(id: string): TutorialScenario {
+  return id === CONTACT_TUTORIAL.id ? CONTACT_TUTORIAL : TUTORIAL;
+}
 
 /** The person is side A and the computer side B, as in every game against the computer. */
 export const TUTORIAL_HUMAN: Side = 'A';
@@ -50,7 +67,11 @@ export function tutorialSetup(cardSet: CardSet, seed?: number, scenario: Tutoria
     config: scenario.config,
     teams: { A: scenario.player.team, B: scenario.computer.team },
     decks: { A: deckOf(scenario.player), B: deckOf(scenario.computer) },
-    scenario: { stackedPiles: true, firstSide: scenario.firstSide },
+    scenario: {
+      stackedPiles: true,
+      firstSide: scenario.firstSide,
+      physicalOrder: { A: scenario.player.physical ?? [], B: scenario.computer.physical ?? [] },
+    },
   };
 }
 
@@ -70,6 +91,9 @@ export function tutorialProblems(cardSet: CardSet, scenario: TutorialScenario = 
     for (const id of placed) if (!opening.has(id)) problems.push(`${who}: ${id} in the lineup isn't in the opening hand.`);
     for (const area of AREAS) {
       if ((t.lineup[area] ?? []).length !== config.lanes) problems.push(`${who}: ${area} needs ${config.lanes} players.`);
+    }
+    for (const id of t.physical ?? []) {
+      if (cardSet.cards.find((c) => c.id === id)?.kind !== 'physical') problems.push(`${who}: ${id} isn't a physical card.`);
     }
   }
   return problems;

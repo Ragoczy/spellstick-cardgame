@@ -12,6 +12,7 @@ import { TournamentScreen, TournamentsScreen } from './Tournaments';
 import { TeamColors } from './Card';
 import { LocalGameScreen, TutorialGameScreen } from './GameScreen';
 import { tutorialDone } from './tutorialSession';
+import { CONTACT_TUTORIAL, TUTORIAL } from '../tutorial/scenario';
 import { FutureFeatures } from './FutureFeatures';
 import { HowToPlay } from './HowToPlay';
 import { RecentChanges } from './RecentChanges';
@@ -21,7 +22,7 @@ import type { SessionOptions } from './session';
 type Screen =
   | { kind: 'start' } | { kind: 'rules' } | { kind: 'future' } | { kind: 'game'; options: SessionOptions; id: number }
   // The tutorial: a fixed practice game with a coach (docs/tutorial-design.md).
-  | { kind: 'tutorial'; id: number }
+  | { kind: 'tutorial'; id: number; scenario: string }
   // Online build only: your matches, one match, the rankings, your cards and saved teams, and
   // tournaments. A match opened from a tournament goes back to it (fromTournament).
   | { kind: 'lobby' } | { kind: 'match'; id: number; fromTournament?: number } | { kind: 'rankings' } | { kind: 'collection' }
@@ -64,6 +65,11 @@ export function App() {
     if (!inGame) setDiscordPresence(MENU_PRESENCE);
   }, [inGame]);
 
+  // New players are steered to the tutorials in order until they've finished each once.
+  const basicsDone = tutorialDone(TUTORIAL.id);
+  const contactDone = tutorialDone(CONTACT_TUTORIAL.id);
+  const tutorial = (scenario: string) => setScreen({ kind: 'tutorial', id: Date.now(), scenario });
+
   const start = () => setScreen({ kind: 'game', id: Date.now(), options: { seed: newSeed(), cardSet: prototypeCards, lanes, team, draft } });
 
   return (
@@ -97,9 +103,11 @@ export function App() {
               </label>
             </div>
             <div className="buttons">
-              {/* New players are steered to the tutorial until they've finished it once. */}
-              <button type="button" className={tutorialDone() ? '' : 'primary'} onClick={() => setScreen({ kind: 'tutorial', id: Date.now() })}>Learn to play</button>
-              <button type="button" className={tutorialDone() ? 'primary' : ''} onClick={start}>Play against the computer</button>
+              <button type="button" className={basicsDone ? '' : 'primary'} onClick={() => tutorial(TUTORIAL.id)}>Learn to play</button>
+              {basicsDone ? (
+                <button type="button" className={contactDone ? '' : 'primary'} onClick={() => tutorial(CONTACT_TUTORIAL.id)}>Contact and fouls</button>
+              ) : null}
+              <button type="button" className={basicsDone && contactDone ? 'primary' : ''} onClick={start}>Play against the computer</button>
               {ONLINE && me?.displayName ? <button type="button" className="primary" onClick={() => setScreen({ kind: 'lobby' })}>Play online</button> : null}
               <button type="button" onClick={() => setScreen({ kind: 'rules' })}>How to play</button>
             </div>
@@ -150,7 +158,13 @@ export function App() {
           }} />
         ) : null}
         {screen.kind === 'tutorial' ? (
-          <TutorialGameScreen key={screen.id} onQuit={() => setScreen({ kind: 'start' })} onAgain={() => setScreen({ kind: 'tutorial', id: Date.now() })} />
+          <TutorialGameScreen
+            key={screen.id}
+            scenario={screen.scenario}
+            onQuit={() => setScreen({ kind: 'start' })}
+            onAgain={() => tutorial(screen.scenario)}
+            onNext={screen.scenario === TUTORIAL.id ? () => tutorial(CONTACT_TUTORIAL.id) : undefined}
+          />
         ) : null}
         {screen.kind === 'game' ? (
           <LocalGameScreen key={screen.id} options={screen.options} autoplay={autoplay} onQuit={() => setScreen({ kind: 'start' })} />

@@ -142,7 +142,10 @@ export function useGame(source: SessionOptions | (() => GameSession), autoplay =
     const opening = session.openingEvents
       .map((e) => describeForPlayer(e, session.human, session.view.lanes, true, opp))
       .filter((line): line is Line => line !== null);
-    const first = session.view.pending.kind === 'draftPick' ? 'Draft your players to begin.' : 'Choose your goalie to begin.';
+    const kind = session.view.pending.kind;
+    const first = kind === 'draftPick' ? 'Draft your players to begin.'
+      : kind === 'chooseGoalie' ? 'Choose your goalie to begin.'
+      : 'Both teams are set up. The game starts with a faceoff.';
     setLog([{ text: first, tone: 'turn' }, ...opening]);
   }, [session, opp, setLog]);
 

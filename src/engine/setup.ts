@@ -23,10 +23,11 @@ export interface GameSetup {
   /**
    * A fixed scenario (the tutorial): with stackedPiles, each side's draw piles keep the order the
    * cards are listed in (first listed is drawn first) instead of being shuffled, and the spare
-   * goalie goes to the bottom of the Players pile. firstSide skips the coin toss. Dice and the
-   * injury deck still come from the seed.
+   * goalie goes to the bottom of the Players pile. firstSide skips the coin toss. physicalOrder
+   * puts these physical cards (by card id) on top of each side's Physical pile, first listed on
+   * top; the rest follow in card order. Dice and the injury deck still come from the seed.
    */
-  scenario?: { stackedPiles?: boolean; firstSide?: Side };
+  scenario?: { stackedPiles?: boolean; firstSide?: Side; physicalOrder?: Partial<Record<Side, string[]>> };
 }
 
 export class SetupError extends Error {}
@@ -90,17 +91,18 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
     result: null,
     ...(setup.scenario?.stackedPiles ? { stackedPiles: true } : {}),
   };
+  const order = setup.scenario?.physicalOrder ?? {};
   const teamCards = {
-    A: [...buildDeck(setup.cardSet, teamIds.A, config), ...physicalPile(setup.cardSet, config, teamIds.A)],
-    B: [...buildDeck(setup.cardSet, teamIds.B, config), ...physicalPile(setup.cardSet, config, teamIds.B)],
+    A: [...buildDeck(setup.cardSet, teamIds.A, config), ...physicalPile(setup.cardSet, config, teamIds.A, order.A)],
+    B: [...buildDeck(setup.cardSet, teamIds.B, config), ...physicalPile(setup.cardSet, config, teamIds.B, order.B)],
   };
 
   if (setup.decks) {
     if (config.draftPicks > 0) throw new SetupError('A game with its own decks has no draft.');
     const decks = setup.decks;
     dealTeams(state, {
-      A: [...constructedDeck(setup.cardSet, decks.A, config, teamIds.A), ...physicalPile(setup.cardSet, config, teamIds.A)],
-      B: [...constructedDeck(setup.cardSet, decks.B, config, teamIds.B), ...physicalPile(setup.cardSet, config, teamIds.B)],
+      A: [...constructedDeck(setup.cardSet, decks.A, config, teamIds.A), ...physicalPile(setup.cardSet, config, teamIds.A, order.A)],
+      B: [...constructedDeck(setup.cardSet, decks.B, config, teamIds.B), ...physicalPile(setup.cardSet, config, teamIds.B, order.B)],
     }, teamIds);
   } else if (config.draftPicks > 0) {
     startDraft(state, setup.cardSet, teamIds, teamCards);
@@ -116,14 +118,19 @@ export function createGame(setup: GameSetup): { state: GameState; events: GameEv
 
 /**
  * A team's Physical pile (v0.17): one of each physical card in the card set (up to the pile size),
- * playing in the team's color. None with the old rules.
+ * playing in the team's color. None with the old rules. `first`: card ids to put first, in that
+ * order (a fixed scenario; the pile is shuffled at setup otherwise).
  */
-function physicalPile(cardSet: CardSet, config: GameConfig, teamId: string): CardDef[] {
+function physicalPile(cardSet: CardSet, config: GameConfig, teamId: string, first: string[] = []): CardDef[] {
   if (!config.physicalAttacks) return [];
-  return cardSet.cards
+  const cards = cardSet.cards
     .filter((c) => c.kind === 'physical' && c.team === PHYSICAL_TEAM)
-    .slice(0, config.physicalPileSize)
-    .map((c) => ({ ...c, team: teamId }));
+    .slice(0, config.physicalPileSize);
+  const rank = (id: string) => (first.includes(id) ? first.indexOf(id) : first.length);
+  return cards
+    .map((c, i) => ({ c, i }))
+    .sort((x, y) => rank(x.c.id) - rank(y.c.id) || x.i - y.i)
+    .map(({ c }) => ({ ...c, team: teamId }));
 }
 
 /** A deck a team brings (Constructed), checked, with every card playing for the team. */

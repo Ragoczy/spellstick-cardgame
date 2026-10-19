@@ -14,6 +14,8 @@ import {
 import { magicLabel, posName } from '../ui/labels';
 import { reactionPreview } from '../ui/preview';
 import { cardAt, firstName, nameAt, sameAction, suggest, type CoachOptions, type Suggestion } from './coach';
+import { CONTACT_KEEPS_BASIC_NOTES, CONTACT_LESSONS, contactNotes } from './contactLessons';
+import type { LessonSet } from './scenario';
 
 export interface Lesson {
   id: string;
@@ -27,7 +29,7 @@ const KEY_STAT: Record<Area, keyof typeof STAT_NAME> = { forward: 'shot', midfie
 
 // ---- Lessons at a decision ----
 
-interface DecisionLesson {
+export interface DecisionLesson {
   id: string;
   title: string;
   applies: (view: PlayerView, legal: Action[], s: Suggestion | null) => boolean;
@@ -58,7 +60,8 @@ function suggestedAffinitySpell(v: PlayerView, s: Suggestion | null) {
   return o && (o.affinity === 'specialist' || o.affinity === 'match') ? o : null;
 }
 
-const DECISION_LESSONS: DecisionLesson[] = [
+/** The first tutorial's lessons. */
+const BASIC_LESSONS: DecisionLesson[] = [
   {
     id: 'welcome',
     title: 'Welcome to spellstick',
@@ -198,9 +201,9 @@ const DECISION_LESSONS: DecisionLesson[] = [
   },
 ];
 
-export function lessonFor(view: PlayerView, legal: Action[], s: Suggestion | null, taught: ReadonlySet<string>): Lesson | null {
+export function lessonFor(view: PlayerView, legal: Action[], s: Suggestion | null, taught: ReadonlySet<string>, set: LessonSet = 'basics'): Lesson | null {
   if (view.pending.kind === 'gameOver' || view.pending.side !== view.me) return null;
-  for (const l of DECISION_LESSONS) {
+  for (const l of set === 'contact' ? CONTACT_LESSONS : BASIC_LESSONS) {
     if (!taught.has(l.id) && l.applies(view, legal, s)) return { id: l.id, title: l.title, text: l.text(view, s) };
   }
   return null;
@@ -209,58 +212,63 @@ export function lessonFor(view: PlayerView, legal: Action[], s: Suggestion | nul
 // ---- Notes after something happens ----
 
 /** Notes the first time each kind of result happens. `view` is the view after the events. */
-export function notesFor(events: GameEvent[], view: PlayerView, taught: ReadonlySet<string>): Lesson[] {
+export function notesFor(events: GameEvent[], view: PlayerView, taught: ReadonlySet<string>, set: LessonSet = 'basics'): Lesson[] {
   const me = view.me;
   const notes: Lesson[] = [];
   const add = (id: string, title: string, text: string) => {
     if (!taught.has(id) && !notes.some((n) => n.id === id)) notes.push({ id, title, text });
   };
+  // The contact tutorial keeps only a few of the basic notes, and has its own.
+  const addBasic = set === 'basics' ? add : (id: string, title: string, text: string) => {
+    if (CONTACT_KEEPS_BASIC_NOTES.has(id)) add(id, title, text);
+  };
   for (const e of events) {
+    if (set === 'contact') contactNotes(e, view, add);
     if (e.type === 'revealed' && e.side !== me && isFieldPos(e.pos) && e.card.def.kind === 'field') {
       const stat = KEY_STAT[e.pos.area];
       const value = (e.card.def as FieldCardDef)[stat];
       if (value <= 4) {
-        add('their-weak', 'A look at their team', `Their ${posName(e.pos, view.lanes)} is ${e.card.def.name}: ${STAT_NAME[stat]} ${value}. In this practice game their team is weaker on purpose. Most of your players have 5s and 6s.`);
+        addBasic('their-weak', 'A look at their team', `Their ${posName(e.pos, view.lanes)} is ${e.card.def.name}: ${STAT_NAME[stat]} ${value}. In this practice game their team is weaker on purpose. Most of your players have 5s and 6s.`);
       }
     }
     if (e.type === 'contestResolved' && e.kind === 'pass') {
       const mine = e.attacker.side === me;
       if (mine && e.winner === me && isFieldPos(e.attacker.pos) && e.attacker.pos.area === 'forward') {
-        add('caught-forward', 'Catch and shoot', "Caught! A forward who catches a pass can't be tackled until your next turn. So next turn, shoot.");
+        addBasic('caught-forward', 'Catch and shoot', "Caught! A forward who catches a pass can't be tackled until your next turn. So next turn, shoot.");
       } else if (mine && e.winner !== me) {
-        add('intercepted', 'Intercepted', 'Their defender cut out the pass. Dice happen: even a likely pass fails sometimes. Now you defend.');
+        addBasic('intercepted', 'Intercepted', 'Their defender cut out the pass. Dice happen: even a likely pass fails sometimes. Now you defend.');
       } else if (!mine && e.winner === me) {
-        add('you-intercepted', 'You cut it out', 'Your player won the ball from their pass. Now move it up the field.');
+        addBasic('you-intercepted', 'You cut it out', 'Your player won the ball from their pass. Now move it up the field.');
       }
     }
     if (e.type === 'contestResolved' && e.kind === 'shot' && e.attacker.side === me && e.winner !== me) {
-      add('saved', 'Saved', "Their goalie stopped it. Most shots are saved, so don't be discouraged. Their goalie has to pass the ball out on their turn.");
+      addBasic('saved', 'Saved', "Their goalie stopped it. Most shots are saved, so don't be discouraged. Their goalie has to pass the ball out on their turn.");
     }
     if (e.type === 'goal') {
-      if (e.side === me) add('goal-mine', 'Goal!', 'After a goal there\'s a faceoff. The team that was scored on chooses the lane and takes the next turn.');
-      else add('goal-theirs', 'They scored', 'You choose the next faceoff lane, and you take the next turn.');
+      if (e.side === me) addBasic('goal-mine', 'Goal!', 'After a goal there\'s a faceoff. The team that was scored on chooses the lane and takes the next turn.');
+      else addBasic('goal-theirs', 'They scored', 'You choose the next faceoff lane, and you take the next turn.');
     }
     if (e.type === 'knockedDown') {
-      add('knocked-down', 'Knocked down', `${e.card.def.name} was knocked down and rolled ${e.roll} against their Toughness ${e.toughness}. At or under Toughness they're fine; above it, they're hurt.`);
+      addBasic('knocked-down', 'Knocked down', `${e.card.def.name} was knocked down and rolled ${e.roll} against their Toughness ${e.toughness}. At or under Toughness they're fine; above it, they're hurt.`);
     }
     if (e.type === 'hurt' && e.result === 'shaken') {
-      add('shaken', 'Shaken', `${e.card.def.name} is Shaken: the card is turned sideways. They can't pass, shoot, tackle, or cast, and get −${view.config.shakenPenalty} in contests, until the end of their team's next turn. They can still catch passes and defend.`);
+      addBasic('shaken', 'Shaken', `${e.card.def.name} is Shaken: the card is turned sideways. They can't pass, shoot, tackle, or cast, and get −${view.config.shakenPenalty} in contests, until the end of their team's next turn. They can still catch passes and defend.`);
     }
     if (e.type === 'injured') {
-      add('injured', 'Injured', `${e.card.def.name} is injured: their stats are lower until the injury is mended. An injured player on the field has to come off for a substitute.`);
+      addBasic('injured', 'Injured', `${e.card.def.name} is injured: their stats are lower until the injury is mended. An injured player on the field has to come off for a substitute.`);
     }
     if (e.type === 'spellCast' && e.side !== me) {
-      add('their-spell', 'Their spell', `They cast ${e.card.def.name}. The computer has spells too, and casting turned their caster face up.`);
+      addBasic('their-spell', 'Their spell', `They cast ${e.card.def.name}. The computer has spells too, and casting turned their caster face up.`);
     }
     if (e.type === 'spellCast' && e.side === me) {
       const caster = view.mine.lineup[e.caster.area as Area]?.[(e.caster as { lane?: number }).lane ?? 0];
       if (isFieldPos(e.caster) && caster && caster.state !== 'empty' && caster.state !== 'unknown' && caster.castsLeft === 0) {
-        add('out-of-spells', 'Out of spells', `${firstName(caster.card.def.name)} has cast all they can: one spell per Resonant. To rest them, substitute them out at a draw step. They come back later with all their spells.`);
+        addBasic('out-of-spells', 'Out of spells', `${firstName(caster.card.def.name)} has cast all they can: one spell per Resonant. To rest them, substitute them out at a draw step. They come back later with all their spells.`);
       }
     }
     if (e.type === 'gameOver') {
       const won = e.result.winner === me;
-      add('game-over', won ? 'You won!' : e.result.winner === null ? 'A draw' : 'They won this time',
+      addBasic('game-over', won ? 'You won!' : e.result.winner === null ? 'A draw' : 'They won this time',
         `${won ? 'Well played.' : 'The cards were on your side, so it\'s worth another go.'} That's the whole game: passing, contests, spells, tackles, and the clock. Real games are rougher, with physical attacks and fouls, and real teams are evenly matched.`);
     }
   }
@@ -290,7 +298,7 @@ export function commentOn(view: PlayerView, s: Suggestion | null, chosen: Action
       return m ? { id: 'lane', text: `${firstName(m.name)}'s Faceoff ${m.faceoff} can still do it, and ties go to you.` } : null;
     }
     case 'callDice':
-      return chosen.roll && sug.type === 'callDice' && !sug.roll && s.says.includes('winning')
+      return chosen.roll && sug.type === 'callDice' && !sug.roll && s.says.startsWith('Keep your roll')
         ? { id: 'reroll', text: 'That roll was already winning. Rerolls are best saved for a die that loses you the contest.' }
         : null;
     case 'react':
@@ -312,6 +320,21 @@ export function commentOn(view: PlayerView, s: Suggestion | null, chosen: Action
     }
     case 'regroup':
       return { id: 'idle', text: 'Fine, though doing nothing gives them time.' };
+    case 'attack': {
+      const level = view.mine.penaltyLevel;
+      if (level >= 3) {
+        return { id: 'attack-risk', text: `Your penalty risk is ${level} now: about ${level * level} in 36 to be caught. A turn without an attack brings it down.` };
+      }
+      const holder = view.ball && view.ball.side !== view.me ? view.ball.pos : null;
+      if (!holder || holder.area === 'goal' || holder.area !== chosen.target.area || holder.lane !== chosen.target.lane) {
+        return { id: 'attack-no-ball', text: "That can still hurt them, but they don't have the ball. Attacks are worth most against the ball holder." };
+      }
+      return null;
+    }
+    case 'foul':
+      return chosen.card && sug.type === 'foul' && !sug.card
+        ? { id: 'risky-foul', text: 'A bold foul. If you lose the contest it does nothing, and matching dice still send your player off.' }
+        : null;
     case 'tackle':
       return { id: 'long-tackle', text: `A brave tackle. If you lose by ${view.config.tackleRiskMargin} or more, your tackler is Shaken.` };
     default:
@@ -335,12 +358,12 @@ export class TutorialCoach {
   private readonly taught = new Set<string>();
   private readonly commented = new Set<string>();
 
-  constructor(readonly options: CoachOptions = {}) {}
+  constructor(readonly options: CoachOptions & { lessons?: LessonSet } = {}) {}
 
   /** The tip for the person's current decision. Asking again before they act gives the same tip. */
   tip(view: PlayerView, legal: Action[]): CoachTip {
     const suggestion = suggest(view, legal, this.options);
-    return { lesson: lessonFor(view, legal, suggestion, this.taught), suggestion };
+    return { lesson: lessonFor(view, legal, suggestion, this.taught, this.options.lessons), suggestion };
   }
 
   /** The person made their move: the lesson for it is taught, and a comment if it wasn't the suggestion. */
@@ -355,7 +378,7 @@ export class TutorialCoach {
 
   /** Notes about what just happened, each taught once. */
   observe(events: GameEvent[], view: PlayerView): Lesson[] {
-    const notes = notesFor(events, view, this.taught);
+    const notes = notesFor(events, view, this.taught, this.options.lessons);
     for (const n of notes) this.taught.add(n.id);
     return notes;
   }
@@ -366,4 +389,4 @@ export class TutorialCoach {
 }
 
 /** Every decision lesson, in the order they're checked (for tests). */
-export const LESSON_IDS = DECISION_LESSONS.map((l) => l.id);
+export const LESSON_IDS = BASIC_LESSONS.map((l) => l.id);
